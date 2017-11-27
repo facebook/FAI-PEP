@@ -1,0 +1,12 @@
+{
+  "tests" : [
+    {
+      "args" : "--identifier \"error-squeezenet-1_3_227_227\" --init_net <models_dir>/squeezenet/squeeze_init_net.pb --net <models_dir>/squeezenet/squeeze_predict_net.pb --metric error --input data --input_file <models_dir>/squeezenet/tests/test0/data.txt --warmup 0 --iter 1 --output \"softmaxout\" --golden_output_file <models_dir>/squeezenet/tests/test0/softmaxout.txt",
+      "excluded_platforms" : ""
+    },
+    {
+      "args" : "--identifier \"delay-64_3_30_30\" --init_net <models_dir>/squeezenet/squeeze_init_net.pb --net <models_dir>/squeezenet/squeeze_predict_net.pb --metric delay --input_dims 64,3,30,30 --input data --run_individual --warmup 10 --iter 50 ",
+      "excluded_platforms" : ""
+    }
+  ]
+}
