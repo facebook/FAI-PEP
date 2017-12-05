@@ -11,10 +11,12 @@
 import subprocess
 from utils.custom_logger import getLogger
 
-def processRun(*args):
+def processRun(*args, **kwargs):
     getLogger().info("Running: %s", ' '.join(*args))
     try:
-        return subprocess.check_output(*args).decode("utf-8")
+        return subprocess.check_output(*args, **kwargs).decode("utf-8")
     except subprocess.CalledProcessError:
         getLogger().error("Command failed: %s", ' '.join(*args))
+    except subprocess.TimeoutExpired:
+        getLogger().error("Command timeout: %s", ' '.join(*args))
     return None

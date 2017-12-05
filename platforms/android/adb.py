@@ -21,7 +21,7 @@ class ADB(object):
         self.device = device
         self.dir = getArgs().android_dir
 
-    def run(self, cmd, *args):
+    def run(self, cmd, *args, **kwargs):
         adb = ["adb"]
         if self.device:
             adb.append("-s")
@@ -32,7 +32,9 @@ class ADB(object):
                 adb.extend(item)
             else:
                 adb.append(item)
-        return processRun(adb)
+        if not 'timeout' in kwargs:
+            kwargs['timeout'] = 10
+        return processRun(adb, **kwargs)
 
     def push(self, src, tgt = None):
         target = tgt if tgt != None else self.dir + path.basename(src)
@@ -44,5 +46,5 @@ class ADB(object):
     def logcat(self, *args):
         return self.run("logcat", *args)
 
-    def shell(self, cmd):
-        return self.run("shell", cmd)
+    def shell(self, cmd, **kwargs):
+        return self.run("shell", cmd, **kwargs)

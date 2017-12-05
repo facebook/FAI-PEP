@@ -60,7 +60,7 @@ class AndroidPlatform(PlatformBase):
         if getArgs().run_individual:
             cmd.extend(["--run_individual", "true"])
 
-        self.adb.shell(cmd)
+        self.adb.shell(cmd, timeout=getArgs().timeout)
         log = self.adb.logcat('-d')
         self._postRun()
         return log
