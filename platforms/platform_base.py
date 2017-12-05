@@ -126,6 +126,8 @@ class PlatformBase(object):
         return meta
 
     def collectDelayData(self, output, results):
+        if output is None:
+            return False
         prev_num = len(results)
         rows = output.split('\n')
         useful_rows = [row for row in rows if row.find(self.IDENTIFIER) >= 0]
