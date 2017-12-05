@@ -38,6 +38,8 @@ class ADB(object):
 
     def push(self, src, tgt = None):
         target = tgt if tgt != None else self.dir + path.basename(src)
+        # Always remove the old file before pushing the new file
+        self.shell(['rm', '-f', target])
         return self.run("push", src, target)
 
     def pull(self, src, tgt):
