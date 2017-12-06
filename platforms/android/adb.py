@@ -49,4 +49,10 @@ class ADB(object):
         return self.run("logcat", *args)
 
     def shell(self, cmd, **kwargs):
-        return self.run("shell", cmd, **kwargs)
+        dft = None
+        if 'default' in kwargs:
+            dft = kwargs.pop('default')
+        val = self.run("shell", cmd, **kwargs)
+        if val == None and dft != None:
+            val = dft
+        return val
