@@ -72,9 +72,9 @@ class RemoteReporter(ReporterBase):
             new_meta['type'] = item
             summary = base_summary.copy()
             self._updateSummaryData(data['summary'], summary, "")
-            if data['control_summary']:
+            if 'control_summary' in data:
                 self._updateSummaryData(data['control_summary'], summary, "control_")
-            if data['diff_summary']:
+            if 'diff_summary' in data:
                 self._updateSummaryData(data['diff_summary'], summary, "diff_")
 
             message = {

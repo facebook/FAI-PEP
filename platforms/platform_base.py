@@ -145,7 +145,7 @@ class PlatformBase(object):
                 if (i < len(useful_rows) and
                         (useful_rows[i].find(self.DELAYS_START) >= 0)):
                     i = self._parseDelayData(useful_rows, result, i)
-                if len(result) > 1:
+                if (len(result) > 1) and (self.NET_DELAY in result):
                     # operator delay. Need to strip the net delay from it
                     del result[self.NET_DELAY]
                 results.append(result)
