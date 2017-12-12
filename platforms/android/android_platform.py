@@ -35,9 +35,9 @@ class AndroidPlatform(PlatformBase):
         program = self.adb.dir + basename
         init_net = path.basename(getArgs().init_net)
         net = path.basename(getArgs().net)
-        cmd = ["cd", self.adb.dir, "&&", program,
-            "--init_net", init_net,
-            "--net", net,
+        cmd = [program,
+            "--init_net", self.adb.dir + "/" + init_net,
+            "--net", self.adb.dir + "/" + net,
             "--input", getArgs().input,
             "--warmup", str(getArgs().warmup),
             "--iter", str(getArgs().iter),
