@@ -181,13 +181,13 @@ class GitDriver(object):
                 '/build_android/bin/caffe2_benchmark'
             dst = tempdir + '/caffe2_benchmark_android'
             build_dir = getArgs().git_dir + "/build_android"
-            script = getArgs().git_dir + "/scripts/build_android.sh -DBUILD_BINARY=ON -DBUILD_SHARE_DIR=ON"
+            script = getArgs().git_dir + "/scripts/build_android.sh -DBUILD_BINARY=ON -DBUILD_SHARE_DIR=ON -DUSE_ZSTD=ON"
         elif getArgs().host:
             src = getArgs().git_dir + \
                 '/build/bin/caffe2_benchmark'
             dst = tempdir + '/caffe2_benchmark_host'
             build_dir = getArgs().git_dir + "/build"
-            script = getArgs().git_dir + "/scripts/build_local.sh -DBUILD_BINARY=ON -DBUILD_SHARE_DIR=ON"
+            script = getArgs().git_dir + "/scripts/build_local.sh -DBUILD_BINARY=ON -DBUILD_SHARE_DIR=ON -DUSE_ZSTD=ON"
         else:
             getLogger().error("At least one platform needs to be specified.")
         return self._buildProgramPlatform(git_info, src, dst, build_dir, script, skip_build)
