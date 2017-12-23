@@ -35,7 +35,7 @@ class Git(object):
         return self.run('rev-parse', commit).rstrip()
 
     def getCommitTime(self, commit):
-        return int(self.run('show', '-s', '--format=%ct', commit).strip())
+        return int(self.run('show', '-s', '--format=%at', commit).strip())
 
     def getNextCommitHash(self, commit):
         commits = self.run('rev-list', '--reverse', commit+"..HEAD").strip().split('\n')
