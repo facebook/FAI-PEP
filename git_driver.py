@@ -20,6 +20,7 @@ from utils.arg_parse import getParser, getArgs, getUnknowns, parseKnown
 from utils.git import Git
 from utils.custom_logger import getLogger
 from utils.subprocess_with_logger import processRun
+from utils.utilities import getDirectory
 
 getParser().add_argument("--exec_dir", required=True,
     help="The executable is saved in the specified directory. " +
@@ -153,13 +154,8 @@ class ExecutablesBuilder (threading.Thread):
         return git_info if self._buildProgram(git_info) else None
 
     def _buildProgram(self, git_info):
-        dt = datetime.datetime.fromtimestamp(
-            git_info['commit_time'], datetime.timezone.utc)
         directory = getArgs().exec_dir + "/" + \
-            str(dt.year) + "/" + \
-            str(dt.month) + "/" + \
-            str(dt.day) + "/" + \
-            git_info['commit'] + "/"
+            getDirectory(git_info['commit'], git_info['commit_time'])
 
         if getArgs().android:
             src = getArgs().git_dir + \

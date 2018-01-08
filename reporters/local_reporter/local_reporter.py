@@ -10,11 +10,10 @@
 
 from utils.arg_parse import getParser, getArgs
 from reporters.reporter_base import ReporterBase
+from utils.utilities import getDirectory
 
 import json
 import os
-import shutil
-import datetime
 
 getParser().add_argument("--local_reporter",
     help="Save the result to a directory specified by this argument.")
@@ -30,8 +29,8 @@ class LocalReporter(ReporterBase):
         platform_name = content[self.META][self.PLATFORM]
         platformdir = self._getFilename(platform_name) + "/"
         ts = float(content[self.META]['time'])
-        dt = datetime.datetime.fromtimestamp(ts)
-        datedir = str(dt.year) + "/" + str(dt.month) + "/" + str(dt.day) + "/"
+        commit = content[self.META]['commit']
+        datedir = getDirectory(commit, ts)
         dirname = platformdir + netdir + datedir
         dirname = getArgs().local_reporter + "/" + dirname
         i = 0
@@ -52,4 +51,6 @@ class LocalReporter(ReporterBase):
 
     def _getFilename(self, name):
         filename = name.replace(' ', '-').replace('/', '-')
-        return "".join([c for c in filename if c.isalpha() or c.isdigit() or c=='_' or c=='.']).rstrip()
+        return "".join([c for c in filename
+                        if c.isalpha() or c.isdigit() or
+                        c == '_' or c == '.']).rstrip()
