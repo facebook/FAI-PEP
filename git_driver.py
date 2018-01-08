@@ -118,14 +118,23 @@ class ExecutablesBuilder (threading.Thread):
         self.git.checkout(getArgs().git_branch)
         self.git.pull(getArgs().git_repository, getArgs().git_branch)
         new_commit_hash = None
-        if self.current_commit_hash is None:
-            self.current_commit_hash = self._getSavedCommit()
+        if not getArgs().interval:
+            new_commit_hash = self._getSavedCommit() \
+                if getArgs().git_commit_file \
+                else self.git.getCommitHash(getArgs().git_commit)
+            if new_commit_hash is None:
+                getLogger().error("Commit is not specified")
+                return False
 
-        if self.current_commit_hash is None or not getArgs().interval:
-            new_commit_hash = self.git.getCommitHash(getArgs().git_commit)
         else:
-            new_commit_hash = self.git.getNextCommitHash(
-                self.current_commit_hash)
+            if self.current_commit_hash is None:
+                self.current_commit_hash = self._getSavedCommit()
+
+            if self.current_commit_hash is None:
+                new_commit_hash = self.git.getCommitHash(getArgs().git_commit)
+            else:
+                new_commit_hash = self.git.getNextCommitHash(
+                    self.current_commit_hash)
         if new_commit_hash == self.current_commit_hash:
             getLogger().info("Commit %s is already processed, sleeping...",
                              new_commit_hash)
