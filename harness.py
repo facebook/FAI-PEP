@@ -15,7 +15,7 @@ from reporters.reporters import getReporters
 from utils.arg_parse import getParser, parse
 
 getParser().add_argument("--excluded_platforms",
-    help="Specify the platforms that skip the test, in a comma separated list. "
+    help="Specify the platforms that skip the test, in a comma separated list."
     "For android devices, the specified value is the output of the command: "
     "\"adb shell getprop ro.product.model\". For host, the specified value is "
     "The output of python method: \"platform.processor()\".")
@@ -24,7 +24,7 @@ getParser().add_argument("--golden_output_file",
     "the output blobs. If multiple output needed, use comma "
     "separated string. Must have the same number of items as output does. "
     "The specifying order must be the same. ")
-getParser().add_argument("--identifier",
+getParser().add_argument("--identifier", required=True,
     help="A unique identifier to identify this type of run so that it can be "
     "filtered out from all other regression runs in the database.")
 getParser().add_argument("--info",
@@ -81,6 +81,7 @@ getParser().add_argument("--timeout", default=300, type=float,
 getParser().add_argument("--warmup", default=0, type=int,
     help="The number of iterations to warm up.")
 
+
 class BenchmarkDriver(object):
     def __init__(self):
         parse()
@@ -98,6 +99,7 @@ class BenchmarkDriver(object):
             t = threading.Thread(target=self.runBenchmark, args=(platform,))
             threads.append(t)
             t.start()
+
 
 if __name__ == "__main__":
     app = BenchmarkDriver()

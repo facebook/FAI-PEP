@@ -28,10 +28,10 @@ class LocalReporter(ReporterBase):
         netdir = self._getFilename(net_name) + "/"
         platform_name = content[self.META][self.PLATFORM]
         platformdir = self._getFilename(platform_name) + "/"
-        ts = float(content[self.META]['time'])
+        ts = float(content[self.META]['commit_time'])
         commit = content[self.META]['commit']
         datedir = getDirectory(commit, ts)
-        dirname = platformdir + netdir + datedir
+        dirname = datedir + platformdir + netdir + getArgs().identifier + "/"
         dirname = getArgs().local_reporter + "/" + dirname
         i = 0
         while os.path.exists(dirname + str(i)):
