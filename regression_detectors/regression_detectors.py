@@ -94,7 +94,6 @@ class VerifyRegressions (threading.Thread):
         self._removeCommandArg(command, "--run_type")
         self._removeCommandArg(command, "--regressed_types")
 
-
     def _removeCommandArg(self, command, arg):
         try:
             idx = command.index(arg)

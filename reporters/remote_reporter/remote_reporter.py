@@ -77,7 +77,8 @@ class RemoteReporter(ReporterBase):
                 self._updateSummaryData(data['control_summary'], summary, "control_")
             if 'diff_summary' in data:
                 self._updateSummaryData(data['diff_summary'], summary, "diff_")
-
+            if 'regressed' in data:
+                summary['regressed'] = data['regressed']
             message = {
                 'int': summary,
                 'normal': new_meta,
