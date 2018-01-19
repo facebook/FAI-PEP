@@ -19,3 +19,10 @@ def getDirectory(commit_hash, commit_time):
         str(dt.day) + "/" + \
         commit_hash + "/"
     return directory
+
+
+def getCommand(command):
+    exe = command[0]
+    args = [x if x.isnumeric() else "'" + x + "'" for x in command[1:]]
+    cmd = exe + ' ' + ' '.join(args)
+    return cmd

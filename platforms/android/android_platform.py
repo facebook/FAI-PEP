@@ -19,13 +19,13 @@ class AndroidPlatform(PlatformBase):
         super(AndroidPlatform, self).__init__()
         self.adb = adb
         self.platform = adb.shell(['getprop', 'ro.product.model'], default="").strip() + \
-            ' - ' + \
+            '-' + \
             adb.shell(['getprop', 'dalvik.vm.isa.arm.variant'], default="").strip() + \
-            ' - ' + \
+            '-' + \
             adb.shell(['getprop', 'ro.build.version.release'], default="").strip() + \
-            ' - ' + \
+            '-' + \
             adb.shell(['getprop', 'ro.build.version.sdk'], default="").strip()
-        self.input_file  = None
+        self.input_file = None
         self.android_input_dir = self.adb.dir + "/input/"
         self.android_output_dir = self.adb.dir + "/output/"
 

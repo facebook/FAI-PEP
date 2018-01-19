@@ -54,13 +54,14 @@ class PlatformBase(object):
         return None
 
     def runOnPlatform(self):
+        data = None
         if getArgs().metric == "delay":
-            return self.runOnPlatformDelay()
+            data = self.runOnPlatformDelay()
         elif getArgs().metric == "error":
-            return self.runOnPlatformError()
+            data = self.runOnPlatformError()
         else:
             assert False, "Unknown metric %s." % getArgs().metric
-            return None
+        return self._adjustData(data)
 
     def runOnPlatformDelay(self):
         # Run on the treatment
@@ -116,7 +117,7 @@ class PlatformBase(object):
         meta['net_name'] = self.net_name if len(self.net_name) > 0 else \
             os.path.basename(getArgs().net)
         meta['metric'] = getArgs().metric
-        meta['command'] = ' '.join(sys.argv)
+        meta['command'] = sys.argv
         if info['commit']:
             meta[self.COMMIT] = info['commit']
         if info['commit_time']:
@@ -242,6 +243,7 @@ class PlatformBase(object):
     def _mergeMetaData(self, treatment_meta, control_meta):
         meta = treatment_meta.copy()
         meta['regression_direction'] = getArgs().regression_direction
+        meta['run_type'] = getArgs().run_type
         if control_meta:
             meta['control_time'] = control_meta['time']
             meta['control_commit'] = control_meta['commit']
@@ -277,6 +279,7 @@ class PlatformBase(object):
                 "p10": tsummary['p10'] - csummary['p90'],
                 "p90": tsummary['p90'] - csummary['p10'],
             }
+            data[k]['type'] = k
         return data
 
     def _collectErrorData(self, output_filenames):
@@ -319,4 +322,17 @@ class PlatformBase(object):
                 'control_summary': self._getStatistics(golden_values),
                 'diff_summary': self._getStatistics(diff_values),
             }
+            data[output]['type'] = output
+        return data
+
+    def _adjustData(self, data):
+        regressed_types_string = getArgs().regressed_types
+        if regressed_types_string is None:
+            return data
+        values = data[self.DATA]
+        regressed_types = json.loads(regressed_types_string)
+        if getArgs().run_type == 'regress':
+            for v in values:
+                if v in regressed_types:
+                    values[v]['regressed'] = 1
         return data

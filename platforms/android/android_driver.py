@@ -16,7 +16,7 @@ getParser().add_argument("--android", action="store_true",
     help="Run the benchmark on all connected android devices.")
 
 class AndroidDriver:
-    def __init__(self, devices = None):
+    def __init__(self, devices=None):
         self.adb = ADB()
         if devices:
             if isinstance(devices, string):
@@ -34,7 +34,6 @@ class AndroidDriver:
                 device_id = items[0].strip()
                 devices.append(device_id)
         return devices
-
 
     def getAndroidPlatforms(self):
         if self.devices is None:

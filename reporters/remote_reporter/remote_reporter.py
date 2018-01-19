@@ -11,10 +11,10 @@
 from utils.arg_parse import getParser, getArgs
 from reporters.reporter_base import ReporterBase
 from utils.custom_logger import getLogger
+from utils.utilities import getCommand
 
 import json
 import requests
-import urllib
 
 getParser().add_argument("--remote_reporter",
     help="Save the result to a remote server. "
@@ -59,6 +59,7 @@ class RemoteReporter(ReporterBase):
     def _composeMessages(self, content, category):
         logs = []
         meta = content[self.META].copy()
+        meta["command"] = getCommand(meta["command"])
         base_summary = {}
         self._convertToInt(meta, base_summary, 'time')
         self._convertToInt(meta, base_summary, 'commit_time')
@@ -69,7 +70,7 @@ class RemoteReporter(ReporterBase):
         for item in content[self.DATA]:
             data = content[self.DATA][item]
             new_meta = meta.copy()
-            new_meta['type'] = item
+            new_meta['type'] = data['type']
             summary = base_summary.copy()
             self._updateSummaryData(data['summary'], summary, "")
             if 'control_summary' in data:
@@ -78,9 +79,9 @@ class RemoteReporter(ReporterBase):
                 self._updateSummaryData(data['diff_summary'], summary, "diff_")
 
             message = {
-                'int' : summary,
-                'normal' : new_meta,
-                'normvector' : {},
+                'int': summary,
+                'normal': new_meta,
+                'normvector': {},
             }
             if 'values' in data:
                 message['normvector']['values'] = data['values']

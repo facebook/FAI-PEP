@@ -15,10 +15,8 @@ from reporters.reporters import getReporters
 from utils.arg_parse import getParser, parse
 
 getParser().add_argument("--excluded_platforms",
-    help="Specify the platforms that skip the test, in a comma separated list."
-    "For android devices, the specified value is the output of the command: "
-    "\"adb shell getprop ro.product.model\". For host, the specified value is "
-    "The output of python method: \"platform.processor()\".")
+    help="Specify the platforms that skip the benchmark, in a comma separated "
+    "list. The value is the platform field of the meta info.")
 getParser().add_argument("--golden_output_file",
     help="The reference output file that contains the serialized protobuf for "
     "the output blobs. If multiple output needed, use comma "
@@ -64,13 +62,23 @@ getParser().add_argument("--output",
 getParser().add_argument("--output_folder",
     help="The folder that the output should be written to. This "
     "folder must already exist in the file system.")
+getParser().add_argument("--platforms",
+    help="Specify the platforms to run the benchmark, in a comma separated "
+    "list. The value is the platform field of the meta info.")
 getParser().add_argument("--program",
     help="The program to run on the platform.")
+getParser().add_argument("--regressed_types",
+    help="A json string that encodes the types of the regressed tests.")
 getParser().add_argument("--regression_direction", type=int, default=1,
     help="The direction when regression happens. 1 means higher value is "
     "regression. -1 means lower value is regression.")
 getParser().add_argument("--run_individual", action="store_true",
     help="Whether to benchmark individual operators.")
+getParser().add_argument("--run_type", default="benchmark",
+    choices=["benchmark", "verify", "regress"],
+    help="The type of the current run. The allowed values are: benchmark, the "
+    "normal benchmark run. verify, the benchmark is re-run to confirm a "
+    "suspicious regression. regress, the regression is confirmed.")
 getParser().add_argument("--temp_dir",
     help="The temporary directory used by the script.")
 getParser().add_argument("--timeout", default=300, type=float,

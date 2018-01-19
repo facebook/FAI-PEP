@@ -28,10 +28,13 @@ class LocalReporter(ReporterBase):
         netdir = self._getFilename(net_name) + "/"
         platform_name = content[self.META][self.PLATFORM]
         platformdir = self._getFilename(platform_name) + "/"
+        metric_name = content[self.META]['metric']
+        metric_dir = self._getFilename(metric_name) + "/"
+        id_dir = self._getFilename(getArgs().identifier) + "/"
         ts = float(content[self.META]['commit_time'])
         commit = content[self.META]['commit']
         datedir = getDirectory(commit, ts)
-        dirname = datedir + platformdir + netdir + getArgs().identifier + "/"
+        dirname = platformdir + netdir + metric_dir + id_dir + datedir
         dirname = getArgs().local_reporter + "/" + dirname
         i = 0
         while os.path.exists(dirname + str(i)):
@@ -53,4 +56,4 @@ class LocalReporter(ReporterBase):
         filename = name.replace(' ', '-').replace('/', '-')
         return "".join([c for c in filename
                         if c.isalpha() or c.isdigit() or
-                        c == '_' or c == '.']).rstrip()
+                        c == '_' or c == '.' or c == '-']).rstrip()

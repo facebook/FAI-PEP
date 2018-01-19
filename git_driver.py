@@ -16,6 +16,7 @@ import shutil
 import tempfile
 import threading
 import time
+from regression_detectors.regression_detectors import checkRegressions
 from utils.arg_parse import getParser, getArgs, getUnknowns, parseKnown
 from utils.git import Git
 from utils.custom_logger import getLogger
@@ -48,6 +49,8 @@ getParser().add_argument("--git_repository", default="origin",
     help="The remote git repository. Defaults to origin")
 getParser().add_argument("--interval", type=int,
     help="The minimum time interval in seconds between two benchmark runs.")
+getParser().add_argument("--local_reporter",
+    help="Save the result to a directory specified by this argument.")
 getParser().add_argument("--models_dir", required=True,
     help="Required. The root directory that all models resides.")
 getParser().add_argument("--status_file",
@@ -70,9 +73,9 @@ def stopRun():
 
 
 class ExecutablesBuilder (threading.Thread):
-    def __init__(self, work_queue, queue_lock):
+    def __init__(self, git, work_queue, queue_lock):
         threading.Thread.__init__(self)
-        self.git = Git(getArgs().git_dir)
+        self.git = git
         self.work_queue = work_queue
         self.queue_lock = queue_lock
         self.current_commit_hash = None
@@ -173,7 +176,7 @@ class ExecutablesBuilder (threading.Thread):
             build_dir = getArgs().git_dir + "/build_android"
             script = getArgs().git_dir + \
                 "/scripts/build_android.sh -DBUILD_BINARY=ON " + \
-                "-DBUILD_SHARE_DIR=ON -DUSE_ZSTD=ON"
+                "-DBUILD_SHARE_DIR=ON -DBUILD_OBSERVERS=ON -DUSE_ZSTD=ON"
         elif getArgs().host:
             src = getArgs().git_dir + \
                 '/build/bin/caffe2_benchmark'
@@ -181,7 +184,7 @@ class ExecutablesBuilder (threading.Thread):
             build_dir = getArgs().git_dir + "/build"
             script = getArgs().git_dir + \
                 "/scripts/build_local.sh -DBUILD_BINARY=ON " + \
-                "-DBUILD_SHARE_DIR=ON -DUSE_ZSTD=ON"
+                "-DBUILD_SHARE_DIR=ON -DBUILD_OBSERVERS=ON -DUSE_ZSTD=ON"
         else:
             getLogger().error("At least one platform needs to be specified.")
         git_info["program"] = dst
@@ -245,9 +248,11 @@ class ExecutablesBuilder (threading.Thread):
 class GitDriver(object):
     def __init__(self):
         parseKnown()
+        self.git = Git(getArgs().git_dir)
         self.queue_lock = threading.Lock()
         self.work_queue = deque()
-        self.executables_builder = ExecutablesBuilder(self.work_queue,
+        self.executables_builder = ExecutablesBuilder(self.git,
+                                                      self.work_queue,
                                                       self.queue_lock)
 
     def run(self):
@@ -294,6 +299,10 @@ class GitDriver(object):
             time.sleep(10)
             # cannot use subprocess because it conflicts with requests
             os.system(' '.join(cmd))
+        if getArgs().local_reporter:
+            checkRegressions(self.git,
+                             git_info,
+                             getArgs().local_reporter + "/")
         if getArgs().git_commit_file:
             with open(getArgs().git_commit_file, 'w') as file:
                 file.write(git_info['treatment']['commit'])
@@ -310,9 +319,15 @@ class GitDriver(object):
             configs = [dir_path +
                        "/harness.py " +
                        x["args"].strip().replace('<models_dir>', models_dir) +
+                       ((" --platforms \"" + x["platforms"] + "\"")
+                        if "platforms" in x and
+                        (len(x["platforms"]) > 0) else "") +
                        ((" --excluded_platforms \"" +
                         x["excluded_platforms"] + "\"")
-                        if x["excluded_platforms"] else "") +
+                        if "excluded_platforms" in x and
+                        (len(x["excluded_platforms"]) > 0) else "") +
+                       ((" --local_reporter " + getArgs().local_reporter)
+                        if getArgs().local_reporter else "") +
                        (" --android" if getArgs().android else "") +
                        (" --host" if getArgs().host else "") +
                        (" --info \'" + json.dumps(git_info) + "\'") + " " +
