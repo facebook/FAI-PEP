@@ -8,8 +8,9 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from utils.arg_parse import getParser, getArgs
 from reporters.reporter_base import ReporterBase
+from utils.arg_parse import getParser, getArgs
+from utils.custom_logger import getLogger
 from utils.utilities import getDirectory
 
 import json
@@ -51,6 +52,7 @@ class LocalReporter(ReporterBase):
         with open(filename, 'w') as file:
             content_meta = json.dumps(content[self.META])
             file.write(content_meta)
+        getLogger().info("Writing file: %s" % dirname)
 
     def _getFilename(self, name):
         filename = name.replace(' ', '-').replace('/', '-')
