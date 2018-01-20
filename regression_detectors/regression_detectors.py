@@ -200,22 +200,23 @@ def _getLatestBenchmarkRuns(commit, commit_time, outdir):
     date_directory = getDirectory(commit, commit_time)
     platforms = _listdirs(outdir)
     for platform in platforms:
-        subdir = outdir + platform + "/"
-        nets = _listdirs(subdir)
+        platform_subdir = outdir + platform + "/"
+        nets = _listdirs(platform_subdir)
         for net_name in nets:
-            subdir = subdir + net_name + "/"
-            metrics = _listdirs(subdir)
+            net_subdir = platform_subdir + net_name + "/"
+            metrics = _listdirs(net_subdir)
             for metric_name in metrics:
-                subdir = subdir + metric_name + "/"
-                ids = _listdirs(subdir)
+                metric_subdir = net_subdir + metric_name + "/"
+                ids = _listdirs(metric_subdir)
                 for identifier in ids:
-                    subdir = subdir + identifier + "/" + date_directory
-                    if not os.path.isdir(subdir):
+                    id_subdir = metric_subdir + identifier + "/" + \
+                        date_directory
+                    if not os.path.isdir(id_subdir):
                         getLogger().error("The benchmark run for %s does"
-                                          "not exist, skiping..." % subdir)
+                                          "not exist, skiping..." % id_subdir)
                         continue
                     # get the latest run
-                    last_run = _getLatestRun(subdir)
+                    last_run = _getLatestRun(id_subdir)
 
                     if last_run is None:
                         continue
