@@ -27,6 +27,8 @@ getParser().add_argument("--exec_dir", required=True,
     help="The executable is saved in the specified directory. " +
     "If an executable is found for a commit, no re-compilation is performed. " +
     "Instead, the previous compiled executable is reused.")
+getParser().add_argument("--extra_build_args",
+    help="Pass the extra build argument to the build script.")
 getParser().add_argument("--config", required=True,
     help="Required. The test config file containing all the tests to run")
 getParser().add_argument("--git_base_commit",
@@ -187,6 +189,8 @@ class ExecutablesBuilder (threading.Thread):
                 "-DBUILD_SHARE_DIR=ON -DBUILD_OBSERVERS=ON -DUSE_ZSTD=ON"
         else:
             getLogger().error("At least one platform needs to be specified.")
+        if getArgs().extra_build_args:
+            script = script + " " + getArgs().extra_build_args
         git_info["program"] = dst
         if os.path.isfile(dst):
             return True
