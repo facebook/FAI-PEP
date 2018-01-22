@@ -79,6 +79,9 @@ getParser().add_argument("--run_type", default="benchmark",
     help="The type of the current run. The allowed values are: benchmark, the "
     "normal benchmark run. verify, the benchmark is re-run to confirm a "
     "suspicious regression. regress, the regression is confirmed.")
+getParser().add_argument("--shared_libs",
+    help="Pass the shared libs that Caffe2 depends on, in a comma separated"
+    "list.")
 getParser().add_argument("--temp_dir",
     help="The temporary directory used by the script.")
 getParser().add_argument("--timeout", default=300, type=float,
