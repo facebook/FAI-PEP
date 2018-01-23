@@ -182,7 +182,8 @@ class PlatformBase(object):
             row = rows[i]
             start_idx = row.find(self.IDENTIFIER) + len(self.IDENTIFIER)
             pair = row[start_idx:].strip().split('-')
-            assert len(pair) == 2, "Operator delay doesn't have two items"
+            assert len(pair) == 2, \
+                "Operator delay doesn't have two items: %s" % row
             unit_idx = pair[1].find("(")
             assert unit_idx > 0, "Unit is not specified"
             result[pair[0].strip()] = float(pair[1][:unit_idx-1].strip())
@@ -257,13 +258,14 @@ class PlatformBase(object):
         data = {}
         for k in treatment_metric:
             treatment_value = treatment_metric[k]
+            data[k] = treatment_value
+            data[k]['type'] = k
             # Just skip this entry if the value doesn't exist in control
             if k not in control_metric:
                 getLogger().error(
                     "Value %s existed in treatment but not control" % k)
                 continue
             control_value = control_metric[k]
-            data[k] = treatment_value
             for control_key in control_value:
                 new_key = 'control_' + control_key
                 data[k][new_key] = control_value[control_key]
@@ -279,7 +281,6 @@ class PlatformBase(object):
                 "p10": tsummary['p10'] - csummary['p90'],
                 "p90": tsummary['p90'] - csummary['p10'],
             }
-            data[k]['type'] = k
         return data
 
     def _collectErrorData(self, output_filenames):
