@@ -60,6 +60,9 @@ class AndroidPlatform(PlatformBase):
         if getArgs().run_individual:
             cmd.extend(["--run_individual", "true"])
 
+        if getArgs().shared_libs:
+            cmd = ["export", "LD_LIBRARY_PATH=" + self.adb.dir, "&&"] + cmd
+
         self.adb.shell(cmd, timeout=getArgs().timeout)
         log = self.adb.logcat('-d')
         self._postRun()
@@ -82,10 +85,13 @@ class AndroidPlatform(PlatformBase):
         if getArgs().input_file:
             orig_input_files = self.getNameList(getArgs().input_file)
             self.input_file = [self.android_input_dir + path.basename(x)
-                for x in orig_input_files]
-            for src,tgt in zip(orig_input_files, self.input_file):
+                               for x in orig_input_files]
+            for src, tgt in zip(orig_input_files, self.input_file):
                 self.adb.push(src, tgt)
-
+        if getArgs().shared_libs:
+            libs = getArgs().shared_libs.split(",")
+            for lib in libs:
+                self.adb.push(lib)
         self.adb.push(info['program'])
 
     def _postRun(self):
