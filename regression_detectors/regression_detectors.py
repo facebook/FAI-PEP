@@ -152,8 +152,8 @@ def _detectRegression(git, git_info, outdir):
                              outdir)
     for metric, metric_dir in dirs.items():
         if metric not in detectors:
-            getLogger().info("Metric %s is not defined. Cannot detect " +
-                             "regression for it." % metric)
+            getLogger().info("Metric {0} is not defined. ".format(metric) +
+                             "Cannot detect regression for it.")
             continue
         for platform, platform_dir in metric_dir.items():
             for net, net_dir in platform_dir.items():
