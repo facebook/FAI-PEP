@@ -26,7 +26,8 @@ class DelayRegressionDetector(RegressionDetectorBase):
             return self.detectionOnDiff(latest_data, compare_data)
 
     def detectionOnDiff(self, latest_data, compare_data):
-        if not all("diff_summary" in x for x in compare_data):
+        if "diff_summary" not in latest_data or \
+            not all("diff_summary" in x for x in compare_data):
             getLogger().error("Diff summary does not exist in data")
             return self.detectionOnMeasurement(latest_data, compare_data)
         return self._detectionP50vsP90(latest_data, compare_data,
