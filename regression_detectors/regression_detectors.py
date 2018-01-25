@@ -76,7 +76,6 @@ class VerifyRegressions (threading.Thread):
         regressed, command = _detectOneBenchmarkRegression(data)
         if len(regressed) > 0:
             getLogger().info("Regression confirmed.")
-            import pdb; pdb.set_trace()
             # rerun the regressed point and send the final
             # confirmed regressed data
             regressed_types_string = json.dumps(regressed, sort_keys=True)
