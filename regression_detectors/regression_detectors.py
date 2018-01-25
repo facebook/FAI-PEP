@@ -73,13 +73,13 @@ class VerifyRegressions (threading.Thread):
                 continue
             runs.append(latest_run)
         data = _collectBenchmarkRunData(runs)
-        regressed = _detectOneBenchmarkRegression(data)
+        regressed, command = _detectOneBenchmarkRegression(data)
         if len(regressed) > 0:
             getLogger().info("Regression confirmed.")
+            import pdb; pdb.set_trace()
             # rerun the regressed point and send the final
             # confirmed regressed data
             regressed_types_string = json.dumps(regressed, sort_keys=True)
-            command = commands[-1]
             self._removeCommandArgs(command)
             command = getCommand(command)
             cmd = command + " --platform '" + meta[0]["platform"] + "\'" + \
@@ -123,25 +123,31 @@ def checkRegressions(git, git_info, outdir):
         getLogger().info("No Regression found")
 
 
+# Regress is identified if last two runs are both above threshhold.
 def _detectOneBenchmarkRegression(data):
     regressed = []
     if 'meta.txt' not in data:
         getLogger().error("Meta is not found")
-        return regressed
+        return regressed, None
     meta = data['meta.txt']
-    commits = [x['commit'] for x in meta]
-    latest_commit = commits.pop(0)
-    control_in_compare = latest_commit in commits
+    if len(meta) < 2:
+        return regressed, None
+    control_change = len(set([x['control_commit'] for x in meta])) > 1
     metric = meta[0]["metric"]
     detector = detectors[metric]()
     for filename, one_data in data.items():
         if filename == 'meta.txt':
             continue
-        latest_data = one_data.pop(0)
-        if detector.isRegressed(filename, latest_data, one_data,
-                                control_in_compare):
-            regressed.append(latest_data["type"])
-    return regressed
+        if len(one_data) < 2:
+            continue
+        if (detector.isRegressed(filename, one_data[0], one_data[2:],
+                                 control_change)) and \
+            detector.isRegressed(filename, one_data[1], one_data[2:],
+                                 control_change):
+            regressed.append(one_data[0]["type"])
+
+    command = meta[1]["command"]
+    return regressed, command
 
 
 def _detectRegression(git, git_info, outdir):
@@ -160,7 +166,7 @@ def _detectRegression(git, git_info, outdir):
                 for metric2, metric_dir2 in net_dir.items():
                     for identifier, identifier_dir in metric_dir2.items():
                         data = _collectBenchmarkRunData(identifier_dir)
-                        regressed = _detectOneBenchmarkRegression(data)
+                        regressed, _ = _detectOneBenchmarkRegression(data)
                         if len(regressed) > 0:
                             prefix = outdir + "/" + platform + "/" + net + \
                                 "/" + metric2 + "/" + identifier + "/"
@@ -248,7 +254,7 @@ def _getLatestBenchmarkRuns(commit, commit_time, outdir):
 def _getBenchmarkRuns(git, latest_commit, latest_commit_time, outdir):
     # compose previous 30 commits. If there is no data in the previous
     # 30 commits, the earlier commits may not be meaningful.
-    commits = git.run('rev-list', "--max-count=11", latest_commit)
+    commits = git.run('rev-list', "--max-count=12", latest_commit)
     if not commits:
         return {}
     commits = commits.split('\n')
