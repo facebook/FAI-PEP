@@ -23,7 +23,10 @@ def getPlatforms():
     if getArgs().excluded_platforms:
         excluded_platforms = getArgs().excluded_platforms.strip().split(',')
         platforms = \
-            [p for p in platforms if not p.platform in excluded_platforms]
+            [p for p in platforms if p.platform not in excluded_platforms]
+    if getArgs().platforms:
+        plts = getArgs().platforms.strip().split(',')
+        platforms = [p for p in platforms if p.platform in plts]
     if not platforms:
         getLogger().error("No platform is specified.")
     return platforms
