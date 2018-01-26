@@ -175,6 +175,9 @@ def _detectRegression(git, git_info, outdir):
                                 "prefix": prefix,
                                 "meta": data['meta.txt']
                             })
+                            getLogger().info("Regression detected for [" +
+                                             ','.join(regressed) +
+                                             "] in " + identifier_dir[0])
     return regressions
 
 
