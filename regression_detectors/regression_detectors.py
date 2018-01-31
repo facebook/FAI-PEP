@@ -53,7 +53,7 @@ class VerifyRegressions (threading.Thread):
         for command in commands:
             self._removeCommandArgs(command)
             command = getCommand(command)
-            cmd = command + " --platform \"" + meta[0]["platform"] + "\"" + \
+            cmd = command + " --platform '" + meta[0]["platform"] + "'" + \
                 " --run_type verify"
             time.sleep(10)
             getLogger().info("Running: %s", cmd)
