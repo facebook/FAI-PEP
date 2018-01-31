@@ -25,6 +25,10 @@ class LocalReporter(ReporterBase):
         super(LocalReporter, self).__init__()
 
     def report(self, content):
+        data = content[self.DATA]
+        if data is None or len(data) == 0:
+            getLogger().info("No data to write")
+            return  
         net_name = content[self.META]['net_name']
         netdir = self._getFilename(net_name) + "/"
         platform_name = content[self.META][self.PLATFORM]
@@ -42,7 +46,6 @@ class LocalReporter(ReporterBase):
             i = i+1
         dirname = dirname + str(i) + "/"
         os.makedirs(dirname)
-        data = content[self.DATA]
         for d in data:
             filename = dirname + self._getFilename(d) + ".txt"
             content_d = json.dumps(data[d])
