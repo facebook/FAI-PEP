@@ -70,7 +70,7 @@ class PlatformBase(object):
         treatment_meta = self.collectMetaData(treatment_info)
 
         # Run on the control
-        if self.info['control']:
+        if 'control' in self.info:
             # wait till the device is cooler
             # time.sleep(60)
             control_info = self.info['control']
