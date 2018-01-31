@@ -12,6 +12,7 @@ from collections import deque
 import datetime
 import json
 import os
+import shlex
 import shutil
 import tempfile
 import threading
@@ -293,16 +294,13 @@ class GitDriver(object):
     def _runOneBenchmarkSuite(self, git_info, tempdir):
         configs = self._processConfig(git_info)
         for config in configs:
-            cmds = config.split(' ')
-            cmd = [x.strip() for x in cmds]
-            cmd.append("--temp_dir")
-            cmd.append(tempdir)
-            getLogger().info("Running: %s", ' '.join(cmd))
+            cmd = config + " --temp_dir " + tempdir
+            getLogger().info("Running: %s", cmd)
             # always sleep 10 seconds to make the phone in a more
             # consistent state
             time.sleep(10)
             # cannot use subprocess because it conflicts with requests
-            os.system(' '.join(cmd))
+            os.system(cmd)
         if getArgs().local_reporter:
             checkRegressions(self.git,
                              git_info,
@@ -323,7 +321,7 @@ class GitDriver(object):
             configs = [dir_path +
                        "/harness.py " +
                        x["args"].strip().replace('<models_dir>', models_dir) +
-                       ((" --platforms \"" + x["platforms"] + "\"")
+                       ((" --platforms '" + x["platforms"] + "'")
                         if "platforms" in x and
                         (len(x["platforms"]) > 0) else "") +
                        ((" --excluded_platforms \"" +
