@@ -29,7 +29,7 @@ class Git(object):
 
     def checkout(self, *args):
         self.run('checkout', *args)
-        self.run('submodule', 'update', '--init')
+        self.run('submodule', 'update', '--init', '--recursive')
 
     def getCommitHash(self, commit):
         return self.run('rev-parse', commit).rstrip()
