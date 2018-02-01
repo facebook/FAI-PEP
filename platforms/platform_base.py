@@ -47,6 +47,9 @@ class PlatformBase(object):
                 self.output_dir = tempfile.mkdtemp(
                     prefix=getArgs().temp_dir)
 
+    def setPlatform(self, platform):
+        self.platform = platform.replace(' ', '-')
+
     def getPlatform(self):
         return self.platform
 
@@ -76,6 +79,9 @@ class PlatformBase(object):
             control_info = self.info['control']
             control_metric = self.runOnPlatformDelayOnePass(control_info)
             control_meta = self.collectMetaData(control_info)
+        else:
+            control_meta = None
+            control_metric = None
 
         meta = self._mergeMetaData(treatment_meta, control_meta)
         data = self._processDelayData(treatment_metric, control_metric)
@@ -252,14 +258,16 @@ class PlatformBase(object):
         return meta
 
     def _processDelayData(self, treatment_metric, control_metric):
-        if not control_metric:
-            return treatment_metric
-
         data = {}
         for k in treatment_metric:
             treatment_value = treatment_metric[k]
             data[k] = treatment_value
             data[k]['type'] = k
+
+        if not control_metric:
+            return data
+            
+        for k in treatment_metric:
             # Just skip this entry if the value doesn't exist in control
             if k not in control_metric:
                 getLogger().error(

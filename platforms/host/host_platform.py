@@ -25,8 +25,7 @@ getParser().add_argument("--host", action="store_true",
 class HostPlatform(PlatformBase):
     def __init__(self):
         super(HostPlatform, self).__init__()
-        self.platform = platform.platform() + " - " + \
-            self._getProcessorName()
+        self.setPlatform(platform.platform() + "-" + self._getProcessorName())
 
     def runBenchmark(self, info):
         cmd = [
