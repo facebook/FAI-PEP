@@ -14,6 +14,7 @@ import time
 from platforms.platform_base import PlatformBase
 from utils.arg_parse import getArgs
 
+
 class AndroidPlatform(PlatformBase):
     def __init__(self, adb):
         super(AndroidPlatform, self).__init__()
@@ -26,6 +27,7 @@ class AndroidPlatform(PlatformBase):
             '-' + \
             adb.shell(['getprop', 'ro.build.version.sdk'], default="").strip()
         self.setPlatform(platform)
+        self.platform_hash = adb.device
         self.input_file = None
         self.android_input_dir = self.adb.dir + "/input/"
         self.android_output_dir = self.adb.dir + "/output/"
@@ -71,7 +73,7 @@ class AndroidPlatform(PlatformBase):
 
     def collectMetaData(self, info):
         meta = super(AndroidPlatform, self).collectMetaData(info)
-        meta[self.PLATFORM] = self.platform
+        meta['platform_hash'] = self.platform_hash
         return meta
 
     def _setupPlatform(self, info):

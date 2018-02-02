@@ -12,7 +12,6 @@ from collections import deque
 import datetime
 import json
 import os
-import shlex
 import shutil
 import tempfile
 import threading

@@ -22,6 +22,7 @@ from utils.subprocess_with_logger import processRun
 getParser().add_argument("--host", action="store_true",
     help="Run the benchmark on the host.")
 
+
 class HostPlatform(PlatformBase):
     def __init__(self):
         super(HostPlatform, self).__init__()
@@ -59,11 +60,6 @@ class HostPlatform(PlatformBase):
             return std_err.decode("utf-8")
         else:
             return ""
-
-    def collectMetaData(self, info):
-        meta = super(HostPlatform, self).collectMetaData(info)
-        meta[self.PLATFORM] = self.platform
-        return meta
 
     def _getProcessorName(self):
         if platform.system() == "Windows":

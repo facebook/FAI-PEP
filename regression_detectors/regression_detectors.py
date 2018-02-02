@@ -50,10 +50,12 @@ class VerifyRegressions (threading.Thread):
         meta = one_regression["meta"]
         commands = [x["command"] for x in meta]
         commands.reverse()
+        platform = self._getPlatform(meta[0])
+
         for command in commands:
             self._removeCommandArgs(command)
             command = getCommand(command)
-            cmd = command + " --platform '" + meta[0]["platform"] + "'" + \
+            cmd = command + " --platform '" + platform + "'" + \
                 " --run_type verify"
             time.sleep(10)
             getLogger().info("Running: %s", cmd)
@@ -81,7 +83,8 @@ class VerifyRegressions (threading.Thread):
             regressed_types_string = json.dumps(regressed, sort_keys=True)
             self._removeCommandArgs(command)
             command = getCommand(command)
-            cmd = command + " --platform '" + meta[0]["platform"] + "\'" + \
+            platform = self._getPlatform(meta[0])
+            cmd = command + " --platform '" + platform + "\'" + \
                 " --run_type regress --regressed_types '" + \
                 regressed_types_string + "'"
             time.sleep(10)
@@ -101,6 +104,10 @@ class VerifyRegressions (threading.Thread):
             del command[idx]
         except ValueError:
             pass
+
+    def _getPlatform(self, meta):
+        return meta["platform_hash"] if "platform_hash" in meta \
+            else meta["platform"]
 
 
 def checkRegressions(git, git_info, outdir):

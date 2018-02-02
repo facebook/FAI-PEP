@@ -16,6 +16,7 @@ import tempfile
 import time
 from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
+from utils.utilities import getCommand
 
 
 class PlatformBase(object):
@@ -34,6 +35,7 @@ class PlatformBase(object):
     def __init__(self):
         self.info = self._processInfo()
         self.platform = None
+        self.platform_hash = None
         self.net_name = ""
         if getArgs().output:
             if getArgs().output_folder:
@@ -124,6 +126,8 @@ class PlatformBase(object):
             os.path.basename(getArgs().net)
         meta['metric'] = getArgs().metric
         meta['command'] = sys.argv
+        meta['command_str'] = getCommand(meta['command'])
+        meta[self.PLATFORM] = self.platform
         if info['commit']:
             meta[self.COMMIT] = info['commit']
         if info['commit_time']:
@@ -266,7 +270,7 @@ class PlatformBase(object):
 
         if not control_metric:
             return data
-            
+
         for k in treatment_metric:
             # Just skip this entry if the value doesn't exist in control
             if k not in control_metric:
