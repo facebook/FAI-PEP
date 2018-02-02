@@ -16,7 +16,7 @@ from utils.arg_parse import getParser, parse
 
 getParser().add_argument("--excluded_platforms",
     help="Specify the platforms that skip the benchmark, in a comma separated "
-    "list. The value is the platform field of the meta info.")
+    "list. The value is the platform or platform_hash field of the meta info.")
 getParser().add_argument("--golden_output_file",
     help="The reference output file that contains the serialized protobuf for "
     "the output blobs. If multiple output needed, use comma "
@@ -64,7 +64,7 @@ getParser().add_argument("--output_folder",
     "folder must already exist in the file system.")
 getParser().add_argument("--platforms",
     help="Specify the platforms to run the benchmark, in a comma separated "
-    "list. The value is the platform field of the meta info.")
+    "list. The value is the platform or platform_hash field of the meta info.")
 getParser().add_argument("--program",
     help="The program to run on the platform.")
 getParser().add_argument("--regressed_types",
