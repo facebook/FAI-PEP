@@ -131,7 +131,8 @@ def _detectOneBenchmarkRegression(data):
     meta = data['meta.txt']
     if len(meta) < 2:
         return regressed, None
-    control_change = len(set([x['control_commit'] for x in meta])) > 1
+    control_change = len(set([x['control_commit']
+        if 'control_commit' in x else x['commit'] for x in meta])) > 1
     metric = meta[0]["metric"]
     detector = detectors[metric]()
     for filename, one_data in data.items():
