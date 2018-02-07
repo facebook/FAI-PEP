@@ -278,6 +278,7 @@ class PlatformBase(object):
                     "Value %s existed in treatment but not control" % k)
                 continue
             control_value = control_metric[k]
+            treatment_value = treatment_metric[k]
             for control_key in control_value:
                 new_key = 'control_' + control_key
                 data[k][new_key] = control_value[control_key]
