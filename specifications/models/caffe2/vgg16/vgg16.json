@@ -1,0 +1,47 @@
+{
+  "model": {
+    "category": "CNN", 
+    "description": "Trained 16 layer VGG on Caffe2", 
+    "files": {
+      "init": {
+        "filename": "init_net.pb", 
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/vgg16/init_net.pb", 
+        "md5": "22b9f99a54f832a8d1b7b83214a31716"
+      }, 
+      "predict": {
+        "filename": "predict_net.pb", 
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/vgg16/predict_net.pb", 
+        "md5": "e556e4623a61b1ce05c13ffa0520ee2e"
+      }
+    }, 
+    "format": "caffe2", 
+    "kind": "deployment", 
+    "name": "vgg16"
+  }, 
+  "tests": [
+    {
+      "commands": {
+        "caffe2": {
+          "run_individual": "true"
+        }
+      }, 
+      "identifier": "{ID}", 
+      "inputs": {
+        "gpu_0/data": {
+          "shapes": [
+            [
+              1, 
+              3, 
+              224, 
+              224
+            ]
+          ], 
+          "type": "float"
+        }
+      }, 
+      "iter": 50, 
+      "metric": "delay", 
+      "warmup": 1
+    }
+  ]
+}
