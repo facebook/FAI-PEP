@@ -9,7 +9,7 @@ Currently two performance metrics are collected:
 
 ## Framework and backend agnostic benchmarking platforms
 
-Machine learning is a rapidly evolving area with many moving parts: new and existing framework enhancement, new hardware solutions, new software backends, and new models. With so many moving parts, it is very difficult to quickly evaluating the performance of a machine learning model. However, such evaluation is vastly important in guiding resource allocation in:
+Machine learning is a rapidly evolving area with many moving parts: new and existing framework enhancement, new hardware solutions, new software backends, and new models. With so many moving parts, it is very difficult to quickly evaluate the performance of a machine learning model. However, such evaluation is vastly important in guiding resource allocation in:
 
 * the development of the frameworks
 * the optimization of the software backends
@@ -18,8 +18,8 @@ Machine learning is a rapidly evolving area with many moving parts: new and exis
 
 This project tries to achieve the following two goals:
 
-* When a new model is added, get the runtime performance of this model on all existing backends easily.
-* When a new backend is added, get the runtime performance of all existing models on this backend easily.
+* When a new model is added to be benchmarked, get the runtime performance of this model on all existing backends easily.
+* When a new backend is added to be benchmarked, get the runtime performance of all existing models on this backend easily.
 
 The flow of benchmarking is illustrated in the following figure:
 
@@ -28,16 +28,19 @@ The flow of benchmarking is illustrated in the following figure:
 The flow is composed of three parts:
 
 * A centralized model/benchmark specification
- * A fair input to the comparison
-* A centralized benchmark driver with distributed benchmarking execution
- * The same code base for all backends to reduce variation
- * Distributed execution due to the unique build/run environment for each backend
+  * A fair input to the comparison
+* A centralized benchmark driver with distributed benchmark execution
+  * The same code base for all backends to reduce variation
+  * Distributed execution due to the unique build/run environment for each backend
 * A centralized data consumption
- * One stop to compare the performance
+  * One stop to compare the performance
 
 The currently supported frameworks are: Caffe2
+
 The currently supported model formats are: Caffe2
+
 The currently supported hardware backends: CPU, GPU, Android, linux based systems
+
 The currently supported software backends: Eigen, MKL, NNPACK, OpenGL, CUDA
 
 ## Performance regression detection
@@ -46,7 +49,7 @@ The benchmark platform also provides a means to compare performance between comm
 
 ## Directory structure
 
-The benchmarking codebase resides in `benchmarking` directory. Inside, the `frameworks` directory contains all supported ML frameworks. Add a new framework by creating a new directory, derive from `framework_base.py` and implement all its methods. The `platforms` directory contains all supported ML backend platforms. Add a new backend by creating a new directory, derive from `platform_base.py` and implement all its methods.
+The benchmarking codebase resides in `benchmarking` directory. Inside, the `frameworks` directory contains all supported ML frameworks. Add a new framework by creating a new directory, deriving from `framework_base.py` and implementing all its methods. The `platforms` directory contains all supported ML backend platforms. Add a new backend by creating a new directory, deriving from `platform_base.py` and implementing all its methods.
 
 The model specifications resides in `specifications` directory. Inside, the `models` directory contains all model and benchmarking specifications organized in model format. The `benchmarks` directory contains a sequence of benchmarks organized in model format. The `frameworks` directory contains custom build scripts for each framework.
 
