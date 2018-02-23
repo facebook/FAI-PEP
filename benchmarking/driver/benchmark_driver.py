@@ -25,21 +25,26 @@ def runOneBenchmark(info, benchmark, framework, platform, backend, reporters):
     minfo = copy.deepcopy(info["treatment"])
     if "shared_libs" in info:
         minfo["shared_libs"] = info["shared_libs"]
-    data = _runOnePass(minfo, benchmark, framework, platform)
+    try:
+        data = _runOnePass(minfo, benchmark, framework, platform)
 
-    if "control" in info and benchmark["tests"][0]["metric"] == "delay":
-        cinfo = copy.deepcopy(info["control"])
-        if "shared_libs" in info:
-            cinfo["shared_libs"] = info["shared_libs"]
-        control = _runOnePass(cinfo, benchmark, framework, platform)
-        bname = benchmark["model"]["name"]
-        data = _mergeDelayData(data, control, bname)
-    data = _adjustData(info, data)
-    meta = _retrieveMeta(info, benchmark, platform, framework, backend)
-    result = {
-        "meta": meta,
-        "data": data
-    }
+        if "control" in info and benchmark["tests"][0]["metric"] == "delay":
+            cinfo = copy.deepcopy(info["control"])
+            if "shared_libs" in info:
+                cinfo["shared_libs"] = info["shared_libs"]
+            control = _runOnePass(cinfo, benchmark, framework, platform)
+            bname = benchmark["model"]["name"]
+            data = _mergeDelayData(data, control, bname)
+        data = _adjustData(info, data)
+        meta = _retrieveMeta(info, benchmark, platform, framework, backend)
+        result = {
+            "meta": meta,
+            "data": data
+        }
+    except Exception:
+        # Catch all exceptions so that failure in one test does not
+        # affect other tests
+        data = None
     if data is None or len(data) == 0:
         getLogger().info("No data collected. The run may be failed for "
                          "{}".format(info["treatment"]["commit"]))
