@@ -8,10 +8,10 @@
     }
   },
   "benchmarks": [
-    "models/caffe2/vgg16/vgg16.json",
-    "models/caffe2/vgg19/vgg19.json",
-    "models/caffe2/bvlc_googlenet/bvlc_googlenet.json",
-    "models/caffe2/inception_v1/inception_v1.json",
-    "models/caffe2/squeezenet/squeezenet.json"
+    "../../models/caffe2/vgg16/vgg16.json",
+    "../../models/caffe2/vgg19/vgg19.json",
+    "../../models/caffe2/bvlc_googlenet/bvlc_googlenet.json",
+    "../../models/caffe2/inception_v1/inception_v1.json",
+    "../../models/caffe2/squeezenet/squeezenet.json"
   ]
 }

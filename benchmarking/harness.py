@@ -89,8 +89,7 @@ class BenchmarkDriver(object):
         tempdir = tempfile.mkdtemp()
         getLogger().info("Temp directory: {}".format(tempdir))
         info = self._getInfo()
-        bcollector = BenchmarkCollector(getArgs().model_cache,
-                                        getArgs().specifications_dir)
+        bcollector = BenchmarkCollector(getArgs().model_cache)
         benchmarks = bcollector.collectBenchmarks(info,
                                                   getArgs().benchmark_file)
         frameworks = getFrameworks()

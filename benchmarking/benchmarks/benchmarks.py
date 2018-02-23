@@ -19,11 +19,10 @@ from utils.custom_logger import getLogger
 
 
 class BenchmarkCollector(object):
-    def __init__(self, model_cache, models_dir):
+    def __init__(self, model_cache):
         assert os.path.isdir(model_cache), \
             "Specified cached model {} is not a directory".format(model_cache)
         self.model_cache = model_cache
-        self.models_dir = models_dir
 
     def collectBenchmarks(self, info, source):
         assert os.path.isfile(source), "Source {} is not a file".format(source)
@@ -34,9 +33,10 @@ class BenchmarkCollector(object):
             self._deepMerge(meta, info["meta"])
         benchmarks = []
         if "benchmarks" in content:
+            path = os.path.abspath(os.path.dirname(source))
             assert "meta" in content, "Meta field is missing in benchmarks"
             for benchmark_file in content["benchmarks"]:
-                benchmark_file = self.models_dir + "/" + benchmark_file
+                benchmark_file = path + "/" + benchmark_file
                 self._collectOneBenchmark(benchmark_file,
                                           meta, benchmarks)
         else:
