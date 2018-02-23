@@ -219,9 +219,9 @@ class ExecutablesBuilder (threading.Thread):
         return True
 
     def _getBuildScript(self):
-        assert os.path.isdir(getArgs().models_dir), \
+        assert os.path.isdir(getArgs().specifications_dir), \
             "Models dir is not specified."
-        frameworks_dir = getArgs().models_dir + "/frameworks"
+        frameworks_dir = getArgs().specifications_dir + "/frameworks"
         assert os.path.isdir(frameworks_dir), \
             "{} must be specified.".format(frameworks_dir)
         framework_dir = frameworks_dir + "/" + getArgs().framework
@@ -341,7 +341,7 @@ class GitDriver(object):
         command = dir_path + "/harness.py " + \
             " --platform \'" + getArgs().platform + "\'" + \
             " --framework \'" + getArgs().framework + "\'" + \
-            " --models_dir \'" + getArgs().models_dir + "\'" + \
+            " --specifications_dir \'" + getArgs().specifications_dir + "\'" +\
             (" --info \'" + json.dumps(git_info) + "\'") + " " + \
             ' '.join(['"' + u + '"' for u in unknowns])
         return command
