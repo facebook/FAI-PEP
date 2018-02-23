@@ -4,6 +4,7 @@
   },
   "benchmarks": [
     "models/caffe2/squeezenet/squeezenet.json",
+    "models/caffe2/style_transfer/style_transfer.json",
     "models/caffe2/bvlc_alexnet/bvlc_alexnet.json",
     "models/caffe2/bvlc_googlenet/bvlc_googlenet.json",
     "models/caffe2/bvlc_reference_caffenet/bvlc_reference_caffenet.json",

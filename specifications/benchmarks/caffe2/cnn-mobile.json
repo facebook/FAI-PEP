@@ -4,11 +4,12 @@
   },
   "benchmarks": [
     "models/caffe2/squeezenet/squeezenet.json",
+    "models/caffe2/style_transfer/style_transfer.json",
     "models/caffe2/bvlc_googlenet/bvlc_googlenet.json",
     "models/caffe2/densenet121/densenet121.json",
     "models/caffe2/inception_v1/inception_v1.json",
     "models/caffe2/inception_v2/inception_v2.json",
     "models/caffe2/resnet50/resnet50.json",
-    "models/caffe2/shufflenet/shufflenet.json",
+    "models/caffe2/shufflenet/shufflenet.json"
   ]
 }
