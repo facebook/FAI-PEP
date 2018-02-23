@@ -1,0 +1,47 @@
+{
+  "model": {
+    "category": "CNN",
+    "description": "Trained style transfer on Caffe2",
+    "files": {
+      "init": {
+        "filename": "init_net.pb",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/style_transfer/animals/init_net.pb",
+        "md5": "eb2fd0b370d1840b79af5b185ea10df7"
+      },
+      "predict": {
+        "filename": "predict_net.pb",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/style_transfer/animals/predict_net.pb",
+        "md5": "63d3ed009753843ff45cbb6eee1152ae"
+      }
+    },
+    "format": "caffe2",
+    "kind": "deployment",
+    "name": "style_transfer"
+  },
+  "tests": [
+    {
+      "commands": {
+        "caffe2": {
+          "run_individual": "true"
+        }
+      },
+      "identifier": "{ID}",
+      "inputs": {
+        "data_int8_bgra": {
+          "shapes": [
+            [
+              1,
+              640,
+              360,
+              4
+            ]
+          ],
+          "type": "uint8_t"
+        }
+      },
+      "iter": 50,
+      "metric": "delay",
+      "warmup": 1
+    }
+  ]
+}

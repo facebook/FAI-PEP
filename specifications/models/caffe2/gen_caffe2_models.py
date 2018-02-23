@@ -23,8 +23,9 @@ parser.add_argument("--model",
 parser.add_argument("--model_cache", required=True,
     help="The local directory containing the cached models. It should not "
     "be part of a git directory.")
-parser.add_argument("--models_dir", required=True,
-    help="Required. The root directory that all models resides.")
+parser.add_argument("--specifications_dir", required=True,
+    help="Required. The root directory that all specifications resides. "
+    "Usually it is the specifications directory.")
 parser.add_argument("--overwrite_meta", action="store_true",
     help="Overwrite the meta data.")
 
@@ -126,6 +127,18 @@ models = {
             }
         },
     },
+    "style_transfer": {
+        "desc": "style transfer",
+        "model_dir": "style_transfer/animals",
+        "inputs": {
+            "data_int8_bgra": {
+                "shapes": [
+                    [1, 640, 360, 4]
+                ],
+                "type": "uint8_t"
+            }
+        },
+    },
     "vgg16": {
         "desc": "16 layer VGG",
         "inputs": {
@@ -217,7 +230,7 @@ def genOneModelMeta(args, model_name, model):
             return
         f["md5"] = md5
 
-    path = args.models_dir + "/caffe2/" + model_name + "/"
+    path = args.specifications_dir + "/models/caffe2/" + model_name + "/"
     filename = path + model_name + ".json"
 
     if not os.path.isfile(filename) or args.overwrite_meta:
@@ -253,8 +266,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.model:
         if args.model in models:
-            m = models["model"]
-            genOneModelMeta(args.model, m)
+            m = models[args.model]
+            genOneModelMeta(args, args.model, m)
         else:
             logger.error("Model {} is not specified".format(args.model))
     else:
