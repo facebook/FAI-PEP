@@ -34,18 +34,18 @@ def checkRegressions(info, platform, framework, benchmark,
     getLogger().info("Checking regression for " + commit)
     regressions, infos = _detectRegression(info, meta, outdir)
     if len(regressions):
-        from driver.benchmark_driver import runBenchmark
+        from driver.benchmark_driver import runOneBenchmark
         getLogger().info(
             "Regression detected, verifying: {}".format(",".join(regressions)))
         for i in infos:
             i["run_type"] = "verify"
-            runBenchmark(i, benchmark, framework, platform, reporters)
+            runOneBenchmark(i, benchmark, framework, platform, reporters)
         verify_regressions, _ = _detectRegression(info, meta, outdir)
         if len(verify_regressions) > 0:
             # regression verified
             info["run_type"] = "regress"
             info["regressed_types"] = verify_regressions
-            runBenchmark(info, benchmark, framework, platform, reporters)
+            runOneBenchmark(info, benchmark, framework, platform, reporters)
             getLogger().info("Regression confirmed: {}".
                              format(",".join(verify_regressions)))
         getLogger().info("Regression verifying completed for " + commit)
