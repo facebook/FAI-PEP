@@ -36,21 +36,26 @@ def checkRegressions(info, platform, framework, benchmark,
     if len(regressions):
         from driver.benchmark_driver import runOneBenchmark
         getLogger().info(
-            "Regression detected, verifying: {}".format(",".join(regressions)))
+            "Regression detected on {}, ".format(platform.getMangledName()) +
+            "verifying: {}".format(",".join(regressions)))
         for i in infos:
             i["run_type"] = "verify"
-            runOneBenchmark(i, benchmark, framework, platform, reporters)
+            runOneBenchmark(i, benchmark, framework, platform,
+                            meta["backend"], reporters)
         verify_regressions, _ = _detectRegression(info, meta, outdir)
         if len(verify_regressions) > 0:
             # regression verified
             info["run_type"] = "regress"
             info["regressed_types"] = verify_regressions
-            runOneBenchmark(info, benchmark, framework, platform, reporters)
+            runOneBenchmark(info, benchmark, framework, platform,
+                            meta["backend"], reporters)
             getLogger().info("Regression confirmed: {}".
                              format(",".join(verify_regressions)))
-        getLogger().info("Regression verifying completed for " + commit)
+        getLogger().info("Regression verifying completed for " +
+                         "{} on {}".format(platform.getMangledName(), commit))
     else:
-        getLogger().info("No Regression found for " + commit)
+        getLogger().info("No Regression found for " +
+                         "{} on {}".format(platform.getMangledName(), commit))
 
 
 # Regress is identified if last two runs are both above threshhold.

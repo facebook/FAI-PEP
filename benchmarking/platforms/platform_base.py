@@ -36,6 +36,12 @@ class PlatformBase(object):
     def getName(self):
         return self.platform
 
+    def getMangledName(self):
+        name = self.platform
+        if self.platform_hash:
+            name = name + " ({})".format(self.platform_hash)
+        return name
+
     @abc.abstractmethod
     def runBenchmark(self, info):
         return None

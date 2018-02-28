@@ -46,8 +46,12 @@ def runOneBenchmark(info, benchmark, framework, platform, backend, reporters):
         # affect other tests
         data = None
     if data is None or len(data) == 0:
-        getLogger().info("No data collected. The run may be failed for "
-                         "{}".format(info["treatment"]["commit"]))
+        name = platform.getMangledName()
+        getLogger().info(
+            "No data collected for {} ".format(benchmark["model"]["name"]) +
+            "on {}. ".format(name) +
+            "The run may be failed for " +
+            "{}".format(info["treatment"]["commit"]))
         return
     for reporter in reporters:
         reporter.report(result)
