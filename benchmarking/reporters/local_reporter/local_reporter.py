@@ -56,4 +56,7 @@ class LocalReporter(ReporterBase):
             content_meta = json.dumps(meta,
                                       indent=2, sort_keys=True)
             file.write(content_meta)
-        getLogger().info("Writing file: %s" % dirname)
+        pname = platform_name
+        if meta["platform_hash"]:
+            pname = pname + " ({})".format(meta["platform_hash"])
+        getLogger().info("Writing file for {}: {}".format(pname, dirname))
