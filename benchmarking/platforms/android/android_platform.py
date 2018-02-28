@@ -32,10 +32,18 @@ class AndroidPlatform(PlatformBase):
         self.tempdir = tempdir + "/" + self.platform
         os.makedirs(self.tempdir, 0o777, True)
         self.platform_hash = adb.device
-        try:
-            self.adb.logcat("-G", "1M")
-        except Exception:
-            self.adb.logcat("-G", "256K")
+        self.setLogCatSize()
+
+    def setLogCatSize(self):
+        repeat = True
+        size = 131072
+        while (repeat and size > 256):
+            try:
+                repeat = False
+                self.adb.logcat("-G", str(size) + "K")
+            except Exception:
+                repeat = True
+                size = size / 2
 
     def runBenchmark(self, cmd):
         self.adb.logcat('-b', 'all', '-c')
