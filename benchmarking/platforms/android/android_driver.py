@@ -43,7 +43,7 @@ class AndroidDriver:
             self.devices = self.devices.difference(excluded_devices)
 
         if getArgs().devices:
-            supported_devices = set(getArgs().platforms.strip().split(','))
+            supported_devices = set(getArgs().devices.strip().split(','))
             if supported_devices.issubset(self.devices):
                 self.devices = supported_devices
 
