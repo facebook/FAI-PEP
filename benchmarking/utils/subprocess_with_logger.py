@@ -9,15 +9,20 @@
 ##############################################################################
 
 import subprocess
+import sys
 from .custom_logger import getLogger
 
 
 def processRun(*args, **kwargs):
     getLogger().info("Running: %s", ' '.join(*args))
     try:
-        return subprocess.check_output(*args, **kwargs).decode("utf-8")
+        return subprocess.check_output(*args, **kwargs).\
+            decode("utf-8", "ignore")
     except subprocess.CalledProcessError:
         getLogger().error("Command failed: %s", ' '.join(*args))
     except subprocess.TimeoutExpired:
         getLogger().error("Command timeout: %s", ' '.join(*args))
+    except:
+        getLogger().error("Unknown failure {}: {}".format(sys.exc_info()[0],
+                                                          ' '.join(*args)))
     return None

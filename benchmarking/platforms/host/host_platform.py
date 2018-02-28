@@ -33,7 +33,7 @@ class HostPlatform(PlatformBase):
         std_out, std_err = pipes.communicate()
         assert pipes.returncode == 0, "Benchmark run failed"
         if len(std_err):
-            return std_err.decode("utf-8")
+            return std_err.decode("utf-8", "ignore")
         else:
             return ""
 
