@@ -165,7 +165,8 @@ class BenchmarkCollector(object):
             cached_model_name = \
                 self._getModelFilename(field, model_dir, None)
             cached_models[f] = cached_model_name
-            if not os.path.isfile(cached_model_name):
+            if not os.path.isfile(cached_model_name) or \
+                    self._calculateMD5(cached_model_name) != field["md5"]:
                 update_json |= self._copyFile(field, model_dir,
                                               cached_model_name)
 
@@ -176,6 +177,12 @@ class BenchmarkCollector(object):
             getLogger().info("Model {} is changed. ".format(model["name"]) +
                              "Please update the meta json file.")
         one_benchmark["model"]["cached_models"] = cached_models
+
+    def _calculateMD5(self, model_name):
+        m = hashlib.md5()
+        m.update(open(model_name, 'rb').read())
+        md5 = m.hexdigest()
+        return md5
 
     def _copyFile(self, field, model_dir, cached_model_name):
         location = field["location"]
@@ -190,9 +197,7 @@ class BenchmarkCollector(object):
         assert os.path.isfile(cached_model_name), \
             "File {} cannot be retrieved".format(cached_model_name)
         # verify the md5 matches the file downloaded
-        m = hashlib.md5()
-        m.update(open(cached_model_name, 'rb').read())
-        md5 = m.hexdigest()
+        md5 = self._calculateMD5(cached_model_name)
         if md5 != field["md5"]:
             getLogger().info("Source file {} is changed, ".format(location) +
                              " updating MD5. " +
