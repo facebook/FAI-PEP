@@ -16,11 +16,11 @@ from utils.custom_logger import getLogger
 
 def getPlatforms(tempdir):
     platforms = []
-    if getArgs().platform == "host" or \
-       getArgs().platform == "linux" or \
-       getArgs().platform == "mac":
+    if getArgs().platform[0:4] == "host" or \
+       getArgs().platform[0:5] == "linux" or \
+       getArgs().platform[0:3] == "mac":
         platforms.append(HostPlatform(tempdir))
-    elif getArgs().platform == "android":
+    elif getArgs().platform[0:7] == "android":
         driver = AndroidDriver()
         platforms.extend(driver.getAndroidPlatforms(tempdir))
         if getArgs().excluded_devices:

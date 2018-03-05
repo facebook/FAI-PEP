@@ -49,10 +49,11 @@ getParser().add_argument("--git_repository", default="origin",
     help="The remote git repository. Defaults to origin")
 getParser().add_argument("--interval", type=int,
     help="The minimum time interval in seconds between two benchmark runs.")
-getParser().add_argument("--platform", required=True,
-    help="Specify the platform to benchmark on. Use this flag if the framework"
+getParser().add_argument("--platforms", required=True,
+    help="Specify the platforms to benchmark on, in comma separated list."
+    "Use this flag if the framework"
     " needs special compilation scripts. The scripts are called build.sh "
-    "saved in specifications/frameworks/<framework>/<platform> directory")
+    "saved in specifications/frameworks/<framework>/<platforms> directory")
 getParser().add_argument("--regression", action="store_true",
     help="Indicate whether this run detects regression.")
 getParser().add_argument("--same_host", action="store_true",
@@ -92,23 +93,32 @@ class ExecutablesBuilder (threading.Thread):
             self._buildExecutables()
 
     def _buildExecutables(self):
-        same_host = getArgs().same_host
+        platforms = getArgs().platforms.split(",")
         while not stopRun() and self._pullNewCommits():
-            if same_host:
+            for platform in platforms:
+                self._saveOneCommitExecutable(platform)
+
+    def _saveOneCommitExecutable(self, platform):
+        getLogger().info("Building executable on {} ".format(platform) +
+                         "@ {}".format(self.current_commit_hash))
+        same_host = getArgs().same_host
+        if same_host:
+            self.queue_lock.acquire()
+        git_info = self._buildOneCommitExecutable(platform,
+                                                  self.current_commit_hash)
+        if git_info is None:
+            getLogger().error(
+                "Failed to extract git commands. Skip this commit.")
+        else:
+            if not same_host:
                 self.queue_lock.acquire()
-            git_info = self._buildOneCommitExecutable(self.current_commit_hash)
-            if git_info is None:
-                getLogger().error(
-                    "Failed to extract git commands. Skip this commit.")
-            else:
-                if not same_host:
-                    self.queue_lock.acquire()
-                self.work_queue.append(git_info)
+            self.work_queue.append(git_info)
+        if self.queue_lock.locked():
             self.queue_lock.release()
 
-    def _buildOneCommitExecutable(self, commit_hash):
+    def _buildOneCommitExecutable(self, platform, commit_hash):
         git_info = {}
-        git_info_treatment = self._setupGitStep(commit_hash)
+        git_info_treatment = self._setupGitStep(platform, commit_hash)
         if git_info_treatment is None:
             return None
         git_info['treatment'] = git_info_treatment
@@ -119,13 +129,16 @@ class ExecutablesBuilder (threading.Thread):
             control_commit_hash = self._getControlCommit(
                 git_info_treatment['commit_time'], getArgs().git_base_commit)
 
-            git_info_control = self._setupGitStep(control_commit_hash)
+            git_info_control = self._setupGitStep(platform,
+                                                  control_commit_hash)
             if git_info_control is None:
                 return None
             git_info['control'] = git_info_control
 
             git_info["regression_commits"] = \
                 self._getCompareCommits(git_info_treatment['commit'])
+        # use git_info to pass the value of platform
+        git_info['platform'] = platform
         return git_info
 
     def _getCompareCommits(self, latest_commit):
@@ -182,29 +195,29 @@ class ExecutablesBuilder (threading.Thread):
                     return commit_hash
         return None
 
-    def _setupGitStep(self, commit):
+    def _setupGitStep(self, platform, commit):
         git_info = {}
         git_info['commit'] = self.git.getCommitHash(commit)
         git_info['commit_time'] = self.git.getCommitTime(git_info['commit'])
-        return git_info if self._buildProgram(git_info) else None
+        return git_info if self._buildProgram(platform, git_info) else None
 
-    def _buildProgram(self, git_info):
+    def _buildProgram(self, platform, git_info):
         directory = "/" + \
             getDirectory(git_info['commit'], git_info['commit_time'])
 
         dst = getArgs().exec_dir + "/" + getArgs().framework + "/" + \
-            getArgs().platform + "/" + directory + getArgs().framework + \
+            platform + "/" + directory + getArgs().framework + \
             "_benchmark"
 
         git_info["program"] = dst
         if os.path.isfile(dst):
             return True
         else:
-            return self._buildProgramPlatform(git_info, dst)
+            return self._buildProgramPlatform(git_info, dst, platform)
 
-    def _buildProgramPlatform(self, git_info, dst):
+    def _buildProgramPlatform(self, git_info, dst, platform):
         self.git.checkout(git_info['commit'])
-        script = self._getBuildScript()
+        script = self._getBuildScript(platform)
         dst_dir = os.path.dirname(dst)
         shutil.rmtree(dst_dir, True)
         os.makedirs(dst_dir)
@@ -218,7 +231,7 @@ class ExecutablesBuilder (threading.Thread):
             return False
         return True
 
-    def _getBuildScript(self):
+    def _getBuildScript(self, platform):
         assert os.path.isdir(getArgs().specifications_dir), \
             "Models dir is not specified."
         frameworks_dir = getArgs().specifications_dir + "/frameworks"
@@ -227,19 +240,21 @@ class ExecutablesBuilder (threading.Thread):
         framework_dir = frameworks_dir + "/" + getArgs().framework
         assert os.path.isdir(framework_dir), \
             "{} must be specified.".format(framework_dir)
-        platform_dir = framework_dir + "/" + getArgs().platform
+        platform_dir = framework_dir + "/" + platform
         build_script = None
         if os.path.isdir(platform_dir):
             if os.path.isfile(platform_dir + "/build.sh"):
                 build_script = platform_dir + "/build.sh"
         if build_script is None:
+            # Ideally, should check the parent directory until the
+            # framework directory. Save this for the future
             build_script = framework_dir + "/build.sh"
             getLogger().warning("Directory {} ".format(platform_dir) +
                                 "doesn't exist. Use " +
                                 "{} instead".format(framework_dir))
         assert os.path.isfile(build_script), \
             "Cannot find build script in {} for ".framework_dir + \
-            "platform {}".format(getArgs().platform)
+            "platform {}".format(platform)
         return build_script
 
     def _getControlCommit(self, reference_time, base_commit):
@@ -336,10 +351,13 @@ class GitDriver(object):
                          git_info['treatment']['commit'])
 
     def _getCommand(self, git_info):
+        platform = git_info["platform"]
+        # Remove it from git_info to avoid polution, should clean up later
+        del git_info["platform"]
         dir_path = os.path.dirname(os.path.realpath(__file__))
         unknowns = getUnknowns()
         command = dir_path + "/harness.py " + \
-            " --platform \'" + getArgs().platform + "\'" + \
+            " --platform \'" + platform + "\'" + \
             " --framework \'" + getArgs().framework + "\'" + \
             " --specifications_dir \'" + getArgs().specifications_dir + "\'" +\
             (" --info \'" + json.dumps(git_info) + "\'") + " " + \
