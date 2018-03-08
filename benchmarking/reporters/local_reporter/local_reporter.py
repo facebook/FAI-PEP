@@ -57,6 +57,6 @@ class LocalReporter(ReporterBase):
                                       indent=2, sort_keys=True)
             file.write(content_meta)
         pname = platform_name
-        if meta["platform_hash"]:
+        if "platform_hash" in meta:
             pname = pname + " ({})".format(meta["platform_hash"])
         getLogger().info("Writing file for {}: {}".format(pname, dirname))
