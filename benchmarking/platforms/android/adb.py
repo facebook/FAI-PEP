@@ -33,7 +33,7 @@ class ADB(object):
             else:
                 adb.append(item)
         if 'timeout' not in kwargs:
-            kwargs['timeout'] = 30
+            kwargs['timeout'] = 60
         return processRun(adb, **kwargs)
 
     def push(self, src, tgt=None):
