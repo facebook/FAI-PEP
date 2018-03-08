@@ -57,19 +57,24 @@ class AndroidPlatform(PlatformBase):
         return meta
 
     def copyFilesToPlatform(self, files, target_dir=None):
-        target_dir = self.adb.dir if target_dir is None else target_dir
+        target_dir = (self.adb.dir if target_dir is None else target_dir) + "/"
         if isinstance(files, str):
-            self.adb.push(files)
-            return target_dir + "/" + os.path.basename(files)
+            target_file = target_dir + os.path.basename(files)
+            self.adb.push(files, target_file)
+            return target_file
         elif isinstance(files, list):
+            target_files = []
             for f in files:
-                self.adb.push(f)
-            return [target_dir + '/' + os.path.basename(x) for x in files]
+                target_file = target_dir + os.path.basename(f)
+                self.adb.push(f, target_dir)
+                target_files.append(target_file)
+            return target_files
         elif isinstance(files, dict):
             d = {}
             for f in files:
-                self.adb.push(files[f])
-                d[f] = target_dir + os.path.basename(files[f])
+                target_file = target_dir + os.path.basename(files[f])
+                self.adb.push(files[f], target_file)
+                d[f] = target_file
             return d
         else:
             assert False, "Cannot reach here"
@@ -103,6 +108,19 @@ class AndroidPlatform(PlatformBase):
         self.adb.pull(android_file, output_file)
         self.adb.shell(["rm", "-f", android_file])
         return output_file
+
+    def delFilesFromPlatform(self, files):
+        if isinstance(files, str):
+            self.adb.deleteFile(files)
+        elif isinstance(files, list):
+            for f in files:
+                self.adb.deleteFile(f)
+        elif isinstance(files, dict):
+            for f in files:
+                self.adb.deleteFile(files[f])
+        else:
+            assert False, "Cannot reach here"
+
 
     def getOutputDir(self):
         return self.adb.dir

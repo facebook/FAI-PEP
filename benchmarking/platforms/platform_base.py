@@ -55,5 +55,9 @@ class PlatformBase(object):
         return files
 
     @abc.abstractmethod
+    def delFilesFromPlatform(self, files):
+        pass
+
+    @abc.abstractmethod
     def getOutputDir(self):
         pass

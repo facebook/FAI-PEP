@@ -39,7 +39,7 @@ class ADB(object):
     def push(self, src, tgt=None):
         target = tgt if tgt is not None else self.dir + path.basename(src)
         # Always remove the old file before pushing the new file
-        self.shell(['rm', '-f', target])
+        self.deleteFile(target)
         return self.run("push", src, target)
 
     def pull(self, src, tgt):
@@ -47,6 +47,9 @@ class ADB(object):
 
     def logcat(self, *args):
         return self.run("logcat", *args)
+
+    def deleteFile(self, file):
+        return self.shell(['rm', '-f', file])
 
     def shell(self, cmd, **kwargs):
         dft = None

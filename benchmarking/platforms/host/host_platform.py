@@ -83,6 +83,9 @@ class HostPlatform(PlatformBase):
                 os.remove(source)
         return tgt_files
 
+    def delFilesFromPlatform(self, files):
+        pass
+
     def getOutputDir(self):
         out_dir = self.tempdir + "/output/"
         if not os.path.isdir(out_dir):
