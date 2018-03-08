@@ -63,9 +63,6 @@ getParser().add_argument("--run_type", default="benchmark",
 getParser().add_argument("--shared_libs",
     help="Pass the shared libs that the framework depends on, "
     "in a comma separated list.")
-getParser().add_argument("--specifications_dir", required=True,
-    help="Required. The root directory that all specifications resides. "
-    "Usually it is the specifications directory.")
 getParser().add_argument("--timeout", default=300, type=float,
     help="Specify a timeout running the test on the platforms. "
     "The timeout value needs to be large enough so that the low end devices "

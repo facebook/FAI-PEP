@@ -59,9 +59,9 @@ getParser().add_argument("--regression", action="store_true",
 getParser().add_argument("--same_host", action="store_true",
     help="Specify whether the build and benchmark run are on the same host. "
     "If so, the build cannot be done in parallel with the benchmark run.")
-getParser().add_argument("--specifications_dir", required=True,
-    help="Required. The root directory that all specifications resides. "
-    "Usually it is the specifications directory.")
+getParser().add_argument("--frameworks_dir", required=True,
+    help="Required. The root directory that all frameworks resides. "
+    "Usually it is the specifications/frameworks directory.")
 getParser().add_argument("--status_file",
     help="A file to inform the driver stops running when the content of the file is 0.")
 
@@ -232,9 +232,9 @@ class ExecutablesBuilder (threading.Thread):
         return True
 
     def _getBuildScript(self, platform):
-        assert os.path.isdir(getArgs().specifications_dir), \
-            "Models dir is not specified."
-        frameworks_dir = getArgs().specifications_dir + "/frameworks"
+        assert os.path.isdir(getArgs().frameworks_dir), \
+            "Frameworks dir is not specified."
+        frameworks_dir = getArgs().frameworks_dir
         assert os.path.isdir(frameworks_dir), \
             "{} must be specified.".format(frameworks_dir)
         framework_dir = frameworks_dir + "/" + getArgs().framework
@@ -359,7 +359,6 @@ class GitDriver(object):
         command = dir_path + "/harness.py " + \
             " --platform \'" + platform + "\'" + \
             " --framework \'" + getArgs().framework + "\'" + \
-            " --specifications_dir \'" + getArgs().specifications_dir + "\'" +\
             (" --info \'" + json.dumps(git_info) + "\'") + " " + \
             ' '.join(['"' + u + '"' for u in unknowns])
         return command
