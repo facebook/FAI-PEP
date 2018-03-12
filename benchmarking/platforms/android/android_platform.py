@@ -65,16 +65,12 @@ class AndroidPlatform(PlatformBase):
         elif isinstance(files, list):
             target_files = []
             for f in files:
-                target_file = target_dir + os.path.basename(f)
-                self.adb.push(f, target_dir)
-                target_files.append(target_file)
+                target_files.append(self.copyFilesToPlatform(f, target_dir))
             return target_files
         elif isinstance(files, dict):
             d = {}
             for f in files:
-                target_file = target_dir + os.path.basename(files[f])
-                self.adb.push(files[f], target_file)
-                d[f] = target_file
+                d[f] = self.copyFilesToPlatform(files[f], target_dir)
             return d
         else:
             assert False, "Cannot reach here"
@@ -87,14 +83,13 @@ class AndroidPlatform(PlatformBase):
         elif isinstance(files, list):
             output_files = []
             for f in files:
-                output_file = self._moveOneFileFromPlatform(f, target_dir)
-                output_files.append(output_file)
+                output_files.append(self.moveFilesFromPlatform(f, target_dir))
             return output_files
         elif isinstance(files, dict):
             output_files = {}
             for f in files:
-                output_file = self._moveOneFileFromPlatform(files[f],
-                                                            target_dir)
+                output_file = self.moveFilesFromPlatform(files[f],
+                                                         target_dir)
                 output_files[f] = output_file
             return output_files
         else:

@@ -55,33 +55,41 @@ class HostPlatform(PlatformBase):
             return files
         else:
             if isinstance(files, str):
-                shutil.copyfile(files, target_dir)
+                tgt_file = target_dir + "/" + os.path.basename(files)
+                shutil.copyfile(files, tgt_file)
                 return target_dir + "/" + os.path.basename(files)
             elif isinstance(files, list):
+                target_files = []
                 for f in files:
-                    shutil.copyfile(f, target_dir)
-                return [target_dir + "/" + os.path.basename(f) for f in files]
+                    target_files.append(self.copyFilesToPlatform(f,
+                                                                 target_dir))
+                return target_files
             elif isinstance(files, dict):
                 tgt = {}
                 for f in files:
-                    source = files[f]
-                    target = target_dir + "/" + os.path.basename(source)
-                    tgt[f] = target
-                    shutil.copyfile(source, target)
+                    tgt[f] = self.copyFilesToPlatform(files[f], target_dir)
                 return tgt
             else:
                 assert False, "Cannot reach here"
 
     def moveFilesFromPlatform(self, files, target_dir=None):
-        tgt_files = self.copyFilesToPlatform(files, target_dir)
-        if tgt_files is not files:
-            src_files = files
-            if isinstance(files, str):
-                src_files = [tgt_files]
-            for f in src_files:
-                source = f if isinstance(files, list) else files[f]
-                os.remove(source)
-        return tgt_files
+        if isinstance(files, str):
+            tgt_file = self.copyFilesToPlatform(files, target_dir)
+            if tgt_file != files:
+                os.remove(files)
+            return tgt_file
+        elif isinstance(files, list):
+            tgt_files = []
+            for f in files:
+                tgt_files.append(self.moveFilesFromPlatform(f, target_dir))
+            return tgt_files
+        elif isinstance(files, dict):
+            tgt = {}
+            for f in files:
+                tgt[f] = self.moveFilesFromPlatform(files[f], target_dir)
+            return tgt
+        else:
+            assert False, "Cannot reach here"
 
     def delFilesFromPlatform(self, files):
         pass
