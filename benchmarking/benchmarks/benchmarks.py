@@ -169,7 +169,7 @@ class BenchmarkCollector(object):
             if not os.path.isfile(cached_model_name) or \
                     self._calculateMD5(cached_model_name) != field["md5"]:
                 update_json |= self._copyFile(field, model_dir,
-                                              cached_model_name)
+                                              cached_model_name, filename)
 
         if update_json:
             s = json.dumps(one_benchmark, indent=2, sort_keys=True)
@@ -185,7 +185,7 @@ class BenchmarkCollector(object):
         md5 = m.hexdigest()
         return md5
 
-    def _copyFile(self, field, model_dir, cached_model_name):
+    def _copyFile(self, field, model_dir, cached_model_name, source):
         location = field["location"]
         if location[0:4] == "http":
             getLogger().info("Downloading {}".format(location))
@@ -193,14 +193,9 @@ class BenchmarkCollector(object):
             if r.status_code == 200:
                 with open(cached_model_name, 'wb') as f:
                     f.write(r.content)
-        elif location[0:2] == "//":
-            assert getArgs().root_model_dir is not None, \
-                "When specifying relative directory, the --root_model_dir " \
-                "must be specified."
-            filename = getArgs().root_model_dir + location[1:]
-            shutil.copy(filename, cached_model_name)
         else:
-            shutil.copyfile(location, cached_model_name)
+            filename = self._getAbsFilename(location, source)
+            shutil.copyfile(filename, cached_model_name)
         assert os.path.isfile(cached_model_name), \
             "File {} cannot be retrieved".format(cached_model_name)
         # verify the md5 matches the file downloaded
@@ -255,8 +250,28 @@ class BenchmarkCollector(object):
                     new_tests.append(t)
         return new_tests
 
+    def _getAbsFilename(self, filename, source):
+        if filename[0:2] == "//":
+            assert getArgs().root_model_dir is not None, \
+                "When specifying relative directory, the " \
+                "--root_model_dir must be specified."
+            return getArgs().root_model_dir + filename[1:]
+        elif filename[0] != "/":
+            abs_dir = os.path.dirname(os.path.abspath(source)) + "/"
+            return abs_dir + filename
+        else:
+            return filename
+
+    def _updateRelativeDirectory(self, files, source):
+        for name in files:
+            value = files[name]
+            if isinstance(value, str):
+                files[name] = [value]
+            files[name] = [self._getAbsFilename(filename, source)
+                           for filename in files[name]]
+        return files
+
     def _replicateTestsOnFiles(self, tests, source):
-        abs_dir = os.path.dirname(os.path.abspath(source)) + "/"
         new_tests = []
         for test in tests:
             num = -1
@@ -264,25 +279,22 @@ class BenchmarkCollector(object):
                 new_tests.append(copy.deepcopy(test))
                 continue
 
-            input_files = {k: abs_dir + test["input_files"][k]
-                           for k in test["input_files"]}
-            output_files = {k: abs_dir + test["output_files"][k]
-                            for k in test["output_files"]}
+            input_files = self._updateRelativeDirectory(test["input_files"],
+                                                        source)
+            output_files = self._updateRelativeDirectory(test["output_files"],
+                                                         source)
             test["input_files"] = input_files
             test["output_files"] = output_files
             num = self._checkNumFiles(input_files, source, num, True)
             num = self._checkNumFiles(output_files, source, num, False)
 
-            if num == 1:
-                new_tests.append(copy.deepcopy(test))
-            else:
-                for i in range(num):
-                    t = copy.deepcopy(test)
-                    for iname in input_files:
-                        t["input_files"][iname] = test["input_files"][iname][i]
-                    for oname in output_files:
-                        t["output_files"][oname] = \
-                            test["output_files"][oname][i]
+            for i in range(num):
+                t = copy.deepcopy(test)
+                for iname in input_files:
+                    t["input_files"][iname] = test["input_files"][iname][i]
+                for oname in output_files:
+                    t["output_files"][oname] = \
+                        test["output_files"][oname][i]
                     new_tests.append(t)
         return new_tests
 
