@@ -55,6 +55,9 @@ getParser().add_argument("--remote_reporter",
     "The style is <domain_name>/<endpoint>|<category>")
 getParser().add_argument("--remote_access_token",
     help="The access token to access the remote server")
+getParser().add_argument("--root_model_dir",
+    help="The root model directory if the meta data of the model uses "
+    "relative directory, i.e. the location field starts with //")
 getParser().add_argument("--run_type", default="benchmark",
     choices=["benchmark", "verify", "regress"],
     help="The type of the current run. The allowed values are: benchmark, the "

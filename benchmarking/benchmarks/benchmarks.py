@@ -15,6 +15,7 @@ import json
 import os
 import requests
 import shutil
+from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
 
 
@@ -192,6 +193,12 @@ class BenchmarkCollector(object):
             if r.status_code == 200:
                 with open(cached_model_name, 'wb') as f:
                     f.write(r.content)
+        elif location[0:2] == "//":
+            assert getArgs().root_model_dir is not None, \
+                "When specifying relative directory, the --root_model_dir " \
+                "must be specified."
+            filename = getArgs().root_model_dir + location[1:]
+            shutil.copy(filename, cached_model_name)
         else:
             shutil.copyfile(location, cached_model_name)
         assert os.path.isfile(cached_model_name), \
