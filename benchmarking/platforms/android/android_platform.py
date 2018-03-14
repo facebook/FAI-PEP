@@ -47,9 +47,9 @@ class AndroidPlatform(PlatformBase):
 
     def runBenchmark(self, cmd):
         self.adb.logcat('-b', 'all', '-c')
-        self.adb.shell(cmd, timeout=getArgs().timeout)
-        log = self.adb.logcat('-d')
-        return log
+        log_screen = self.adb.shell(cmd, timeout=getArgs().timeout)
+        log_logcat = self.adb.logcat('-d')
+        return log_screen + log_logcat
 
     def collectMetaData(self, info):
         meta = super(AndroidPlatform, self).collectMetaData(info)
