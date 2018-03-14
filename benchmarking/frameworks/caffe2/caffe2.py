@@ -67,12 +67,14 @@ class Caffe2Framework(FrameworkBase):
             os.makedirs(target_dir)
             output_files = \
                 platform.moveFilesFromPlatform(files, target_dir)
-        platform.delFilesFromPlatform(cached_models)
-        platform.delFilesFromPlatform(program)
-        if shared_libs is not None:
-            platform.delFilesFromPlatform(shared_libs)
-        if input_files is not None:
-            platform.delFilesFromPlatform(input_files)
+
+        if len(output) > 0:
+            platform.delFilesFromPlatform(cached_models)
+            platform.delFilesFromPlatform(program)
+            if shared_libs is not None:
+                platform.delFilesFromPlatform(shared_libs)
+            if input_files is not None:
+                platform.delFilesFromPlatform(input_files)
         return output, output_files
 
     def _composeRunCommand(self, platform, program, test, cached_models,
