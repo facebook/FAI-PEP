@@ -16,7 +16,8 @@ from .custom_logger import getLogger
 def processRun(*args, **kwargs):
     getLogger().info("Running: %s", ' '.join(*args))
     try:
-        return subprocess.check_output(*args, **kwargs).\
+        return subprocess.check_output(*args,
+                                       stderr=subprocess.STDOUT, **kwargs).\
             decode("utf-8", "ignore")
     except subprocess.CalledProcessError:
         getLogger().error("Command failed: %s", ' '.join(*args))
