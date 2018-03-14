@@ -48,6 +48,9 @@ class ADB(object):
     def logcat(self, *args):
         return self.run("logcat", *args)
 
+    def reboot(self):
+        return self.run("reboot")
+
     def deleteFile(self, file):
         return self.shell(['rm', '-f', file])
 
