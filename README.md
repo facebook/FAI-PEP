@@ -74,9 +74,9 @@ usage: harness.py [-h] [--android_dir ANDROID_DIR] [--backend BACKEND]
                   [--regressed_types REGRESSED_TYPES]
                   [--remote_reporter REMOTE_REPORTER]
                   [--remote_access_token REMOTE_ACCESS_TOKEN]
-                  [--run_type {benchmark,verify,regress}]
-                  [--shared_libs SHARED_LIBS] --specifications_dir
-                  SPECIFICATIONS_DIR [--timeout TIMEOUT]
+                  [--root_model_dir ROOT_MODEL_DIR]
+                  [--run_type {benchmark,verify,regress}] [--screen_reporter]
+                  [--shared_libs SHARED_LIBS] [--timeout TIMEOUT]
 
 Perform one benchmark run
 
@@ -119,17 +119,19 @@ optional arguments:
                         <domain_name>/<endpoint>|<category>
   --remote_access_token REMOTE_ACCESS_TOKEN
                         The access token to access the remote server
+  --root_model_dir ROOT_MODEL_DIR
+                        The root model directory if the meta data of the model
+                        uses relative directory, i.e. the location field
+                        starts with //
   --run_type {benchmark,verify,regress}
                         The type of the current run. The allowed values are:
                         benchmark, the normal benchmark run. verify, the
                         benchmark is re-run to confirm a suspicious
                         regression. regress, the regression is confirmed.
+  --screen_reporter     Display the summary of the benchmark result on screen.
   --shared_libs SHARED_LIBS
                         Pass the shared libs that the framework depends on, in
                         a comma separated list.
-  --specifications_dir SPECIFICATIONS_DIR
-                        Required. The root directory that all specifications
-                        resides. Usually it is the specifications directory.
   --timeout TIMEOUT     Specify a timeout running the test on the platforms.
                         The timeout value needs to be large enough so that the
                         low end devices can safely finish the execution in
@@ -143,61 +145,64 @@ The `git_driver.py` is the entry point to run the benchmark continuously. It rep
 The accepted arguments are as follows:
 
 ```
-usage: git_driver.py [-h] --exec_dir EXEC_DIR --framework {caffe2}
-                     [--git_base_commit GIT_BASE_COMMIT]
-                     [--git_branch GIT_BRANCH] [--git_commit GIT_COMMIT]
-                     [--git_commit_file GIT_COMMIT_FILE] --git_dir GIT_DIR
-                     [--git_repository GIT_REPOSITORY] [--interval INTERVAL]
-                     --platform PLATFORM [--regression] [--same_host]
-                     --specifications_dir SPECIFICATIONS_DIR
-                     [--status_file STATUS_FILE]
+usage: repo_driver.py [-h] [--base_commit BASE_COMMIT] [--branch BRANCH]
+                      [--commit COMMIT] [--commit_file COMMIT_FILE] --exec_dir
+                      EXEC_DIR --framework {caffe2} --frameworks_dir
+                      FRAMEWORKS_DIR [--interval INTERVAL] --platforms
+                      PLATFORMS [--regression]
+                      [--remote_repository REMOTE_REPOSITORY]
+                      [--repo {git,hg}] --repo_dir REPO_DIR [--same_host]
+                      [--status_file STATUS_FILE]
 
 Perform one benchmark run
 
 optional arguments:
   -h, --help            show this help message and exit
-  --exec_dir EXEC_DIR   The executable is saved in the specified directory. If
-                        an executable is found for a commit, no re-compilation
-                        is performed. Instead, the previous compiled
-                        executable is reused.
-  --framework {caffe2}  Specify the framework to benchmark on.
-  --git_base_commit GIT_BASE_COMMIT
+  --base_commit BASE_COMMIT
                         In A/B testing, this is the control commit that is
                         used to compare against. If not specified, the default
                         is the first commit in the week in UTC timezone. Even
                         if specified, the control is the later of the
                         specified commit and the commit at the start of the
                         week.
-  --git_branch GIT_BRANCH
-                        The remote git repository branch. Defaults to master
-  --git_commit GIT_COMMIT
-                        The git commit this benchmark runs on. It can be a
-                        branch. Defaults to master. If it is a commit hash,
-                        and program runs on continuous mode, it is the
-                        starting commit hash the regression runs on. The
-                        regression runs on all commits starting from the
-                        specified commit.
-  --git_commit_file GIT_COMMIT_FILE
+  --branch BRANCH       The remote repository branch. Defaults to master
+  --commit COMMIT       The commit this benchmark runs on. It can be a branch.
+                        Defaults to master. If it is a commit hash, and
+                        program runs on continuous mode, it is the starting
+                        commit hash the regression runs on. The regression
+                        runs on all commits starting from the specified
+                        commit.
+  --commit_file COMMIT_FILE
                         The file saves the last commit hash that the
                         regression has finished. If this argument is specified
-                        and is valid, the --git_commit has no use.
-  --git_dir GIT_DIR     Required. The base git directory for Caffe2.
-  --git_repository GIT_REPOSITORY
-                        The remote git repository. Defaults to origin
+                        and is valid, the --commit has no use.
+  --exec_dir EXEC_DIR   The executable is saved in the specified directory. If
+                        an executable is found for a commit, no re-compilation
+                        is performed. Instead, the previous compiled
+                        executable is reused.
+  --framework {caffe2}  Specify the framework to benchmark on.
+  --frameworks_dir FRAMEWORKS_DIR
+                        Required. The root directory that all frameworks
+                        resides. Usually it is the specifications/frameworks
+                        directory.
   --interval INTERVAL   The minimum time interval in seconds between two
                         benchmark runs.
-  --platform PLATFORM   Specify the platform to benchmark on. Use this flag if
-                        the framework needs special compilation scripts. The
-                        scripts are called build.sh saved in
-                        specifications/frameworks/<framework>/<platform>
+  --platforms PLATFORMS
+                        Specify the platforms to benchmark on, in comma
+                        separated list.Use this flag if the framework needs
+                        special compilation scripts. The scripts are called
+                        build.sh saved in
+                        specifications/frameworks/<framework>/<platforms>
                         directory
   --regression          Indicate whether this run detects regression.
+  --remote_repository REMOTE_REPOSITORY
+                        The remote repository. Defaults to origin
+  --repo {git,hg}       Specify the source control repo of the framework.
+  --repo_dir REPO_DIR   Required. The base framework repo directory used for
+                        benchmark.
   --same_host           Specify whether the build and benchmark run are on the
                         same host. If so, the build cannot be done in parallel
                         with the benchmark run.
-  --specifications_dir SPECIFICATIONS_DIR
-                        Required. The root directory that all specifications
-                        resides. Usually it is the specifications directory.
   --status_file STATUS_FILE
                         A file to inform the driver stops running when the
                         content of the file is 0.
