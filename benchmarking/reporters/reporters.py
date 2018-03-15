@@ -11,6 +11,7 @@
 from utils.arg_parse import getArgs
 from .local_reporter.local_reporter import LocalReporter
 from .remote_reporter.remote_reporter import RemoteReporter
+from .screen_reporter.screen_reporter import ScreenReporter
 
 
 def getReporters():
@@ -19,4 +20,6 @@ def getReporters():
         reporters.append(LocalReporter())
     if getArgs().remote_reporter:
         reporters.append(RemoteReporter())
+    if getArgs().screen_reporter:
+        reporters.append(ScreenReporter())
     return reporters

@@ -63,6 +63,8 @@ getParser().add_argument("--run_type", default="benchmark",
     help="The type of the current run. The allowed values are: benchmark, the "
     "normal benchmark run. verify, the benchmark is re-run to confirm a "
     "suspicious regression. regress, the regression is confirmed.")
+getParser().add_argument("--screen_reporter", action="store_true",
+    help="Display the summary of the benchmark result on screen.")
 getParser().add_argument("--shared_libs",
     help="Pass the shared libs that the framework depends on, "
     "in a comma separated list.")
