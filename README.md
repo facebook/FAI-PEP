@@ -140,7 +140,7 @@ optional arguments:
 ```
 
 ## Continuous benchmark run
-The `git_driver.py` is the entry point to run the benchmark continuously. It repeatedly pulls the framework from github, builds the framework, and launches the `harness.py` with the built benchmarking binaries
+The `repo_driver.py` is the entry point to run the benchmark continuously. It repeatedly pulls the framework from github, builds the framework, and launches the `harness.py` with the built benchmarking binaries
 
 The accepted arguments are as follows:
 
@@ -208,4 +208,4 @@ optional arguments:
                         content of the file is 0.
 ```
 
-The `git_driver.py` can also take the arguments that are recognized by `harness.py`. It just passes those arguments over.
+The `repo_driver.py` can also take the arguments that are recognized by `harness.py`. It just passes those arguments over.
