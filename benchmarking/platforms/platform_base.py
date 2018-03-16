@@ -42,6 +42,9 @@ class PlatformBase(object):
             name = name + " ({})".format(self.platform_hash)
         return name
 
+    def rebootDevice(self):
+        pass
+
     @abc.abstractmethod
     def runBenchmark(self, info):
         return None

@@ -48,6 +48,9 @@ getParser().add_argument("--platform", required=True,
     "saved in specifications/frameworks/<framework>/<platform> directory")
 getParser().add_argument("--program",
     help="The program to run on the platform.")
+getParser().add_argument("--reboot", action="store_true",
+    help="Tries to reboot the devices before launching benchmarks for one "
+    "commit.")
 getParser().add_argument("--regressed_types",
     help="A json string that encodes the types of the regressed tests.")
 getParser().add_argument("--remote_reporter",
@@ -80,6 +83,8 @@ class BenchmarkDriver(object):
         parse()
 
     def runBenchmark(self, info, platform, benchmarks, framework):
+        if getArgs().reboot:
+            platform.rebootDevice()
         reporters = getReporters()
         for benchmark in benchmarks:
             b = copy.deepcopy(benchmark)

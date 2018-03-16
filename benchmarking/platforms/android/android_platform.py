@@ -9,9 +9,11 @@
 ##############################################################################
 
 import os
+import time
 
 from platforms.platform_base import PlatformBase
 from utils.arg_parse import getArgs
+from utils.custom_logger import getLogger
 
 
 class AndroidPlatform(PlatformBase):
@@ -32,9 +34,9 @@ class AndroidPlatform(PlatformBase):
         self.tempdir = tempdir + "/" + self.platform
         os.makedirs(self.tempdir, 0o777, True)
         self.platform_hash = adb.device
-        self.setLogCatSize()
+        self._setLogCatSize()
 
-    def setLogCatSize(self):
+    def _setLogCatSize(self):
         repeat = True
         size = 131072
         while (repeat and size > 256):
@@ -44,6 +46,23 @@ class AndroidPlatform(PlatformBase):
             except Exception:
                 repeat = True
                 size = size / 2
+
+    def rebootDevice(self):
+        self.adb.reboot()
+        t = 0
+        ls = None
+        while ls is None and t < 6:
+            time.sleep(20)
+            ls = self.adb.shell(['ls', self.adb.dir])
+            getLogger().info("Rebooting: {} ({})".format(self.platform,
+                                                         self.platform_hash))
+        # Need to wait a bit more after the device is rebooted
+        time.sleep(20)
+        if ls is None:
+            getLogger().error("Cannot reach device {} ({}) after reboot.".
+                              format(self.platform, self.platform_hash))
+        # may need to set log size again after reboot
+        self._setLogCatSize()
 
     def runBenchmark(self, cmd):
         self.adb.logcat('-b', 'all', '-c')
@@ -115,7 +134,6 @@ class AndroidPlatform(PlatformBase):
                 self.adb.deleteFile(files[f])
         else:
             assert False, "Cannot reach here"
-
 
     def getOutputDir(self):
         return self.adb.dir
