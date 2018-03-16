@@ -45,11 +45,14 @@ def checkRegressions(info, platform, framework, benchmark,
         verify_regressions, _ = _detectRegression(info, meta, outdir)
         if len(verify_regressions) > 0:
             # regression verified
-            info["run_type"] = "regress"
-            info["regressed_types"] = verify_regressions
-            runOneBenchmark(info, benchmark, framework, platform,
+            regressed_info = infos[-2]
+            regressed_info["run_type"] = "regress"
+            regressed_info["regressed_types"] = verify_regressions
+            runOneBenchmark(regressed_info, benchmark, framework, platform,
                             meta["backend"], reporters)
-            getLogger().info("Regression confirmed: {}".
+            getLogger().info("Regression confirmed for commit: {}".
+                             format(regressed_info["treatment"]["commit"]))
+            getLogger().info("Regressed types: {}".
                              format(",".join(verify_regressions)))
         getLogger().info("Regression verifying completed for " +
                          "{} on {}".format(platform.getMangledName(), commit))
