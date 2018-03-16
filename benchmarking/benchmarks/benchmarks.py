@@ -21,8 +21,9 @@ from utils.custom_logger import getLogger
 
 class BenchmarkCollector(object):
     def __init__(self, model_cache):
-        assert os.path.isdir(model_cache), \
-            "Specified cached model {} is not a directory".format(model_cache)
+
+        if not os.path.isdir(model_cache):
+            os.makedirs(model_cache)
         self.model_cache = model_cache
 
     def collectBenchmarks(self, info, source):
