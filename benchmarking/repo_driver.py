@@ -43,7 +43,8 @@ getParser().add_argument("--exec_dir", required=True,
 getParser().add_argument("--framework", required=True,
     choices=["caffe2"],
     help="Specify the framework to benchmark on.")
-getParser().add_argument("--frameworks_dir", required=True,
+getParser().add_argument("--frameworks_dir",
+    default=str(os.path.dirname(os.path.realpath(__file__)) + "/../specifications/frameworks"),
     help="Required. The root directory that all frameworks resides. "
     "Usually it is the specifications/frameworks directory.")
 getParser().add_argument("--interval", type=int,
@@ -163,10 +164,8 @@ class ExecutablesBuilder (threading.Thread):
         self.repo.checkout(getArgs().branch)
         self.repo.pull(getArgs().remote_repository, getArgs().branch)
         new_commit_hash = None
-        if not getArgs().interval:
-            new_commit_hash = self._getSavedCommit() \
-                if getArgs().commit_file \
-                else self.repo.getCommitHash(getArgs().commit)
+        if not getArgs().interval or not getArgs().regression:
+            new_commit_hash = self.repo.getCommitHash(getArgs().commit)
             if new_commit_hash is None:
                 getLogger().error("Commit is not specified")
                 return False
@@ -193,7 +192,8 @@ class ExecutablesBuilder (threading.Thread):
                 commit_hash = file.read().strip()
                 # verify that the commit exists
                 return self.repo.getNextCommitHash(commit_hash)
-        return None
+        else:
+            return self.repo.getCommitHash(getArgs().commit)
 
     def _setupRepoStep(self, platform, commit):
         repo_info = {}
