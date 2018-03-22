@@ -19,10 +19,10 @@ def processRun(*args, **kwargs):
         return subprocess.check_output(*args,
                                        stderr=subprocess.STDOUT, **kwargs).\
             decode("utf-8", "ignore")
-    except subprocess.CalledProcessError:
-        getLogger().error("Command failed: %s", ' '.join(*args))
-    except subprocess.TimeoutExpired:
-        getLogger().error("Command timeout: %s", ' '.join(*args))
+    except subprocess.CalledProcessError as e:
+        getLogger().error("Command failed: {}".format(e.output))
+    except subprocess.TimeoutExpired as e:
+        getLogger().error("Command timeout: {}".format(e.output))
     except:
         getLogger().error("Unknown failure {}: {}".format(sys.exc_info()[0],
                                                           ' '.join(*args)))
