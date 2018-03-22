@@ -36,8 +36,8 @@ class RunBench(object):
         i = 0
         while i < len(unknowns):
             if len(unknowns[i]) > 2 and unknowns[i][:2] == '--':
-                if i < len(unknowns) - 1 and unknowns[i+1][:2] != '--':
-                    args[unknowns[i]] = unknowns[i+1]
+                if i < len(unknowns) - 1 and unknowns[i + 1][:2] != '--':
+                    args[unknowns[i]] = unknowns[i + 1]
                     i = i + 1
                 else:
                     args[unknowns[i]] = None
