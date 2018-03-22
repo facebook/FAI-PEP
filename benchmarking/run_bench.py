@@ -8,19 +8,21 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+import copy
 import json
 import os
 import re
 from utils.arg_parse import getParser, getArgs, getUnknowns, parseKnown
 from utils.custom_logger import getLogger
 
-getParser().add_argument("--reset_options",
+getParser().add_argument("--reset_options", action="store_true",
     help="Reset all the options that is saved by default.")
 
 
 class RunBench(object):
     def __init__(self):
         self.home_dir = os.path.expanduser('~')
+        self.root_dir = self.home_dir + "/.aibench/git/"
         parseKnown()
 
     def run(self):
@@ -46,23 +48,24 @@ class RunBench(object):
         return args
 
     def _saveDefaultArgs(self, new_args):
-        if not os.path.isdir(self.home_dir + "/.aibench/git"):
-            os.makedirs(self.home_dir + "/.aibench/git")
+        if not os.path.isdir(self.root_dir):
+            os.makedirs(self.root_dir)
         args = {
             '--remote_repository': 'origin',
             '--commit': 'master',
-            '--commit_file': self.home_dir + '/.aibench/git/processed_commit',
-            '--exec_dir': self.home_dir + '/.aibench/git/exec',
+            '--commit_file': self.root_dir + "processed_commit",
+            '--exec_dir': self.root_dir + "exec",
             '--framework': 'caffe2',
             '--repo': 'git',
-            '--status_file': self.home_dir + '/.aibench/git/status',
-            '--model_cache': self.home_dir + '/.aibench/git/model_cache',
+            '--status_file': self.root_dir + "status",
+            '--model_cache': self.root_dir + "model_cache",
             '--platform': 'android',
             '--timeout': 300,
         }
-        if os.path.isfile(self.home_dir + "/.aibench/git/config.txt"):
-            with open(self.home_dir + "/.aibench/git/config.txt", "r") as f:
-                args = json.load(f)
+        if os.path.isfile(self.root_dir + "config.txt"):
+            with open(self.root_dir + "config.txt", "r") as f:
+                load_args = json.load(f)
+                args.update(load_args)
         args.update(new_args)
         self._inputOneRequiredArg(
             "Please enter the directory the framework repo resides",
@@ -81,11 +84,14 @@ class RunBench(object):
                 f.write("1")
         if "--screen_reporter" in args:
             args["--screen_reporter"] = None
-        with open(self.home_dir + "/.aibench/git/config.txt", "w") as f:
+        all_args = copy.deepcopy(args)
+        if "--benchmark_file" in args:
+            del args["--benchmark_file"]
+        with open(self.root_dir + "config.txt", "w") as f:
             json_args = json.dumps(args,
                                    indent=2, sort_keys=True)
             f.write(json_args)
-        return args
+        return all_args
 
     def _inputOneArg(self, text, key, args):
         arg = args[key] if key in args else None
@@ -105,11 +111,11 @@ class RunBench(object):
     def _getSavedArgs(self):
         new_args = self._getUnknownArgs()
         if getArgs().reset_options or \
-                not os.path.isdir(self.home_dir + "/.aibench/git") or \
-                not os.path.isfile(self.home_dir + '/.aibench/git/config.txt'):
+                not os.path.isdir(self.root_dir) or \
+                not os.path.isfile(self.root_dir + "config.txt"):
             args = self._saveDefaultArgs(new_args)
         else:
-            with open(self.home_dir + "/.aibench/git/config.txt", "r") as f:
+            with open(self.root_dir + "config.txt", "r") as f:
                 args = json.load(f)
         for v in new_args:
             if v in args:
