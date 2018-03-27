@@ -54,12 +54,16 @@ class HGRepo(RepoBase):
         return c[start:end]
 
     def getCommitsInRange(self, start_date, end_date):
+        sdate = start_date.strftime("%Y-%m-%d %H:%M:%S")
+        # edate = end_date.strftime("%Y-%m-%d %H:%M:%S")
         output = self._run('log',
-                           '--date',
-                           '"' + start_date.isoformat() + " to " +
-                           end_date.isoformat() + '"',
-                           '--template', '"{node}:{date}\n"').strip()
-        return output.reverse()
+                           '-r',
+                           'children(first(reverse(::.) & date(\"<' +
+                           sdate + '\")))',
+                           '--template', '{node}:{date}\\n'
+                           ).strip()
+        return output
 
     def getPriorCommits(self, commit, num):
-        assert False, "Not implemented"
+        # do not support prior commits
+        return None
