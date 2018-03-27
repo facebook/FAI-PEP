@@ -272,9 +272,14 @@ class ExecutablesBuilder (threading.Thread):
                 return base_commit
 
         # Give more buffer to the date range to avoid the timezone issues
-        start = start_of_week - datetime.timedelta(days=1)
-        end = dt + datetime.timedelta(days=1)
-        logs_str = self.repo.getCommitsInRange(start, end)
+        start = end = start_of_week
+        repeat = True
+        while repeat:
+            logs_str = self.repo.getCommitsInRange(start, end)
+            if logs_str == '':
+                end = end + datetime.timedelta(hours=1)
+            else:
+                repeat = False
         logs = logs_str.split('\n')
         for row in logs:
             items = row.strip().split(':')
@@ -338,7 +343,7 @@ class RepoDriver(object):
         time.sleep(10)
         # cannot use subprocess because it conflicts with requests
         os.system(cmd)
-        if getArgs().commit_file:
+        if getArgs().commit_file and getArgs().regression:
             with open(getArgs().commit_file, 'w') as file:
                 file.write(repo_info['treatment']['commit'])
         getLogger().info("Done one benchmark run for " +
