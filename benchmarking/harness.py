@@ -68,6 +68,12 @@ getParser().add_argument("--run_type", default="benchmark",
     "suspicious regression. regress, the regression is confirmed.")
 getParser().add_argument("--screen_reporter", action="store_true",
     help="Display the summary of the benchmark result on screen.")
+getParser().add_argument("--set_freq",
+    help="On rooted android phones, set the frequency of the cores. "
+    "The supported values are: "
+    "max: set all cores to the maximum frquency. "
+    "min: set all cores to the minimum frequency. "
+    "mid: set all cores to the median frequency. ")
 getParser().add_argument("--shared_libs",
     help="Pass the shared libs that the framework depends on, "
     "in a comma separated list.")

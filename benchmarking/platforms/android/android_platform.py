@@ -35,6 +35,8 @@ class AndroidPlatform(PlatformBase):
         os.makedirs(self.tempdir, 0o777, True)
         self.platform_hash = adb.device
         self._setLogCatSize()
+        if getArgs().set_freq:
+            self.adb.setFrequency(getArgs().set_freq)
 
     def _setLogCatSize(self):
         repeat = True
@@ -63,6 +65,8 @@ class AndroidPlatform(PlatformBase):
                               format(self.platform, self.platform_hash))
         # may need to set log size again after reboot
         self._setLogCatSize()
+        if getArgs().set_freq:
+            self.adb.setFrequency(getArgs().set_freq)
 
     def runBenchmark(self, cmd):
         self.adb.logcat('-b', 'all', '-c')
