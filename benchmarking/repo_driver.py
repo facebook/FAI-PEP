@@ -22,6 +22,8 @@ from utils.custom_logger import getLogger
 from utils.subprocess_with_logger import processRun
 from utils.utilities import getDirectory
 
+getParser().add_argument("--ab_testing", action="store_true",
+    help="Enable A/B testing in benchmark.")
 getParser().add_argument("--base_commit",
     help="In A/B testing, this is the control commit that is used to compare against. " +
     "If not specified, the default is the first commit in the week in UTC timezone. " +
@@ -127,7 +129,7 @@ class ExecutablesBuilder (threading.Thread):
             return None
         repo_info['treatment'] = repo_info_treatment
 
-        if getArgs().regression:
+        if getArgs().ab_testing:
             # only build control on regression detection
             # figure out the base commit. It is the first commit in the week
             control_commit_hash = self._getControlCommit(
@@ -139,6 +141,7 @@ class ExecutablesBuilder (threading.Thread):
                 return None
             repo_info['control'] = repo_info_control
 
+        if getArgs().regression:
             repo_info["regression_commits"] = \
                 self._getCompareCommits(repo_info_treatment['commit'])
         # use repo_info to pass the value of platform
