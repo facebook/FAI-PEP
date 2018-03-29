@@ -42,12 +42,11 @@ class AndroidPlatform(PlatformBase):
         repeat = True
         size = 131072
         while (repeat and size > 256):
-            try:
-                repeat = False
-                self.adb.logcat("-G", str(size) + "K")
-            except Exception:
+            repeat = False
+            ret = self.adb.logcat("-G", str(size) + "K")
+            if ret.find("failed to") >= 0:
                 repeat = True
-                size = size / 2
+                size = int(size / 2)
 
     def rebootDevice(self):
         self.adb.reboot()
