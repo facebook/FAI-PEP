@@ -194,7 +194,7 @@ class ExecutablesBuilder (threading.Thread):
             with open(getArgs().commit_file, 'r') as file:
                 commit_hash = file.read().strip()
                 # verify that the commit exists
-                return self.repo.getNextCommitHash(commit_hash)
+                return self.repo.getCommitHash(commit_hash)
         else:
             return self.repo.getCommitHash(getArgs().commit)
 
