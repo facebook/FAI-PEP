@@ -24,9 +24,9 @@ from utils.custom_logger import getLogger
 
 getParser().add_argument("--backend",
     help="Specify the backend the test runs on.")
-getParser().add_argument("--benchmark_file", required=True,
+getParser().add_argument("-b", "--benchmark_file", required=True,
     help="Specify the json file for the benchmark or a number of benchmarks")
-getParser().add_argument("--devices",
+getParser().add_argument("-d", "--devices",
     help="Specify the devices to run the benchmark, in a comma separated "
     "list. The value is the device or device_hash field of the meta info.")
 getParser().add_argument("--excluded_devices",
@@ -42,7 +42,7 @@ getParser().add_argument("--local_reporter",
 getParser().add_argument("--model_cache", required=True,
     help="The local directory containing the cached models. It should not "
     "be part of a git directory.")
-getParser().add_argument("--platform", required=True,
+getParser().add_argument("-p", "--platform", required=True,
     help="Specify the platform to benchmark on. Use this flag if the framework"
     " needs special compilation scripts. The scripts are called build.sh "
     "saved in specifications/frameworks/<framework>/<platform> directory")

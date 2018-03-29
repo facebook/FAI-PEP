@@ -59,7 +59,7 @@ class RunBench(object):
             '--repo': 'git',
             '--status_file': self.root_dir + "status",
             '--model_cache': self.root_dir + "model_cache",
-            '--platform': 'android',
+            '--platforms': 'android',
             '--timeout': 300,
         }
         if os.path.isfile(self.root_dir + "config.txt"):
@@ -87,6 +87,8 @@ class RunBench(object):
         all_args = copy.deepcopy(args)
         if "--benchmark_file" in args:
             del args["--benchmark_file"]
+        if "-b" in args:
+            del args["-b"]
         with open(self.root_dir + "config.txt", "w") as f:
             json_args = json.dumps(args,
                                    indent=2, sort_keys=True)
