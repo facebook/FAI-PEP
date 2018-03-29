@@ -18,7 +18,6 @@ from utils.utilities import getCommand
 
 
 def runOneBenchmark(info, benchmark, framework, platform, backend, reporters):
-    time.sleep(5)
     assert "treatment" in info, "Treatment is missing in info"
     getLogger().info("Running {}".format(benchmark["model"]["path"]))
 
@@ -61,6 +60,7 @@ def runOneBenchmark(info, benchmark, framework, platform, backend, reporters):
         from regression_detectors.regression_detectors import checkRegressions
         checkRegressions(info, platform, framework, benchmark, reporters,
                          result['meta'], getArgs().local_reporter)
+    time.sleep(5)
 
 
 def _runOnePass(info, benchmark, framework, platform):
