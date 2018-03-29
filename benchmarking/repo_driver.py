@@ -162,9 +162,13 @@ class ExecutablesBuilder (threading.Thread):
             res.append({"commit": c[0], "commit_time": int(float(c[1]))})
         return res
 
+    def _noCheckout(self):
+        return not getArgs().interval and not getArgs().regression and \
+            not getArgs().ab_testing
+
     def _pullNewCommits(self):
         new_commit_hash = None
-        if not getArgs().interval or not getArgs().regression:
+        if self._noCheckout():
             new_commit_hash = self.repo.getCurrentCommitHash()
             if new_commit_hash is None:
                 getLogger().error("Commit is not specified")
@@ -213,7 +217,7 @@ class ExecutablesBuilder (threading.Thread):
             "_benchmark"
 
         repo_info["program"] = dst
-        if os.path.isfile(dst):
+        if not self._noCheckout() and os.path.isfile(dst):
             return True
         else:
             return self._buildProgramPlatform(repo_info, dst, platform)
