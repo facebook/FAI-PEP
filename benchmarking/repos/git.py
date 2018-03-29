@@ -32,6 +32,9 @@ class GitRepo(RepoBase):
         self._run('checkout', *args)
         self._run('submodule', 'update', '--init', '--recursive')
 
+    def getCurrentCommitHash(self):
+        return self.getCommitHash('HEAD')
+
     def getCommitHash(self, commit):
         return self._run('rev-parse', commit).rstrip()
 

@@ -163,16 +163,16 @@ class ExecutablesBuilder (threading.Thread):
         return res
 
     def _pullNewCommits(self):
-        # first get into the correct branch
-        self.repo.checkout(getArgs().branch)
-        self.repo.pull(getArgs().remote_repository, getArgs().branch)
         new_commit_hash = None
         if not getArgs().interval or not getArgs().regression:
-            new_commit_hash = self.repo.getCommitHash(getArgs().commit)
+            new_commit_hash = self.repo.getCurrentCommitHash()
             if new_commit_hash is None:
                 getLogger().error("Commit is not specified")
                 return False
         else:
+            # first get into the correct branch
+            self.repo.checkout(getArgs().branch)
+            self.repo.pull(getArgs().remote_repository, getArgs().branch)
             if self.current_commit_hash is None:
                 self.current_commit_hash = self._getSavedCommit()
 

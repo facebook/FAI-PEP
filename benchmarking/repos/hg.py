@@ -31,6 +31,10 @@ class HGRepo(RepoBase):
     def checkout(self, *args):
         self._run('update', *args)
 
+    def getCurrentCommitHash(self):
+        commit = self._run('id', '-i')
+        return self.getCommitHash(commit)
+
     def getCommitHash(self, commit):
         output = self._run('log', '--template', '<START>{node}<END>',
                            '-r', commit)
