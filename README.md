@@ -62,21 +62,40 @@ A few key items in the specifications
 * In the `inputs` field of `tests`, one may specify multiple shapes. This is a short hand to indicate that we benchmark the tests of all shapes in sequence.
 * In some field, such as `identifier`, you may find some string like `{ID}`. This is a placeholder to be replaced by the benchmarking tool to differentiate multiple test runs specified in one test specification, as in the above item.
 
+## Run benchmark
+To run the benchmark, you need to run `run_bench.py`, given a model meta data or a benchmark meta data. An example of the command is:
+```
+run_bench.py -b caffe2-benchmarking/specifications/models/caffe2/shufflenet/shufflenet.json
+```
+When you run the command for the first time, you are asked several questions. The answers to those questions, together with other sensible defaults, are saved in a config file: `~/.aibench/git/config.txt`. You can edit the file to update your default arguments.
+
+The arguments to the driver are as follows. It also takes arguments specified in the following sections and pass them to those scripts.
+```
+usage: run_bench.py [-h] [--reset_options]
+
+Perform one benchmark run
+
+optional arguments:
+  -h, --help       show this help message and exit
+  --reset_options  Reset all the options that is saved by default.
+```
+
 ## Stand alone benchmark run
 The `harness.py` is the entry point for one benchmark run. It collects the runtime for an entire net and/or individual operator, and saves the data locally or pushes to a remote server. The usage of the script is as follows:
 
 ```
-usage: harness.py [-h] [--android_dir ANDROID_DIR] [--backend BACKEND]
-                  --benchmark_file BENCHMARK_FILE [--devices DEVICES]
+usage: harness.py [-h] [--android_dir ANDROID_DIR] [--backend BACKEND] -b
+                  BENCHMARK_FILE [-d DEVICES]
                   [--excluded_devices EXCLUDED_DEVICES] --framework {caffe2}
                   --info INFO [--local_reporter LOCAL_REPORTER] --model_cache
-                  MODEL_CACHE --platform PLATFORM [--program PROGRAM]
+                  MODEL_CACHE -p PLATFORM [--program PROGRAM] [--reboot]
                   [--regressed_types REGRESSED_TYPES]
                   [--remote_reporter REMOTE_REPORTER]
                   [--remote_access_token REMOTE_ACCESS_TOKEN]
                   [--root_model_dir ROOT_MODEL_DIR]
                   [--run_type {benchmark,verify,regress}] [--screen_reporter]
-                  [--shared_libs SHARED_LIBS] [--timeout TIMEOUT]
+                  [--set_freq SET_FREQ] [--shared_libs SHARED_LIBS]
+                  [--timeout TIMEOUT]
 
 Perform one benchmark run
 
@@ -86,10 +105,11 @@ optional arguments:
                         The directory in the android device all files are
                         pushed to.
   --backend BACKEND     Specify the backend the test runs on.
-  --benchmark_file BENCHMARK_FILE
+  -b BENCHMARK_FILE, --benchmark_file BENCHMARK_FILE
                         Specify the json file for the benchmark or a number of
                         benchmarks
-  --devices DEVICES     Specify the devices to run the benchmark, in a comma
+  -d DEVICES, --devices DEVICES
+                        Specify the devices to run the benchmark, in a comma
                         separated list. The value is the device or device_hash
                         field of the meta info.
   --excluded_devices EXCLUDED_DEVICES
@@ -105,12 +125,15 @@ optional arguments:
   --model_cache MODEL_CACHE
                         The local directory containing the cached models. It
                         should not be part of a git directory.
-  --platform PLATFORM   Specify the platform to benchmark on. Use this flag if
+  -p PLATFORM, --platform PLATFORM
+                        Specify the platform to benchmark on. Use this flag if
                         the framework needs special compilation scripts. The
                         scripts are called build.sh saved in
                         specifications/frameworks/<framework>/<platform>
                         directory
   --program PROGRAM     The program to run on the platform.
+  --reboot              Tries to reboot the devices before launching
+                        benchmarks for one commit.
   --regressed_types REGRESSED_TYPES
                         A json string that encodes the types of the regressed
                         tests.
@@ -129,6 +152,11 @@ optional arguments:
                         benchmark is re-run to confirm a suspicious
                         regression. regress, the regression is confirmed.
   --screen_reporter     Display the summary of the benchmark result on screen.
+  --set_freq SET_FREQ   On rooted android phones, set the frequency of the
+                        cores. The supported values are: max: set all cores to
+                        the maximum frquency. min: set all cores to the
+                        minimum frequency. mid: set all cores to the median
+                        frequency.
   --shared_libs SHARED_LIBS
                         Pass the shared libs that the framework depends on, in
                         a comma separated list.
@@ -145,12 +173,12 @@ The `repo_driver.py` is the entry point to run the benchmark continuously. It re
 The accepted arguments are as follows:
 
 ```
-usage: repo_driver.py [-h] [--base_commit BASE_COMMIT] [--branch BRANCH]
-                      [--commit COMMIT] [--commit_file COMMIT_FILE] --exec_dir
-                      EXEC_DIR --framework {caffe2} --frameworks_dir
-                      FRAMEWORKS_DIR [--interval INTERVAL] --platforms
-                      PLATFORMS [--regression]
-                      [--remote_repository REMOTE_REPOSITORY]
+usage: repo_driver.py [-h] [--ab_testing] [--base_commit BASE_COMMIT]
+                      [--branch BRANCH] [--commit COMMIT]
+                      [--commit_file COMMIT_FILE] --exec_dir EXEC_DIR
+                      --framework {caffe2} [--frameworks_dir FRAMEWORKS_DIR]
+                      [--interval INTERVAL] --platforms PLATFORMS
+                      [--regression] [--remote_repository REMOTE_REPOSITORY]
                       [--repo {git,hg}] --repo_dir REPO_DIR [--same_host]
                       [--status_file STATUS_FILE]
 
@@ -158,6 +186,7 @@ Perform one benchmark run
 
 optional arguments:
   -h, --help            show this help message and exit
+  --ab_testing          Enable A/B testing in benchmark.
   --base_commit BASE_COMMIT
                         In A/B testing, this is the control commit that is
                         used to compare against. If not specified, the default
