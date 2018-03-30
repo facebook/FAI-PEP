@@ -32,14 +32,18 @@ class HGRepo(RepoBase):
         self._run('update', *args)
 
     def getCurrentCommitHash(self):
-        commit = self._run('id', '-i').strip()
+        commit = self.getCommitHash(None)
         if commit[-1] == '+':
             commit = commit[:-1]
         return self.getCommitHash(commit)
 
     def getCommitHash(self, commit):
-        output = self._run('log', '--template', '<START>{node}<END>',
-                           '-r', commit)
+        if commit:
+            output = self._run('log', '--template', '<START>{node}<END>',
+                               '-r', commit)
+        else:
+            output = self._run('log', '-l', "1",
+                               '--template', '<START>{node}<END>')
         start = output.index('<START>') + len('<START>')
         end = output.index('<END>')
         return output[start:end]
