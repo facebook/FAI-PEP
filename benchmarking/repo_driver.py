@@ -201,7 +201,7 @@ class ExecutablesBuilder (threading.Thread):
                 # verify that the commit exists
                 return self.repo.getCommitHash(commit_hash)
         else:
-            return self.repo.getCommitHash(getArgs().commit)
+            return None
 
     def _setupRepoStep(self, platform, commit):
         repo_info = {}
