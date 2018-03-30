@@ -54,7 +54,7 @@ class HGRepo(RepoBase):
     def getNextCommitHash(self, commit):
         # always get the top-of-trunk commit
         c = self._run('log', '--template', '<START>{node}<END>',
-                      'tip')
+                      '-r', 'tip')
         start = c.index('<START>') + len('<START>')
         end = c.index('<END>')
         return c[start:end]
