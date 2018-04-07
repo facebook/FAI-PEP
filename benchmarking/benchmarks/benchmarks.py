@@ -140,7 +140,6 @@ class BenchmarkCollector(object):
 
         if meta:
             self._deepMerge(one_benchmark["model"], meta)
-
         self._verifyModel(one_benchmark, source)
         self._updateTests(one_benchmark, source)
         one_benchmark["model"]["path"] = os.path.abspath(source)
@@ -178,6 +177,11 @@ class BenchmarkCollector(object):
                 f.write(s)
             getLogger().info("Model {} is changed. ".format(model["name"]) +
                              "Please update the meta json file.")
+            for f in model["files"]:
+                cached_model_name = \
+                    self._getModelFilename(field, model_dir, None)
+                cached_models[f] = cached_model_name
+
         one_benchmark["model"]["cached_models"] = cached_models
 
     def _calculateMD5(self, model_name):
