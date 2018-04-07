@@ -56,6 +56,7 @@ class RunBench(object):
             '--commit_file': self.root_dir + "processed_commit",
             '--exec_dir': self.root_dir + "exec",
             '--framework': 'caffe2',
+            '--local_reporter': self.root_dir + "reporter",
             '--repo': 'git',
             '--status_file': self.root_dir + "status",
             '--model_cache': self.root_dir + "model_cache",
