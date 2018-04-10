@@ -34,5 +34,5 @@ def getPlatforms(tempdir):
             platforms = [p for p in platforms if p.platform in plts or
                          p.platform_hash in plts]
     if not platforms:
-        getLogger().error("No platform is specified.")
+        getLogger().error("No platform or physical device detected.")
     return platforms
