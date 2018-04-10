@@ -230,8 +230,10 @@ class ExecutablesBuilder (threading.Thread):
         shutil.rmtree(dst_dir, True)
         os.makedirs(dst_dir)
 
-        if processRun(['sh', script, getArgs().repo_dir, dst]) is not None:
+        result = processRun(['sh', script, getArgs().repo_dir, dst])
+        if result is not None:
             os.chmod(dst, 0o777)
+        print(result)
 
         if not os.path.isfile(dst):
             getLogger().error(
