@@ -10,6 +10,7 @@
 
 import collections
 import os
+import re
 import shutil
 from frameworks.framework_base import FrameworkBase
 from utils.custom_logger import getLogger
@@ -172,11 +173,20 @@ class Caffe2Framework(FrameworkBase):
             i = i+1
         return i
 
+
     def _processDelayData(self, data):
-        details = collections.defaultdict(list)
+        details = collections.defaultdict(lambda: collections.defaultdict(list))
         for d in data:
             for k, v in d.items():
-                details[k].append(v)
-        for d in details:
-            details[d].sort()
+                details[k]["values"].append(v)
+        pattern = re.compile(r"^ID_(\d+)_([a-zA-Z]+)_[\w/]+")
+        for key in details:
+            match = pattern.match(key)
+            if match:
+                # per layer timing
+                details[key]["id"].append(match.group(1))
+                details[key]["operator"].append(match.group(2))
+            else:
+                # whole graph timing
+                pass
         return details

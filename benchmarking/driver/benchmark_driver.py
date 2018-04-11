@@ -83,9 +83,11 @@ def _processDelayData(input_data):
     data = {}
     for k in input_data:
         data[k] = {
-            "values": input_data[k],
-            "summary": _getStatistics(input_data[k]),
-            "type": k
+            "values": input_data[k]["values"],
+            "summary": _getStatistics(input_data[k]["values"]),
+            "type": k,
+            "operator": input_data[k]["operator"],
+            "id": input_data[k]["id"]
         }
     return data
 
@@ -154,14 +156,18 @@ def _collectErrorData(output_files):
     return data
 
 
-def _getStatistics(sorted_array):
+def _getStatistics(array):
+    sorted_array = sorted(array)
+    median = _getMedian(sorted_array)
     return {
         'p0': sorted_array[0],
         'p100': sorted_array[-1],
-        'p50': _getMedian(sorted_array),
+        'p50': median,
         'p10': sorted_array[len(sorted_array) // 10],
         'p90': sorted_array[len(sorted_array) -
                             len(sorted_array) // 10 - 1],
+        'MAD': _getMedian(sorted(map(lambda x: abs(x - median),
+                                     sorted_array))),
     }
 
 
