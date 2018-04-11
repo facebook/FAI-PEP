@@ -12,14 +12,12 @@ from collections import deque
 import datetime
 import json
 import os
-import shutil
 import threading
 import time
-from utils.arg_parse import getParser, getArgs, \
-                                         getUnknowns, parseKnown
+from utils.arg_parse import getParser, getArgs, getUnknowns, parseKnown
 from repos.repos import getRepo
+from utils.build_program import buildProgramPlatform
 from utils.custom_logger import getLogger
-from utils.subprocess_with_logger import processRun
 from utils.utilities import getDirectory
 
 getParser().add_argument("--ab_testing", action="store_true",
@@ -225,47 +223,9 @@ class ExecutablesBuilder (threading.Thread):
 
     def _buildProgramPlatform(self, repo_info, dst, platform):
         self.repo.checkout(repo_info['commit'])
-        script = self._getBuildScript(platform)
-        dst_dir = os.path.dirname(dst)
-        shutil.rmtree(dst_dir, True)
-        os.makedirs(dst_dir)
-
-        result = processRun(['sh', script, getArgs().repo_dir, dst])
-        if result is not None:
-            os.chmod(dst, 0o777)
-        print(result)
-
-        if not os.path.isfile(dst):
-            getLogger().error(
-                "Build program using script {} failed.".format(script))
-            return False
-        return True
-
-    def _getBuildScript(self, platform):
-        assert os.path.isdir(getArgs().frameworks_dir), \
-            "Frameworks dir is not specified."
-        frameworks_dir = getArgs().frameworks_dir
-        assert os.path.isdir(frameworks_dir), \
-            "{} must be specified.".format(frameworks_dir)
-        framework_dir = frameworks_dir + "/" + getArgs().framework
-        assert os.path.isdir(framework_dir), \
-            "{} must be specified.".format(framework_dir)
-        platform_dir = framework_dir + "/" + platform
-        build_script = None
-        if os.path.isdir(platform_dir):
-            if os.path.isfile(platform_dir + "/build.sh"):
-                build_script = platform_dir + "/build.sh"
-        if build_script is None:
-            # Ideally, should check the parent directory until the
-            # framework directory. Save this for the future
-            build_script = framework_dir + "/build.sh"
-            getLogger().warning("Directory {} ".format(platform_dir) +
-                                "doesn't exist. Use " +
-                                "{} instead".format(framework_dir))
-        assert os.path.isfile(build_script), \
-            "Cannot find build script in {} for ".framework_dir + \
-            "platform {}".format(platform)
-        return build_script
+        return buildProgramPlatform(dst, getArgs().repo_dir,
+                                    getArgs().framework,
+                                    getArgs().frameworks_dir, platform)
 
     def _getControlCommit(self, reference_time, base_commit):
         # Get start of week
