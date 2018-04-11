@@ -9,7 +9,6 @@
 ##############################################################################
 
 import os
-import shutil
 
 from .custom_logger import getLogger
 from .subprocess_with_logger import processRun
@@ -18,8 +17,10 @@ from .subprocess_with_logger import processRun
 def buildProgramPlatform(dst, repo_dir, framework, frameworks_dir, platform):
     script = _getBuildScript(framework, frameworks_dir, platform)
     dst_dir = os.path.dirname(dst)
-    shutil.rmtree(dst_dir, True)
-    os.makedirs(dst_dir)
+    if os.path.isfile(dst):
+        os.remove(dst)
+    elif not os.path.isdir(dst_dir):
+        os.makedirs(dst_dir)
 
     result = processRun(['sh', script, repo_dir, dst])
     if result is not None:
