@@ -14,7 +14,6 @@ from utils.custom_logger import getLogger
 import copy
 import datetime
 
-
 class ScreenReporter(ReporterBase):
     def __init__(self):
         super(ScreenReporter, self).__init__()
@@ -43,28 +42,23 @@ class ScreenReporter(ReporterBase):
               format(framework_name, commit, datetime.datetime.fromtimestamp(
                      int(ts)).strftime('%Y-%m-%d %H:%M:%S')))
 
-        for key in sorted(data):
-            if "NET_DELAY" == key:
-                continue
-            self._printOneData(key, data[key])
-
-        # Print NET_DELAY last
         if "NET_DELAY" in data:
             self._printOneData("NET_DELAY", data["NET_DELAY"])
+            data.pop("NET_DELAY")
+
+        # Print per layer delay
+        for key in sorted(data, key=lambda x: int(data[x]["id"][0])):
+            self._printOneData(key, data[key])
+
 
     def _printOneData(self, key, d):
-        print("{}: ".format(key))
         if "summary" in d:
             s = d["summary"]
-            print("  value: p0: {0:.2f}  ".format(s["p0"]) +
-                  "p10: {0:.2f}  ".format(s["p10"]) +
-                  "p50: {0:.2f}  ".format(s["p50"]) +
-                  "p90: {0:.2f}  ".format(s["p90"]) +
-                  "p100: {0:.2f}".format(s["p100"]))
+            print("{}: value median {:.2f}  MAD: {:.5f}".format(key, s["p50"], s["MAD"]))
         if "diff_summary" in d:
             s = d["diff_summary"]
-            print("  diff:  p0: {0:.2f}  ".format(s["p0"]) +
-                  "p10: {0:.2f}  ".format(s["p10"]) +
-                  "p50: {0:.2f}  ".format(s["p50"]) +
-                  "p90: {0:.2f}  ".format(s["p90"]) +
-                  "p100: {0:.2f}".format(s["p100"]))
+            print("{}: diff median {:.2f}  MAD: {:.5f}".format(key, s["p50"], s["MAD"]))
+
+
+    def _getOperatorStats(self, data):
+        pass
