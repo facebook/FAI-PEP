@@ -188,5 +188,5 @@ class Caffe2Framework(FrameworkBase):
                 details[key]["operator"].append(match.group(2))
             else:
                 # whole graph timing
-                pass
+                assert key == self.NET_DELAY
         return details
