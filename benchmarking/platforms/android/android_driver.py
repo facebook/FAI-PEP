@@ -34,9 +34,14 @@ class AndroidDriver:
         return devices
 
     def getAndroidPlatforms(self, tempdir):
+        platforms = []
+        if getArgs().device:
+            adb = ADB(getArgs().device)
+            platforms.append(AndroidPlatform(tempdir, adb))
+            return platforms
+
         if self.devices is None:
             self.devices = self.getDevices()
-        platforms = []
         if getArgs().excluded_devices:
             excluded_devices = \
                 set(getArgs().excluded_devices.strip().split(','))
