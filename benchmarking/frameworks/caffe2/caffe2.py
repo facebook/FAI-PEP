@@ -179,7 +179,7 @@ class Caffe2Framework(FrameworkBase):
         for d in data:
             for k, v in d.items():
                 details[k]["values"].append(v)
-        pattern = re.compile(r"^ID_(\d+)_([a-zA-Z]+)_[\w/]+")
+        pattern = re.compile(r"^ID_(\d+)_([a-zA-Z0-9]+)_[\w/]+")
         for key in details:
             match = pattern.match(key)
             if match:
@@ -188,5 +188,5 @@ class Caffe2Framework(FrameworkBase):
                 details[key]["operator"].append(match.group(2))
             else:
                 # whole graph timing
-                pass
+                assert key == self.NET_DELAY
         return details
