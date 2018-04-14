@@ -31,8 +31,6 @@ class AndroidPlatform(PlatformBase):
             '-' + \
             adb.shell(['getprop', 'ro.build.version.sdk'], default="").strip()
         self.setPlatform(platform)
-        self.tempdir = tempdir + "/" + self.platform
-        os.makedirs(self.tempdir, 0o777, True)
         self.platform_hash = adb.device
         self._setLogCatSize()
         if getArgs().set_freq:
