@@ -19,7 +19,7 @@ from benchmarks.benchmarks import BenchmarkCollector
 from frameworks.frameworks import getFrameworks
 from platforms.platforms import getPlatforms
 from reporters.reporters import getReporters
-from utils.arg_parse import getParser, getArgs, parse
+from utils.arg_parse import getParser, getArgs, parseKnown
 from utils.custom_logger import getLogger
 
 getParser().add_argument("--backend",
@@ -90,7 +90,7 @@ getParser().add_argument("--timeout", default=300, type=float,
 
 class BenchmarkDriver(object):
     def __init__(self):
-        parse()
+        parseKnown()
 
     def runBenchmark(self, info, platform, benchmarks, framework):
         if getArgs().reboot:
