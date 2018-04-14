@@ -39,9 +39,13 @@ getParser().add_argument("--info", required=True,
     help="The json serialized options describing the control and treatment.")
 getParser().add_argument("--local_reporter",
     help="Save the result to a directory specified by this argument.")
+getParser().add_argument("--simple_local_reporter",
+    help="Same as local reporter, but the directory hierarchy is reduced.")
 getParser().add_argument("--model_cache", required=True,
     help="The local directory containing the cached models. It should not "
     "be part of a git directory.")
+getParser().add_argument("--device",
+    help="The single device to run this benchmark on")
 getParser().add_argument("-p", "--platform", required=True,
     help="Specify the platform to benchmark on. Use this flag if the framework"
     " needs special compilation scripts. The scripts are called build.sh "
