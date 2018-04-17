@@ -18,6 +18,7 @@ def getPlatforms(tempdir):
     platforms = []
     if getArgs().platform[0:4] == "host" or \
        getArgs().platform[0:5] == "linux" or \
+       getArgs().platform[0:9] == "devserver" or \
        getArgs().platform[0:3] == "mac":
         platforms.append(HostPlatform(tempdir))
     elif getArgs().platform[0:7] == "android":
