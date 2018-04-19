@@ -214,4 +214,6 @@ def _retrieveMeta(info, benchmark, platform, framework, backend):
     if "group" in benchmark["model"]:
         meta["group"] = benchmark["model"]["group"]
     meta["backend"] = backend
+    if getArgs().user_identifier:
+        meta["user_identifier"] = getArgs().user_identifier
     return meta
