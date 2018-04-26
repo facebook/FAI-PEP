@@ -40,9 +40,9 @@ class BenchmarkCollector(object):
             for benchmark_file in content["benchmarks"]:
                 benchmark_file = path + "/" + benchmark_file
                 self._collectOneBenchmark(benchmark_file,
-                                          meta, benchmarks)
+                                          meta, benchmarks, info)
         else:
-            self._collectOneBenchmark(source, meta, benchmarks)
+            self._collectOneBenchmark(source, meta, benchmarks, info)
 
         for b in benchmarks:
             self._verifyBenchmark(b, b["model"]["path"], True)
@@ -130,7 +130,7 @@ class BenchmarkCollector(object):
                     "Input files are specified, but output files are not " + \
                     "specified in the benchmark {}".format(filename)
 
-    def _collectOneBenchmark(self, source, meta, benchmarks):
+    def _collectOneBenchmark(self, source, meta, benchmarks, info):
         assert os.path.isfile(source), \
             "Benchmark {} does not exist".format(source)
         with open(source, 'r') as b:
@@ -140,6 +140,10 @@ class BenchmarkCollector(object):
 
         if meta:
             self._deepMerge(one_benchmark["model"], meta)
+        if "commands" in info:
+            if "commands" not in one_benchmark["model"]:
+                one_benchmark["model"]["commands"] = {}
+            self._deepMerge(one_benchmark["model"]["commands"], info["commands"])
         self._verifyModel(one_benchmark, source)
         self._updateTests(one_benchmark, source)
         one_benchmark["model"]["path"] = os.path.abspath(source)

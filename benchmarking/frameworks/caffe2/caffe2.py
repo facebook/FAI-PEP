@@ -42,7 +42,6 @@ class Caffe2Framework(FrameworkBase):
         shared_libs = None
         if "shared_libs" in info:
             shared_libs = platform.copyFilesToPlatform(info["shared_libs"])
-        commands = info["commands"] if "commands" in info else None
 
         cached_models = \
             platform.copyFilesToPlatform(model["cached_models"])
@@ -51,7 +50,7 @@ class Caffe2Framework(FrameworkBase):
             input_files = platform.copyFilesToPlatform(test["input_files"])
 
         cmd = self._composeRunCommand(platform, program, test, cached_models,
-                                      input_files, shared_libs, commands)
+                                      input_files, shared_libs)
         total_num = test["iter"]
         if "commands" in test and \
                 "caffe2" in test["commands"] and \
@@ -80,7 +79,7 @@ class Caffe2Framework(FrameworkBase):
         return output, output_files
 
     def _composeRunCommand(self, platform, program, test, cached_models,
-                           input_files, shared_libs, commands):
+                           input_files, shared_libs):
         cmd = [program,
                "--net", cached_models["predict"],
                "--warmup", test["warmup"],
@@ -112,12 +111,6 @@ class Caffe2Framework(FrameworkBase):
                 for key in test["commands"]["caffe2"]:
                     val = test["commands"]["caffe2"][key]
                     cmd.extend(["--" + key, val])
-        # annotates the additional comands and also show respect to the hard-coded
-        if commands and "caffe2" in commands:
-            for key, val in commands["caffe2"].items():
-                cmd_key = "--" + key
-                if cmd_key not in cmd:
-                    cmd.extend([cmd_key, val])
 
         if shared_libs:
             cmd = ["export", "LD_LIBRARY_PATH=$\{LD_LIBRARY_PATH\}:" +
