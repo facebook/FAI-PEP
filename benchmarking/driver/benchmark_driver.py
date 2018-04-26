@@ -24,8 +24,6 @@ def runOneBenchmark(info, benchmark, framework, platform, backend, reporters, lo
     minfo = copy.deepcopy(info["treatment"])
     if "shared_libs" in info:
         minfo["shared_libs"] = info["shared_libs"]
-    if "commands" in info:
-        minfo["commands"] = info["commands"]
     try:
         data = _runOnePass(minfo, benchmark, framework, platform)
         meta = None
@@ -33,8 +31,6 @@ def runOneBenchmark(info, benchmark, framework, platform, backend, reporters, lo
             cinfo = copy.deepcopy(info["control"])
             if "shared_libs" in info:
                 cinfo["shared_libs"] = info["shared_libs"]
-            if "commands" in info:
-                cinfo["commands"] = info["commands"]
             control = _runOnePass(cinfo, benchmark, framework, platform)
             bname = benchmark["model"]["name"]
             data = _mergeDelayData(data, control, bname)
