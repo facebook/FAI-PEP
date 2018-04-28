@@ -15,6 +15,7 @@ from utils.utilities import getFilename
 
 import json
 import os
+import shutil
 
 
 class SimpleLocalReporter(ReporterBase):
@@ -30,8 +31,8 @@ class SimpleLocalReporter(ReporterBase):
         id_dir = getFilename(meta["identifier"]) + "/"
         dirname = id_dir
         dirname = getArgs().simple_local_reporter + "/" + dirname
-        assert not os.path.exists(dirname), \
-            "Simple local reporter should not have multiple entries"
+        if os.path.exists(dirname):
+            shutil.rmtree(dirname, True)
         os.makedirs(dirname)
         with open(dirname + "/data.txt", 'w') as file:
             content_d = json.dumps(data)
