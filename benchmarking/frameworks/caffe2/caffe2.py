@@ -81,11 +81,13 @@ class Caffe2Framework(FrameworkBase):
     def _composeRunCommand(self, platform, program, test, cached_models,
                            input_files, shared_libs):
         cmd = [program,
-               "--init_net", cached_models["init"],
                "--net", cached_models["predict"],
                "--warmup", test["warmup"],
                "--iter", test["iter"]
                ]
+        if "init" in cached_models:
+            cmd.append("--init_net")
+            cmd.append(cached_models["init"])
         if input_files:
             inputs = ",".join(list(input_files.keys()))
             cmd.extend(["--input_file", ",".join(list(input_files.values()))])
@@ -109,6 +111,7 @@ class Caffe2Framework(FrameworkBase):
                 for key in test["commands"]["caffe2"]:
                     val = test["commands"]["caffe2"][key]
                     cmd.extend(["--" + key, val])
+
         if shared_libs:
             cmd = ["export", "LD_LIBRARY_PATH=$\{LD_LIBRARY_PATH\}:" +
                    os.path.dirname(shared_libs[0]), "&&"] + cmd
