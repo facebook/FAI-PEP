@@ -86,6 +86,9 @@ getParser().add_argument("--timeout", default=300, type=float,
     "The timeout value needs to be large enough so that the low end devices "
     "can safely finish the execution in normal conditions. Note, in A/B "
     "testing mode, the test runs twice. ")
+getParser().add_argument("--user_identifier",
+    help="User can specify an identifier and that will be passed to the "
+    "output so that the result can be easily identified.")
 
 
 class BenchmarkDriver(object):

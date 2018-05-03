@@ -24,9 +24,6 @@ class AndroidPlatform(PlatformBase):
             ['getprop', 'ro.product.model'], default="").strip() + \
             '-' + \
             adb.shell(
-            ['getprop', 'dalvik.vm.isa.arm.variant'], default="").strip() + \
-            '-' + \
-            adb.shell(
             ['getprop', 'ro.build.version.release'], default="").strip() + \
             '-' + \
             adb.shell(['getprop', 'ro.build.version.sdk'], default="").strip()
