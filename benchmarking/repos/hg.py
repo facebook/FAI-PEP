@@ -46,6 +46,7 @@ class HGRepo(RepoBase):
                                '--template', '<START>{node}<END>')
         start = output.index('<START>') + len('<START>')
         end = output.index('<END>')
+
         return output[start:end]
 
     def getCommitTime(self, commit):
