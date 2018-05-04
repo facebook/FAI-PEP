@@ -68,6 +68,8 @@ getParser().add_argument("--same_host", action="store_true",
     "If so, the build cannot be done in parallel with the benchmark run.")
 getParser().add_argument("--status_file",
     help="A file to inform the driver stops running when the content of the file is 0.")
+getParser().add_argument("--step", type=int,
+    help="Specify the number of commits we want to run the  benchmark once under continuous mode.")
 
 
 def stopRun():
@@ -183,7 +185,7 @@ class ExecutablesBuilder (threading.Thread):
                 new_commit_hash = self.repo.getCommitHash(getArgs().commit)
             else:
                 new_commit_hash = self.repo.getNextCommitHash(
-                    self.current_commit_hash)
+                    self.current_commit_hash, getArgs().step)
         if new_commit_hash == self.current_commit_hash:
             getLogger().info("Commit %s is already processed, sleeping...",
                              new_commit_hash)
