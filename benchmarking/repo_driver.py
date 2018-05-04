@@ -68,7 +68,7 @@ getParser().add_argument("--same_host", action="store_true",
     "If so, the build cannot be done in parallel with the benchmark run.")
 getParser().add_argument("--status_file",
     help="A file to inform the driver stops running when the content of the file is 0.")
-getParser().add_argument("--step", type=int,
+getParser().add_argument("--step", type=int, default=1,
     help="Specify the number of commits we want to run the  benchmark once under continuous mode.")
 
 

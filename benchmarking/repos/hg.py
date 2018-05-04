@@ -46,7 +46,6 @@ class HGRepo(RepoBase):
                                '--template', '<START>{node}<END>')
         start = output.index('<START>') + len('<START>')
         end = output.index('<END>')
-
         return output[start:end]
 
     def getCommitTime(self, commit):
@@ -58,7 +57,6 @@ class HGRepo(RepoBase):
 
     def getNextCommitHash(self, commit, step):
         # always get the top-of-trunk commit if there is no more commits
-        step = 1 if not step else step
         command_str = f'descendants({commit}, {step})'
         commits_str = self._run('log', '--template', '{node}:', '-r', command_str)
         commits_list = commits_str.split(':') if commits_str else []

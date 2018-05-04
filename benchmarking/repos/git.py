@@ -41,7 +41,7 @@ class GitRepo(RepoBase):
     def getCommitTime(self, commit):
         return int(self._run('show', '-s', '--format=%at', commit).strip())
 
-    def getNextCommitHash(self, commit, step=0):
+    def getNextCommitHash(self, commit, step):
         commits = self._run('rev-list', '--reverse',
                             commit+"..HEAD").strip().split('\n')
         next_commit = commits[0].strip()
