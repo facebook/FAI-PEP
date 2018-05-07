@@ -56,13 +56,14 @@ class HGRepo(RepoBase):
         return int(float(t[start:end]))
 
     def getNextCommitHash(self, commit, step):
-        # always get the top-of-trunk commit if there is no more commits
         command_str = f'descendants({commit}, {step})'
-        commits_str = self._run('log', '--template', '{node}:', '-r', command_str)
-        commits_list = commits_str.split(':') if commits_str else []
-        if '' in commits_list:
-            commits_list.remove('')
-        return commits_list[-1]
+        commits_str = self._run('log', '--template', '<START>{node}<END>', '-r', command_str)
+        # Extract the last commit str between START and END, it must exist
+        # In the worst case, it will be the commit itself
+        start = commits_str.rindex('<START>') + len('<START>')
+        end = commits_str.rindex('<END>')
+
+        return commits_str[start:end]
 
     def getCommitsInRange(self, start_date, end_date):
         sdate = start_date.strftime("%Y-%m-%d %H:%M:%S")
