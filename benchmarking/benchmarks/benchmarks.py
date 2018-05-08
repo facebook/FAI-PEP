@@ -30,10 +30,12 @@ class BenchmarkCollector(object):
         assert os.path.isfile(source), "Source {} is not a file".format(source)
         with open(source, 'r') as f:
             content = json.load(f)
+
         meta = content["meta"] if "meta" in content else {}
         if "meta" in info:
             self._deepMerge(meta, info["meta"])
         benchmarks = []
+
         if "benchmarks" in content:
             path = os.path.abspath(os.path.dirname(source))
             assert "meta" in content, "Meta field is missing in benchmarks"
@@ -45,33 +47,33 @@ class BenchmarkCollector(object):
             self._collectOneBenchmark(source, meta, benchmarks, info)
 
         for b in benchmarks:
-            self._verifyBenchmark(b, b["model"]["path"], True)
+            self._verifyBenchmark(b, b["path"], True)
         return benchmarks
 
     def _verifyBenchmark(self, benchmark, filename, is_post):
-        assert "model" in benchmark, \
-            "Model field is missing in benchmark {}".format(filename)
+        # model is now optional
+        if "model" in benchmark:
+            model = benchmark["model"]
+            assert "files" in model, \
+                "Files field is missing in benchmark {}".format(filename)
+            assert "name" in model, \
+                "Name field is missing in benchmark {}".format(filename)
+            assert "format" in model, \
+                "Format field is missing in benchmark {}".format(filename)
 
-        model = benchmark["model"]
-        assert "files" in model, \
-            "Files field is missing in benchmakr {}".format(filename)
-        assert "name" in model, \
-            "Name field is missing in benchmakr {}".format(filename)
-        assert "format" in model, \
-            "Format field is missing in benchmakr {}".format(filename)
+            for f in model["files"]:
+                field = model["files"][f]
+                assert "filename" in field, \
+                    "Filename is missing in file" + \
+                    " {} of benchmark {}".format(f, filename)
+                assert "location" in field, \
+                    "Location is missing in file" + \
+                    " {} of benchmark {}".format(f, filename)
+                assert "md5" in field, \
+                    "MD5 is missing in file" + \
+                    " {} of benchmark {}".format(f, filename)
 
-        for f in model["files"]:
-            field = model["files"][f]
-            assert "filename" in field, \
-                "Filename is missing in file" + \
-                " {} of benchmark {}".format(f, filename)
-            assert "location" in field, \
-                "Location is missing in file" + \
-                " {} of benchmark {}".format(f, filename)
-            assert "md5" in field, \
-                "MD5 is missing in file" + \
-                " {} of benchmark {}".format(f, filename)
-
+        # tests is mandatory
         assert "tests" in benchmark, \
             "Tests field is missing in benchmark {}".format(filename)
         tests = benchmark["tests"]
@@ -79,14 +81,25 @@ class BenchmarkCollector(object):
         if is_post:
             assert len(tests) == 1, "After rewrite, only one test in " + \
                 "one benchmark."
+        else:
+            assert len(tests) > 0, "Tests cannot be empty"
+
+        is_generic_test = tests[0]["metric"] == "generic"
 
         for test in tests:
+            assert "metric" in test, "Metric field is missing in " + \
+                "benchmark {}".format(filename)
+
+            # no check is needed if the metric is generic
+            if is_generic_test:
+                assert test["metric"] == "generic", "All tests must be generic"
+                continue
+
             assert "iter" in test, "Iter field is missing in benchmark " + \
                 "{}".format(filename)
             assert "warmup" in test, "Warmup field is missing in " + \
                 "benchmark {}".format(filename)
-            assert "metric" in test, "Metric field is missing in " + \
-                "benchmark {}".format(filename)
+
             assert "identifier" in test, "Identifier field is missing in " + \
                 "benchmark {}".format(filename)
 
@@ -138,15 +151,20 @@ class BenchmarkCollector(object):
 
         self._verifyBenchmark(one_benchmark, source, False)
 
+        # Adding path to benchmark file
+        one_benchmark["path"] = os.path.abspath(source)
+
         if meta:
             self._deepMerge(one_benchmark["model"], meta)
         if "commands" in info:
             if "commands" not in one_benchmark["model"]:
                 one_benchmark["model"]["commands"] = {}
             self._deepMerge(one_benchmark["model"]["commands"], info["commands"])
-        self._verifyModel(one_benchmark, source)
+
+        if "model" in benchmarks:
+            self._verifyModel(one_benchmark, source)
+
         self._updateTests(one_benchmark, source)
-        one_benchmark["model"]["path"] = os.path.abspath(source)
         if len(one_benchmark["tests"]) == 1:
             benchmarks.append(one_benchmark)
         else:
@@ -227,6 +245,8 @@ class BenchmarkCollector(object):
         return cached_model_name
 
     def _updateTests(self, one_benchmark, source):
+        if one_benchmark["tests"][0]["metric"] == "generic":
+            return
         tests = one_benchmark.pop("tests")
         # dealing with multiple inputs
         new_tests = self._replicateTestsOnDims(tests, source)

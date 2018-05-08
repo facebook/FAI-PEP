@@ -19,14 +19,14 @@ from utils.utilities import getCommand
 
 def runOneBenchmark(info, benchmark, framework, platform, backend, reporters):
     assert "treatment" in info, "Treatment is missing in info"
-    getLogger().info("Running {}".format(benchmark["model"]["path"]))
+    getLogger().info("Running {}".format(benchmark["path"]))
 
     minfo = copy.deepcopy(info["treatment"])
     if "shared_libs" in info:
         minfo["shared_libs"] = info["shared_libs"]
     try:
         data = _runOnePass(minfo, benchmark, framework, platform)
-
+        meta = None
         if "control" in info and benchmark["tests"][0]["metric"] == "delay":
             cinfo = copy.deepcopy(info["control"])
             if "shared_libs" in info:
@@ -34,8 +34,10 @@ def runOneBenchmark(info, benchmark, framework, platform, backend, reporters):
             control = _runOnePass(cinfo, benchmark, framework, platform)
             bname = benchmark["model"]["name"]
             data = _mergeDelayData(data, control, bname)
-        data = _adjustData(info, data)
-        meta = _retrieveMeta(info, benchmark, platform, framework, backend)
+        if benchmark["tests"][0]["metric"] == "delay":
+            data = _adjustData(info, data)
+            meta = _retrieveMeta(info, benchmark, platform, framework, backend)
+
         result = {
             "meta": meta,
             "data": data
@@ -43,15 +45,24 @@ def runOneBenchmark(info, benchmark, framework, platform, backend, reporters):
     except Exception:
         # Catch all exceptions so that failure in one test does not
         # affect other tests
+        getLogger().info(
+            "Exception caught when running benchmark")
         data = None
     if data is None or len(data) == 0:
         name = platform.getMangledName()
+        model_name = ""
+        if "model" in benchmark and "name" in benchmark["model"]:
+            model_name = benchmark["model"]["name"]
+        commit_hash = ""
+        if "commit" in info["treatment"]:
+            commit_hash = info["treatment"]["commit"]
         getLogger().info(
-            "No data collected for {} ".format(benchmark["model"]["name"]) +
+            "No data collected for ".format(model_name) +
             "on {}. ".format(name) +
             "The run may be failed for " +
-            "{}".format(info["treatment"]["commit"]))
+            "{}".format(commit_hash))
         return
+
     for reporter in reporters:
         reporter.report(result)
     if "regression_commits" in info and \
@@ -68,14 +79,19 @@ def _runOnePass(info, benchmark, framework, platform):
         "At this moment, only one test exists in the benchmark"
     output, treatment_files = \
         framework.runBenchmark(info, benchmark, platform)
+
+    data = None
     test = benchmark["tests"][0]
     if treatment_files and test["metric"] == "error":
         golden_files = test["output_files"]
         data = _processErrorData(treatment_files, golden_files)
     elif test["metric"] == "delay":
         data = _processDelayData(output)
+    elif test["metric"] == "generic":
+        data = output
     else:
         assert False, "Should not be here"
+
     return data
 
 

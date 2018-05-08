@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 
 ##############################################################################
 # Copyright 2017-present, Facebook, Inc.
@@ -8,16 +8,12 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-
-from .caffe2.caffe2 import Caffe2Framework
-from .generic.generic import GenericFramework
-
-frameworks = {
-    'caffe2': Caffe2Framework,
-    'generic': GenericFramework
-}
+from reporters.reporter_base import ReporterBase
 
 
-def getFrameworks():
-    global frameworks
-    return frameworks
+class SimpleScreenReporter(ReporterBase):
+    def __init__(self):
+        super(SimpleScreenReporter, self).__init__()
+
+    def report(self, content):
+        print(content["data"])
