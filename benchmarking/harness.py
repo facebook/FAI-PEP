@@ -94,6 +94,7 @@ getParser().add_argument("--user_identifier",
 class BenchmarkDriver(object):
     def __init__(self):
         parseKnown()
+        self._lock = threading.Lock()
 
     def runBenchmark(self, info, platform, benchmarks, framework):
         if getArgs().reboot:
@@ -103,7 +104,7 @@ class BenchmarkDriver(object):
             b = copy.deepcopy(benchmark)
             i = copy.deepcopy(info)
             runOneBenchmark(i, b, framework, platform, getArgs().platform,
-                            reporters)
+                            reporters, self._lock)
 
     def run(self):
         tempdir = tempfile.mkdtemp()
@@ -117,11 +118,9 @@ class BenchmarkDriver(object):
             "Framework {} is not supported".format(getArgs().framework)
         framework = frameworks[getArgs().framework](tempdir)
         platforms = getPlatforms(tempdir)
-        threads = []
         for platform in platforms:
             t = threading.Thread(target=self.runBenchmark,
                                  args=(info, platform, benchmarks, framework))
-            threads.append(t)
             t.start()
         shutil.rmtree(tempdir, True)
 
