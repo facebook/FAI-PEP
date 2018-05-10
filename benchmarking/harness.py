@@ -33,7 +33,7 @@ getParser().add_argument("--excluded_devices",
     help="Specify the devices that skip the benchmark, in a comma separated "
     "list. The value is the device or device_hash field of the meta info.")
 getParser().add_argument("--framework", required=True,
-    choices=["caffe2"],
+    choices=["caffe2", "generic"],
     help="Specify the framework to benchmark on.")
 getParser().add_argument("--info", required=True,
     help="The json serialized options describing the control and treatment.")
@@ -67,11 +67,14 @@ getParser().add_argument("--root_model_dir",
     "relative directory, i.e. the location field starts with //")
 getParser().add_argument("--run_type", default="benchmark",
     choices=["benchmark", "verify", "regress"],
-    help="The type of the current run. The allowed values are: benchmark, the "
-    "normal benchmark run. verify, the benchmark is re-run to confirm a "
-    "suspicious regression. regress, the regression is confirmed.")
+    help="The type of the current run. The allowed values are: "
+    "benchmark, the normal benchmark run."
+    "verify, the benchmark is re-run to confirm a suspicious regression."
+    "regress, the regression is confirmed.")
 getParser().add_argument("--screen_reporter", action="store_true",
     help="Display the summary of the benchmark result on screen.")
+getParser().add_argument("--simple_screen_reporter", action="store_true",
+    help="Display the result on screen with no post processing.")
 getParser().add_argument("--set_freq",
     help="On rooted android phones, set the frequency of the cores. "
     "The supported values are: "

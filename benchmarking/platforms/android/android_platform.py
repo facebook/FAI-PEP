@@ -62,10 +62,12 @@ class AndroidPlatform(PlatformBase):
         if getArgs().set_freq:
             self.adb.setFrequency(getArgs().set_freq)
 
-    def runBenchmark(self, cmd):
+    def runBenchmark(self, cmd, log_to_screen_only=False):
         self.adb.logcat('-b', 'all', '-c')
         log_screen = self.adb.shell(cmd, timeout=getArgs().timeout)
-        log_logcat = self.adb.logcat('-d')
+        log_logcat = ""
+        if not log_to_screen_only:
+            log_logcat = self.adb.logcat('-d')
         return log_screen + log_logcat
 
     def collectMetaData(self, info):
