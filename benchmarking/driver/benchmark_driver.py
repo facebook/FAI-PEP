@@ -17,7 +17,7 @@ from utils.custom_logger import getLogger
 from utils.utilities import getCommand
 
 
-def runOneBenchmark(info, benchmark, framework, platform, backend, reporters):
+def runOneBenchmark(info, benchmark, framework, platform, backend, reporters, lock):
     assert "treatment" in info, "Treatment is missing in info"
     getLogger().info("Running {}".format(benchmark["path"]))
 
@@ -62,9 +62,11 @@ def runOneBenchmark(info, benchmark, framework, platform, backend, reporters):
             "The run may be failed for " +
             "{}".format(commit_hash))
         return
+      
+    with lock:
+        for reporter in reporters:
+            reporter.report(result)
 
-    for reporter in reporters:
-        reporter.report(result)
     if "regression_commits" in info and \
             info["run_type"] == "benchmark" and \
             getArgs().local_reporter:
