@@ -34,7 +34,7 @@ def runOneBenchmark(info, benchmark, framework, platform, backend, reporters, lo
             control = _runOnePass(cinfo, benchmark, framework, platform)
             bname = benchmark["model"]["name"]
             data = _mergeDelayData(data, control, bname)
-        if benchmark["tests"][0]["metric"] == "delay":
+        if benchmark["tests"][0]["metric"] != "generic":
             data = _adjustData(info, data)
             meta = _retrieveMeta(info, benchmark, platform, framework, backend)
 
@@ -62,7 +62,7 @@ def runOneBenchmark(info, benchmark, framework, platform, backend, reporters, lo
             "The run may be failed for " +
             "{}".format(commit_hash))
         return
-      
+
     with lock:
         for reporter in reporters:
             reporter.report(result)
@@ -134,6 +134,7 @@ def _mergeDelayData(treatment_data, control_data, bname):
             "p100": tsummary['p100'] - csummary['p0'],
             "p10": tsummary['p10'] - csummary['p90'],
             "p90": tsummary['p90'] - csummary['p10'],
+            "MAD": tsummary['MAD'] - csummary['MAD'],
         }
     return data
 
