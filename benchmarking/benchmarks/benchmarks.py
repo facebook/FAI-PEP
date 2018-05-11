@@ -161,7 +161,7 @@ class BenchmarkCollector(object):
                 one_benchmark["model"]["commands"] = {}
             self._deepMerge(one_benchmark["model"]["commands"], info["commands"])
 
-        if "model" in benchmarks:
+        if "model" in one_benchmark:
             self._verifyModel(one_benchmark, source)
 
         self._updateTests(one_benchmark, source)

@@ -46,18 +46,24 @@ class ScreenReporter(ReporterBase):
             self._printOneData("NET_DELAY", data["NET_DELAY"])
             data.pop("NET_DELAY")
 
-        # Print per layer delay
-        for key in sorted(data, key=lambda x: int(data[x]["id"][0])):
-            self._printOneData(key, data[key])
+        data_values_iter = iter(data.values())
+        if "id" in next(data_values_iter):
+            # Print per layer delay in order
+            for key in sorted(data, key=lambda x: int(data[x]["id"][0])):
+                self._printOneData(key, data[key])
+        else:
+            for key in sorted(data):
+                self._printOneData(key, data[key])
 
 
     def _printOneData(self, key, d):
         if "summary" in d:
             s = d["summary"]
-            print("{}: value median {:.2f}  MAD: {:.5f}".format(key, s["p50"], s["MAD"]))
+            # MAD: Median absolute deviation
+            print("{}: value median {:.5f}  MAD: {:.5f}".format(key, s["p50"], s["MAD"]))
         if "diff_summary" in d:
             s = d["diff_summary"]
-            print("{}: diff median {:.2f}  MAD: {:.5f}".format(key, s["p50"], s["MAD"]))
+            print("{}: diff median {:.5f}  MAD: {:.5f}".format(key, s["p50"], s["MAD"]))
 
 
     def _getOperatorStats(self, data):
