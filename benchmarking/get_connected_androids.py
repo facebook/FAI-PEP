@@ -14,9 +14,11 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import json
+import logging
 
 from platforms.android.android_driver import AndroidDriver
 from utils.arg_parse import getParser, parse
+from utils.custom_logger import getLogger
 
 
 getParser().add_argument("-d", "--devices",
@@ -37,14 +39,18 @@ getParser().add_argument("--set_freq",
 
 class GetConnectedAndroids(object):
     def __init__(self):
+        getLogger().setLevel(logging.FATAL)
         parse()
 
     def run(self):
         driver = AndroidDriver()
         platforms = driver.getAndroidPlatforms("")
-        androids = {}
+        androids = []
         for p in platforms:
-            androids[p.platform] = p.platform_hash
+            androids.append({
+                "kind": p.platform,
+                "hash": p.platform_hash,
+            })
         json_str = json.dumps(androids)
         print(json_str)
         return json_str
