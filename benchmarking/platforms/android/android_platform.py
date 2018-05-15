@@ -117,7 +117,7 @@ class AndroidPlatform(PlatformBase):
 
     def _moveOneFileFromPlatform(self, f, target_dir):
         basename = os.path.basename(f)
-        android_file = self.adb.dir + basename
+        android_file = f if f.startswith('/') else self.adb.dir + basename
         output_file = target_dir + basename
         self.adb.pull(android_file, output_file)
         self.adb.shell(["rm", "-f", android_file])
