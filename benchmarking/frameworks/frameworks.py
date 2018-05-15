@@ -11,10 +11,12 @@
 
 from .caffe2.caffe2 import Caffe2Framework
 from .generic.generic import GenericFramework
+from .oculus.oculus import OculusFramework
 
 frameworks = {
     'caffe2': Caffe2Framework,
-    'generic': GenericFramework
+    'generic': GenericFramework,
+    'oculus': OculusFramework
 }
 
 
