@@ -25,7 +25,6 @@ class GenericFramework(FrameworkBase):
         return "generic"
 
     def runBenchmark(self, info, benchmark, platform):
-        # import pdb; pdb.set_trace()
         tests = benchmark["tests"]
         assert len(tests) == 1, "At this point, only one test should " + \
             "exist in one benchmark. However, benchmark " + \
@@ -45,6 +44,8 @@ class GenericFramework(FrameworkBase):
             commands = self._updateModelPath(model, commands)
 
         # todo: input files
+
+        # run benchmark
         output = platform.runBenchmark(commands, True)
 
         # todo: output files
@@ -59,11 +60,10 @@ class GenericFramework(FrameworkBase):
 
     def _updateModelPath(self, model, commands):
         _args = commands.split()
-        init_net = model["files"]["init"]["filename"]
-        predict_net = model["files"]["predict"]["filename"]
+        # net_names = {filename: net_type}
+        net_names = {model["files"][key]["filename"]: key for key in model["files"].keys()}
+
         for i in range(len(_args)):
-            if _args[i] == init_net:
-                _args[i] = os.path.basename(model["cached_models"]["init"])
-            elif _args[i] == predict_net:
-                _args[i] = os.path.basename(model["cached_models"]["predict"])
+            if _args[i] in net_names:
+                _args[i] = os.path.basename(model["cached_models"][net_names[_args[i]]])
         return ' '.join(_args)

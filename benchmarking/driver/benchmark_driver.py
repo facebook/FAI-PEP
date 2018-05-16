@@ -36,7 +36,7 @@ def runOneBenchmark(info, benchmark, framework, platform, backend, reporters, lo
             data = _mergeDelayData(data, control, bname)
         if benchmark["tests"][0]["metric"] != "generic":
             data = _adjustData(info, data)
-            meta = _retrieveMeta(info, benchmark, platform, framework, backend)
+        meta = _retrieveMeta(info, benchmark, platform, framework, backend)
 
         result = {
             "meta": meta,
@@ -209,30 +209,41 @@ def _adjustData(info, data):
 
 def _retrieveMeta(info, benchmark, platform, framework, backend):
     assert "treatment" in info, "Treatment is missing in info"
-    model = benchmark["model"]
-    test = benchmark["tests"][0]
+
     meta = {}
+    # common
+    meta["backend"] = backend
     meta["time"] = time.time()
-    meta['net_name'] = model["name"]
-    meta["metric"] = test["metric"]
     meta["framework"] = framework.getName()
     meta["platform"] = platform.getName()
     if platform.platform_hash:
         meta["platform_hash"] = platform.platform_hash
-    meta["identifier"] = test["identifier"]
-    assert "commit" in info["treatment"], \
-        "Commit hash is missing in treatment"
-    meta["commit"] = info["treatment"]["commit"]
-    meta["commit_time"] = info["treatment"]["commit_time"]
+    meta["command"] = sys.argv
+    meta["command_str"] = getCommand(sys.argv)
+    if getArgs().user_identifier:
+        meta["user_identifier"] = getArgs().user_identifier
+
+    # model specific
+    if "model" in benchmark:
+        model = benchmark["model"]
+        meta['net_name'] = model["name"]
+        if "group" in benchmark["model"]:
+            meta["group"] = benchmark["model"]["group"]
+
+    # test specific
+    test = benchmark["tests"][0]
+    meta["metric"] = test["metric"]
+    if "identifier" in test:
+        meta["identifier"] = test["identifier"]
+
+    # info specific
+    if "commit" in info["treatment"]:
+        meta["commit"] = info["treatment"]["commit"]
+        meta["commit_time"] = info["treatment"]["commit_time"]
     if "control" in info:
         meta["control_commit"] = info["control"]["commit"]
         meta["control_commit_time"] = info["control"]["commit_time"]
-    meta["run_type"] = info["run_type"]
-    meta["command"] = sys.argv
-    meta["command_str"] = getCommand(sys.argv)
-    if "group" in benchmark["model"]:
-        meta["group"] = benchmark["model"]["group"]
-    meta["backend"] = backend
-    if getArgs().user_identifier:
-        meta["user_identifier"] = getArgs().user_identifier
+    if "run_type" in info:
+        meta["run_type"] = info["run_type"]
+
     return meta
