@@ -16,6 +16,7 @@ from utils.utilities import getFilename
 import json
 import os
 import shutil
+import tempfile
 
 
 class SimpleLocalReporter(ReporterBase):
@@ -28,9 +29,13 @@ class SimpleLocalReporter(ReporterBase):
             getLogger().info("No data to write")
             return
         meta = content[self.META]
-        id_dir = getFilename(meta["identifier"]) + "/"
-        dirname = id_dir
-        dirname = getArgs().simple_local_reporter + "/" + dirname
+        dirname = None
+        if "identifier" in meta:
+            id_dir = getFilename(meta["identifier"]) + "/"
+            dirname = getArgs().simple_local_reporter + "/" + id_dir
+        else:
+            dirname = tempfile.mkdtemp(dir=getArgs().simple_local_reporter)
+
         if os.path.exists(dirname):
             shutil.rmtree(dirname, True)
         os.makedirs(dirname)
