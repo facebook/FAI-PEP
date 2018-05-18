@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python
 
 ##############################################################################
 # Copyright 2017-present, Facebook, Inc.
@@ -10,6 +10,7 @@
 
 import platform
 import os
+import random
 import re
 import shutil
 import subprocess
@@ -23,8 +24,9 @@ class HostPlatform(PlatformBase):
     def __init__(self, tempdir):
         super(HostPlatform, self).__init__()
         self.setPlatform(platform.platform() + "-" + self._getProcessorName())
-        self.tempdir = tempdir + "/" + self.platform
-        os.makedirs(self.tempdir, 0o777, True)
+        self.setPlatformHash(str(random.randint(1, 1<<32)))
+        self.tempdir = tempdir + "/" + self.platform + '_' + str(self.platform_hash)
+        os.makedirs(self.tempdir, 0o777)
 
     def runBenchmark(self, cmd):
         getLogger().info("Running: %s", ' '.join(cmd))
