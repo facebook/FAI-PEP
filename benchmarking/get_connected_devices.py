@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 ##############################################################################
 # Copyright 2017-present, Facebook, Inc.
@@ -15,7 +15,7 @@ from __future__ import unicode_literals
 
 import json
 
-from platforms.android.android_driver import AndroidDriver
+from platforms.platforms import getPlatforms
 from utils.arg_parse import getParser, parse
 
 
@@ -33,23 +33,27 @@ getParser().add_argument("--set_freq",
     "max: set all cores to the maximum frquency. "
     "min: set all cores to the minimum frequency. "
     "mid: set all cores to the median frequency. ")
+getParser().add_argument("--platform", default="android",
+    help="Specify the platforms to benchmark on. ")
 
 
-class GetConnectedAndroids(object):
+class GetConnectedDevices(object):
     def __init__(self):
         parse()
 
     def run(self):
-        driver = AndroidDriver()
-        platforms = driver.getAndroidPlatforms("")
-        androids = {}
+	platforms = getPlatforms("/tmp")
+        devices = []
         for p in platforms:
-            androids[p.platform] = p.platform_hash
-        json_str = json.dumps(androids)
+            devices.append({
+		"kind": p.platform,
+                "hash": p.platform_hash,	
+	    })
+        json_str = json.dumps(devices)
         print(json_str)
         return json_str
 
 
 if __name__ == "__main__":
-    app = GetConnectedAndroids()
+    app = GetConnectedDevices()
     app.run()

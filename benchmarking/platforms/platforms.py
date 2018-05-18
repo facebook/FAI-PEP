@@ -8,8 +8,8 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from platforms.android.android_driver import AndroidDriver
-from platforms.host.host_platform import HostPlatform
+from android.android_driver import AndroidDriver
+from host.host_platform import HostPlatform
 from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
 
