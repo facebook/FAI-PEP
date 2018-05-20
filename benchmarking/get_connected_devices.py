@@ -37,6 +37,8 @@ getParser().add_argument("--set_freq",
     "mid: set all cores to the median frequency. ")
 getParser().add_argument("--platform", default="android",
     help="Specify the platforms to benchmark on. ")
+getParser().add_argument("--platform_sig",
+    help="Specify the platforms signature which clusters the same type machine. ")
 
 
 class GetConnectedDevices(object):

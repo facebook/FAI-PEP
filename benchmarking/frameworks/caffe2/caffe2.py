@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 ##############################################################################
 # Copyright 2017-present, Facebook, Inc.
@@ -25,7 +25,7 @@ class Caffe2Framework(FrameworkBase):
     def __init__(self, tempdir):
         super(Caffe2Framework, self).__init__()
         self.tempdir = tempdir + "/" + self.getName()
-        os.makedirs(self.tempdir, 0o777, True)
+        os.makedirs(self.tempdir, 0o777)
         # cannot have any variable pass among methods
 
     def getName(self):
