@@ -38,9 +38,12 @@ class GenericFramework(FrameworkBase):
         program = platform.copyFilesToPlatform(info["program"])
 
         commands = test["commands"]
-        if model is not None and "cached_files" in model:
-            cached_files = \
-                platform.copyFilesToPlatform(model["cached_files"])
+        model_files = None
+        if model is not None and "files" in model:
+            model_files = {name: model["files"][name]["location"]
+                           for name in model["files"]}
+            model_files = \
+                platform.copyFilesToPlatform(model_files)
             commands = self._updateModelPath(model, commands)
 
         # todo: input files
@@ -52,8 +55,8 @@ class GenericFramework(FrameworkBase):
         output_files = None
 
         # cleanup
-        if model is not None and "cached_modes" in model:
-            platform.delFilesFromPlatform(cached_files)
+        if model_files:
+            platform.delFilesFromPlatform(model_files)
         platform.delFilesFromPlatform(program)
 
         return output, output_files
