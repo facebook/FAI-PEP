@@ -71,5 +71,5 @@ class GenericFramework(FrameworkBase):
 
         for i in range(len(_args)):
             if _args[i] in net_names:
-                _args[i] = os.path.basename(model["cached_files"][net_names[_args[i]]])
+                _args[i] = os.path.basename(model["files"][net_names[_args[i]]])
         return ' '.join(_args)
