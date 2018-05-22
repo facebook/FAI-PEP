@@ -34,7 +34,7 @@ class PlatformBase(object):
         self.platform = getFilename(platform)
 
     def setPlatformHash(self, platform_hash):
-	    self.platform_hash = platform_hash
+        self.platform_hash = platform_hash
 
     def getName(self):
         return self.platform
