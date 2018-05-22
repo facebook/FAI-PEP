@@ -24,10 +24,11 @@ from utils.subprocess_with_logger import processRun
 class HostPlatform(PlatformBase):
     def __init__(self, tempdir):
         super(HostPlatform, self).__init__()
-	if getArgs().platform_sig:
+        if getArgs().platform_sig is not None:
             self.setPlatform(str(getArgs().platform_sig))
-	else:
+        else:
             self.setPlatform(platform.platform() + "-" + self._getProcessorName())
+
         self.setPlatformHash(str(random.randint(1, 1<<32)))
         self.tempdir = tempdir + "/" + self.platform + '_' + str(self.platform_hash)
         os.makedirs(self.tempdir, 0o777)

@@ -47,13 +47,13 @@ class GetConnectedDevices(object):
         parse()
 
     def run(self):
-	platforms = getPlatforms("/tmp")
+        platforms = getPlatforms("/tmp")
         devices = []
         for p in platforms:
             devices.append({
-		"kind": p.platform,
-                "hash": p.platform_hash,	
-	    })
+		        "kind": p.platform,
+                "hash": p.platform_hash,
+	        })
         json_str = json.dumps(devices)
         print(json_str)
         return json_str
