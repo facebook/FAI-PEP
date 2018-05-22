@@ -33,12 +33,10 @@ class OculusFramework(FrameworkBase):
         test = tests[0]
         assert set({"input_files", "output_files"}).issubset(test.keys())
 
-        input_files = [model["cached_files"][f["filename"]]
-                       for f in test["input_files"]]
+        input_files = [f["location"] for f in test["input_files"]]
         inputs = \
             platform.copyFilesToPlatform(input_files)
         outputs = [platform.getOutputDir() + "/" + t["filename"]
-                   if t["filename"][0] != '/' else t["filename"]
                    for t in test["output_files"]]
         # Always copy binary to /system/bin/ directory
         program = platform.copyFilesToPlatform(info["program"], "/system/bin/")
@@ -50,6 +48,7 @@ class OculusFramework(FrameworkBase):
         shutil.rmtree(target_dir, True)
         os.makedirs(target_dir)
 
+        platform.delFilesFromPlatform(inputs)
         # output files are removed after being copied back
         output_files = platform.moveFilesFromPlatform(outputs,
                                                       target_dir)
