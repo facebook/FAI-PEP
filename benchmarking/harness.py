@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python
 
 ##############################################################################
 # Copyright 2017-present, Facebook, Inc.
@@ -51,6 +51,8 @@ getParser().add_argument("-p", "--platform", required=True,
     help="Specify the platform to benchmark on. Use this flag if the framework"
     " needs special compilation scripts. The scripts are called build.sh "
     "saved in specifications/frameworks/<framework>/<platform> directory")
+getParser().add_argument("--platform_sig",
+    help="Specify the platform signature")
 getParser().add_argument("--program",
     help="The program to run on the platform.")
 getParser().add_argument("--reboot", action="store_true",
