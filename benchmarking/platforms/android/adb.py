@@ -37,7 +37,7 @@ class ADB(object):
                 adb.append(item)
         if 'timeout' not in kwargs:
             kwargs['timeout'] = 60
-        return processRun(adb, **kwargs)
+        return processRun(adb, **kwargs)[0]
 
     def push(self, src, tgt=None):
         target = tgt if tgt is not None else self.dir + path.basename(src)

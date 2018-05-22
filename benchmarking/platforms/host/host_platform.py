@@ -48,13 +48,15 @@ class HostPlatform(PlatformBase):
         if platform.system() == "Windows":
             return platform.processor()
         elif platform.system() == "Darwin":
-            return processRun(["sysctl", "-n", "machdep.cpu.brand_string"])\
-                .rstrip()
+            processor_info, _ = processRun(["sysctl", "-n", "machdep.cpu.brand_string"])
+            if processor_info:
+                return processor_info.rstrip()
         elif platform.system() == "Linux":
-            proc_info = processRun(["cat", "/proc/cpuinfo"])
-            for line in proc_info.split("\n"):
-                if "model name" in line:
-                    return re.sub(".*model name.*:", "", line, 1)
+            processor_info, _ = processRun(["cat", "/proc/cpuinfo"])
+            if processor_info:
+                for line in processor_info.split("\n"):
+                    if "model name" in line:
+                        return re.sub(".*model name.*:", "", line, 1)
         return ""
 
     def copyFilesToPlatform(self, files, target_dir=None):

@@ -23,7 +23,7 @@ class GitRepo(RepoBase):
             git.append(self.dir)
         git.append(cmd)
         git.extend(args)
-        return processRun(git)
+        return processRun(git)[0]
 
     def pull(self, *args):
         return self._run('pull', *args)
