@@ -11,6 +11,7 @@
 import copy
 import json
 import shutil
+import sys
 import tempfile
 import threading
 
@@ -98,6 +99,7 @@ class BenchmarkDriver(object):
     def __init__(self):
         parseKnown()
         self._lock = threading.Lock()
+        self.success = True
 
     def runBenchmark(self, info, platform, benchmarks, framework):
         if getArgs().reboot:
@@ -106,25 +108,31 @@ class BenchmarkDriver(object):
         for benchmark in benchmarks:
             b = copy.deepcopy(benchmark)
             i = copy.deepcopy(info)
-            runOneBenchmark(i, b, framework, platform, getArgs().platform,
-                            reporters, self._lock)
+            success = runOneBenchmark(i, b, framework, platform,
+                                      getArgs().platform,
+                                      reporters, self._lock)
+            self.success = self.success and success
 
     def run(self):
         tempdir = tempfile.mkdtemp()
         getLogger().info("Temp directory: {}".format(tempdir))
         info = self._getInfo()
-        bcollector = BenchmarkCollector(getArgs().model_cache)
-        benchmarks = bcollector.collectBenchmarks(info,
-                                                  getArgs().benchmark_file)
         frameworks = getFrameworks()
         assert getArgs().framework in frameworks, \
             "Framework {} is not supported".format(getArgs().framework)
         framework = frameworks[getArgs().framework](tempdir)
+        bcollector = BenchmarkCollector(framework, getArgs().model_cache)
+        benchmarks = bcollector.collectBenchmarks(info,
+                                                  getArgs().benchmark_file)
         platforms = getPlatforms(tempdir)
+        threads = []
         for platform in platforms:
             t = threading.Thread(target=self.runBenchmark,
                                  args=(info, platform, benchmarks, framework))
             t.start()
+            threads.append(t)
+        for t in threads:
+            t.join()
         shutil.rmtree(tempdir, True)
 
     def _getInfo(self):
@@ -141,3 +149,6 @@ class BenchmarkDriver(object):
 if __name__ == "__main__":
     app = BenchmarkDriver()
     app.run()
+    getLogger().info(" ======= Run {}".format("success" if app.success else "failure"))
+    if not app.success:
+        sys.exit(1)

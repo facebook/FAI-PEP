@@ -75,6 +75,11 @@ class RemoteReporter(ReporterBase):
                 self._updateSummaryData(data['diff_summary'], summary, "diff_")
             if 'regressed' in data:
                 summary['regressed'] = data['regressed']
+            if "unit" in data:
+                new_meta["unit"] = data["unit"]
+            # override the default metric if it is specified in the data
+            if "metric" in data:
+                new_meta["metric"] = data["metric"]
             message = {
                 'int': summary,
                 'normal': new_meta,
@@ -106,7 +111,7 @@ class RemoteReporter(ReporterBase):
 
     def _updateSummaryData(self, data, summary, prefix):
         for k in data:
-            summary[prefix + k] = int(data[k] * 1000)
+            summary[prefix + k] = int(data[k])
 
     def _log(self, url, access_token, logs):
         num_logs = len(logs)

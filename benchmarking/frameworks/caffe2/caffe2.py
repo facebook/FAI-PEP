@@ -9,6 +9,7 @@
 ##############################################################################
 
 import collections
+import copy
 import os
 import re
 import shutil
@@ -43,13 +44,13 @@ class Caffe2Framework(FrameworkBase):
         if "shared_libs" in info:
             shared_libs = platform.copyFilesToPlatform(info["shared_libs"])
 
-        cached_models = \
-            platform.copyFilesToPlatform(model["cached_models"])
+        cached_files = \
+            platform.copyFilesToPlatform(model["cached_files"])
         input_files = None
         if "input_files" in test:
             input_files = platform.copyFilesToPlatform(test["input_files"])
 
-        cmd = self._composeRunCommand(platform, program, test, cached_models,
+        cmd = self._composeRunCommand(platform, program, test, cached_files,
                                       input_files, shared_libs)
         total_num = test["iter"]
         if "commands" in test and \
@@ -70,7 +71,7 @@ class Caffe2Framework(FrameworkBase):
                 platform.moveFilesFromPlatform(files, target_dir)
 
         if len(output) > 0:
-            platform.delFilesFromPlatform(cached_models)
+            platform.delFilesFromPlatform(cached_files)
             platform.delFilesFromPlatform(program)
             if shared_libs is not None:
                 platform.delFilesFromPlatform(shared_libs)
@@ -78,16 +79,164 @@ class Caffe2Framework(FrameworkBase):
                 platform.delFilesFromPlatform(input_files)
         return output, output_files
 
-    def _composeRunCommand(self, platform, program, test, cached_models,
+    def verifyBenchmarkFile(self, benchmark, filename, is_post):
+        # model is now optional
+        if "model" in benchmark:
+            model = benchmark["model"]
+            assert "files" in model, \
+                "Files field is missing in benchmark {}".format(filename)
+            assert "name" in model, \
+                "Name field is missing in benchmark {}".format(filename)
+            assert "format" in model, \
+                "Format field is missing in benchmark {}".format(filename)
+
+            for f in model["files"]:
+                field = model["files"][f]
+                assert "filename" in field, \
+                    "Filename is missing in file" + \
+                    " {} of benchmark {}".format(f, filename)
+                assert "location" in field, \
+                    "Location is missing in file" + \
+                    " {} of benchmark {}".format(f, filename)
+                assert "md5" in field, \
+                    "MD5 is missing in file" + \
+                    " {} of benchmark {}".format(f, filename)
+
+        # tests is mandatory
+        assert "tests" in benchmark, \
+            "Tests field is missing in benchmark {}".format(filename)
+        tests = benchmark["tests"]
+
+        if is_post:
+            assert len(tests) == 1, "After rewrite, only one test in " + \
+                "one benchmark."
+        else:
+            assert len(tests) > 0, "Tests cannot be empty"
+
+        is_generic_test = tests[0]["metric"] == "generic"
+
+        for test in tests:
+            assert "metric" in test, "Metric field is missing in " + \
+                "benchmark {}".format(filename)
+
+            # no check is needed if the metric is generic
+            if is_generic_test:
+                assert test["metric"] == "generic", "All tests must be generic"
+                continue
+
+            assert "iter" in test, "Iter field is missing in benchmark " + \
+                "{}".format(filename)
+            assert "warmup" in test, "Warmup field is missing in " + \
+                "benchmark {}".format(filename)
+
+            assert "identifier" in test, "Identifier field is missing in " + \
+                "benchmark {}".format(filename)
+
+            assert "inputs" in test, "Inputs field is missing in " + \
+                "benchmark {}".format(filename)
+
+            num = -1
+            for ip_name in test["inputs"]:
+                ip = test["inputs"][ip_name]
+                assert "shapes" in ip, "Shapes field is missing in" + \
+                    " input {}".format(ip_name) + \
+                    " of benchmark {}".format(filename)
+                assert "type" in ip, \
+                    "Type field is missing in input {}".format(ip_name) + \
+                    " of benchmark {}".format(filename)
+                assert isinstance(ip["shapes"], list), \
+                    "Shape field should be a list. However, input " + \
+                    "{} of benchmark is not.".format(ip_name, filename)
+
+                dims = -1
+                for item in ip["shapes"]:
+                    assert isinstance(item, list), \
+                        "Shapes must be a list of list."
+                    if dims < 0:
+                        dims = len(item)
+                    else:
+                        assert dims == len(item), \
+                            "All shapes of one data must have " + \
+                            "the same dimension"
+
+                if num < 0:
+                    num = len(ip["shapes"])
+                else:
+                    assert len(ip["shapes"]) == num, "The shapes of " + \
+                        "input {} ".format(ip_name) + \
+                        "are not of the same dimension in " + \
+                        "benchmark {}".format(filename)
+
+            if "input_files" in test:
+                assert "output_files" in test, \
+                    "Input files are specified, but output files are not " + \
+                    "specified in the benchmark {}".format(filename)
+
+    def rewriteBenchmarkTests(self, benchmark, filename):
+        tests = benchmark.pop("tests")
+        new_tests = self._replicateTestsOnDims(tests, filename)
+        # dealing with multiple input files
+        new_tests = self._replicateTestsOnFiles(new_tests, filename)
+        benchmark["tests"] = new_tests
+
+    def _replicateTestsOnFiles(self, tests, source):
+        new_tests = []
+        for test in tests:
+            num = -1
+            if "input_files" not in test:
+                new_tests.append(copy.deepcopy(test))
+                continue
+
+            input_files = test["input_files"]
+            output_files = test["output_files"]
+            num = self._checkNumFiles(input_files, source, num, True)
+            num = self._checkNumFiles(output_files, source, num, False)
+
+            for i in range(num):
+                t = copy.deepcopy(test)
+                for iname in input_files:
+                    t["input_files"][iname] = test["input_files"][iname][i]
+                for oname in output_files:
+                    t["output_files"][oname] = \
+                        test["output_files"][oname][i]
+                    new_tests.append(t)
+        return new_tests
+
+    def _replicateTestsOnDims(self, tests, source):
+        new_tests = []
+        for test in tests:
+            if "inputs" not in test:
+                new_tests.append(copy.deepcopy(test))
+                continue
+
+            num = -1
+            for ip_name in test["inputs"]:
+                ip = test["inputs"][ip_name]
+                if num < 0:
+                    num = len(ip["shapes"])
+                    break
+
+            if num == 1:
+                new_tests.append(copy.deepcopy(test))
+            else:
+                for i in range(num):
+                    t = copy.deepcopy(test)
+                    for ip_name in t["inputs"]:
+                        t["inputs"][ip_name]["shapes"] = \
+                            [test["inputs"][ip_name]["shapes"][i]]
+                    new_tests.append(t)
+        return new_tests
+
+    def _composeRunCommand(self, platform, program, test, cached_files,
                            input_files, shared_libs):
         cmd = [program,
-               "--net", cached_models["predict"],
+               "--net", cached_files["predict"],
                "--warmup", test["warmup"],
                "--iter", test["iter"]
                ]
-        if "init" in cached_models:
+        if "init" in cached_files:
             cmd.append("--init_net")
-            cmd.append(cached_models["init"])
+            cmd.append(cached_files["init"])
         if input_files:
             inputs = ",".join(list(input_files.keys()))
             cmd.extend(["--input_file", ",".join(list(input_files.values()))])
@@ -176,12 +325,13 @@ class Caffe2Framework(FrameworkBase):
             i = i+1
         return i
 
-
     def _processDelayData(self, data):
-        details = collections.defaultdict(lambda: collections.defaultdict(list))
+        details = collections.defaultdict(
+            lambda: collections.defaultdict(list))
         for d in data:
             for k, v in d.items():
-                details[k]["values"].append(v)
+                # Value is collected in milliseconds, add value in microseconds
+                details[k]["values"].append(v * 1000)
         pattern = re.compile(r"^ID_(\d+)_([a-zA-Z0-9]+)_[\w/]+")
         for key in details:
             match = pattern.match(key)

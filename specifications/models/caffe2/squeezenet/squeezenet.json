@@ -52,7 +52,13 @@
     {
       "identifier": "{ID}",
       "input_files": {
-        "data": "tests/test0/data.txt"
+        "data": [
+          {
+            "filename": "data.txt",
+            "location": "tests/test0/data.txt",
+            "md5": "93015ae541c3c9b84c2bb97de9252ad9"
+          }
+        ]
       },
       "inputs": {
         "data": {
@@ -70,7 +76,13 @@
       "iter": 1,
       "metric": "error",
       "output_files": {
-        "softmaxout": "tests/test0/softmaxout.txt"
+        "softmaxout": [
+          {
+            "filename": "softmaxout.txt",
+            "location": "tests/test0/softmaxout.txt",
+            "md5": "a0340f00ea3e012e8aad8b96caee6c9f"
+          }
+        ]
       },
       "warmup": 0
     },
