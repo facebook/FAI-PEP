@@ -20,11 +20,12 @@ from utils.custom_logger import getLogger
 
 
 class BenchmarkCollector(object):
-    def __init__(self, model_cache):
+    def __init__(self, framework, model_cache):
 
         if not os.path.isdir(model_cache):
             os.makedirs(model_cache)
         self.model_cache = model_cache
+        self.framework = framework
 
     def collectBenchmarks(self, info, source):
         assert os.path.isfile(source), "Source {} is not a file".format(source)
@@ -51,97 +52,7 @@ class BenchmarkCollector(object):
         return benchmarks
 
     def _verifyBenchmark(self, benchmark, filename, is_post):
-        # model is now optional
-        if "model" in benchmark:
-            model = benchmark["model"]
-            assert "files" in model, \
-                "Files field is missing in benchmark {}".format(filename)
-            assert "name" in model, \
-                "Name field is missing in benchmark {}".format(filename)
-            assert "format" in model, \
-                "Format field is missing in benchmark {}".format(filename)
-
-            for f in model["files"]:
-                field = model["files"][f]
-                assert "filename" in field, \
-                    "Filename is missing in file" + \
-                    " {} of benchmark {}".format(f, filename)
-                assert "location" in field, \
-                    "Location is missing in file" + \
-                    " {} of benchmark {}".format(f, filename)
-                assert "md5" in field, \
-                    "MD5 is missing in file" + \
-                    " {} of benchmark {}".format(f, filename)
-
-        # tests is mandatory
-        assert "tests" in benchmark, \
-            "Tests field is missing in benchmark {}".format(filename)
-        tests = benchmark["tests"]
-
-        if is_post:
-            assert len(tests) == 1, "After rewrite, only one test in " + \
-                "one benchmark."
-        else:
-            assert len(tests) > 0, "Tests cannot be empty"
-
-        is_generic_test = tests[0]["metric"] == "generic"
-
-        for test in tests:
-            assert "metric" in test, "Metric field is missing in " + \
-                "benchmark {}".format(filename)
-
-            # no check is needed if the metric is generic
-            if is_generic_test:
-                assert test["metric"] == "generic", "All tests must be generic"
-                continue
-
-            assert "iter" in test, "Iter field is missing in benchmark " + \
-                "{}".format(filename)
-            assert "warmup" in test, "Warmup field is missing in " + \
-                "benchmark {}".format(filename)
-
-            assert "identifier" in test, "Identifier field is missing in " + \
-                "benchmark {}".format(filename)
-
-            assert "inputs" in test, "Inputs field is missing in " + \
-                "benchmark {}".format(filename)
-
-            num = -1
-            for ip_name in test["inputs"]:
-                ip = test["inputs"][ip_name]
-                assert "shapes" in ip, "Shapes field is missing in" + \
-                    " input {}".format(ip_name) + \
-                    " of benchmark {}".format(filename)
-                assert "type" in ip, \
-                    "Type field is missing in input {}".format(ip_name) + \
-                    " of benchmark {}".format(filename)
-                assert isinstance(ip["shapes"], list), \
-                    "Shape field should be a list. However, input " + \
-                    "{} of benchmark is not.".format(ip_name, filename)
-
-                dims = -1
-                for item in ip["shapes"]:
-                    assert isinstance(item, list), \
-                        "Shapes must be a list of list."
-                    if dims < 0:
-                        dims = len(item)
-                    else:
-                        assert dims == len(item), \
-                            "All shapes of one data must have " + \
-                            "the same dimension"
-
-                if num < 0:
-                    num = len(ip["shapes"])
-                else:
-                    assert len(ip["shapes"]) == num, "The shapes of " + \
-                        "input {} ".format(ip_name) + \
-                        "are not of the same dimension in " + \
-                        "benchmark {}".format(filename)
-
-            if "input_files" in test:
-                assert "output_files" in test, \
-                    "Input files are specified, but output files are not " + \
-                    "specified in the benchmark {}".format(filename)
+        self.framework.verifyBenchmarkFile(benchmark, filename, is_post)
 
     def _collectOneBenchmark(self, source, meta, benchmarks, info):
         assert os.path.isfile(source), \
@@ -151,20 +62,23 @@ class BenchmarkCollector(object):
 
         self._verifyBenchmark(one_benchmark, source, False)
 
-        # Adding path to benchmark file
-        one_benchmark["path"] = os.path.abspath(source)
-
         if meta:
             self._deepMerge(one_benchmark["model"], meta)
         if "commands" in info:
             if "commands" not in one_benchmark["model"]:
                 one_benchmark["model"]["commands"] = {}
-            self._deepMerge(one_benchmark["model"]["commands"], info["commands"])
+            self._deepMerge(one_benchmark["model"]["commands"],
+                            info["commands"])
 
-        if "model" in one_benchmark:
-            self._verifyModel(one_benchmark, source)
+        self._updateFiles(one_benchmark, source)
 
         self._updateTests(one_benchmark, source)
+
+        # Add fields that should not appear in the saved benchmark file
+        # Adding path to benchmark file
+        one_benchmark["path"] = os.path.abspath(source)
+
+        # One test per benchmark
         if len(one_benchmark["tests"]) == 1:
             benchmarks.append(one_benchmark)
         else:
@@ -175,36 +89,73 @@ class BenchmarkCollector(object):
                 new_benchmark["tests"].append(test)
                 benchmarks.append(new_benchmark)
 
-    def _verifyModel(self, one_benchmark, filename):
+    # Update all files in the benchmark to absolute path
+    # download the files if needed
+    def _updateFiles(self, one_benchmark, filename):
+
         model = one_benchmark["model"]
         model_dir = self.model_cache + "/" + model["format"] + "/" + \
             model["name"] + "/"
         if not os.path.isdir(model_dir):
             os.makedirs(model_dir)
-        cached_models = {}
+        cached_files = {}
         update_json = False
-        for f in model["files"]:
-            field = model["files"][f]
-            cached_model_name = \
-                self._getModelFilename(field, model_dir, None)
-            cached_models[f] = cached_model_name
-            if not os.path.isfile(cached_model_name) or \
-                    self._calculateMD5(cached_model_name) != field["md5"]:
-                update_json |= self._copyFile(field, model_dir,
-                                              cached_model_name, filename)
+        if "files" in model:
+            update_json |= self._updateGroupsOfFiles(model["files"], model_dir,
+                                                     cached_files, filename)
 
+        tests = one_benchmark["tests"]
+        for test in tests:
+            if "input_files" in test:
+                update_json |= self._updateGroupsOfFiles(test["input_files"],
+                                                         model_dir,
+                                                         cached_files,
+                                                         filename)
+            if "output_files" in test:
+                update_json |= self._updateGroupsOfFiles(test["output_files"],
+                                                         model_dir,
+                                                         cached_files,
+                                                         filename)
         if update_json:
             s = json.dumps(one_benchmark, indent=2, sort_keys=True)
             with open(filename, "w") as f:
                 f.write(s)
             getLogger().info("Model {} is changed. ".format(model["name"]) +
                              "Please update the meta json file.")
-            for f in model["files"]:
-                cached_model_name = \
-                    self._getModelFilename(field, model_dir, None)
-                cached_models[f] = cached_model_name
 
-        one_benchmark["model"]["cached_models"] = cached_models
+        one_benchmark["model"]["cached_files"] = cached_files
+
+    def _updateGroupsOfFiles(self, files, model_dir, cached_files, filename):
+        update_json = False
+        if isinstance(files, list):
+            for f in files:
+                update_json |= self._updateOneFile(f["filename"], f, model_dir,
+                                                   cached_files, filename)
+        elif isinstance(files, dict):
+            for name in files:
+                f_or_list = files[name]
+                if isinstance(f_or_list, list):
+                    for f in f_or_list:
+                        update_json |= self._updateOneFile(name, f,
+                                                           model_dir,
+                                                           cached_files,
+                                                           filename)
+                else:
+                    update_json |= self._updateOneFile(name, f_or_list,
+                                                       model_dir,
+                                                       cached_files, filename)
+        else:
+            assert False, "Only support list and dict"
+        return update_json
+
+    def _updateOneFile(self, f, field, model_dir, cached_files, filename):
+        cached_filename = \
+            self._getDestFilename(field, model_dir)
+        cached_files[f] = cached_filename
+        if not os.path.isfile(cached_filename) or \
+                self._calculateMD5(cached_filename) != field["md5"]:
+            return self._copyFile(field, cached_filename, filename)
+        return False
 
     def _calculateMD5(self, model_name):
         m = hashlib.md5()
@@ -212,120 +163,76 @@ class BenchmarkCollector(object):
         md5 = m.hexdigest()
         return md5
 
-    def _copyFile(self, field, model_dir, cached_model_name, source):
+    def _copyFile(self, field, destination_name, source):
+        if "location" not in field:
+            return False
         location = field["location"]
         if location[0:4] == "http":
             getLogger().info("Downloading {}".format(location))
             r = requests.get(location)
             if r.status_code == 200:
-                with open(cached_model_name, 'wb') as f:
+                with open(destination_name, 'wb') as f:
                     f.write(r.content)
         else:
-            filename = self._getAbsFilename(location, source)
-            shutil.copyfile(filename, cached_model_name)
-        assert os.path.isfile(cached_model_name), \
-            "File {} cannot be retrieved".format(cached_model_name)
+            abs_name = self._getAbsFilename(field, source, None)
+            shutil.copyfile(abs_name, destination_name)
+        assert os.path.isfile(destination_name), \
+            "File {} cannot be retrieved".format(destination_name)
         # verify the md5 matches the file downloaded
-        md5 = self._calculateMD5(cached_model_name)
+        md5 = self._calculateMD5(destination_name)
         if md5 != field["md5"]:
             getLogger().info("Source file {} is changed, ".format(location) +
                              " updating MD5. " +
                              "Please commit the updated json file.")
-            new_cached_model_name = self._getModelFilename(field,
-                                                           model_dir, md5)
-            shutil.move(cached_model_name, new_cached_model_name)
             field["md5"] = md5
             return True
         return False
 
-    def _getModelFilename(self, field, model_dir, md5):
+    def _getDestFilename(self, field, dir):
         fn = os.path.splitext(field["filename"])
-        cached_model_name = model_dir + "/" + \
-            fn[0] + "_" + (md5 if md5 else field["md5"]) + fn[1]
-        return cached_model_name
+        cached_name = dir + "/" + fn[0] + fn[1]
+        return cached_name
 
     def _updateTests(self, one_benchmark, source):
         if one_benchmark["tests"][0]["metric"] == "generic":
             return
-        tests = one_benchmark.pop("tests")
-        # dealing with multiple inputs
-        new_tests = self._replicateTestsOnDims(tests, source)
 
-        # dealing with multiple input files
-        new_tests = self._replicateTestsOnFiles(new_tests, source)
+        # framework specific updates
+        self.framework.rewriteBenchmarkTests(one_benchmark, source)
 
-        # Update identifiers
-        self._updateNewTestFields(new_tests, one_benchmark)
-        one_benchmark["tests"] = new_tests
+        # Update identifiers, the last update
+        self._updateNewTestFields(one_benchmark["tests"], one_benchmark)
 
-    def _replicateTestsOnDims(self, tests, source):
-        new_tests = []
+    def _updateNewTestFields(self, tests, one_benchmark):
+        idx = 0
         for test in tests:
-            num = -1
-            for ip_name in test["inputs"]:
-                ip = test["inputs"][ip_name]
-                if num < 0:
-                    num = len(ip["shapes"])
-                    break
+            identifier = test["identifier"].replace("{ID}", str(idx))
+            test["identifier"] = identifier
+            idx += 1
 
-            if num == 1:
-                new_tests.append(copy.deepcopy(test))
-            else:
-                for i in range(num):
-                    t = copy.deepcopy(test)
-                    for ip_name in t["inputs"]:
-                        t["inputs"][ip_name]["shapes"] = \
-                            [test["inputs"][ip_name]["shapes"][i]]
-                    new_tests.append(t)
-        return new_tests
+        if "commands" in one_benchmark["model"]:
+            for test in tests:
+                if "commands" not in test:
+                    test["commands"] = {}
+                self._deepMerge(test["commands"],
+                                one_benchmark["model"]["commands"])
 
-    def _getAbsFilename(self, filename, source):
-        if filename[0:2] == "//":
+    def _getAbsFilename(self, file, source, cache_dir):
+        location = file["location"]
+        filename = file["filename"]
+        if location[0:4] == "http":
+            # Need to download, return the destination filename
+            return cache_dir + "/" + filename
+        elif location[0:2] == "//":
             assert getArgs().root_model_dir is not None, \
                 "When specifying relative directory, the " \
                 "--root_model_dir must be specified."
-            return getArgs().root_model_dir + filename[1:]
-        elif filename[0] != "/":
+            return getArgs().root_model_dir + location[1:]
+        elif location[0] != "/":
             abs_dir = os.path.dirname(os.path.abspath(source)) + "/"
-            return abs_dir + filename
+            return abs_dir + location
         else:
-            return filename
-
-    def _updateRelativeDirectory(self, files, source):
-        for name in files:
-            value = files[name]
-            if isinstance(value, str):
-                files[name] = [value]
-            files[name] = [self._getAbsFilename(filename, source)
-                           for filename in files[name]]
-        return files
-
-    def _replicateTestsOnFiles(self, tests, source):
-        new_tests = []
-        for test in tests:
-            num = -1
-            if "input_files" not in test:
-                new_tests.append(copy.deepcopy(test))
-                continue
-
-            input_files = self._updateRelativeDirectory(test["input_files"],
-                                                        source)
-            output_files = self._updateRelativeDirectory(test["output_files"],
-                                                         source)
-            test["input_files"] = input_files
-            test["output_files"] = output_files
-            num = self._checkNumFiles(input_files, source, num, True)
-            num = self._checkNumFiles(output_files, source, num, False)
-
-            for i in range(num):
-                t = copy.deepcopy(test)
-                for iname in input_files:
-                    t["input_files"][iname] = test["input_files"][iname][i]
-                for oname in output_files:
-                    t["output_files"][oname] = \
-                        test["output_files"][oname][i]
-                    new_tests.append(t)
-        return new_tests
+            return location
 
     def _checkNumFiles(self, files, source, num, is_input):
         new_num = num
@@ -357,20 +264,6 @@ class BenchmarkCollector(object):
             "{} file ".format("Input" if is_input else "Output") + \
             "{} : {} does not exsit in ".format(name, fs) + \
             "benchmark {}".format(source)
-
-    def _updateNewTestFields(self, tests, one_benchmark):
-        idx = 0
-        for test in tests:
-            identifier = test["identifier"].replace("{ID}", str(idx))
-            test["identifier"] = identifier
-            idx += 1
-
-        if "commands" in one_benchmark["model"]:
-            for test in tests:
-                if "commands" not in test:
-                    test["commands"] = {}
-                self._deepMerge(test["commands"],
-                                one_benchmark["model"]["commands"])
 
     def _deepMerge(self, tgt, src):
         if isinstance(src, list):

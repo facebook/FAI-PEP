@@ -38,9 +38,9 @@ class GenericFramework(FrameworkBase):
         program = platform.copyFilesToPlatform(info["program"])
 
         commands = test["commands"]
-        if model is not None and "cached_models" in model:
-            cached_models = \
-                platform.copyFilesToPlatform(model["cached_models"])
+        if model is not None and "cached_files" in model:
+            cached_files = \
+                platform.copyFilesToPlatform(model["cached_files"])
             commands = self._updateModelPath(model, commands)
 
         # todo: input files
@@ -53,10 +53,13 @@ class GenericFramework(FrameworkBase):
 
         # cleanup
         if model is not None and "cached_modes" in model:
-            platform.delFilesFromPlatform(cached_models)
+            platform.delFilesFromPlatform(cached_files)
         platform.delFilesFromPlatform(program)
 
         return output, output_files
+
+    def verifyBenchmarkFile(self, benchmark, filename, is_post):
+        pass
 
     def _updateModelPath(self, model, commands):
         _args = commands.split()
@@ -65,5 +68,5 @@ class GenericFramework(FrameworkBase):
 
         for i in range(len(_args)):
             if _args[i] in net_names:
-                _args[i] = os.path.basename(model["cached_models"][net_names[_args[i]]])
+                _args[i] = os.path.basename(model["cached_files"][net_names[_args[i]]])
         return ' '.join(_args)

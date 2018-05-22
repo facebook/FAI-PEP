@@ -22,3 +22,10 @@ class FrameworkBase(object):
     @abc.abstractmethod
     def runBenchmark(self, info, benchmark, platform):
         return None
+
+    @abc.abstractmethod
+    def verifyBenchmarkFile(self, benchmark, filename, is_post):
+        return None
+
+    def rewriteBenchmarkTests(self, benchmark, filename):
+        pass

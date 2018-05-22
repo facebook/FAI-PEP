@@ -8,9 +8,11 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+import json
 import os
 import shutil
 from frameworks.framework_base import FrameworkBase
+from utils.custom_logger import getLogger
 
 
 class OculusFramework(FrameworkBase):
@@ -27,32 +29,98 @@ class OculusFramework(FrameworkBase):
             "exist in one benchmark. However, benchmark " + \
             "{} doesn't.".format(benchmark["name"])
 
+        model = benchmark["model"]
         test = tests[0]
-        assert set({"model", "input", "output"}).issubset(test.keys())
+        assert set({"input_files", "output_files"}).issubset(test.keys())
 
-        program = platform.copyFilesToPlatform(info["program"])
-        commands = self._composeRunCommand(program, test)
-        output = platform.runBenchmark(commands, True)
+        input_files = [model["cached_files"][f["filename"]]
+                       for f in test["input_files"]]
+        inputs = \
+            platform.copyFilesToPlatform(input_files)
+        outputs = [platform.getOutputDir() + "/" + t["filename"]
+                   if t["filename"][0] != '/' else t["filename"]
+                   for t in test["output_files"]]
+        # Always copy binary to /system/bin/ directory
+        program = platform.copyFilesToPlatform(info["program"], "/system/bin/")
+        commands = self._composeRunCommand(program, platform, model, test,
+                                           inputs, outputs)
+        platform.runBenchmark(commands, True)
 
         target_dir = self.tempdir + "/output/"
         shutil.rmtree(target_dir, True)
         os.makedirs(target_dir)
 
         # output files are removed after being copied back
-        output_files = platform.moveFilesFromPlatform(test["output"], target_dir)
+        output_files = platform.moveFilesFromPlatform(outputs,
+                                                      target_dir)
 
+        json_file = platform.moveFilesFromPlatform(
+            platform.getOutputDir() + "report.json",
+            self.tempdir)
+        with open(json_file, 'r') as f:
+            json_content = json.load(f)
+
+        result = {}
+        for one_test in json_content:
+            for one_entry in one_test:
+                type = one_entry["type"]
+                value = one_entry["value"]
+                unit = one_entry["unit"]
+                metric = one_entry["metric"]
+                if type in result:
+                    entry = result[type]
+                    if entry["unit"] is not None and entry["unit"] != unit:
+                        getLogger().error("The unit do not match in different"
+                                          " test runs {} and {}".
+                                          format(entry["unit"], unit))
+                        entry["unit"] = None
+                    if entry["metric"] is not None and \
+                            entry["metric"] != metric:
+                        getLogger().error("The metric do not match in "
+                                          " different test runs {} and {}".
+                                          format(entry["metric"], metric))
+                        entry["metric"] = None
+                    entry["values"].append(value)
+                else:
+                    result[type] = {
+                        "type": type,
+                        "values": [value],
+                        "unit": unit,
+                        "metric": metric,
+                    }
         # cleanup
         # platform.delFilesFromPlatform(program)
         # for input in test["input"]:
         #     platform.delFilesFromPlatform(input)
+        return result, output_files
 
-        return output, output_files
+    def verifyBenchmarkFile(self, benchmark, filename, is_post):
+        assert "model" in benchmark, \
+            "Model must exist in the benchmark {}".format(filename)
+        assert "name" in benchmark["model"], \
+            "field name must exist in model in benchmark {}".format(filename)
+        assert "format" in benchmark["model"], \
+            "field format must exist in model in benchmark {}".format(filename)
+        assert "tests" in benchmark, \
+            "Tests field is missing in benchmark {}".format(filename)
 
-    def _composeRunCommand(self, program, test):
+        for test in benchmark["tests"]:
+            assert "input_files" in test, \
+                "inputs must exist in test in benchmark {}".format(filename)
+            assert "output_files" in test, \
+                "outputs must exist in test in benchmark {}".format(filename)
+            assert "metric" in test, \
+                "metric must exist in test in benchmark {}".format(filename)
+            assert "batch" in test, \
+                "batch must exist in test in benchmark {}".format(filename)
+
+    def _composeRunCommand(self, program, platform, model, test,
+                           inputs, outputs):
         cmd = [program,
-               "--model", test["model"],
-               "--input", ' ' .join(test["input"]),
-               "--output", ' '.join(test["output"])]
+               "--json", platform.getOutputDir() + "report.json",
+               "--model", model["name"],
+               "--input", ' ' .join(inputs),
+               "--output", ' '.join(outputs)]
         if "batch" in test:
             cmd.append("--batch")
             cmd.append(str(test["batch"]))
