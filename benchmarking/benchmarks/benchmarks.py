@@ -98,24 +98,11 @@ class BenchmarkCollector(object):
             model["name"] + "/"
         if not os.path.isdir(model_dir):
             os.makedirs(model_dir)
-        cached_files = {}
+        collected_files = self._collectFiles(one_benchmark)
         update_json = False
-        if "files" in model:
-            update_json |= self._updateGroupsOfFiles(model["files"], model_dir,
-                                                     cached_files, filename)
+        for file in collected_files:
+            update_json |= self._updateOneFile(file, model_dir, filename)
 
-        tests = one_benchmark["tests"]
-        for test in tests:
-            if "input_files" in test:
-                update_json |= self._updateGroupsOfFiles(test["input_files"],
-                                                         model_dir,
-                                                         cached_files,
-                                                         filename)
-            if "output_files" in test:
-                update_json |= self._updateGroupsOfFiles(test["output_files"],
-                                                         model_dir,
-                                                         cached_files,
-                                                         filename)
         if update_json:
             s = json.dumps(one_benchmark, indent=2, sort_keys=True)
             with open(filename, "w") as f:
@@ -123,35 +110,47 @@ class BenchmarkCollector(object):
             getLogger().info("Model {} is changed. ".format(model["name"]) +
                              "Please update the meta json file.")
 
-        one_benchmark["model"]["cached_files"] = cached_files
+        # update the file field with the absolute path
+        # needs to be after the file is updated
+        for file in collected_files:
+            cached_filename = \
+                self._getDestFilename(file, model_dir)
+            file["location"] = cached_filename
 
-    def _updateGroupsOfFiles(self, files, model_dir, cached_files, filename):
-        update_json = False
-        if isinstance(files, list):
-            for f in files:
-                update_json |= self._updateOneFile(f["filename"], f, model_dir,
-                                                   cached_files, filename)
-        elif isinstance(files, dict):
-            for name in files:
-                f_or_list = files[name]
+    def _collectFiles(self, benchmark):
+        files = []
+        if "model" in benchmark and "files" in benchmark["model"]:
+            self._collectOneGroupFiles(benchmark["model"]["files"], files)
+
+        for test in benchmark["tests"]:
+            if "input_files" in test:
+                self._collectOneGroupFiles(test["input_files"], files)
+            if "output_files" in test:
+                self._collectOneGroupFiles(test["output_files"], files)
+        return files
+
+    def _collectOneGroupFiles(self, group, files):
+        if isinstance(group, list):
+            for f in group:
+                self._collectOneFile(f, files)
+        elif isinstance(group, dict):
+            for name in group:
+                f_or_list = group[name]
                 if isinstance(f_or_list, list):
                     for f in f_or_list:
-                        update_json |= self._updateOneFile(name, f,
-                                                           model_dir,
-                                                           cached_files,
-                                                           filename)
+                        self._collectOneFile(f, files)
                 else:
-                    update_json |= self._updateOneFile(name, f_or_list,
-                                                       model_dir,
-                                                       cached_files, filename)
-        else:
-            assert False, "Only support list and dict"
-        return update_json
+                    self._collectOneFile(f_or_list, files)
 
-    def _updateOneFile(self, f, field, model_dir, cached_files, filename):
+    def _collectOneFile(self, item, files):
+        assert "filename" in item, "field filename must exist"
+        if "location" not in item:
+            return
+        files.append(item)
+
+    def _updateOneFile(self, field, model_dir, filename):
         cached_filename = \
             self._getDestFilename(field, model_dir)
-        cached_files[f] = cached_filename
         if not os.path.isfile(cached_filename) or \
                 self._calculateMD5(cached_filename) != field["md5"]:
             return self._copyFile(field, cached_filename, filename)
@@ -233,37 +232,6 @@ class BenchmarkCollector(object):
             return abs_dir + location
         else:
             return location
-
-    def _checkNumFiles(self, files, source, num, is_input):
-        new_num = num
-        ftype = "input" if is_input else "output"
-        for name in files:
-            fs = files[name]
-            if isinstance(fs, list):
-                if new_num < 0:
-                    new_num = len(fs)
-                else:
-                    assert len(fs) == new_num, \
-                        "The number of specified {} files ".format(ftype) + \
-                        "in blob {} do not ".format(name) + \
-                        "match in all input blobs in benchmark " + \
-                        "{}.".format(source)
-                for f in fs:
-                    self._checkFileExists(name, f, source, is_input)
-            else:
-                new_num = 1
-                self._checkFileExists(name, fs, source, is_input)
-
-        return new_num
-
-    def _checkFileExists(self, name, fs, source, is_input):
-        assert isinstance(fs, str), \
-            "The file {} : {} should be a ".format(name, fs) + \
-            "string, in benchmark {}.".format(source)
-        assert os.path.isfile(fs), \
-            "{} file ".format("Input" if is_input else "Output") + \
-            "{} : {} does not exsit in ".format(name, fs) + \
-            "benchmark {}".format(source)
 
     def _deepMerge(self, tgt, src):
         if isinstance(src, list):

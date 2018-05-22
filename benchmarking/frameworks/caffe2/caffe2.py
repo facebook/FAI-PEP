@@ -44,13 +44,16 @@ class Caffe2Framework(FrameworkBase):
         if "shared_libs" in info:
             shared_libs = platform.copyFilesToPlatform(info["shared_libs"])
 
-        cached_files = \
-            platform.copyFilesToPlatform(model["cached_files"])
+        model_files = {name: model["files"][name]["location"]
+                       for name in model["files"]}
+        model_files = platform.copyFilesToPlatform(model_files)
         input_files = None
         if "input_files" in test:
-            input_files = platform.copyFilesToPlatform(test["input_files"])
+            input_files = {name: test["input_files"][name]["location"]
+                           for name in test["input_files"]}
+            input_files = platform.copyFilesToPlatform(input_files)
 
-        cmd = self._composeRunCommand(platform, program, test, cached_files,
+        cmd = self._composeRunCommand(platform, program, test, model_files,
                                       input_files, shared_libs)
         total_num = test["iter"]
         if "commands" in test and \
@@ -58,6 +61,7 @@ class Caffe2Framework(FrameworkBase):
                 "run_individual" in test["commands"]["caffe2"] and \
                 test["commands"]["caffe2"]["run_individual"] == "true":
             total_num *= 2
+
         output = self._runOnPlatform(total_num, cmd, platform)
         output_files = None
         if "output_files" in test:
@@ -71,7 +75,7 @@ class Caffe2Framework(FrameworkBase):
                 platform.moveFilesFromPlatform(files, target_dir)
 
         if len(output) > 0:
-            platform.delFilesFromPlatform(cached_files)
+            platform.delFilesFromPlatform(model_files)
             platform.delFilesFromPlatform(program)
             if shared_libs is not None:
                 platform.delFilesFromPlatform(shared_libs)
@@ -227,19 +231,39 @@ class Caffe2Framework(FrameworkBase):
                     new_tests.append(t)
         return new_tests
 
-    def _composeRunCommand(self, platform, program, test, cached_files,
+    def _checkNumFiles(self, files, source, num, is_input):
+        new_num = num
+        ftype = "input" if is_input else "output"
+        for name in files:
+            fs = files[name]
+            if isinstance(fs, list):
+                if new_num < 0:
+                    new_num = len(fs)
+                else:
+                    assert len(fs) == new_num, \
+                        "The number of specified {} files ".format(ftype) + \
+                        "in blob {} do not ".format(name) + \
+                        "match in all input blobs in benchmark " + \
+                        "{}.".format(source)
+            else:
+                new_num = 1
+
+        return new_num
+
+    def _composeRunCommand(self, platform, program, test, model_files,
                            input_files, shared_libs):
         cmd = [program,
-               "--net", cached_files["predict"],
+               "--net", model_files["predict"],
                "--warmup", test["warmup"],
                "--iter", test["iter"]
                ]
-        if "init" in cached_files:
+        if "init" in model_files:
             cmd.append("--init_net")
-            cmd.append(cached_files["init"])
+            cmd.append(model_files["init"])
         if input_files:
             inputs = ",".join(list(input_files.keys()))
-            cmd.extend(["--input_file", ",".join(list(input_files.values()))])
+            cmd.extend(["--input_file",
+                        ",".join(list(input_files.values()))])
         else:
             inputs = ",".join(list(test["inputs"].keys()))
             input_dims = [
@@ -251,7 +275,7 @@ class Caffe2Framework(FrameworkBase):
         cmd.extend(["--input_type",
                    list(test["inputs"].values())[0]["type"]])
         if "output_files" in test:
-            outputs = ",".join(list(test["output_files"]))
+            outputs = ",".join(list(test["output_files"].keys()))
             cmd.extend(["--output", outputs])
             cmd.extend(["--text_output", "true"])
             cmd.extend(["--output_folder", platform.getOutputDir()])

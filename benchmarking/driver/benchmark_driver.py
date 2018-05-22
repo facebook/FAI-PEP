@@ -88,7 +88,8 @@ def _runOnePass(info, benchmark, framework, platform):
     data = None
     test = benchmark["tests"][0]
     if treatment_files and test["metric"] == "error":
-        golden_files = test["output_files"]
+        output_files = test["output_files"]
+        golden_files = {t:output_files[t]["location"] for t in output_files}
         data = _processErrorData(treatment_files, golden_files)
     elif test["metric"] == "delay":
         data = _processDelayData(output)
