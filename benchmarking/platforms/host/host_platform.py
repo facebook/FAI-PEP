@@ -32,6 +32,7 @@ class HostPlatform(PlatformBase):
         self.setPlatformHash(str(random.randint(1, 1<<32)))
         self.tempdir = tempdir + "/" + self.platform + '_' + str(self.platform_hash)
         os.makedirs(self.tempdir, 0o777)
+        self.type = "host"
 
     def runBenchmark(self, cmd):
         getLogger().info("Running: %s", ' '.join(cmd))

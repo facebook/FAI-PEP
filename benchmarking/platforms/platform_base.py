@@ -29,7 +29,11 @@ class PlatformBase(object):
         self.tempdir = None
         self.platform = None
         self.platform_hash = None
+        self.type = None
 
+    def getType(self):
+        return self.type
+        
     def setPlatform(self, platform):
         self.platform = getFilename(platform)
 
@@ -49,7 +53,11 @@ class PlatformBase(object):
         pass
 
     @abc.abstractmethod
-    def runBenchmark(self, info):
+    def runCommand(self, cmd):
+        pass
+
+    @abc.abstractmethod
+    def runBenchmark(self, cmd):
         return None
 
     @abc.abstractmethod

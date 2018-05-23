@@ -19,6 +19,7 @@ class AndroidDriver:
             if isinstance(devices, str):
                 devices = [devices]
         self.devices = devices
+        self.type = "android"
 
     def getDevices(self):
         adb = ADB()
