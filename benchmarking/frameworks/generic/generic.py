@@ -44,7 +44,6 @@ class GenericFramework(FrameworkBase):
                            for name in model["files"]}
             model_files = \
                 platform.copyFilesToPlatform(model_files)
-            commands = self._updateModelPath(model, commands)
 
         # todo: input files
 
@@ -63,13 +62,3 @@ class GenericFramework(FrameworkBase):
 
     def verifyBenchmarkFile(self, benchmark, filename, is_post):
         pass
-
-    def _updateModelPath(self, model, commands):
-        _args = commands.split()
-        # net_names = {filename: net_type}
-        net_names = {model["files"][key]["filename"]: key for key in model["files"].keys()}
-
-        for i in range(len(_args)):
-            if _args[i] in net_names:
-                _args[i] = os.path.basename(model["files"][net_names[_args[i]]])
-        return ' '.join(_args)
