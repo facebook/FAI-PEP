@@ -22,7 +22,7 @@ def buildProgramPlatform(dst, repo_dir, framework, frameworks_dir, platform):
     elif not os.path.isdir(dst_dir):
         os.makedirs(dst_dir)
 
-    result = processRun(['sh', script, repo_dir, dst])
+    result = processRun(['sh', script, repo_dir, dst])[0]
     if result is not None:
         os.chmod(dst, 0o777)
     print(result)

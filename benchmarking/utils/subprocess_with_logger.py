@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python
 
 ##############################################################################
 # Copyright 2017-present, Facebook, Inc.
@@ -8,6 +8,10 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 import subprocess
 import sys
 from .custom_logger import getLogger
@@ -15,15 +19,17 @@ from .custom_logger import getLogger
 
 def processRun(*args, **kwargs):
     getLogger().info("Running: %s", ' '.join(*args))
+    err_output = None
     try:
-        return subprocess.check_output(*args,
-                                       stderr=subprocess.STDOUT, **kwargs).\
+        output = subprocess.check_output(*args,
+                                         stderr=subprocess.STDOUT, **kwargs).\
             decode("utf-8", "ignore")
+        return output, None
     except subprocess.CalledProcessError as e:
         getLogger().error("Command failed: {}".format(e.output))
-    except subprocess.TimeoutExpired as e:
-        getLogger().error("Command timeout: {}".format(e.output))
-    except:
+        err_output = e.output
+    except Exception:
         getLogger().error("Unknown failure {}: {}".format(sys.exc_info()[0],
                                                           ' '.join(*args)))
-    return None
+        err_output = "{}".format(sys.exc_info()[2])
+    return None, err_output

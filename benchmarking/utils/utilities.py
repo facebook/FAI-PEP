@@ -12,8 +12,7 @@ import datetime
 
 
 def getDirectory(commit_hash, commit_time):
-    dt = datetime.datetime.fromtimestamp(
-        commit_time, datetime.timezone.utc)
+    dt = datetime.datetime.utcfromtimestamp(commit_time)
     directory = str(dt.year) + "/" + \
         str(dt.month) + "/" + \
         str(dt.day) + "/" + \

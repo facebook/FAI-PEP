@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python
 
 ##############################################################################
 # Copyright 2017-present, Facebook, Inc.
@@ -23,7 +23,7 @@ class HGRepo(RepoBase):
             hg.append(self.dir)
         hg.append(cmd)
         hg.extend(args)
-        return processRun(hg)
+        return processRun(hg)[0]
 
     def pull(self, *args):
         return self._run('pull', '--rebase', '-d', args[0])
@@ -62,7 +62,7 @@ class HGRepo(RepoBase):
         commit_date = commit_str[start:end].split()
         next_commit_date = int(commit_date[0]) + step
 
-        commit_str = self._run('log', '-d', '<' + f'{next_commit_date} {commit_date[1]}', '-l', '1', '--template', '<START>{node}<END>')
+        commit_str = self._run('log', '-d', '<' + next_commit_date + ' ' + commit_date[1], '-l', '1', '--template', '<START>{node}<END>')
         start = commit_str.index('<START>') + len('<START>')
         end = commit_str.index('<END>')
         return commit_str[start:end]
