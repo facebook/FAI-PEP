@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python
 
 ##############################################################################
 # Copyright 2017-present, Facebook, Inc.
@@ -33,7 +33,7 @@ class PlatformBase(object):
 
     def getType(self):
         return self.type
-        
+
     def setPlatform(self, platform):
         self.platform = getFilename(platform)
 
