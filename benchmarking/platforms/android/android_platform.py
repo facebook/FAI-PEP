@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python
 
 ##############################################################################
 # Copyright 2017-present, Facebook, Inc.
@@ -12,6 +12,7 @@ import os
 import time
 
 from platforms.platform_base import PlatformBase
+from six import string_types
 from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
 
@@ -81,7 +82,7 @@ class AndroidPlatform(PlatformBase):
 
     def copyFilesToPlatform(self, files, target_dir=None):
         target_dir = (self.adb.dir if target_dir is None else target_dir) + "/"
-        if isinstance(files, str):
+        if isinstance(files, string_types):
             target_file = target_dir + os.path.basename(files)
             self.adb.push(files, target_file)
             return target_file
@@ -101,7 +102,7 @@ class AndroidPlatform(PlatformBase):
 
     def moveFilesFromPlatform(self, files, target_dir):
         assert target_dir is not None, "Target directory must be specified."
-        if isinstance(files, str):
+        if isinstance(files, string_types):
             return self._moveOneFileFromPlatform(files, target_dir)
         elif isinstance(files, list):
             output_files = []
@@ -128,7 +129,7 @@ class AndroidPlatform(PlatformBase):
         return output_file
 
     def delFilesFromPlatform(self, files):
-        if isinstance(files, str):
+        if isinstance(files, string_types):
             self.adb.deleteFile(files)
         elif isinstance(files, list):
             for f in files:
