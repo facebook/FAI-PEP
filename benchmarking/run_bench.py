@@ -12,6 +12,7 @@ import copy
 import json
 import os
 import re
+import six
 from utils.arg_parse import getParser, getArgs, getUnknowns, parseKnown
 from utils.custom_logger import getLogger
 
@@ -98,7 +99,7 @@ class RunBench(object):
 
     def _inputOneArg(self, text, key, args):
         arg = args[key] if key in args else None
-        v = input(text + ' [' + str(arg) + ']: ')
+        v = six.moves.input(text + ' [' + str(arg) + ']: ')
         if v == '':
             v = arg
         if v is not None:

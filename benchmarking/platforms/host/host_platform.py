@@ -16,6 +16,7 @@ import shutil
 import subprocess
 
 from platforms.platform_base import PlatformBase
+from six import string_types
 from utils.custom_logger import getLogger
 from utils.arg_parse import getArgs
 from utils.subprocess_with_logger import processRun
@@ -64,7 +65,7 @@ class HostPlatform(PlatformBase):
         if target_dir is None:
             return files
         else:
-            if isinstance(files, str):
+            if isinstance(files, string_types):
                 tgt_file = target_dir + "/" + os.path.basename(files)
                 shutil.copyfile(files, tgt_file)
                 return target_dir + "/" + os.path.basename(files)
@@ -83,7 +84,7 @@ class HostPlatform(PlatformBase):
                 assert False, "Cannot reach here"
 
     def moveFilesFromPlatform(self, files, target_dir=None):
-        if isinstance(files, str):
+        if isinstance(files, string_types):
             tgt_file = self.copyFilesToPlatform(files, target_dir)
             if tgt_file != files:
                 os.remove(files)

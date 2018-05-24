@@ -231,12 +231,12 @@ class ExecutablesBuilder (threading.Thread):
 
     def _getControlCommit(self, reference_time, base_commit):
         # Get start of week
-        dt = datetime.datetime.fromtimestamp(reference_time,
-                                             datetime.timezone.utc)
+        dt = datetime.datetime.utcfromtimestamp(reference_time)
         monday = dt - datetime.timedelta(days=dt.weekday())
         start_of_week = monday.replace(hour=0, minute=0,
                                        second=0, microsecond=0)
-        ut_start_of_week = start_of_week.timestamp()
+
+        ut_start_of_week = float(start_of_week.strftime("%s"))
 
         if base_commit:
             base_commit_time = self.repo.getCommitTime(base_commit)
