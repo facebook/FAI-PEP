@@ -38,13 +38,13 @@ class OculusFramework(FrameworkBase):
         platform.adb.run("root")
         platform.adb.run("remount")
 
+        libraries = []
         if "libraries" in model:
             for entry in model["libraries"]:
-                if entry["target"]:
-                    platform.copyFilesToPlatform(entry["location"],
-                                                 entry["target"])
-                else:
-                    platform.copyFilesToPlatform(entry["location"])
+                target = entry["target"] \
+                    if "target" in entry else platform.adb.dir
+                libraries.append(platform.copyFilesToPlatform(
+                    entry["location"], target))
 
         assert "files" in model, "files field is required in model"
         assert len(model["files"]) == 1, "only one file is specified in model"
@@ -69,7 +69,10 @@ class OculusFramework(FrameworkBase):
         shutil.rmtree(target_dir, True)
         os.makedirs(target_dir)
 
+        platform.delFilesFromPlatform(model_file)
         platform.delFilesFromPlatform(inputs)
+        platform.delFilesFromPlatform(libraries)
+        platform.delFilesFromPlatform(program)
         # output files are removed after being copied back
         output_files = platform.moveFilesFromPlatform(outputs,
                                                       target_dir)
