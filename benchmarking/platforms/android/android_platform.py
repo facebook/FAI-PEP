@@ -27,6 +27,7 @@ class AndroidPlatform(PlatformBase):
             ['getprop', 'ro.build.version.release'], default="").strip() + \
             '-' + \
             adb.shell(['getprop', 'ro.build.version.sdk'], default="").strip()
+        self.type = "android"
         self.setPlatform(platform)
         self.platform_hash = adb.device
         self._setLogCatSize()
@@ -62,9 +63,12 @@ class AndroidPlatform(PlatformBase):
         if getArgs().set_freq:
             self.adb.setFrequency(getArgs().set_freq)
 
+    def runCommand(self, cmd):
+        return self.adb.shell(cmd)
+
     def runBenchmark(self, cmd, log_to_screen_only=False):
         self.adb.logcat('-b', 'all', '-c')
-        log_screen = self.adb.shell(cmd, timeout=getArgs().timeout)
+        log_screen = self.adb.shell(cmd)
         log_logcat = ""
         if not log_to_screen_only:
             log_logcat = self.adb.logcat('-d')

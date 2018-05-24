@@ -33,6 +33,26 @@ class OculusFramework(FrameworkBase):
         test = tests[0]
         assert set({"input_files", "output_files"}).issubset(test.keys())
 
+        assert platform.getType() == "android", \
+            "Only android system is supported"
+        platform.adb.run("root")
+        platform.adb.run("remount")
+
+        if "libraries" in model:
+            for entry in model["libraries"]:
+                if entry["target"]:
+                    platform.copyFilesToPlatform(entry["location"],
+                                                 entry["target"])
+                else:
+                    platform.copyFilesToPlatform(entry["location"])
+
+        assert "files" in model, "files field is required in model"
+        assert len(model["files"]) == 1, "only one file is specified in model"
+
+        model_file = {f: model["files"][f]["location"] for f in model["files"]}
+        model_file = platform.copyFilesToPlatform(model_file)
+        for name in model_file:
+            model_filename = model_file[name]
         input_files = [f["location"] for f in test["input_files"]]
         inputs = \
             platform.copyFilesToPlatform(input_files)
@@ -40,7 +60,8 @@ class OculusFramework(FrameworkBase):
                    for t in test["output_files"]]
         # Always copy binary to /system/bin/ directory
         program = platform.copyFilesToPlatform(info["program"], "/system/bin/")
-        commands = self._composeRunCommand(program, platform, model, test,
+        commands = self._composeRunCommand(program, platform, model,
+                                           model_filename, test,
                                            inputs, outputs)
         platform.runBenchmark(commands, True)
 
@@ -113,11 +134,12 @@ class OculusFramework(FrameworkBase):
             assert "batch" in test, \
                 "batch must exist in test in benchmark {}".format(filename)
 
-    def _composeRunCommand(self, program, platform, model, test,
-                           inputs, outputs):
+    def _composeRunCommand(self, program, platform, model, model_filename,
+                           test, inputs, outputs):
         cmd = [program,
                "--json", platform.getOutputDir() + "report.json",
                "--model", model["name"],
+               "--modelfile", model_filename,
                "--input", ' ' .join(inputs),
                "--output", ' '.join(outputs)]
         if "batch" in test:

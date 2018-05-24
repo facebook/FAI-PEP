@@ -119,8 +119,12 @@ class BenchmarkCollector(object):
 
     def _collectFiles(self, benchmark):
         files = []
-        if "model" in benchmark and "files" in benchmark["model"]:
-            self._collectOneGroupFiles(benchmark["model"]["files"], files)
+        if "model" in benchmark:
+            if "files" in benchmark["model"]:
+                self._collectOneGroupFiles(benchmark["model"]["files"], files)
+            if "libraries" in benchmark["model"]:
+                self._collectOneGroupFiles(benchmark["model"]["libraries"],
+                                           files)
 
         for test in benchmark["tests"]:
             if "input_files" in test:
