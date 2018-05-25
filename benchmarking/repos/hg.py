@@ -62,7 +62,7 @@ class HGRepo(RepoBase):
         commit_date = commit_str[start:end].split()
         next_commit_date = int(commit_date[0]) + step
 
-        commit_str = self._run('log', '-d', '<' + next_commit_date + ' ' + commit_date[1], '-l', '1', '--template', '<START>{node}<END>')
+        commit_str = self._run('log', '-d', '<' + str(next_commit_date) + ' ' + commit_date[1], '-l', '1', '--template', '<START>{node}<END>')
         start = commit_str.index('<START>') + len('<START>')
         end = commit_str.index('<END>')
         return commit_str[start:end]
