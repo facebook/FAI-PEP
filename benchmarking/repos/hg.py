@@ -60,6 +60,8 @@ class HGRepo(RepoBase):
     def getNextCommitHash(self, commit, step):
         self.pull(commit)
         res = self._run('next', str(step))
+        if res is None:
+            return commit
         res = res.split("\n")
         if len(res) > 0 and res[0].strip() == "reached head commit":
             # Not yet have step commits
