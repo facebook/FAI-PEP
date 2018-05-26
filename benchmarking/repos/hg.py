@@ -8,8 +8,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-import time
-
 from utils.subprocess_with_logger import processRun
 from .repo_base import RepoBase
 
