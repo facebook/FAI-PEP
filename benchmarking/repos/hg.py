@@ -26,7 +26,7 @@ class HGRepo(RepoBase):
         return processRun(hg)[0]
 
     def pull(self, *args):
-        return self._run('pull', '--rebase', '-d', args[0])
+        return self._run('update', args[0])
 
     def checkout(self, *args):
         self._run('update', *args)
