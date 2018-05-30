@@ -26,7 +26,7 @@ class HGRepo(RepoBase):
         return processRun(hg)[0]
 
     def pull(self, *args):
-        return self._run('pull', '--rebase', '-d', args[0])
+        return self._run('update', args[0])
 
     def checkout(self, *args):
         self._run('update', *args)
@@ -56,16 +56,15 @@ class HGRepo(RepoBase):
         return int(float(t[start:end]))
 
     def getNextCommitHash(self, commit, step):
-        commit_str = self._run('log', '-T', '<START>{date|hgdate}<END>', '-r', commit)
-        start = commit_str.index('<START>') + len('<START>')
-        end = commit_str.index('<END>')
-        commit_date = commit_str[start:end].split()
-        next_commit_date = int(commit_date[0]) + step
-
-        commit_str = self._run('log', '-d', '<' + next_commit_date + ' ' + commit_date[1], '-l', '1', '--template', '<START>{node}<END>')
-        start = commit_str.index('<START>') + len('<START>')
-        end = commit_str.index('<END>')
-        return commit_str[start:end]
+        self.pull(commit)
+        res = self._run('next', str(step))
+        if res is None:
+            return commit
+        res = res.split("\n")
+        if len(res) > 0 and res[0].strip() == "reached head commit":
+            # Not yet have step commits
+            return commit
+        return self.getCurrentCommitHash()
 
     def getCommitsInRange(self, start_date, end_date):
         sdate = start_date.strftime("%Y-%m-%d %H:%M:%S")
