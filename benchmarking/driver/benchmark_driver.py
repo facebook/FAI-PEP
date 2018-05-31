@@ -106,12 +106,14 @@ def _processDelayData(input_data):
     for k in input_data:
         d = input_data[k]
         data[k] = {
-            "values": input_data[k]["values"],
-            "summary": _getStatistics(input_data[k]["values"]),
+            "values": input_data[k]["latency"],
+            "summary": _getStatistics(input_data[k]["latency"]),
             "type": k,
         }
         if "operator" in d:
             data[k]["operator"] = d["operator"]
+        if "flops" in d:
+            data[k]["flops"] = d["flops"][0]
         if "id" in d:
             data[k]["id"] = d["id"]
         if "unit" in d:
