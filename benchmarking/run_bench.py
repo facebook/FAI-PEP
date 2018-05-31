@@ -15,6 +15,7 @@ import re
 import six
 from utils.arg_parse import getParser, getArgs, getUnknowns, parseKnown
 from utils.custom_logger import getLogger
+from utils.utilities import getPythonCommand
 
 getParser().add_argument("--reset_options", action="store_true",
     help="Reset all the options that is saved by default.")
@@ -130,7 +131,7 @@ class RunBench(object):
         args = self._getSavedArgs()
         unknowns = getUnknowns()
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        command = dir_path + "/repo_driver.py " + \
+        command = getPythonCommand() + " " + dir_path + "/repo_driver.py " + \
             ' '.join([self._getString(u) + ' ' +
                      (self._getString(args[u])
                       if args[u] is not None else "")

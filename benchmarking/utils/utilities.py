@@ -9,6 +9,8 @@
 ##############################################################################
 
 import datetime
+import os
+import sys
 
 
 def getDirectory(commit_hash, commit_time):
@@ -32,3 +34,12 @@ def getFilename(name):
     return "".join([c for c in filename
                     if c.isalpha() or c.isdigit() or
                     c == '_' or c == '.' or c == '-']).rstrip()
+
+
+def getPythonCommand():
+    exe = sys.argv[0]
+    basename = os.path.basename(exe)
+    if basename[:6] == "python":
+        return exe
+    else:
+        return ""
