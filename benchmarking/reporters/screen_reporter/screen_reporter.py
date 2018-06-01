@@ -42,9 +42,13 @@ class ScreenReporter(ReporterBase):
               format(framework_name, commit, datetime.datetime.fromtimestamp(
                      int(ts)).strftime('%Y-%m-%d %H:%M:%S')))
 
-        if "NET" in data:
-            self._printOneData("NET_DELAY", data["NET"])
-            data.pop("NET")
+        del_keys = []
+        for key in data:
+            if key.startswith('NET'):
+                self._printOneData(key, data[key])
+                del_keys.append(key)
+        for key in del_keys:
+            data.pop(key)
 
         data_values_iter = iter(data.values())
         if "id" in next(data_values_iter):

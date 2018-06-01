@@ -75,8 +75,6 @@ class RemoteReporter(ReporterBase):
                 self._updateSummaryData(data['diff_summary'], summary, "diff_")
             if 'regressed' in data:
                 summary['regressed'] = data['regressed']
-            if 'flops' in data:
-                summary['flops'] = data['flops']
             if "unit" in data:
                 new_meta["unit"] = data["unit"]
             # override the default metric if it is specified in the data

@@ -330,18 +330,20 @@ class Caffe2Framework(FrameworkBase):
     def _processDelayData(self, data):
         details = collections.defaultdict(
             lambda: collections.defaultdict(list))
+        pattern = re.compile(r"^ID_(\d+)_([a-zA-Z0-9]+)_[\w/]+")
         for d in data:
             for k, v in d.items():
                 for kk, vv in v.items():
-                    details[k][kk].append(vv)
-        pattern = re.compile(r"^ID_(\d+)_([a-zA-Z0-9]+)_[\w/]+")
-        for key in details:
-            match = pattern.match(key)
-            if match:
-                # per layer timing
-                details[key]["id"].append(match.group(1))
-                details[key]["operator"].append(match.group(2))
-            else:
-                # whole graph timing
-                assert key == self.NET
+                    key = k + "(" + kk  + ")"
+                    details[key]["values"].append(vv)
+                    # although it is declared as list
+                    details[key]["metric"] = kk
+                    match = pattern.match(k)
+                    if match:
+                        # per layer timing
+                        details[key]["id"] = [match.group(1)]
+                        details[key]["operator"] = [match.group(2)]
+                    else:
+                        # whole graph timing
+                        assert key == self.NET + "(" + kk  + ")"
         return details
