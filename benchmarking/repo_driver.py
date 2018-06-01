@@ -18,7 +18,7 @@ from utils.arg_parse import getParser, getArgs, getUnknowns, parseKnown
 from repos.repos import getRepo
 from utils.build_program import buildProgramPlatform
 from utils.custom_logger import getLogger
-from utils.utilities import getDirectory, getPythonCommand
+from utils.utilities import getDirectory, getPythonInterpreter
 
 getParser().add_argument("--ab_testing", action="store_true",
     help="Enable A/B testing in benchmark.")
@@ -328,7 +328,7 @@ class RepoDriver(object):
         del repo_info["platform"]
         dir_path = os.path.dirname(os.path.realpath(__file__))
         unknowns = getUnknowns()
-        command = getPythonCommand() + " " + dir_path + "/harness.py " + \
+        command = getPythonInterpreter() + " " + dir_path + "/harness.py " + \
             " --platform \'" + platform + "\'" + \
             " --framework \'" + getArgs().framework + "\'" + \
             (" --info \'" + json.dumps(repo_info) + "\'") + " " + \

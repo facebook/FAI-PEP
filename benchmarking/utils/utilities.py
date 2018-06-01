@@ -9,7 +9,6 @@
 ##############################################################################
 
 import datetime
-import os
 import sys
 
 
@@ -36,10 +35,5 @@ def getFilename(name):
                     c == '_' or c == '.' or c == '-']).rstrip()
 
 
-def getPythonCommand():
-    exe = sys.argv[0]
-    basename = os.path.basename(exe)
-    if basename[:6] == "python":
-        return exe
-    else:
-        return ""
+def getPythonInterpreter():
+    return sys.executable
