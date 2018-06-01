@@ -334,7 +334,7 @@ class Caffe2Framework(FrameworkBase):
         for d in data:
             for k, v in d.items():
                 for kk, vv in v.items():
-                    key = k + "(" + kk  + ")"
+                    key = k + " " + kk
                     details[key]["values"].append(vv)
                     # although it is declared as list
                     details[key]["metric"] = kk
@@ -345,5 +345,5 @@ class Caffe2Framework(FrameworkBase):
                         details[key]["operator"] = [match.group(2)]
                     else:
                         # whole graph timing
-                        assert key == self.NET + "(" + kk  + ")"
+                        assert key == self.NET + " " + kk
         return details
