@@ -9,6 +9,7 @@
 ##############################################################################
 
 import datetime
+import sys
 
 
 def getDirectory(commit_hash, commit_time):
@@ -32,3 +33,7 @@ def getFilename(name):
     return "".join([c for c in filename
                     if c.isalpha() or c.isdigit() or
                     c == '_' or c == '.' or c == '-']).rstrip()
+
+
+def getPythonInterpreter():
+    return sys.executable
