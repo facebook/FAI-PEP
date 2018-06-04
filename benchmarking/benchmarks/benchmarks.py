@@ -64,6 +64,7 @@ class BenchmarkCollector(object):
 
         self._updateFiles(one_benchmark, source)
 
+        # following change should not appear in updated_json file
         if meta:
             self._deepMerge(one_benchmark["model"], meta)
         if "commands" in info:
