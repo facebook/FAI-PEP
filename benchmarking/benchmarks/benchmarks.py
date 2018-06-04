@@ -64,8 +64,6 @@ class BenchmarkCollector(object):
 
         self._updateFiles(one_benchmark, source)
 
-        self._updateTests(one_benchmark, source)
-
         if meta:
             self._deepMerge(one_benchmark["model"], meta)
         if "commands" in info:
@@ -73,6 +71,8 @@ class BenchmarkCollector(object):
                 one_benchmark["model"]["commands"] = {}
             self._deepMerge(one_benchmark["model"]["commands"],
                             info["commands"])
+
+        self._updateTests(one_benchmark, source)
         # Add fields that should not appear in the saved benchmark file
         # Adding path to benchmark file
         one_benchmark["path"] = os.path.abspath(source)

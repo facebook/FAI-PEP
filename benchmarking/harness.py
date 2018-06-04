@@ -53,6 +53,8 @@ getParser().add_argument("-p", "--platform", required=True,
     "saved in specifications/frameworks/<framework>/<platform> directory")
 getParser().add_argument("--platform_sig",
     help="Specify the platform signature")
+getParser().add_argument("--wipe_cache", action="store_true",
+    help="Specify whether to evict cache or not before running")
 getParser().add_argument("--program",
     help="The program to run on the platform.")
 getParser().add_argument("--reboot", action="store_true",
@@ -145,6 +147,11 @@ class BenchmarkDriver(object):
             info["commands"][getArgs().framework] = {
                 "backend": getArgs().backend
             }
+        if getArgs().wipe_cache:
+            if "commands" not in info:
+                info["commands"] = {getArgs().framework: {}}
+            info["commands"][getArgs().framework]["wipe_cache"] = \
+                    getArgs().wipe_cache
         return info
 
 
