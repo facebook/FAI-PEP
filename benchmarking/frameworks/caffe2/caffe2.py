@@ -309,7 +309,16 @@ class Caffe2Framework(FrameworkBase):
         while (i < len(useful_rows)):
             row = useful_rows[i]
             valid_row = row[(row.find(self.IDENTIFIER) + len(self.IDENTIFIER)):]
-            results.append(json.loads(valid_row))
+            try:
+                result = json.loads(valid_row)
+                results.append(result)
+            except Exception as e:
+                # bypass one line
+                getLogger().info(
+                        "Skip one row %s \n Exception: %s" %
+                        (valid_row, str(e))
+                        )
+                pass
             i += 1
 
         if len(results) > total_num:
@@ -336,6 +345,7 @@ class Caffe2Framework(FrameworkBase):
                 for kk, vv in v.items():
                     key = k + " " + kk
                     details[key]["values"].append(vv)
+                    details[key]["type"] = k
                     # although it is declared as list
                     details[key]["metric"] = kk
                     match = pattern.match(k)
