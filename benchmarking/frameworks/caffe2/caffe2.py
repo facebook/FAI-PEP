@@ -10,6 +10,7 @@
 
 import collections
 import copy
+import json
 import os
 import re
 import shutil
@@ -18,10 +19,8 @@ from utils.custom_logger import getLogger
 
 
 class Caffe2Framework(FrameworkBase):
-    DELAYS_START = 'Delay Start'
-    DELAYS_END = 'Delay End'
     IDENTIFIER = 'Caffe2Observer '
-    NET_DELAY = 'NET_DELAY'
+    NET = 'NET'
 
     def __init__(self, tempdir):
         super(Caffe2Framework, self).__init__()
@@ -308,14 +307,18 @@ class Caffe2Framework(FrameworkBase):
         useful_rows = [row for row in rows if row.find(self.IDENTIFIER) >= 0]
         i = 0
         while (i < len(useful_rows)):
-            if (i < len(useful_rows) and
-                    (useful_rows[i].find(self.DELAYS_START) >= 0)):
-                result = {}
-                i = self._parseDelayData(useful_rows, result, i)
-                if (len(result) > 1) and (self.NET_DELAY in result):
-                    # operator delay. Need to strip the net delay from it
-                    del result[self.NET_DELAY]
+            row = useful_rows[i]
+            valid_row = row[(row.find(self.IDENTIFIER) + len(self.IDENTIFIER)):]
+            try:
+                result = json.loads(valid_row)
                 results.append(result)
+            except Exception as e:
+                # bypass one line
+                getLogger().info(
+                        "Skip one row %s \n Exception: %s" %
+                        (valid_row, str(e))
+                        )
+                pass
             i += 1
 
         if len(results) > total_num:
@@ -333,37 +336,24 @@ class Caffe2Framework(FrameworkBase):
                         "No new items collected, finish collecting...")
         return False
 
-    def _parseDelayData(self, rows, result, start_idx):
-        assert rows[start_idx].find(self.DELAYS_START) >= 0, \
-                "Does not find the start of the delay"
-        i = start_idx+1
-        while i < len(rows) and rows[i].find(self.DELAYS_END) < 0:
-            row = rows[i]
-            start_idx = row.find(self.IDENTIFIER) + len(self.IDENTIFIER)
-            pair = row[start_idx:].strip().split(' - ')
-            assert len(pair) == 2, \
-                "Operator delay doesn't have two items: %s" % row
-            unit_idx = pair[1].find("(")
-            assert unit_idx > 0, "Unit is not specified"
-            result[pair[0].strip()] = float(pair[1][:unit_idx-1].strip())
-            i = i+1
-        return i
-
     def _processDelayData(self, data):
         details = collections.defaultdict(
             lambda: collections.defaultdict(list))
+        pattern = re.compile(r"^ID_(\d+)_([a-zA-Z0-9]+)_[\w/]+")
         for d in data:
             for k, v in d.items():
-                # Value is collected in milliseconds, add value in microseconds
-                details[k]["values"].append(v * 1000)
-        pattern = re.compile(r"^ID_(\d+)_([a-zA-Z0-9]+)_[\w/]+")
-        for key in details:
-            match = pattern.match(key)
-            if match:
-                # per layer timing
-                details[key]["id"].append(match.group(1))
-                details[key]["operator"].append(match.group(2))
-            else:
-                # whole graph timing
-                assert key == self.NET_DELAY
+                for kk, vv in v.items():
+                    key = k + " " + kk
+                    details[key]["values"].append(vv)
+                    details[key]["type"] = k
+                    # although it is declared as list
+                    details[key]["metric"] = kk
+                    match = pattern.match(k)
+                    if match:
+                        # per layer timing
+                        details[key]["id"] = [match.group(1)]
+                        details[key]["operator"] = [match.group(2)]
+                    else:
+                        # whole graph timing
+                        assert key == self.NET + " " + kk
         return details

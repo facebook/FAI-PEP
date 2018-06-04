@@ -108,7 +108,7 @@ def _processDelayData(input_data):
         data[k] = {
             "values": input_data[k]["values"],
             "summary": _getStatistics(input_data[k]["values"]),
-            "type": k,
+            "type": input_data[k]["type"],
         }
         if "operator" in d:
             data[k]["operator"] = d["operator"]
