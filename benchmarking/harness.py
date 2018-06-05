@@ -53,7 +53,7 @@ getParser().add_argument("-p", "--platform", required=True,
     "saved in specifications/frameworks/<framework>/<platform> directory")
 getParser().add_argument("--platform_sig",
     help="Specify the platform signature")
-getParser().add_argument("--wipe_cache", action="store_true",
+getParser().add_argument("--wipe_cache", default=False,
     help="Specify whether to evict cache or not before running")
 getParser().add_argument("--program",
     help="The program to run on the platform.")
