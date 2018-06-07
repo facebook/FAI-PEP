@@ -134,8 +134,6 @@ class OculusFramework(FrameworkBase):
                 "outputs must exist in test in benchmark {}".format(filename)
             assert "metric" in test, \
                 "metric must exist in test in benchmark {}".format(filename)
-            assert "batch" in test, \
-                "batch must exist in test in benchmark {}".format(filename)
 
     def _composeRunCommand(self, program, platform, model, model_filename,
                            test, inputs, outputs):
@@ -145,13 +143,9 @@ class OculusFramework(FrameworkBase):
                "--modelfile", model_filename,
                "--input", ' ' .join(inputs),
                "--output", ' '.join(outputs)]
-        if "batch" in test:
-            cmd.append("--batch")
-            cmd.append(str(test["batch"]))
-        if "debug" in test:
-            cmd.append("--debug")
-            cmd.append(str(test["debug"]))
-        if "benchmark" in test:
-            cmd.append("--benchmark")
-            cmd.append(str(test["benchmark"]))
+        if "commands" in test:
+            if "oculus" in test["commands"]:
+                for key in test["commands"]["oculus"]:
+                    val = test["commands"]["oculus"][key]
+                    cmd.extend(["--" + key, str(val)])
         return ' '.join(cmd)
