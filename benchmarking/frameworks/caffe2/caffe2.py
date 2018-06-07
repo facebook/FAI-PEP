@@ -341,16 +341,14 @@ class Caffe2Framework(FrameworkBase):
             lambda: collections.defaultdict(list))
         pattern = re.compile(r"^ID_(\d+)_([a-zA-Z0-9]+)_[\w/]+")
         for d in data:
-            print(d)
             for k, v in d.items():
                 for kk, vv in v.items():
                     key = k + " " + kk
-                    details[key]["values"].append(vv)
+                    details[key]["values"].append(float(vv["value"]))
                     details[key]["type"] = k
                     # although it is declared as list
                     details[key]["metric"] = kk
-                    # TODO: add unit for each metric in observer
-                    details[key]["unit"] = "ms"
+                    details[key]["unit"] = str(vv["unit"])
                     match = pattern.match(k)
                     if match:
                         # per layer timing

@@ -13,6 +13,7 @@ import os
 import random
 import re
 import shutil
+import socket
 import subprocess
 
 from platforms.platform_base import PlatformBase
@@ -30,7 +31,7 @@ class HostPlatform(PlatformBase):
         else:
             self.setPlatform(platform.platform() + "-" + self._getProcessorName())
 
-        self.setPlatformHash(str(random.randint(1, 1<<32)))
+        self.setPlatformHash(str(socket.gethostname()))
         self.tempdir = tempdir + "/" + self.platform + '_' + str(self.platform_hash)
         os.makedirs(self.tempdir, 0o777)
         self.type = "host"
