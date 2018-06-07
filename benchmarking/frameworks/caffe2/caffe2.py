@@ -344,10 +344,11 @@ class Caffe2Framework(FrameworkBase):
             for k, v in d.items():
                 for kk, vv in v.items():
                     key = k + " " + kk
-                    details[key]["values"].append(vv)
+                    details[key]["values"].append(float(vv["value"]))
                     details[key]["type"] = k
                     # although it is declared as list
                     details[key]["metric"] = kk
+                    details[key]["unit"] = str(vv["unit"])
                     match = pattern.match(k)
                     if match:
                         # per layer timing
