@@ -27,9 +27,9 @@ def processRun(*args, **kwargs):
         return output, None
     except subprocess.CalledProcessError as e:
         getLogger().error("Command failed: {}".format(e.output))
-        err_output = e.output
+        err_output = e.output.decode("utf-8", "ignore")
     except Exception:
         getLogger().error("Unknown failure {}: {}".format(sys.exc_info()[0],
                                                           ' '.join(*args)))
-        err_output = "{}".format(sys.exc_info()[2])
+        err_output = "{}".format(sys.exc_info()[2].decode("utf-8", "ignore"))
     return None, err_output
