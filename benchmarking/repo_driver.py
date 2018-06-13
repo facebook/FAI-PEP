@@ -41,7 +41,7 @@ getParser().add_argument("--exec_dir", required=True,
     "If an executable is found for a commit, no re-compilation is performed. " +
     "Instead, the previous compiled executable is reused.")
 getParser().add_argument("--framework", required=True,
-    choices=["caffe2", "oculus"],
+    choices=["caffe2", "oculus", "generic"],
     help="Specify the framework to benchmark on.")
 getParser().add_argument("--frameworks_dir",
     default=str(os.path.dirname(os.path.realpath(__file__)) + "/../specifications/frameworks"),

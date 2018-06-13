@@ -13,9 +13,9 @@ import json
 import os
 import re
 import six
-from .utils.arg_parse import getParser, getArgs, getUnknowns, parseKnown
-from .utils.custom_logger import getLogger
-from .utils.utilities import getPythonInterpreter
+from utils.arg_parse import getParser, getArgs, getUnknowns, parseKnown
+from utils.custom_logger import getLogger
+from utils.utilities import getPythonInterpreter
 
 getParser().add_argument("--reset_options", action="store_true",
     help="Reset all the options that is saved by default.")

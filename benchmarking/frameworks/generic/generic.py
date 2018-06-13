@@ -45,7 +45,13 @@ class GenericFramework(FrameworkBase):
             model_files = \
                 platform.copyFilesToPlatform(model_files)
 
-        # todo: input files
+        libraries = []
+        if "libraries" in model:
+            for entry in model["libraries"]:
+                target = entry["target"] \
+                    if "target" in entry else platform.adb.dir
+            libraries.append(platform.copyFilesToPlatform(
+                entry["location"], target))
 
         # run benchmark
         output = platform.runBenchmark(commands, True)
