@@ -55,11 +55,6 @@ class Caffe2Framework(FrameworkBase):
         cmd = self._composeRunCommand(platform, program, test, model_files,
                                       input_files, shared_libs)
         total_num = test["iter"]
-        if "commands" in test and \
-                "caffe2" in test["commands"] and \
-                "run_individual" in test["commands"]["caffe2"] and \
-                test["commands"]["caffe2"]["run_individual"] == "true":
-            total_num *= 2
 
         output = self._runOnPlatform(total_num, cmd, platform)
         output_files = None
@@ -306,11 +301,16 @@ class Caffe2Framework(FrameworkBase):
         rows = output.split('\n')
         useful_rows = [row for row in rows if row.find(self.IDENTIFIER) >= 0]
         i = 0
+        valid_runs = 0
+        valid_run_idx = []
         while (i < len(useful_rows)):
             row = useful_rows[i]
             valid_row = row[(row.find(self.IDENTIFIER) + len(self.IDENTIFIER)):]
             try:
                 result = json.loads(valid_row)
+                if "NET" in result:
+                   valid_runs += 1
+                   valid_run_idx.append(i)
                 results.append(result)
             except Exception as e:
                 # bypass one line
@@ -321,15 +321,15 @@ class Caffe2Framework(FrameworkBase):
                 pass
             i += 1
 
-        if len(results) > total_num:
+        if valid_runs > total_num:
             # Android 5 has an issue that logcat -c does not clear the entry
-            results = results[-total_num:]
-        elif len(results) < total_num:
+            results = results[valid_run_idx[valid_runs-total_num]:]
+        elif valid_runs < total_num:
             if len(results) > prev_num:
                 getLogger().info(
-                        "%d items collected. Still missing %d items. "
+                        "%d items collected. Still missing %d runs. "
                         "Collect again." %
-                        (len(results) - prev_num, total_num - len(results)))
+                        (len(results) - prev_num, total_num - valid_runs))
                 return True
             else:
                 getLogger().info(
