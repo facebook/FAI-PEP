@@ -1,6 +1,6 @@
-# ML Benchmark Platform
+# Facebook AI Performance Evaluation Platform
 
-The ML benchmark platform a framework and backend agnostic benchmarking platform to compare machine learning inferencing runtime information of a set of models on a variety of backends. It also provides a means to check performance regressions on each commit.
+Facebook AI Performance Evaluation Platform is a framework and backend agnostic benchmarking platform to compare machine learning inferencing runtime metrics on a set of models and a variety of backends. It also provides a means to check performance regressions on each commit.
 
 Currently two performance metrics are collected:
 
@@ -9,7 +9,7 @@ Currently two performance metrics are collected:
 
 ## Framework and backend agnostic benchmarking platforms
 
-Machine learning is a rapidly evolving area with many moving parts: new and existing framework enhancement, new hardware solutions, new software backends, and new models. With so many moving parts, it is very difficult to quickly evaluate the performance of a machine learning model. However, such evaluation is vastly important in guiding resource allocation in:
+Machine learning is a rapidly evolving area with many moving parts: new and existing framework enhancements, new hardware solutions, new software backends, and new models. With so many moving parts, it is very difficult to quickly evaluate the performance of a machine learning model. However, such evaluation is vastly important in guiding resource allocation in:
 
 * the development of the frameworks
 * the optimization of the software backends
@@ -39,13 +39,13 @@ The currently supported frameworks are: Caffe2
 
 The currently supported model formats are: Caffe2
 
-The currently supported hardware backends: CPU, GPU, Android, linux based systems
+The currently supported backends: CPU, GPU, DSP, Android, linux based systems
 
-The currently supported software backends: Eigen, MKL, NNPACK, OpenGL, CUDA
+The currently supported libraries: Eigen, MKL, NNPACK, OpenGL, CUDA
 
 ## Performance regression detection
 
-The benchmark platform also provides a means to compare performance between commits and detect regressions. It uses an A/B testing methodology that compares the runtime difference between a newer commit (treatment) and an older commit (control). What matters is the relative performance between the commits, as the backend platform's condition may be different at different times. Running the same tests on two different commit points at the same time removes most of the variations of the backend. This method has shown to improve the precision of detecting performance regressions.
+The benchmark platform also provides a means to compare performance between commits and detect regressions. It uses an A/B testing methodology that compares the runtime difference between a newer commit (treatment) and an older commit (control). What matters is the relative performance difference between the commits, as the backend platform's condition may be different at different times. Running the same tests on two different commit points at the same time removes most of the variations of the backend. This method has shown to improve the precision of detecting performance regressions.
 
 ## Directory structure
 
@@ -80,22 +80,29 @@ optional arguments:
   --reset_options  Reset all the options that is saved by default.
 ```
 
+`run_bench.py` can be the single point of entry for both interactive and regression benchmark runs.
+
 ## Stand alone benchmark run
 The `harness.py` is the entry point for one benchmark run. It collects the runtime for an entire net and/or individual operator, and saves the data locally or pushes to a remote server. The usage of the script is as follows:
 
 ```
 usage: harness.py [-h] [--android_dir ANDROID_DIR] [--backend BACKEND] -b
                   BENCHMARK_FILE [-d DEVICES]
-                  [--excluded_devices EXCLUDED_DEVICES] --framework {caffe2}
-                  --info INFO [--local_reporter LOCAL_REPORTER] --model_cache
-                  MODEL_CACHE -p PLATFORM [--program PROGRAM] [--reboot]
+                  [--excluded_devices EXCLUDED_DEVICES] --framework
+                  {caffe2,generic,oculus} --info INFO
+                  [--local_reporter LOCAL_REPORTER]
+                  [--simple_local_reporter SIMPLE_LOCAL_REPORTER]
+                  --model_cache MODEL_CACHE [--device DEVICE] -p PLATFORM
+                  [--platform_sig PLATFORM_SIG] [--wipe_cache WIPE_CACHE]
+                  [--program PROGRAM] [--reboot]
                   [--regressed_types REGRESSED_TYPES]
                   [--remote_reporter REMOTE_REPORTER]
                   [--remote_access_token REMOTE_ACCESS_TOKEN]
                   [--root_model_dir ROOT_MODEL_DIR]
                   [--run_type {benchmark,verify,regress}] [--screen_reporter]
-                  [--set_freq SET_FREQ] [--shared_libs SHARED_LIBS]
-                  [--timeout TIMEOUT]
+                  [--simple_screen_reporter] [--set_freq SET_FREQ]
+                  [--shared_libs SHARED_LIBS] [--timeout TIMEOUT]
+                  [--user_identifier USER_IDENTIFIER]
 
 Perform one benchmark run
 
@@ -116,21 +123,30 @@ optional arguments:
                         Specify the devices that skip the benchmark, in a
                         comma separated list. The value is the device or
                         device_hash field of the meta info.
-  --framework {caffe2}  Specify the framework to benchmark on.
+  --framework {caffe2,generic,oculus}
+                        Specify the framework to benchmark on.
   --info INFO           The json serialized options describing the control and
                         treatment.
   --local_reporter LOCAL_REPORTER
                         Save the result to a directory specified by this
                         argument.
+  --simple_local_reporter SIMPLE_LOCAL_REPORTER
+                        Same as local reporter, but the directory hierarchy is
+                        reduced.
   --model_cache MODEL_CACHE
                         The local directory containing the cached models. It
                         should not be part of a git directory.
+  --device DEVICE       The single device to run this benchmark on
   -p PLATFORM, --platform PLATFORM
                         Specify the platform to benchmark on. Use this flag if
                         the framework needs special compilation scripts. The
                         scripts are called build.sh saved in
                         specifications/frameworks/<framework>/<platform>
                         directory
+  --platform_sig PLATFORM_SIG
+                        Specify the platform signature
+  --wipe_cache WIPE_CACHE
+                        Specify whether to evict cache or not before running
   --program PROGRAM     The program to run on the platform.
   --reboot              Tries to reboot the devices before launching
                         benchmarks for one commit.
@@ -148,10 +164,12 @@ optional arguments:
                         starts with //
   --run_type {benchmark,verify,regress}
                         The type of the current run. The allowed values are:
-                        benchmark, the normal benchmark run. verify, the
+                        benchmark, the normal benchmark run.verify, the
                         benchmark is re-run to confirm a suspicious
-                        regression. regress, the regression is confirmed.
+                        regression.regress, the regression is confirmed.
   --screen_reporter     Display the summary of the benchmark result on screen.
+  --simple_screen_reporter
+                        Display the result on screen with no post processing.
   --set_freq SET_FREQ   On rooted android phones, set the frequency of the
                         cores. The supported values are: max: set all cores to
                         the maximum frquency. min: set all cores to the
@@ -165,6 +183,10 @@ optional arguments:
                         low end devices can safely finish the execution in
                         normal conditions. Note, in A/B testing mode, the test
                         runs twice.
+  --user_identifier USER_IDENTIFIER
+                        User can specify an identifier and that will be passed
+                        to the output so that the result can be easily
+                        identified.
 ```
 
 ## Continuous benchmark run
@@ -176,11 +198,12 @@ The accepted arguments are as follows:
 usage: repo_driver.py [-h] [--ab_testing] [--base_commit BASE_COMMIT]
                       [--branch BRANCH] [--commit COMMIT]
                       [--commit_file COMMIT_FILE] --exec_dir EXEC_DIR
-                      --framework {caffe2} [--frameworks_dir FRAMEWORKS_DIR]
-                      [--interval INTERVAL] --platforms PLATFORMS
-                      [--regression] [--remote_repository REMOTE_REPOSITORY]
+                      --framework {caffe2,oculus,generic}
+                      [--frameworks_dir FRAMEWORKS_DIR] [--interval INTERVAL]
+                      --platforms PLATFORMS [--regression]
+                      [--remote_repository REMOTE_REPOSITORY]
                       [--repo {git,hg}] --repo_dir REPO_DIR [--same_host]
-                      [--status_file STATUS_FILE]
+                      [--status_file STATUS_FILE] [--step STEP]
 
 Perform one benchmark run
 
@@ -209,7 +232,8 @@ optional arguments:
                         an executable is found for a commit, no re-compilation
                         is performed. Instead, the previous compiled
                         executable is reused.
-  --framework {caffe2}  Specify the framework to benchmark on.
+  --framework {caffe2,oculus,generic}
+                        Specify the framework to benchmark on.
   --frameworks_dir FRAMEWORKS_DIR
                         Required. The root directory that all frameworks
                         resides. Usually it is the specifications/frameworks
@@ -235,6 +259,8 @@ optional arguments:
   --status_file STATUS_FILE
                         A file to inform the driver stops running when the
                         content of the file is 0.
+  --step STEP           Specify the number of commits we want to run the
+                        benchmark once under continuous mode.
 ```
 
 The `repo_driver.py` can also take the arguments that are recognized by `harness.py`. It just passes those arguments over.
