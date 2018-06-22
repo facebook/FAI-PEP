@@ -187,21 +187,13 @@ class Caffe2Framework(FrameworkBase):
                 output_files = test["output_files"]
                 num = self._checkNumFiles(output_files, source, num, False)
 
-
             for i in range(num):
                 t = copy.deepcopy(test)
                 for iname in input_files:
-                    if num > 1:
-                        t["input_files"][iname] = test["input_files"][iname][i]
-                    else:
-                        t["input_files"][iname] = test["input_files"][iname]
+                    t["input_files"][iname] = test["input_files"][iname][i]
                 for oname in output_files:
-                    if num > 1:
-                        t["output_files"][oname] = \
-                            test["output_files"][oname][i]
-                    else:
-                        t["output_files"][oname] = \
-                            test["output_files"][oname]
+                    t["output_files"][oname] = \
+                        test["output_files"][oname][i]
                 new_tests.append(t)
 
         return new_tests
