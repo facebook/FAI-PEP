@@ -165,11 +165,6 @@ class Caffe2Framework(FrameworkBase):
                         "are not of the same dimension in " + \
                         "benchmark {}".format(filename)
 
-            if "input_files" in test:
-                assert "output_files" in test, \
-                    "Input files are specified, but output files are not " + \
-                    "specified in the benchmark {}".format(filename)
-
     def rewriteBenchmarkTests(self, benchmark, filename):
         tests = benchmark.pop("tests")
         new_tests = self._replicateTestsOnDims(tests, filename)
@@ -186,9 +181,11 @@ class Caffe2Framework(FrameworkBase):
                 continue
 
             input_files = test["input_files"]
-            output_files = test["output_files"]
+            output_files = []
             num = self._checkNumFiles(input_files, source, num, True)
-            num = self._checkNumFiles(output_files, source, num, False)
+            if "output_files" in test:
+                output_files = test["output_files"]
+                num = self._checkNumFiles(output_files, source, num, False)
 
             for i in range(num):
                 t = copy.deepcopy(test)
@@ -197,7 +194,8 @@ class Caffe2Framework(FrameworkBase):
                 for oname in output_files:
                     t["output_files"][oname] = \
                         test["output_files"][oname][i]
-                    new_tests.append(t)
+                new_tests.append(t)
+
         return new_tests
 
     def _replicateTestsOnDims(self, tests, source):
