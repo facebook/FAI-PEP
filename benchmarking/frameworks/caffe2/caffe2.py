@@ -193,11 +193,19 @@ class Caffe2Framework(FrameworkBase):
             for i in range(num):
                 t = copy.deepcopy(test)
                 for iname in input_files:
-                    t["input_files"][iname] = test["input_files"][iname][i]
+                    if num > 1:
+                        t["input_files"][iname] = test["input_files"][iname][i]
+                    else:
+                        t["input_files"][iname] = test["input_files"][iname]
                 for oname in output_files:
-                    t["output_files"][oname] = \
-                        test["output_files"][oname][i]
+                    if num > 1:
+                        t["output_files"][oname] = \
+                            test["output_files"][oname][i]
+                    else:
+                        t["output_files"][oname] = \
+                            test["output_files"][oname]
                     new_tests.append(t)
+
         return new_tests
 
     def _replicateTestsOnDims(self, tests, source):

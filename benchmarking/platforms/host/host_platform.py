@@ -109,5 +109,5 @@ class HostPlatform(PlatformBase):
     def getOutputDir(self):
         out_dir = self.tempdir + "/output/"
         if not os.path.isdir(out_dir):
-            os.makedirs(out_dir, 0o777, True)
+            os.makedirs(out_dir, 0o777)
         return out_dir
