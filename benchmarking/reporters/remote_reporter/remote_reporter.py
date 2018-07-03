@@ -67,7 +67,8 @@ class RemoteReporter(ReporterBase):
             new_meta = meta.copy()
             new_meta['type'] = data['type']
             summary = base_summary.copy()
-            self._updateSummaryData(data['summary'], summary, "")
+            if "summary" in data:
+                self._updateSummaryData(data['summary'], summary, "")
             if 'control_summary' in data:
                 self._updateSummaryData(data['control_summary'],
                                         summary, "control_")
@@ -77,6 +78,8 @@ class RemoteReporter(ReporterBase):
                 summary['regressed'] = data['regressed']
             if "unit" in data:
                 new_meta["unit"] = data["unit"]
+            if "info_string" in data:
+                new_meta["info_string"] = data["info_string"]
             # override the default metric if it is specified in the data
             if "metric" in data:
                 new_meta["metric"] = data["metric"]

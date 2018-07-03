@@ -342,7 +342,10 @@ class Caffe2Framework(FrameworkBase):
             for k, v in d.items():
                 for kk, vv in v.items():
                     key = k + " " + kk
-                    details[key]["values"].append(float(vv["value"]))
+                    if "info_string" in vv:
+                        details[key]["info_string"] = vv["info_string"]
+                    else:
+                        details[key]["values"].append(float(vv["value"]))
                     details[key]["type"] = k
                     # although it is declared as list
                     details[key]["metric"] = kk
