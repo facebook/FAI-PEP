@@ -189,6 +189,8 @@ def _collectErrorData(output_files):
 def _getStatistics(array):
     sorted_array = sorted(array)
     median = _getMedian(sorted_array)
+    mean = _getMean(array)
+    stdev = _getStdev(array, mean)
     return {
         'p0': sorted_array[0],
         'p100': sorted_array[-1],
@@ -198,8 +200,17 @@ def _getStatistics(array):
                             len(sorted_array) // 10 - 1],
         'MAD': _getMedian(sorted(map(lambda x: abs(x - median),
                                      sorted_array))),
+        'mean': mean,
+        'stdev': stdev,
     }
 
+
+def _getMean(values):
+    return sum(values)//len(values)
+
+def _getStdev(values, mean):
+    sq_diffs = [(x - mean)**2 for x in values]
+    return int((sum(sq_diffs)/len(values))**0.5)
 
 def _getMedian(values):
     length = len(values)
