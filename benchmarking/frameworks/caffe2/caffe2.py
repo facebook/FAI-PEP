@@ -343,7 +343,12 @@ class Caffe2Framework(FrameworkBase):
                 for kk, vv in v.items():
                     key = k + " " + kk
                     if "info_string" in vv:
-                        details[key]["info_string"] = vv["info_string"]
+                        if "info_string" in details[key]:
+                            assert details[key]["info_string"] == vv["info_string"], \
+                                "info_string values for {} ".format(key) + \
+                                "do not match."
+                        else:
+                            details[key]["info_string"] = vv["info_string"]
                     else:
                         details[key]["values"].append(float(vv["value"]))
                     details[key]["type"] = k
