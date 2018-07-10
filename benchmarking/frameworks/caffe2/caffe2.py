@@ -346,7 +346,9 @@ class Caffe2Framework(FrameworkBase):
                         if "info_string" in details[key]:
                             assert details[key]["info_string"] == vv["info_string"], \
                                 "info_string values for {} ".format(key) + \
-                                "do not match."
+                                "do not match.\n" + \
+                                "Current info_string:\n{}\n ".format(details[key]["info_string"]) + \
+                                "does not match new info_string:\n{}".format(vv["info_string"])
                         else:
                             details[key]["info_string"] = vv["info_string"]
                     else:
