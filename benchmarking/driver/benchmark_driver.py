@@ -32,6 +32,9 @@ def runOneBenchmark(info, benchmark, framework, platform,
             cinfo = copy.deepcopy(info["control"])
             if "shared_libs" in info:
                 cinfo["shared_libs"] = info["shared_libs"]
+            # cool down between treatment and control
+            cooldown = getArgs().cooldown
+            time.sleep(cooldown)
             control = _runOnePass(cinfo, benchmark, framework, platform)
             bname = benchmark["model"]["name"]
             data = _mergeDelayData(data, control, bname)
@@ -97,7 +100,6 @@ def _runOnePass(info, benchmark, framework, platform):
         data = output
     else:
         assert False, "Should not be here"
-
     return data
 
 

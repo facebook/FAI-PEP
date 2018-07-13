@@ -14,6 +14,7 @@ import shutil
 import sys
 import tempfile
 import threading
+import time
 
 from driver.benchmark_driver import runOneBenchmark
 from benchmarks.benchmarks import BenchmarkCollector
@@ -27,6 +28,8 @@ getParser().add_argument("--backend",
     help="Specify the backend the test runs on.")
 getParser().add_argument("-b", "--benchmark_file", required=True,
     help="Specify the json file for the benchmark or a number of benchmarks")
+getParser().add_argument("--cooldown", default=0, type=float,
+    help = "Specify the time interval between two test runs.")
 getParser().add_argument("-d", "--devices",
     help="Specify the devices to run the benchmark, in a comma separated "
     "list. The value is the device or device_hash field of the meta info.")
@@ -109,13 +112,18 @@ class BenchmarkDriver(object):
         if getArgs().reboot:
             platform.rebootDevice()
         reporters = getReporters()
-        for benchmark in benchmarks:
+        for idx in range(len(benchmarks)):
+            benchmark = benchmarks[idx]
             b = copy.deepcopy(benchmark)
             i = copy.deepcopy(info)
             success = runOneBenchmark(i, b, framework, platform,
                                       getArgs().platform,
                                       reporters, self._lock)
             self.success = self.success and success
+            if idx != len(benchmarks) - 1:
+                # cool down period between multiple benchmark runs
+                cooldown = getArgs().cooldown
+                time.sleep(cooldown)
 
     def run(self):
         tempdir = tempfile.mkdtemp()
