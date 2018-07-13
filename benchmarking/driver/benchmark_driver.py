@@ -34,6 +34,8 @@ def runOneBenchmark(info, benchmark, framework, platform,
                 cinfo["shared_libs"] = info["shared_libs"]
             # cool down between treatment and control
             cooldown = getArgs().cooldown
+            if "model" in benchmark and "cooldown" in benchmark["model"]:
+                cooldown = float(benchmark["model"]["cooldown"])
             time.sleep(cooldown)
             control = _runOnePass(cinfo, benchmark, framework, platform)
             bname = benchmark["model"]["name"]
