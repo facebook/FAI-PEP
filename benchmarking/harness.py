@@ -114,6 +114,14 @@ class BenchmarkDriver(object):
         reporters = getReporters()
         for idx in range(len(benchmarks)):
             benchmark = benchmarks[idx]
+            # check the framework matches
+            if "model" in benchmark and "framework" in benchmark["model"]:
+                assert(benchmark["model"]["framework"] ==
+                       getArgs().framework), \
+                    "Framework specified in the json file " \
+                    "{} ".format(benchmark["model"]["framework"]) + \
+                    "does not match the command line argument " \
+                    "{}".format(getArgs().framework)
             b = copy.deepcopy(benchmark)
             i = copy.deepcopy(info)
             success = runOneBenchmark(i, b, framework, platform,
