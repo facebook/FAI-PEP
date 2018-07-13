@@ -131,6 +131,8 @@ class BenchmarkDriver(object):
             if idx != len(benchmarks) - 1:
                 # cool down period between multiple benchmark runs
                 cooldown = getArgs().cooldown
+                if "model" in benchmark and "cooldown" in benchmark["model"]:
+                    cooldown = float(benchmark["model"]["cooldown"])
                 time.sleep(cooldown)
 
     def run(self):
