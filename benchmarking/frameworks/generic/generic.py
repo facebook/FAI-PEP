@@ -8,12 +8,8 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-import collections
 import os
-import re
-import shutil
 from frameworks.framework_base import FrameworkBase
-from utils.custom_logger import getLogger
 
 
 class GenericFramework(FrameworkBase):
@@ -54,7 +50,7 @@ class GenericFramework(FrameworkBase):
                 entry["location"], target))
 
         # run benchmark
-        output = platform.runBenchmark(commands, True)
+        output = platform.runBenchmark(commands, log_to_screen_only=True)
 
         # todo: output files
         output_files = None

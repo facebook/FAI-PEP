@@ -67,11 +67,12 @@ class AndroidPlatform(PlatformBase):
     def runCommand(self, cmd):
         return self.adb.shell(cmd)
 
-    def runBenchmark(self, cmd, log_to_screen_only=False):
+    def runBenchmark(self, cmd, *args, **kwargs):
         self.adb.logcat('-b', 'all', '-c')
         log_screen = self.adb.shell(cmd)
         log_logcat = ""
-        if not log_to_screen_only:
+        if 'log_to_screen_only' not in kwargs or \
+                not kwargs['log_to_screen_only']:
             log_logcat = self.adb.logcat('-d')
         return log_screen + log_logcat
 

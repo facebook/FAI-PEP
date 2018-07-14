@@ -57,7 +57,7 @@ class PlatformBase(object):
         pass
 
     @abc.abstractmethod
-    def runBenchmark(self, cmd):
+    def runBenchmark(self, cmd, *args, **kwargs):
         return None
 
     @abc.abstractmethod
