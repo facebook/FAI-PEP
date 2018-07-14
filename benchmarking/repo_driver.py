@@ -332,7 +332,7 @@ class RepoDriver(object):
             " --platform \'" + platform + "\'" + \
             " --framework \'" + getArgs().framework + "\'" + \
             (" --info \'" + json.dumps(repo_info) + "\'") + " " + \
-            ' '.join(['"' + u + '"' for u in unknowns])
+            ' '.join(['\'' + u + '\'' for u in unknowns])
         return command
 
 
