@@ -56,7 +56,10 @@ class Caffe2Framework(FrameworkBase):
                                       input_files, shared_libs)
         total_num = test["iter"]
 
-        output = self._runOnPlatform(total_num, cmd, platform)
+        platform_args = model["platform_args"] if "platform_args" in model \
+            else {}
+
+        output = self._runOnPlatform(total_num, cmd, platform, platform_args)
         output_files = None
         if "output_files" in test:
             files = {}
@@ -283,11 +286,11 @@ class Caffe2Framework(FrameworkBase):
         cmd = [str(s) for s in cmd]
         return cmd
 
-    def _runOnPlatform(self, total_num, cmd, platform):
+    def _runOnPlatform(self, total_num, cmd, platform, platform_args):
         results = []
         repeat = True
         while repeat:
-            output = platform.runBenchmark(cmd)
+            output = platform.runBenchmark(cmd, platform_args=platform_args)
             repeat = self._collectDelayData(total_num, output, results)
         metric = self._processDelayData(results)
         return metric
