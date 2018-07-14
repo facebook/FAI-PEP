@@ -17,6 +17,7 @@ import requests
 import shutil
 from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
+from utils.utilities import deepMerge
 
 
 class BenchmarkCollector(object):
@@ -34,7 +35,7 @@ class BenchmarkCollector(object):
 
         meta = content["meta"] if "meta" in content else {}
         if "meta" in info:
-            self._deepMerge(meta, info["meta"])
+            deepMerge(meta, info["meta"])
         benchmarks = []
 
         if "benchmarks" in content:
@@ -66,12 +67,11 @@ class BenchmarkCollector(object):
 
         # following change should not appear in updated_json file
         if meta:
-            self._deepMerge(one_benchmark["model"], meta)
+            deepMerge(one_benchmark["model"], meta)
         if "commands" in info:
             if "commands" not in one_benchmark["model"]:
                 one_benchmark["model"]["commands"] = {}
-            self._deepMerge(one_benchmark["model"]["commands"],
-                            info["commands"])
+            deepMerge(one_benchmark["model"]["commands"], info["commands"])
 
         self._updateTests(one_benchmark, source)
         # Add fields that should not appear in the saved benchmark file
@@ -217,8 +217,7 @@ class BenchmarkCollector(object):
             for test in tests:
                 if "commands" not in test:
                     test["commands"] = {}
-                self._deepMerge(test["commands"],
-                                one_benchmark["model"]["commands"])
+                deepMerge(test["commands"], one_benchmark["model"]["commands"])
 
     def _getAbsFilename(self, file, source, cache_dir):
         location = file["location"]
@@ -236,21 +235,3 @@ class BenchmarkCollector(object):
             return abs_dir + location
         else:
             return location
-
-    def _deepMerge(self, tgt, src):
-        if isinstance(src, list):
-            # only handle simple lists
-            for item in src:
-                if item not in tgt:
-                    tgt.append(copy.deepcopy(item))
-        elif isinstance(src, dict):
-            for name in src:
-                m = src[name]
-                if name not in tgt:
-                    tgt[name] = copy.deepcopy(m)
-                else:
-                    self._deepMerge(tgt[name], m)
-        else:
-            # tgt has already specified a value
-            # src does not override tgt
-            return
