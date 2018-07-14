@@ -63,7 +63,7 @@ class OculusFramework(FrameworkBase):
         commands = self._composeRunCommand(program, platform, model,
                                            model_filename, test,
                                            inputs, outputs)
-        platform.runBenchmark(commands, True)
+        platform.runBenchmark(commands, log_to_screen_only=True)
 
         target_dir = self.tempdir + "/output/"
         shutil.rmtree(target_dir, True)

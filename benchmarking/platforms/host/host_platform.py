@@ -36,7 +36,7 @@ class HostPlatform(PlatformBase):
         os.makedirs(self.tempdir, 0o777)
         self.type = "host"
 
-    def runBenchmark(self, cmd):
+    def runBenchmark(self, cmd, *args, **kwargs):
         getLogger().info("Running: %s", ' '.join(cmd))
         pipes = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
