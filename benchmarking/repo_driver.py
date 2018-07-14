@@ -18,7 +18,7 @@ from utils.arg_parse import getParser, getArgs, getUnknowns, parseKnown
 from repos.repos import getRepo
 from utils.build_program import buildProgramPlatform
 from utils.custom_logger import getLogger
-from utils.utilities import getDirectory, getPythonInterpreter
+from utils.utilities import getDirectory, getPythonInterpreter, deepMerge
 
 getParser().add_argument("--ab_testing", action="store_true",
     help="Enable A/B testing in benchmark.")
@@ -328,6 +328,13 @@ class RepoDriver(object):
         del repo_info["platform"]
         dir_path = os.path.dirname(os.path.realpath(__file__))
         unknowns = getUnknowns()
+        # a not so elegant way of merging info construct
+        if '--info' in unknowns:
+            info_idx = unknowns.index('--info')
+            info = json.loads(unknowns[info_idx + 1])
+            deepMerge(repo_info, info)
+            del unknowns[info_idx+1]
+            del unknowns[info_idx]
         command = getPythonInterpreter() + " " + dir_path + "/harness.py " + \
             " --platform \'" + platform + "\'" + \
             " --framework \'" + getArgs().framework + "\'" + \
