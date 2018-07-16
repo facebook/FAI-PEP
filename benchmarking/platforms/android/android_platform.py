@@ -69,6 +69,11 @@ class AndroidPlatform(PlatformBase):
 
     def runBenchmark(self, cmd, *args, **kwargs):
         self.adb.logcat('-b', 'all', '-c')
+        if "platform_args" in kwargs:
+            platform_args = kwargs["platform_args"]
+            if "taskset" in platform_args:
+                taskset = platform_args["taskset"]
+                cmd = ["taskset", taskset] + cmd
         log_screen = self.adb.shell(cmd)
         log_logcat = ""
         if 'log_to_screen_only' not in kwargs or \
