@@ -345,7 +345,17 @@ class Caffe2Framework(FrameworkBase):
             for k, v in d.items():
                 for kk, vv in v.items():
                     key = k + " " + kk
-                    details[key]["values"].append(float(vv["value"]))
+                    if "info_string" in vv:
+                        if "info_string" in details[key]:
+                            assert details[key]["info_string"] == vv["info_string"], \
+                                "info_string values for {} ".format(key) + \
+                                "do not match.\n" + \
+                                "Current info_string:\n{}\n ".format(details[key]["info_string"]) + \
+                                "does not match new info_string:\n{}".format(vv["info_string"])
+                        else:
+                            details[key]["info_string"] = vv["info_string"]
+                    else:
+                        details[key]["values"].append(float(vv["value"]))
                     details[key]["type"] = k
                     # although it is declared as list
                     details[key]["metric"] = kk
