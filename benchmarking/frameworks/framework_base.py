@@ -21,6 +21,7 @@ class FrameworkBase(object):
     def getName(self):
         return "Error"
 
+    @abc.abstractmethod
     def runBenchmark(self, info, benchmark, platform):
         model = benchmark["model"]
         tests = benchmark["tests"]
