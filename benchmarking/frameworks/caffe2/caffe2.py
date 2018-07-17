@@ -13,7 +13,7 @@ import copy
 import json
 import os
 import re
-import shutil
+
 from frameworks.framework_base import FrameworkBase
 from utils.custom_logger import getLogger
 
@@ -32,52 +32,9 @@ class Caffe2Framework(FrameworkBase):
         return "caffe2"
 
     def runBenchmark(self, info, benchmark, platform):
-        model = benchmark["model"]
-        tests = benchmark["tests"]
-        assert len(tests) == 1, "At this point, only one test should " + \
-            "exist in one benchmark. However, benchmark " + \
-            "{} doesn't.".format(benchmark["name"])
-        test = tests[0]
-        program = platform.copyFilesToPlatform(info["program"])
-        shared_libs = None
-        if "shared_libs" in info:
-            shared_libs = platform.copyFilesToPlatform(info["shared_libs"])
-
-        model_files = {name: model["files"][name]["location"]
-                       for name in model["files"]}
-        model_files = platform.copyFilesToPlatform(model_files)
-        input_files = None
-        if "input_files" in test:
-            input_files = {name: test["input_files"][name]["location"]
-                           for name in test["input_files"]}
-            input_files = platform.copyFilesToPlatform(input_files)
-
-        cmd = self._composeRunCommand(platform, program, test, model_files,
-                                      input_files, shared_libs)
-        total_num = test["iter"]
-
-        platform_args = model["platform_args"] if "platform_args" in model \
-            else {}
-
-        output = self._runOnPlatform(total_num, cmd, platform, platform_args)
-        output_files = None
-        if "output_files" in test:
-            files = {}
-            for of in test["output_files"]:
-                files[of] = platform.getOutputDir() + "/" + of + ".txt"
-            target_dir = self.tempdir + "/output/"
-            shutil.rmtree(target_dir, True)
-            os.makedirs(target_dir)
-            output_files = \
-                platform.moveFilesFromPlatform(files, target_dir)
-
-        if len(output) > 0:
-            platform.delFilesFromPlatform(model_files)
-            platform.delFilesFromPlatform(program)
-            if shared_libs is not None:
-                platform.delFilesFromPlatform(shared_libs)
-            if input_files is not None:
-                platform.delFilesFromPlatform(input_files)
+        output, output_files = \
+            super(Caffe2Framework, self).runBenchmark(info, benchmark,
+                                                      platform)
         return output, output_files
 
     def verifyBenchmarkFile(self, benchmark, filename, is_post):
@@ -245,8 +202,8 @@ class Caffe2Framework(FrameworkBase):
 
         return new_num
 
-    def _composeRunCommand(self, platform, program, test, model_files,
-                           input_files, shared_libs):
+    def composeRunCommand(self, platform, program, test, model_files,
+                          input_files, shared_libs):
         cmd = [program,
                "--net", model_files["predict"],
                "--warmup", test["warmup"],
@@ -286,7 +243,7 @@ class Caffe2Framework(FrameworkBase):
         cmd = [str(s) for s in cmd]
         return cmd
 
-    def _runOnPlatform(self, total_num, cmd, platform, platform_args):
+    def runOnPlatform(self, total_num, cmd, platform, platform_args):
         results = []
         repeat = True
         while repeat:
@@ -306,12 +263,13 @@ class Caffe2Framework(FrameworkBase):
         valid_run_idx = []
         while (i < len(useful_rows)):
             row = useful_rows[i]
-            valid_row = row[(row.find(self.IDENTIFIER) + len(self.IDENTIFIER)):]
+            valid_row = row[(row.find(self.IDENTIFIER) +
+                            len(self.IDENTIFIER)):]
             try:
                 result = json.loads(valid_row)
                 if "NET" in result:
-                   valid_runs += 1
-                   valid_run_idx.append(i)
+                    valid_runs += 1
+                    valid_run_idx.append(i)
                 results.append(result)
             except Exception as e:
                 # bypass one line
