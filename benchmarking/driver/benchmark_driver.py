@@ -136,8 +136,8 @@ def _mergeDelayData(treatment_data, control_data, bname):
     for k in treatment_data:
         if k not in control_data:
             getLogger().error(
-                "Value {} existed in treatment but not ".format(k)) + \
-                "control for benchmark {}".format(bname)
+                "Value {} existed in treatment but not ".format(k) +
+                "control for benchmark {}".format(bname))
             continue
         control_value = control_data[k]
         treatment_value = treatment_data[k]
@@ -218,9 +218,11 @@ def _getStatistics(array):
 def _getMean(values):
     return sum(values)//len(values)
 
+
 def _getStdev(values, mean):
     sq_diffs = [(x - mean)**2 for x in values]
     return int((sum(sq_diffs)/len(values))**0.5)
+
 
 def _getMedian(values):
     length = len(values)
