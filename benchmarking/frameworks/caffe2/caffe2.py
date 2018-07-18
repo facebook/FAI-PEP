@@ -267,7 +267,9 @@ class Caffe2Framework(FrameworkBase):
                             len(self.IDENTIFIER)):]
             try:
                 result = json.loads(valid_row)
-                if "NET" in result:
+                if ("type" in result and result["type"] == "NET" and
+                        "value" in result) or \
+                        ("NET" in result):  # for backward compatibility
                     valid_runs += 1
                     valid_run_idx.append(i)
                 results.append(result)
@@ -300,30 +302,61 @@ class Caffe2Framework(FrameworkBase):
             lambda: collections.defaultdict(list))
         pattern = re.compile(r"^ID_(\d+)_([a-zA-Z0-9]+)_[\w/]+")
         for d in data:
-            for k, v in d.items():
-                for kk, vv in v.items():
-                    key = k + " " + kk
-                    if "info_string" in vv:
-                        if "info_string" in details[key]:
-                            assert details[key]["info_string"] == vv["info_string"], \
-                                "info_string values for {} ".format(key) + \
-                                "do not match.\n" + \
-                                "Current info_string:\n{}\n ".format(details[key]["info_string"]) + \
-                                "does not match new info_string:\n{}".format(vv["info_string"])
+            if "type" in d and "metric" in d and "unit" in d:
+                # new format
+                key = d["type"] + " " + d["metric"]
+                if "info_string" in d:
+                    if "info_string" in details[key]:
+                        assert details[key]["info_string"] == \
+                            d["info_string"], \
+                            "info_string values for {} ".format(key) + \
+                            "do not match.\n" + \
+                            "Current info_string: " + \
+                            "{}\n ".format(details[key]["info_string"]) + \
+                            "does not match new info_string: " + \
+                            "{}".format(d["info_string"])
+                    else:
+                        details[key]["info_string"] = d["info_string"]
+                if "value" in d:
+                    details[key]["values"].append(float(d["value"]))
+                self._updateOneEntry(details[key], d, "type")
+                self._updateOneEntry(details[key], d, "metric")
+                self._updateOneEntry(details[key], d, "unit")
+            else:
+                # for backward compatibility purpose
+                # will remove after some time
+                assert False
+                for k, v in d.items():
+                    for kk, vv in v.items():
+                        key = k + " " + kk
+                        if "info_string" in vv:
+                            if "info_string" in details[key]:
+                                assert details[key]["info_string"] == vv["info_string"], \
+                                    "info_string values for {} ".format(key) + \
+                                    "do not match.\n" + \
+                                    "Current info_string:\n{}\n ".format(details[key]["info_string"]) + \
+                                    "does not match new info_string:\n{}".format(vv["info_string"])
+                            else:
+                                details[key]["info_string"] = vv["info_string"]
                         else:
-                            details[key]["info_string"] = vv["info_string"]
-                    else:
-                        details[key]["values"].append(float(vv["value"]))
-                    details[key]["type"] = k
-                    # although it is declared as list
-                    details[key]["metric"] = kk
-                    details[key]["unit"] = str(vv["unit"])
-                    match = pattern.match(k)
-                    if match:
-                        # per layer timing
-                        details[key]["id"] = [match.group(1)]
-                        details[key]["operator"] = [match.group(2)]
-                    else:
-                        # whole graph timing
-                        assert key == self.NET + " " + kk
+                            details[key]["values"].append(float(vv["value"]))
+                        details[key]["type"] = k
+                        # although it is declared as list
+                        details[key]["metric"] = kk
+                        details[key]["unit"] = str(vv["unit"])
+                        match = pattern.match(k)
+                        if match:
+                            # per layer timing
+                            details[key]["id"] = [match.group(1)]
+                            details[key]["operator"] = [match.group(2)]
+                        else:
+                            # whole graph timing
+                            assert key == self.NET + " " + kk
         return details
+
+    def _updateOneEntry(self, detail, d, k):
+        if k in detail:
+            assert detail[k] == d[k], \
+                "Field {} does not match in different entries".format(k)
+        else:
+            detail[k] = d[k]
