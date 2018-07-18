@@ -108,20 +108,16 @@ def _processDelayData(input_data):
     data = {}
     for k in input_data:
         d = input_data[k]
+        data[k] = {}
         if "info_string" in d:
-            data[k] = {
-                "info_string": d["info_string"],
-            }
-        elif "summary" in d:
-            data[k] = {
-                "summary": d["summary"]
-            }
-        else:
-            data[k] = {
-                "summary": _getStatistics(input_data[k]["values"]),
-            }
+            data[k]["info_string"] = d["info_string"]
         if "values" in d:
             data[k]["values"] = input_data[k]["values"]
+        if "summary" in d:
+            data[k]["summary"] = d["summary"]
+        elif "values" in d:
+            data[k]["summary"] = _getStatistics(input_data[k]["values"])
+
         if "type" in d:
             data[k]["type"] = d["type"]
         if "operator" in d:

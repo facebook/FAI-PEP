@@ -83,6 +83,7 @@ class TFLiteFramework(FrameworkBase):
         result = {}
         rows = output.split('\n')
         # only collect one data point for statistics
+        # the actual run data should override the warmup data
         i = 0
         while i < len(rows):
             row = rows[i]
