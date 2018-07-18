@@ -248,11 +248,11 @@ class Caffe2Framework(FrameworkBase):
         repeat = True
         while repeat:
             output = platform.runBenchmark(cmd, platform_args=platform_args)
-            repeat = self._collectDelayData(total_num, output, results)
-        metric = self._processDelayData(results)
+            repeat = self._collectData(total_num, output, results)
+        metric = self._processData(results)
         return metric
 
-    def _collectDelayData(self, total_num, output, results):
+    def _collectData(self, total_num, output, results):
         if output is None:
             return False
         prev_num = len(results)
@@ -295,7 +295,7 @@ class Caffe2Framework(FrameworkBase):
                         "No new items collected, finish collecting...")
         return False
 
-    def _processDelayData(self, data):
+    def _processData(self, data):
         details = collections.defaultdict(
             lambda: collections.defaultdict(list))
         pattern = re.compile(r"^ID_(\d+)_([a-zA-Z0-9]+)_[\w/]+")
