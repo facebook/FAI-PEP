@@ -76,6 +76,8 @@ class RemoteReporter(ReporterBase):
                 self._updateSummaryData(data['diff_summary'], summary, "diff_")
             if 'regressed' in data:
                 summary['regressed'] = data['regressed']
+            if 'num_runs' in data:
+                summary["num_runs"] = data["num_runs"]
             if "unit" in data:
                 new_meta["unit"] = data["unit"]
             if "info_string" in data:

@@ -114,8 +114,11 @@ def _processDelayData(input_data):
         if "values" in d:
             data[k]["values"] = input_data[k]["values"]
             data[k]["summary"] = _getStatistics(input_data[k]["values"])
+            data[k]["num_runs"] = len(data[k]["values"])
         elif "summary" in d:
             data[k]["summary"] = d["summary"]
+            if "num_runs" in d:
+                data[k]["num_runs"] = d["num_runs"]
 
         if "type" in d:
             data[k]["type"] = d["type"]
@@ -127,8 +130,6 @@ def _processDelayData(input_data):
             data[k]["unit"] = d["unit"]
         if "metric" in d:
             data[k]["metric"] = d["metric"]
-        if "num_runs" in d:
-            data[k]["num_runs"] = d["num_runs"]
     return data
 
 
