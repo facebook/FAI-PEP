@@ -55,6 +55,6 @@ def _getBuildScript(framework, frameworks_dir, platform):
                             "doesn't exist. Use " +
                             "{} instead".format(framework_dir))
     assert os.path.isfile(build_script), \
-        "Cannot find build script in {} for ".framework_dir + \
+        "Cannot find build script in {} for ".format(framework_dir) + \
         "platform {}".format(platform)
     return build_script
