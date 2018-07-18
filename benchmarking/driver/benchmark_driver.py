@@ -113,10 +113,9 @@ def _processDelayData(input_data):
             data[k]["info_string"] = d["info_string"]
         if "values" in d:
             data[k]["values"] = input_data[k]["values"]
-        if "summary" in d:
-            data[k]["summary"] = d["summary"]
-        elif "values" in d:
             data[k]["summary"] = _getStatistics(input_data[k]["values"])
+        elif "summary" in d:
+            data[k]["summary"] = d["summary"]
 
         if "type" in d:
             data[k]["type"] = d["type"]
