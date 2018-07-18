@@ -245,21 +245,20 @@ class Caffe2Framework(FrameworkBase):
 
     def runOnPlatform(self, total_num, cmd, platform, platform_args):
         results = []
-        repeat = True
-        while repeat:
+        num = 0
+        while num >= 0 and num < total_num:
             output = platform.runBenchmark(cmd, platform_args=platform_args)
-            repeat = self._collectData(total_num, output, results)
+            num = self._collectData(total_num, output, results, num)
         metric = self._processData(results)
         return metric
 
-    def _collectData(self, total_num, output, results):
+    def _collectData(self, total_num, output, results, prev_num):
         if output is None:
-            return False
-        prev_num = len(results)
+            return -1
         rows = output.split('\n')
         useful_rows = [row for row in rows if row.find(self.IDENTIFIER) >= 0]
         i = 0
-        valid_runs = 0
+        valid_runs = prev_num
         valid_run_idx = []
         while (i < len(useful_rows)):
             row = useful_rows[i]
@@ -286,16 +285,16 @@ class Caffe2Framework(FrameworkBase):
             # Android 5 has an issue that logcat -c does not clear the entry
             results = results[valid_run_idx[valid_runs-total_num]:]
         elif valid_runs < total_num:
-            if len(results) > prev_num:
+            if valid_runs > prev_num:
                 getLogger().info(
                         "%d items collected. Still missing %d runs. "
                         "Collect again." %
-                        (len(results) - prev_num, total_num - valid_runs))
-                return True
+                        (valid_runs - prev_num, total_num - valid_runs))
+                return valid_runs
             else:
                 getLogger().info(
                         "No new items collected, finish collecting...")
-        return False
+        return valid_runs
 
     def _processData(self, data):
         details = collections.defaultdict(
