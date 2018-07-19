@@ -294,7 +294,9 @@ class Caffe2Framework(FrameworkBase):
             else:
                 getLogger().info(
                         "No new items collected, finish collecting...")
-        return valid_runs
+        # finish collecting, when we have collected all items, or we
+        # cannot collect any more items
+        return total_num
 
     def _processData(self, data):
         details = collections.defaultdict(
