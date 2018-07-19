@@ -326,7 +326,6 @@ class Caffe2Framework(FrameworkBase):
             else:
                 # for backward compatibility purpose
                 # will remove after some time
-                assert False
                 for k, v in d.items():
                     for kk, vv in v.items():
                         key = k + " " + kk
