@@ -37,7 +37,7 @@ getParser().add_argument("--excluded_devices",
     help="Specify the devices that skip the benchmark, in a comma separated "
     "list. The value is the device or device_hash field of the meta info.")
 getParser().add_argument("--framework", required=True,
-    choices=["caffe2", "generic", "oculus"],
+    choices=["caffe2", "generic", "oculus", "tflite"],
     help="Specify the framework to benchmark on.")
 getParser().add_argument("--info", required=True,
     help="The json serialized options describing the control and treatment.")

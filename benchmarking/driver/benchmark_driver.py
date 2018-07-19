@@ -89,7 +89,6 @@ def _runOnePass(info, benchmark, framework, platform):
         "At this moment, only one test exists in the benchmark"
     output, treatment_files = \
         framework.runBenchmark(info, benchmark, platform)
-
     data = None
     test = benchmark["tests"][0]
     if treatment_files and test["metric"] == "error":
@@ -109,15 +108,18 @@ def _processDelayData(input_data):
     data = {}
     for k in input_data:
         d = input_data[k]
+        data[k] = {}
         if "info_string" in d:
-            data[k] = {
-                "info_string": d["info_string"],
-            }
-        else:
-            data[k] = {
-                "values": input_data[k]["values"],
-                "summary": _getStatistics(input_data[k]["values"]),
-            }
+            data[k]["info_string"] = d["info_string"]
+        if "values" in d:
+            data[k]["values"] = input_data[k]["values"]
+            data[k]["summary"] = _getStatistics(input_data[k]["values"])
+            data[k]["num_runs"] = len(data[k]["values"])
+        elif "summary" in d:
+            data[k]["summary"] = d["summary"]
+            if "num_runs" in d:
+                data[k]["num_runs"] = d["num_runs"]
+
         if "type" in d:
             data[k]["type"] = d["type"]
         if "operator" in d:
@@ -181,6 +183,7 @@ def _processErrorData(treatment_files, golden_files):
             'diff_summary': _getStatistics(diff_values),
         }
         data[output]['type'] = output
+        data[output]['num_runs'] = len(treatment_values)
     return data
 
 
