@@ -246,9 +246,12 @@ class Caffe2Framework(FrameworkBase):
     def runOnPlatform(self, total_num, cmd, platform, platform_args):
         results = []
         num = 0
-        while num >= 0 and num < total_num:
+        # emulate do...while... loop
+        while True:
             output = platform.runBenchmark(cmd, platform_args=platform_args)
             num = self._collectData(total_num, output, results, num)
+            if num >= total_num:
+                break
         metric = self._processData(results)
         return metric
 

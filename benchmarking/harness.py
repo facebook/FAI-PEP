@@ -30,6 +30,8 @@ getParser().add_argument("-b", "--benchmark_file", required=True,
     help="Specify the json file for the benchmark or a number of benchmarks")
 getParser().add_argument("--cooldown", default=0, type=float,
     help = "Specify the time interval between two test runs.")
+getParser().add_argument("--device",
+    help="The single device to run this benchmark on")
 getParser().add_argument("-d", "--devices",
     help="Specify the devices to run the benchmark, in a comma separated "
     "list. The value is the device or device_hash field of the meta info.")
@@ -48,16 +50,12 @@ getParser().add_argument("--simple_local_reporter",
 getParser().add_argument("--model_cache", required=True,
     help="The local directory containing the cached models. It should not "
     "be part of a git directory.")
-getParser().add_argument("--device",
-    help="The single device to run this benchmark on")
 getParser().add_argument("-p", "--platform", required=True,
     help="Specify the platform to benchmark on. Use this flag if the framework"
     " needs special compilation scripts. The scripts are called build.sh "
     "saved in specifications/frameworks/<framework>/<platform> directory")
 getParser().add_argument("--platform_sig",
     help="Specify the platform signature")
-getParser().add_argument("--wipe_cache", default=False,
-    help="Specify whether to evict cache or not before running")
 getParser().add_argument("--program",
     help="The program to run on the platform.")
 getParser().add_argument("--reboot", action="store_true",
@@ -100,6 +98,8 @@ getParser().add_argument("--timeout", default=300, type=float,
 getParser().add_argument("--user_identifier",
     help="User can specify an identifier and that will be passed to the "
     "output so that the result can be easily identified.")
+getParser().add_argument("--wipe_cache", default=False,
+    help="Specify whether to evict cache or not before running")
 
 
 class BenchmarkDriver(object):

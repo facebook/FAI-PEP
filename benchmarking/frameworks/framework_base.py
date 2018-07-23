@@ -11,6 +11,7 @@
 import abc
 import os
 import shutil
+import time
 
 
 class FrameworkBase(object):
@@ -50,6 +51,10 @@ class FrameworkBase(object):
         platform_args = model["platform_args"] if "platform_args" in model \
             else {}
 
+        if test["metric"] == "power":
+            platform_args["power"] = True
+            # in power metric, the output is ignored
+            total_num = 0
         output = self.runOnPlatform(total_num, cmd, platform, platform_args)
         output_files = None
         if "output_files" in test:
@@ -61,6 +66,15 @@ class FrameworkBase(object):
             os.makedirs(target_dir)
             output_files = \
                 platform.moveFilesFromPlatform(files, target_dir)
+
+        if test["metric"] == "power":
+            # wait till the program is launched
+            # time.sleep(10)
+            # initiate the power collection
+
+            # time.sleep(60)
+            # kill the process if exists
+            pass
 
         if len(output) > 0:
             platform.delFilesFromPlatform(model_files)

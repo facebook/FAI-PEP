@@ -69,15 +69,24 @@ class AndroidPlatform(PlatformBase):
 
     def runBenchmark(self, cmd, *args, **kwargs):
         self.adb.logcat('-b', 'all', '-c')
+        log_to_screen_only = 'log_to_screen_only' in kwargs and \
+            kwargs['log_to_screen_only']
+        android_kwargs = {}
         if "platform_args" in kwargs:
             platform_args = kwargs["platform_args"]
             if "taskset" in platform_args:
                 taskset = platform_args["taskset"]
                 cmd = ["taskset", taskset] + cmd
-        log_screen = self.adb.shell(cmd)
+                del platform_args["taskset"]
+            if "power" in platform_args and platform_args["power"]:
+                cmd = ["nohup"] + cmd + [">", "/dev/null", "2>&1"]
+                log_to_screen_only = True
+                android_kwargs["non_blocking"] = True
+                del platform_args["power"]
+        import pdb; pdb.set_trace()
+        log_screen = self.adb.shell(cmd, **android_kwargs)
         log_logcat = ""
-        if 'log_to_screen_only' not in kwargs or \
-                not kwargs['log_to_screen_only']:
+        if not log_to_screen_only:
             log_logcat = self.adb.logcat('-d')
         return log_screen + log_logcat
 
