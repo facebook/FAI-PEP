@@ -12,6 +12,7 @@ import platform
 import os
 import random
 import re
+import shlex
 import shutil
 import socket
 import subprocess
@@ -37,6 +38,8 @@ class HostPlatform(PlatformBase):
         self.type = "host"
 
     def runBenchmark(self, cmd, *args, **kwargs):
+        if not isinstance(cmd, list):
+            cmd = shlex.split(cmd)
         getLogger().info("Running: %s", ' '.join(cmd))
         pipes = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
