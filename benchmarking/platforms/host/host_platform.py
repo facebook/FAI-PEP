@@ -45,7 +45,7 @@ class HostPlatform(PlatformBase):
         if len(std_err):
             return std_err.decode("utf-8", "ignore")
         else:
-            return stdout
+            return ""
 
     def _getProcessorName(self):
         if platform.system() == "Windows":
