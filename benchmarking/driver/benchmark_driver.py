@@ -143,22 +143,43 @@ def _mergeDelayData(treatment_data, control_data, bname):
             continue
         control_value = control_data[k]
         treatment_value = treatment_data[k]
-        data[k]["control_values"] = control_value["values"]
-        data[k]["control_summary"] = control_value["summary"]
+        if "info_string" in treatment_value:
+            assert "info_string" in control_value, \
+                "Control value missing info_string field"
+            assert treatment_value["info_string"] == \
+                control_value["info_string"], \
+                "The field info_string in control " + \
+                "({})".format(control_value["info_string"]) + \
+                "is different from the info_string in treatment " + \
+                "({})".format(treatment_value["info_string"])
 
+        if "values" in control_value:
+            data[k]["control_values"] = control_value["values"]
+
+        if "summary" in control_value:
+            data[k]["control_summary"] = control_value["summary"]
+            assert "summary" in treatment_value, \
+                "Summary is missing in treatment"
         # create diff of delay
-        csummary = control_value['summary']
-        tsummary = treatment_value['summary']
-        assert csummary is not None and tsummary is not None, \
-            "The summary section in control and treatment cannot be None."
-        data[k]['diff_summary'] = {
-            "p0": tsummary['p0'] - csummary['p100'],
-            "p50": tsummary['p50'] - csummary['p50'],
-            "p100": tsummary['p100'] - csummary['p0'],
-            "p10": tsummary['p10'] - csummary['p90'],
-            "p90": tsummary['p90'] - csummary['p10'],
-            "MAD": tsummary['MAD'] - csummary['MAD'],
-        }
+        if "summary" in control_value and "summary" in treatment_value:
+            csummary = control_value['summary']
+            tsummary = treatment_value['summary']
+            diff_summary = {}
+            if "p0" in tsummary and "p100" in csummary:
+                diff_summary["p0"] = tsummary['p0'] - csummary['p100']
+            if "p50" in tsummary and "p50" in csummary:
+                diff_summary["p50"] = tsummary['p50'] - csummary['p50']
+            if "p100" in tsummary and "p0" in csummary:
+                diff_summary["p100"] = tsummary['p100'] - csummary['p0']
+            if "p10" in tsummary and "p90" in csummary:
+                diff_summary["p10"] = tsummary['p10'] - csummary['p90']
+            if "p90" in tsummary and "p10" in csummary:
+                diff_summary["p90"] = tsummary['p90'] - csummary['p10']
+            if "MAD" in tsummary and "MAD" in csummary:
+                diff_summary["MAD"] = tsummary['MAD'] - csummary['MAD']
+            if "mean" in tsummary and "mean" in csummary:
+                diff_summary["mean"] = tsummary["mean"] - csummary["mean"]
+            data[k]['diff_summary'] = diff_summary
     return data
 
 
