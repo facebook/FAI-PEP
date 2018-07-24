@@ -55,6 +55,8 @@ class FrameworkBase(object):
             platform_args["power"] = True
             # in power metric, the output is ignored
             total_num = 0
+            platform.killProgram(program)
+
         output = self.runOnPlatform(total_num, cmd, platform, platform_args)
         output_files = None
         if "output_files" in test:
@@ -68,13 +70,12 @@ class FrameworkBase(object):
                 platform.moveFilesFromPlatform(files, target_dir)
 
         if test["metric"] == "power":
-            # wait till the program is launched
-            # time.sleep(10)
-            # initiate the power collection
-
-            # time.sleep(60)
+            collection_time = test["collection_time"]
+            from utils.monsoon_power import collectPowerData
+            output = collectPowerData(collection_time)
+            platform.waitForDevice(20)
             # kill the process if exists
-            pass
+            platform.killProgram(program)
 
         if len(output) > 0:
             platform.delFilesFromPlatform(model_files)

@@ -22,7 +22,7 @@
     {
       "commands": {
         "caffe2": {
-          "sleep_before_run": "60"
+          "sleep_before_run": "6"
         }
       },
       "identifier": "squeezenet_power",
@@ -41,6 +41,7 @@
       },
       "iter": 5000,
       "metric": "power",
+      "collection_time": 12,
       "warmup": 1
     }
   ]

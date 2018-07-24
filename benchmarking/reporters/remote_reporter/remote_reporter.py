@@ -65,7 +65,8 @@ class RemoteReporter(ReporterBase):
         for item in content[self.DATA]:
             data = content[self.DATA][item]
             new_meta = meta.copy()
-            new_meta['type'] = data['type']
+            if "type" in data:
+                new_meta['type'] = data['type']
             summary = base_summary.copy()
             if "summary" in data:
                 self._updateSummaryData(data['summary'], summary, "")
