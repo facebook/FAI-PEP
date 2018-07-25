@@ -72,7 +72,7 @@ class FrameworkBase(object):
         if test["metric"] == "power":
             collection_time = test["collection_time"]
             from utils.monsoon_power import collectPowerData
-            output = collectPowerData(collection_time)
+            output = collectPowerData(collection_time, test["iter"])
             platform.waitForDevice(20)
             # kill the process if exists
             platform.killProgram(program)
