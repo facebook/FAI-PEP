@@ -25,7 +25,7 @@ def collectPowerData(sample_time, num_iters):
     # Need to sleep to be functional correctly
     sleep(0.2)
     getLogger().info("Setup Vout")
-    Mon.setVout(4.5)
+    Mon.setVout(4.0)
     getLogger().info("Setup setPowerupTime")
     Mon.setPowerupTime(60)
     getLogger().info("Setup setPowerUpCurrentLimit")
