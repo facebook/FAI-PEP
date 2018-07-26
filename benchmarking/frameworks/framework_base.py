@@ -70,7 +70,8 @@ class FrameworkBase(object):
                 platform.moveFilesFromPlatform(files, target_dir)
 
         if test["metric"] == "power":
-            collection_time = test["collection_time"]
+            collection_time = test["collection_time"] \
+                if "collection_time" in test else 180
             from utils.monsoon_power import collectPowerData
             output = collectPowerData(collection_time, test["iter"])
             platform.waitForDevice(20)
