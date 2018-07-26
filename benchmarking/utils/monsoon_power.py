@@ -65,8 +65,8 @@ def collectPowerData(sample_time, num_iters):
     getLogger().info("Collecting data from "
                      "{} to {}".format(start_idx, end_idx))
     getLogger().info("Benchmark time: "
-                     "{} - {}".format(power_data[start_idx]["time"],
-                                      power_data[end_idx]["time"]))
+                     "{} - {} s".format(power_data[start_idx]["time"],
+                                        power_data[end_idx]["time"]))
     data = _retrievePowerData(power_data, start_idx, end_idx, num_iters)
     data["power_data"] = filename
     return data
@@ -187,14 +187,17 @@ def _retrievePowerData(power_data, start_idx, end_idx, num_iters):
         prev_time = curr_time
     total_time = power_data[end_idx]["time"] - power_data[start_idx]["time"]
     power = energy / total_time
+    energy_per_inference = energy / num_iters
     latency = total_time * 1000 * 1000 / num_iters
-    data["energy"] = _composeStructuredData(energy, "energy", "mJ")
+    data["energy"] = _composeStructuredData(energy_per_inference,
+                                            "energy", "mJ")
     data["power"] = _composeStructuredData(power, "power", "mW")
     data["latency"] = _composeStructuredData(latency, "latency", "uS")
-    getLogger().info("Base current: {}".format(base_current))
-    getLogger().info("Energy: {} mJ".format(energy))
+    getLogger().info("Base current: {} mA".format(base_current))
+    getLogger().info("Energy per inference: {} mJ".format(
+        energy_per_inference))
     getLogger().info("Power: {} mW".format(power))
-    getLogger().info("Latency: {} uS".format(latency))
+    getLogger().info("Latency per inference: {} uS".format(latency))
     return data
 
 
