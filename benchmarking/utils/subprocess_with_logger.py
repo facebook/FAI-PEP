@@ -21,9 +21,15 @@ def processRun(*args, **kwargs):
     getLogger().info("Running: %s", ' '.join(*args))
     err_output = None
     try:
-        output = subprocess.check_output(*args,
-                                         stderr=subprocess.STDOUT, **kwargs).\
-            decode("utf-8", "ignore")
+        output = None
+        if "non_blocking" in kwargs and kwargs["non_blocking"]:
+            subprocess.Popen(*args)
+            return "", None
+        else:
+            output = subprocess.check_output(*args,
+                                             stderr=subprocess.STDOUT,
+                                             **kwargs).\
+                decode("utf-8", "ignore")
         return output, None
     except subprocess.CalledProcessError as e:
         getLogger().error("Command failed: {}".format(e.output))

@@ -11,6 +11,7 @@
 import abc
 import os
 import shutil
+import time
 
 
 class FrameworkBase(object):
@@ -50,6 +51,12 @@ class FrameworkBase(object):
         platform_args = model["platform_args"] if "platform_args" in model \
             else {}
 
+        if test["metric"] == "power":
+            platform_args["power"] = True
+            # in power metric, the output is ignored
+            total_num = 0
+            platform.killProgram(program)
+
         output = self.runOnPlatform(total_num, cmd, platform, platform_args)
         output_files = None
         if "output_files" in test:
@@ -61,6 +68,15 @@ class FrameworkBase(object):
             os.makedirs(target_dir)
             output_files = \
                 platform.moveFilesFromPlatform(files, target_dir)
+
+        if test["metric"] == "power":
+            collection_time = test["collection_time"] \
+                if "collection_time" in test else 180
+            from utils.monsoon_power import collectPowerData
+            output = collectPowerData(collection_time, test["iter"])
+            platform.waitForDevice(20)
+            # kill the process if exists
+            platform.killProgram(program)
 
         if len(output) > 0:
             platform.delFilesFromPlatform(model_files)

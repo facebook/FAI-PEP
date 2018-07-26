@@ -75,3 +75,11 @@ class PlatformBase(object):
     @abc.abstractmethod
     def getOutputDir(self):
         pass
+
+    @abc.abstractmethod
+    def killProgram(self, program):
+        pass
+
+    @abc.abstractmethod
+    def waitForDevice(self):
+        pass

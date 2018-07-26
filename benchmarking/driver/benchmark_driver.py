@@ -99,6 +99,8 @@ def _runOnePass(info, benchmark, framework, platform):
         data = _processDelayData(output)
     elif test["metric"] == "generic":
         data = output
+    elif test["metric"] == "power":
+        data = output
     else:
         assert False, "Should not be here"
     return data

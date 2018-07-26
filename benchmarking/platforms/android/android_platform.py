@@ -9,6 +9,7 @@
 ##############################################################################
 
 import os
+import re
 import time
 
 from platforms.platform_base import PlatformBase
@@ -47,18 +48,10 @@ class AndroidPlatform(PlatformBase):
 
     def rebootDevice(self):
         self.adb.reboot()
-        t = 0
-        ls = None
-        while ls is None and t < 6:
-            time.sleep(20)
-            ls = self.adb.shell(['ls', self.adb.dir])
-            getLogger().info("Rebooting: {} ({})".format(self.platform,
-                                                         self.platform_hash))
+        self.waitForDevice(180)
+
         # Need to wait a bit more after the device is rebooted
         time.sleep(20)
-        if ls is None:
-            getLogger().error("Cannot reach device {} ({}) after reboot.".
-                              format(self.platform, self.platform_hash))
         # may need to set log size again after reboot
         self._setLogCatSize()
         if getArgs().set_freq:
@@ -69,15 +62,23 @@ class AndroidPlatform(PlatformBase):
 
     def runBenchmark(self, cmd, *args, **kwargs):
         self.adb.logcat('-b', 'all', '-c')
+        log_to_screen_only = 'log_to_screen_only' in kwargs and \
+            kwargs['log_to_screen_only']
+        android_kwargs = {}
         if "platform_args" in kwargs:
             platform_args = kwargs["platform_args"]
             if "taskset" in platform_args:
                 taskset = platform_args["taskset"]
                 cmd = ["taskset", taskset] + cmd
-        log_screen = self.adb.shell(cmd)
+                del platform_args["taskset"]
+            if "power" in platform_args and platform_args["power"]:
+                cmd = ["nohup"] + cmd + [">", "/dev/null", "2>&1"]
+                log_to_screen_only = True
+                android_kwargs["non_blocking"] = True
+                del platform_args["power"]
+        log_screen = self.adb.shell(cmd, **android_kwargs)
         log_logcat = ""
-        if 'log_to_screen_only' not in kwargs or \
-                not kwargs['log_to_screen_only']:
+        if not log_to_screen_only:
             log_logcat = self.adb.logcat('-d')
         return log_screen + log_logcat
 
@@ -148,3 +149,26 @@ class AndroidPlatform(PlatformBase):
 
     def getOutputDir(self):
         return self.adb.dir
+
+    def killProgram(self, program):
+        res = self.adb.shell(["ps", "|", "grep", program])
+        results = res.split("\n")
+        pattern = re.compile(r"^shell\s+(\d+)\s+")
+        for result in results:
+            match = pattern.match(result)
+            if match:
+                pid = match.group(1)
+                self.adb.shell(["kill", pid])
+
+    def waitForDevice(self, timeout):
+        period = int(timeout / 20) + 1
+        num = int(timeout / period)
+        count = 0
+        ls = None
+        while ls is None and count < num:
+            ls = self.adb.shell(['ls', self.adb.dir])
+            time.sleep(period)
+        if ls is None:
+            getLogger().error("Cannot reach device {} ({}) after {}.".
+                              format(self.platform, self.platform_hash,
+                                     timeout))

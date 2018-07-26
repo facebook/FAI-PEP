@@ -1,0 +1,48 @@
+{
+  "model": {
+    "category": "CNN",
+    "description": "Trained SqueezeNet model on Caffe2",
+    "files": {
+      "init": {
+        "filename": "init_net.pb",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/squeezenet/init_net.pb",
+        "md5": "a589d31d93c44d353ae2cd92af4d5a3f"
+      },
+      "predict": {
+        "filename": "predict_net.pb",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/squeezenet/predict_net.pb",
+        "md5": "694bfdd02e9ccb57bfc4acb451fbfb2d"
+      }
+    },
+    "format": "caffe2",
+    "kind": "deployment",
+    "name": "squeezenet_power"
+  },
+  "tests": [
+    {
+      "commands": {
+        "caffe2": {
+          "sleep_before_run": "20"
+        }
+      },
+      "identifier": "squeezenet_power",
+      "inputs": {
+        "data": {
+          "shapes": [
+            [
+              1,
+              3,
+              224,
+              224
+            ]
+          ],
+          "type": "float"
+        }
+      },
+      "iter": 1000,
+      "metric": "power",
+      "collection_time": 180,
+      "warmup": 1
+    }
+  ]
+}
