@@ -165,12 +165,25 @@ def _retrievePowerData(power_data, start_idx, end_idx, num_iters):
     if start_idx < 0 or end_idx < 0:
         return data
 
+    # get base current. It is just an approximation
+    THRESHOLD = 300
+    num = len(power_data)
+    i = end_idx
+    sum = 0
+    count = 0
+    for i in range(end_idx, num):
+        if power_data[i]["current"] < THRESHOLD:
+            sum += power_data[i]["current"]
+            count += 1
+    base_current = sum / count if count > 0 else 0
+
     energy = 0
     prev_time = power_data[start_idx - 1]["time"]
     for i in range(start_idx, end_idx):
         entry = power_data[i]
         curr_time = entry["time"]
-        energy += entry["voltage"] * entry["current"] * (curr_time - prev_time)
+        energy += entry["voltage"] * \
+            (entry["current"] - base_current) * (curr_time - prev_time)
         prev_time = curr_time
     total_time = power_data[end_idx]["time"] - power_data[start_idx]["time"]
     power = energy / total_time
@@ -178,6 +191,10 @@ def _retrievePowerData(power_data, start_idx, end_idx, num_iters):
     data["energy"] = _composeStructuredData(energy, "energy", "mJ")
     data["power"] = _composeStructuredData(power, "power", "mW")
     data["latency"] = _composeStructuredData(latency, "latency", "uS")
+    getLogger().info("Base current: {}".format(base_current))
+    getLogger().info("Energy: {} mJ".format(energy))
+    getLogger().info("Power: {} mW".format(power))
+    getLogger().info("Latency: {} uS".format(latency))
     return data
 
 
