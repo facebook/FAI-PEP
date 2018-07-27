@@ -20,27 +20,10 @@
   },
   "tests": [
     {
-      "commands": {
-        "caffe2": {
-          "run_individual": "true"
-        }
-      },
+      "arguments": "--net {files.predict} --init_net {files.init} --warmup 1 --iter 50 --input \"data_int8_bgra\" --input_dims \"1,640,360,4\" --input_type uint8_t --run_individual true",
       "identifier": "{ID}",
-      "inputs": {
-        "data_int8_bgra": {
-          "shapes": [
-            [
-              1,
-              640,
-              360,
-              4
-            ]
-          ],
-          "type": "uint8_t"
-        }
-      },
-      "iter": 50,
       "metric": "delay",
+      "iter": 50,
       "warmup": 1
     }
   ]

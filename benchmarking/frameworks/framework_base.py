@@ -10,8 +10,9 @@
 
 import abc
 import os
+import re
 import shutil
-import time
+from six import string_types
 
 
 class FrameworkBase(object):
@@ -43,9 +44,15 @@ class FrameworkBase(object):
             input_files = {name: test["input_files"][name]["location"]
                            for name in test["input_files"]}
             input_files = platform.copyFilesToPlatform(input_files)
+        result_files = None
+        if "output_files" in test:
+            result_files = {}
+            for of in test["output_files"]:
+                result_files[of] = platform.getOutputDir() + "/" + of + ".txt"
 
-        cmd = self.composeRunCommand(platform, program, test, model_files,
-                                     input_files, shared_libs)
+        cmd = self.composeRunCommand(platform, program, model, test,
+                                     model_files, input_files, result_files,
+                                     shared_libs)
         total_num = test["iter"]
 
         platform_args = model["platform_args"] if "platform_args" in model \
@@ -60,14 +67,11 @@ class FrameworkBase(object):
         output = self.runOnPlatform(total_num, cmd, platform, platform_args)
         output_files = None
         if "output_files" in test:
-            files = {}
-            for of in test["output_files"]:
-                files[of] = platform.getOutputDir() + "/" + of + ".txt"
             target_dir = self.tempdir + "/output/"
             shutil.rmtree(target_dir, True)
             os.makedirs(target_dir)
             output_files = \
-                platform.moveFilesFromPlatform(files, target_dir)
+                platform.moveFilesFromPlatform(result_files, target_dir)
 
         if test["metric"] == "power":
             collection_time = test["collection_time"] \
@@ -88,9 +92,59 @@ class FrameworkBase(object):
         return output, output_files
 
     @abc.abstractmethod
-    def composeRunCommand(self, platform, program, test, model_files,
-                          input_files, shared_libs):
-        assert False, "Child class need to implement composeRunCommand"
+    def composeRunCommand(self, platform, program, model, test, model_files,
+                          input_files, output_files, shared_libs):
+        if "arguments" not in test:
+            return None
+        arguments = test["arguments"]
+        command = arguments
+        pattern = re.compile("\{([\w|\.]+)\}")
+        results = []
+        for m in pattern.finditer(arguments):
+            results.append({
+                "start": m.start(),
+                "end": m.end(),
+                "content": m.group(1)
+            })
+        results.reverse()
+        files = input_files.copy() if input_files is not None else {}
+        files.update(output_files if output_files is not None else {})
+        for res in results:
+            replace = self._getMatchedString(test, res["content"], files)
+            if replace is None:
+                # TODO: handle shared libraries
+                replace = self._getMatchedString(model, res["content"],
+                                                 model_files)
+            if replace:
+                command = command[:res["start"]] + "'" + replace + "'" + \
+                    command[res["end"]:]
+        command = program + " " + command
+        return command
+
+    def _getMatchedString(self, root, match, files):
+        assert isinstance(root, dict), "Root must be a dictionary"
+        if match in root:
+            return root[match]
+        # split on .
+        fields = match.split('.')
+        found = True
+        entry = root
+        for i in range(len(fields)):
+            field = fields[i]
+            if field not in entry:
+                found = False
+                break
+            entry = entry[field]
+        if not found:
+            return None
+        if "location" in entry:
+            # is a file field
+            if files and fields[-1] in files:
+                return files[fields[-1]]
+        import pdb; pdb.set_trace()
+        assert isinstance(entry, string_types), "Output {}".format(entry) + \
+            " is not string type"
+        return entry
 
     @abc.abstractmethod
     def runOnPlatform(self, total_num, cmd, platform, platform_args):
