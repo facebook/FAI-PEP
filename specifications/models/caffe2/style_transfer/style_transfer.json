@@ -20,7 +20,7 @@
   },
   "tests": [
     {
-      "arguments": "--net {files.predict} --init_net {files.init} --warmup 1 --iter 50 --input \"data_int8_bgra\" --input_dims \"1,640,360,4\" --input_type uint8_t --run_individual true",
+      "arguments": "--net {files.predict} --init_net {files.init} --warmup {warmup} --iter {iter} --input \"data_int8_bgra\" --input_dims \"1,640,360,4\" --input_type uint8_t --run_individual true",
       "identifier": "{ID}",
       "metric": "delay",
       "iter": 50,
