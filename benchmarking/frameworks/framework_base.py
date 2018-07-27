@@ -124,7 +124,7 @@ class FrameworkBase(object):
     def _getMatchedString(self, root, match, files):
         assert isinstance(root, dict), "Root must be a dictionary"
         if match in root:
-            return root[match]
+            return str(root[match])
         # split on .
         fields = match.split('.')
         found = True
@@ -140,11 +140,10 @@ class FrameworkBase(object):
         if "location" in entry:
             # is a file field
             if files and fields[-1] in files:
-                return files[fields[-1]]
-        import pdb; pdb.set_trace()
+                return str(files[fields[-1]])
         assert isinstance(entry, string_types), "Output {}".format(entry) + \
             " is not string type"
-        return entry
+        return str(entry)
 
     @abc.abstractmethod
     def runOnPlatform(self, total_num, cmd, platform, platform_args):

@@ -38,10 +38,6 @@ class TFLiteFramework(FrameworkBase):
 
         assert "tests" in benchmark, "Field tests is missing in benchmark"
         for test in benchmark["tests"]:
-            assert "inputs" in test, "Field inputs is missing in test"
-            for layer in test["inputs"]:
-                assert "shapes" in test["inputs"][layer], \
-                    "Field shapes is missing in test[inputs][layer]"
             assert "warmup" in test, "Field warmup is missing in test"
             assert "iter" in test, "Field iter is missing in test"
 
