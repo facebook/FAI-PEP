@@ -10,6 +10,7 @@
 
 import os
 import re
+import shlex
 import time
 
 from platforms.platform_base import PlatformBase
@@ -61,6 +62,8 @@ class AndroidPlatform(PlatformBase):
         return self.adb.shell(cmd)
 
     def runBenchmark(self, cmd, *args, **kwargs):
+        if not isinstance(cmd, list):
+            cmd = shlex.split(cmd)
         self.adb.logcat('-b', 'all', '-c')
         log_to_screen_only = 'log_to_screen_only' in kwargs and \
             kwargs['log_to_screen_only']

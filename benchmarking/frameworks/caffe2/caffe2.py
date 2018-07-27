@@ -90,6 +90,9 @@ class Caffe2Framework(FrameworkBase):
             assert "identifier" in test, "Identifier field is missing in " + \
                 "benchmark {}".format(filename)
 
+            if "arguments" in test:
+                continue
+            # for backward compatibility purpose
             assert "inputs" in test, "Inputs field is missing in " + \
                 "benchmark {}".format(filename)
 
@@ -202,8 +205,20 @@ class Caffe2Framework(FrameworkBase):
 
         return new_num
 
-    def composeRunCommand(self, platform, program, test, model_files,
-                          input_files, shared_libs):
+    def composeRunCommand(self, platform, program, model, test, model_files,
+                          input_files, output_files, shared_libs):
+        cmd = super(Caffe2Framework, self).composeRunCommand(platform,
+                                                             program,
+                                                             model,
+                                                             test,
+                                                             model_files,
+                                                             input_files,
+                                                             output_files,
+                                                             shared_libs)
+        if cmd:
+            if "output_files" in test:
+                cmd += " --output_folder " + platform.getOutputDir()
+            return cmd
         cmd = [program,
                "--net", model_files["predict"],
                "--warmup", test["warmup"],

@@ -1,46 +1,29 @@
 {
   "model": {
-    "category": "CNN", 
-    "description": "Trained BVLC Reference CaffeNet on Caffe2", 
+    "category": "CNN",
+    "description": "Trained BVLC Reference CaffeNet on Caffe2",
     "files": {
       "init": {
-        "filename": "init_net.pb", 
-        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/bvlc_reference_caffenet/init_net.pb", 
+        "filename": "init_net.pb",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/bvlc_reference_caffenet/init_net.pb",
         "md5": "1c2b24cafc6e6013152184c765ce8fe9"
-      }, 
+      },
       "predict": {
-        "filename": "predict_net.pb", 
-        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/bvlc_reference_caffenet/predict_net.pb", 
+        "filename": "predict_net.pb",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/bvlc_reference_caffenet/predict_net.pb",
         "md5": "165ea54221cc40ec7f14e518178d6845"
       }
-    }, 
-    "format": "caffe2", 
-    "kind": "deployment", 
+    },
+    "format": "caffe2",
+    "kind": "deployment",
     "name": "bvlc_reference_caffenet"
-  }, 
+  },
   "tests": [
     {
-      "commands": {
-        "caffe2": {
-          "run_individual": "true"
-        }
-      }, 
-      "identifier": "{ID}", 
-      "inputs": {
-        "data": {
-          "shapes": [
-            [
-              1, 
-              3, 
-              224, 
-              224
-            ]
-          ], 
-          "type": "float"
-        }
-      }, 
-      "iter": 50, 
-      "metric": "delay", 
+      "arguments": "--net {files.predict} --init_net {files.init} --warmup 1 --iter 50 --input \"data\" --input_dims \"1,3,224,224\" --input_type float --run_individual true",
+      "identifier": "{ID}",
+      "iter": 50,
+      "metric": "delay",
       "warmup": 1
     }
   ]
