@@ -14,9 +14,13 @@ import re
 import shutil
 from six import string_types
 
+from data_converters.data_converters import getConverters
+from utils.custom_logger import getLogger
+
 
 class FrameworkBase(object):
     def __init__(self):
+        self.converters = getConverters()
         pass
 
     @abc.abstractmethod
@@ -64,7 +68,15 @@ class FrameworkBase(object):
             total_num = 0
             platform.killProgram(program)
 
-        output = self.runOnPlatform(total_num, cmd, platform, platform_args)
+        if "converter" in model:
+            converter_name = model["converter"]
+            assert converter_name in self.converters, \
+                "Unknown converter {}".format(converter_name)
+            converter = self.converters[converter_name]
+        else:
+            converter = None
+        output = self.runOnPlatform(total_num, cmd, platform, platform_args,
+                                    converter)
         output_files = None
         if "output_files" in test:
             target_dir = self.tempdir + "/output/"
@@ -146,7 +158,8 @@ class FrameworkBase(object):
         return str(entry)
 
     @abc.abstractmethod
-    def runOnPlatform(self, total_num, cmd, platform, platform_args):
+    def runOnPlatform(self, total_num, cmd, platform, platform_args,
+                      converter):
         assert False, "Child class need to implement runOnPlatform"
 
     @abc.abstractmethod

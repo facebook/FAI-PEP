@@ -53,6 +53,7 @@ class TFLiteFramework(FrameworkBase):
                                                              shared_libs)
         if cmd:
             return cmd
+        # the following is for backward compatibility purpose
         input = None
         input_shape = None
         for layer in test["inputs"]:
@@ -76,14 +77,15 @@ class TFLiteFramework(FrameworkBase):
         cmd = [str(s) for s in cmd]
         return cmd
 
-    def runOnPlatform(self, total_num, cmd, platform, platform_args):
+    def runOnPlatform(self, total_num, cmd, platform, platform_args,
+                      converter_class):
         output = platform.runBenchmark(cmd, platform_args=platform_args,
                                        log_to_screen_only=True)
-        result = self._collectData(total_num, output)
+        result = self._collectData(output)
         metric = self._processData(result)
         return metric
 
-    def _collectData(self, total_num, output):
+    def _collectData(self, output):
         if output is None:
             return False
         result = {}

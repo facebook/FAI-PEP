@@ -8,11 +8,8 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-import collections
 import copy
-import json
 import os
-import re
 
 from frameworks.framework_base import FrameworkBase
 from utils.custom_logger import getLogger
@@ -219,6 +216,7 @@ class Caffe2Framework(FrameworkBase):
             if "output_files" in test:
                 cmd += " --output_folder " + platform.getOutputDir()
             return cmd
+        # old format, will deprecate
         cmd = [program,
                "--net", model_files["predict"],
                "--warmup", test["warmup"],
@@ -258,123 +256,40 @@ class Caffe2Framework(FrameworkBase):
         cmd = [str(s) for s in cmd]
         return cmd
 
-    def runOnPlatform(self, total_num, cmd, platform, platform_args):
+    def runOnPlatform(self, total_num, cmd, platform, platform_args,
+                      converter_class):
+        if converter_class is None:
+            converter_class = self.converters["json_data_converter"]
+        converter = converter_class()
         results = []
         num = 0
         # emulate do...while... loop
         while True:
             output = platform.runBenchmark(cmd, platform_args=platform_args)
-            num = self._collectData(total_num, output, results, num)
-            if num >= total_num:
-                break
-        metric = self._processData(results)
+            one_result, valid_run_idxs = converter.collect(output,
+                                                           self.IDENTIFIER)
+            valid_run_idxs = [num + idx for idx in valid_run_idxs]
+            num += len(valid_run_idxs)
+            results.extend(one_result)
+            if num < total_num:
+                num_items = len(valid_run_idxs)
+                if num_items > 0:
+                    getLogger().info("%d items collected, Still missing %d "
+                                     "runs. Collect again." %
+                                     (num_items, total_num - num))
+
+                    continue
+                else:
+                    getLogger().info("No new items collected, "
+                                     "finish collecting...")
+            elif num > total_num:
+                # if collect more than the needed number, get the
+                # latest entries. This may happen when the data in
+                # the previous runs are not cleared. e.g. on some
+                # android 5 devices. Or, it may happen when multiple
+                # runs are needed to collect the desired number of
+                # iterations
+                results = results[valid_run_idxs[num - total_num]:]
+            break
+        metric = converter.convert(results)
         return metric
-
-    def _collectData(self, total_num, output, results, prev_num):
-        if output is None:
-            return -1
-        rows = output.split('\n')
-        useful_rows = [row for row in rows if row.find(self.IDENTIFIER) >= 0]
-        i = 0
-        valid_runs = prev_num
-        valid_run_idx = []
-        while (i < len(useful_rows)):
-            row = useful_rows[i]
-            valid_row = row[(row.find(self.IDENTIFIER) +
-                            len(self.IDENTIFIER)):]
-            try:
-                result = json.loads(valid_row)
-                if ("type" in result and result["type"] == "NET" and
-                        "value" in result) or \
-                        ("NET" in result):  # for backward compatibility
-                    valid_runs += 1
-                    valid_run_idx.append(i)
-                results.append(result)
-            except Exception as e:
-                # bypass one line
-                getLogger().info(
-                        "Skip one row %s \n Exception: %s" %
-                        (valid_row, str(e))
-                        )
-                pass
-            i += 1
-
-        if valid_runs > total_num:
-            # Android 5 has an issue that logcat -c does not clear the entry
-            results = results[valid_run_idx[valid_runs-total_num]:]
-        elif valid_runs < total_num:
-            if valid_runs > prev_num:
-                getLogger().info(
-                        "%d items collected. Still missing %d runs. "
-                        "Collect again." %
-                        (valid_runs - prev_num, total_num - valid_runs))
-                return valid_runs
-            else:
-                getLogger().info(
-                        "No new items collected, finish collecting...")
-        # finish collecting, when we have collected all items, or we
-        # cannot collect any more items
-        return total_num
-
-    def _processData(self, data):
-        details = collections.defaultdict(
-            lambda: collections.defaultdict(list))
-        pattern = re.compile(r"^ID_(\d+)_([a-zA-Z0-9]+)_[\w/]+")
-        for d in data:
-            if "type" in d and "metric" in d and "unit" in d:
-                # new format
-                key = d["type"] + " " + d["metric"]
-                if "info_string" in d:
-                    if "info_string" in details[key]:
-                        assert details[key]["info_string"] == \
-                            d["info_string"], \
-                            "info_string values for {} ".format(key) + \
-                            "do not match.\n" + \
-                            "Current info_string: " + \
-                            "{}\n ".format(details[key]["info_string"]) + \
-                            "does not match new info_string: " + \
-                            "{}".format(d["info_string"])
-                    else:
-                        details[key]["info_string"] = d["info_string"]
-                if "value" in d:
-                    details[key]["values"].append(float(d["value"]))
-                self._updateOneEntry(details[key], d, "type")
-                self._updateOneEntry(details[key], d, "metric")
-                self._updateOneEntry(details[key], d, "unit")
-            else:
-                # for backward compatibility purpose
-                # will remove after some time
-                for k, v in d.items():
-                    for kk, vv in v.items():
-                        key = k + " " + kk
-                        if "info_string" in vv:
-                            if "info_string" in details[key]:
-                                assert details[key]["info_string"] == vv["info_string"], \
-                                    "info_string values for {} ".format(key) + \
-                                    "do not match.\n" + \
-                                    "Current info_string:\n{}\n ".format(details[key]["info_string"]) + \
-                                    "does not match new info_string:\n{}".format(vv["info_string"])
-                            else:
-                                details[key]["info_string"] = vv["info_string"]
-                        else:
-                            details[key]["values"].append(float(vv["value"]))
-                        details[key]["type"] = k
-                        # although it is declared as list
-                        details[key]["metric"] = kk
-                        details[key]["unit"] = str(vv["unit"])
-                        match = pattern.match(k)
-                        if match:
-                            # per layer timing
-                            details[key]["id"] = [match.group(1)]
-                            details[key]["operator"] = [match.group(2)]
-                        else:
-                            # whole graph timing
-                            assert key == self.NET + " " + kk
-        return details
-
-    def _updateOneEntry(self, detail, d, k):
-        if k in detail:
-            assert detail[k] == d[k], \
-                "Field {} does not match in different entries".format(k)
-        else:
-            detail[k] = d[k]
