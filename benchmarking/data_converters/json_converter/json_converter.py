@@ -21,7 +21,7 @@ class JsonConverter(DataConverterBase):
         super(JsonConverter, self).__init__()
 
     def getName(self):
-        return "json_data_converter"
+        return "json_converter"
 
     def collect(self, data, **kwargs):
         if data is None:

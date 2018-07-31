@@ -17,7 +17,7 @@ class JsonWithIdentifierConverter(DataConverterBase):
         self.json_converter = JsonConverter()
 
     def getName(self):
-        return "json_with_identifier_data_converter"
+        return "json_with_identifier_converter"
 
     def collect(self, data, **kwargs):
         if data is None:
