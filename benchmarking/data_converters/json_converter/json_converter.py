@@ -10,28 +10,31 @@
 
 import collections
 import json
+from six import string_types
 
 from data_converters.data_converter_base import DataConverterBase
 from utils.custom_logger import getLogger
 
 
-class JsonDataConverter(DataConverterBase):
+class JsonConverter(DataConverterBase):
     def __init__(self):
-        super(JsonDataConverter, self).__init__()
+        super(JsonConverter, self).__init__()
 
     def getName(self):
-        return "raw_data_converter"
+        return "json_data_converter"
 
-    def collect(self, data, identifier):
+    def collect(self, data, **kwargs):
         if data is None:
             return [], []
-        rows = data.split('\n')
-        useful_rows = [row[(row.find(identifier) + len(identifier)):]
-                       for row in rows if row.find(identifier) >= 0] \
-            if identifier else rows
+        if isinstance(data, string_types):
+            rows = data.split('\n')
+        else:
+            assert isinstance(data, list), \
+                "Input format must be string or list"
+            rows = data
         results = []
         valid_run_idxs = []
-        for row in useful_rows:
+        for row in rows:
             try:
                 result = json.loads(row)
                 if ("type" in result and result["type"] == "NET" and

@@ -259,15 +259,15 @@ class Caffe2Framework(FrameworkBase):
     def runOnPlatform(self, total_num, cmd, platform, platform_args,
                       converter_class):
         if converter_class is None:
-            converter_class = self.converters["json_data_converter"]
+            converter_class = self.converters["json_with_identifier_converter"]
         converter = converter_class()
         results = []
         num = 0
         # emulate do...while... loop
         while True:
             output = platform.runBenchmark(cmd, platform_args=platform_args)
-            one_result, valid_run_idxs = converter.collect(output,
-                                                           self.IDENTIFIER)
+            one_result, valid_run_idxs = \
+                converter.collect(output, identifier=self.IDENTIFIER)
             valid_run_idxs = [num + idx for idx in valid_run_idxs]
             num += len(valid_run_idxs)
             results.extend(one_result)

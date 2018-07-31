@@ -9,10 +9,13 @@
 ##############################################################################
 
 
-from .json_data_converter.json_data_converter import JsonDataConverter
+from .json_converter.json_converter import JsonConverter
+from .json_with_identifier_converter.json_with_identifier_converter \
+    import JsonWithIdentifierConverter
 
 converters = {
-    "json_data_converter": JsonDataConverter,
+    "json_converter": JsonConverter,
+    "json_with_identifier_converter": JsonWithIdentifierConverter,
 }
 
 

@@ -21,7 +21,7 @@ class DataConverterBase(object):
 
     # collect data from the binary
     @abc.abstractmethod
-    def collect(self, data, identifier):
+    def collect(self, data, **kwargs):
         assert False, "Need to call one of " + \
             "the implementations of the collector"
 
