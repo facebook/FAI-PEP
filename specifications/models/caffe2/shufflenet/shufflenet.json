@@ -20,6 +20,14 @@
   },
   "tests": [
     {
+      "preprocess": {
+        "program": {
+          "filename": "name",
+          "location": "location",
+          "md5": "md5",
+        },
+        "arguments": "--net {preprocess.program}"
+      },
       "arguments": "--net {files.predict} --init_net {files.init} --warmup {warmup} --iter {iter} --input \"gpu_0/data\" --input_dims \"1,3,224,224\" --input_type float --run_individual true",
       "identifier": "{ID}",
       "metric": "delay",
