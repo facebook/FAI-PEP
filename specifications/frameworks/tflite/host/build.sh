@@ -7,8 +7,6 @@ cd "$1"
 # build benchmark binary
 # assuming the configure has set up the NDK and SDK correctly
 bazel build -c opt \
-  --config=android_arm \
-  --cxxopt='--std=c++11' \
   tensorflow/contrib/lite/tools/benchmark:benchmark_model
 
 popd

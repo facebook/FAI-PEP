@@ -9,6 +9,7 @@ cd "$1"
 bazel build -c opt \
   --config=android_arm \
   --cxxopt='--std=c++11' \
+  --copt=-DTFLITE_PROFILING_ENABLED \
   tensorflow/contrib/lite/tools/benchmark:benchmark_model
 
 popd
