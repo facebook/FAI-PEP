@@ -36,6 +36,8 @@ class BenchmarkCollector(object):
         meta = content["meta"] if "meta" in content else {}
         if "meta" in info:
             deepMerge(meta, info["meta"])
+        if hasattr(getArgs(), "timeout"):
+            meta["timeout"] = getArgs().timeout
         benchmarks = []
 
         if "benchmarks" in content:

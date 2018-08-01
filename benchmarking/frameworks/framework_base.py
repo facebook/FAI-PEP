@@ -63,8 +63,11 @@ class FrameworkBase(object):
         platform_args = model["platform_args"] if "platform_args" in model \
             else {}
 
-        if (sys.version_info > (3, 0)) and 'timeout' in model.keys():
-            platform_args['timeout'] = model['timeout']
+        if sys.version_info > (3, 0):
+            if 'timeout' in model:
+                platform_args['timeout'] = model['timeout']
+            if 'timeout' in test:
+                platform_args['timeout'] = test['timeout']
 
         if test["metric"] == "power":
             platform_args["power"] = True

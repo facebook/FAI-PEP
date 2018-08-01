@@ -25,8 +25,6 @@ def runOneBenchmark(info, benchmark, framework, platform,
     minfo = copy.deepcopy(info["treatment"])
     if "shared_libs" in info:
         minfo["shared_libs"] = info["shared_libs"]
-    if hasattr(getArgs(), "timeout") and "timeout" not in benchmark["model"]:
-        benchmark["model"]["timeout"] = getArgs().timeout
     try:
         data = _runOnePass(minfo, benchmark, framework, platform)
         meta = None
