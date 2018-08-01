@@ -16,7 +16,8 @@
     },
     "format": "caffe2",
     "kind": "deployment",
-    "name": "shufflenet"
+    "name": "shufflenet",
+    "timeout": 500
   },
   "tests": [
     {

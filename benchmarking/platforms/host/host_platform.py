@@ -43,7 +43,11 @@ class HostPlatform(PlatformBase):
         getLogger().info("Running: %s", ' '.join(cmd))
         pipes = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
-        std_out, std_err = pipes.communicate()
+        if "platform_args" in kwargs and "timeout" in kwargs["platform_args"]:
+            std_out, std_err = pipes.communicate(
+                timeout=kwargs["platform_args"]["timeout"])
+        else:
+            std_out, std_err = pipes.communicate()
         assert pipes.returncode == 0, "Benchmark run failed"
         if len(std_err):
             return std_err.decode("utf-8", "ignore")
