@@ -59,8 +59,12 @@ class FrameworkBase(object):
                                      shared_libs)
         total_num = test["iter"]
 
-        platform_args = model["platform_args"] if "platform_args" in model \
-            else {}
+        if "platform_args" in test:
+            platform_args = test["platform_args"]
+        elif "platform_args" in model:
+            platform_args = model["platform_args"]
+        else:
+            platform_args = {}
 
         if test["metric"] == "power":
             platform_args["power"] = True
@@ -88,8 +92,9 @@ class FrameworkBase(object):
         if test["metric"] == "power":
             collection_time = test["collection_time"] \
                 if "collection_time" in test else 180
+            voltage = float(test["voltage"]) if "voltage" in test else 4.0
             from utils.monsoon_power import collectPowerData
-            output = collectPowerData(collection_time, test["iter"])
+            output = collectPowerData(collection_time, voltage, test["iter"])
             platform.waitForDevice(20)
             # kill the process if exists
             platform.killProgram(program)

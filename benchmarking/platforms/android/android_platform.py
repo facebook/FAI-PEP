@@ -74,8 +74,12 @@ class AndroidPlatform(PlatformBase):
                 taskset = platform_args["taskset"]
                 cmd = ["taskset", taskset] + cmd
                 del platform_args["taskset"]
+            if "sleep_before_run" in platform_args:
+                sleep_before_run = str(platform_args["sleep_before_run"])
+                cmd = ["sleep", sleep_before_run, "&&"] + cmd
             if "power" in platform_args and platform_args["power"]:
-                cmd = ["nohup"] + cmd + [">", "/dev/null", "2>&1"]
+                cmd = ["nohup"] + ["sh", "-c", "'" + " ".join(cmd) + "'"] + \
+                    [">", "/dev/null", "2>&1"]
                 log_to_screen_only = True
                 android_kwargs["non_blocking"] = True
                 del platform_args["power"]
