@@ -50,25 +50,24 @@ class ScreenReporter(ReporterBase):
         for key in del_keys:
             data.pop(key)
 
-        data_values_iter = iter(data.values())
-        if "id" in next(data_values_iter):
-            # Print per layer delay in order
-            for key in sorted(data, key=lambda x: int(data[x]["id"][0])):
-                self._printOneData(key, data[key])
-        else:
-            for key in sorted(data):
-                self._printOneData(key, data[key])
-
+        for key in sorted(data):
+            self._printOneData(key, data[key])
 
     def _printOneData(self, key, d):
         if "summary" in d:
             s = d["summary"]
-            # MAD: Median absolute deviation
-            print("{}: value median {:.5f}  MAD: {:.5f}".format(key, s["p50"], s["MAD"]))
+            self._printOneDataLine(key, s)
         if "diff_summary" in d:
             s = d["diff_summary"]
-            print("{}: diff median {:.5f}  MAD: {:.5f}".format(key, s["p50"], s["MAD"]))
+            self._printOneDataLine(key, s)
 
+    def _printOneDataLine(self, key, s):
+        if "p50" in s and "MAD" in s:
+            print("{}: value median {:.5f}  MAD: {:.5f}".
+                  format(key, s["p50"], s["MAD"]))
+        elif "mean" in s and "stdev" in s:
+            print("{}: value mean {:.5f}  stdev: {:.5f}".
+                  format(key, s["mean"], s["stdev"]))
 
     def _getOperatorStats(self, data):
         pass
