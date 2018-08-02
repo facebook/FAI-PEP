@@ -1,0 +1,30 @@
+{
+  "model": {
+    "category": "CNN",
+    "description": "Trained ShuffleNet on Caffe2",
+    "files": {
+      "init": {
+        "filename": "init_net.pb",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/mobilenet_v2/init_net.pb",
+        "md5": "96f1f34ee5b19b68be3d065570f62c34"
+      },
+      "predict": {
+        "filename": "predict_net.pb",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/mobilenet_v2/predict_net.pb",
+        "md5": "87a4e6b9979588f7c222ffd765412e0a"
+      }
+    },
+    "format": "caffe2",
+    "kind": "deployment",
+    "name": "mobilenet_v2"
+  },
+  "tests": [
+    {
+      "arguments": "--net {files.predict} --init_net {files.init} --warmup {warmup} --iter {iter} --input \"data\" --input_dims \"1,3,224,224\" --input_type float --run_individual true",
+      "identifier": "mobilenet_v2",
+      "iter": 50,
+      "metric": "delay",
+      "warmup": 1
+    }
+  ]
+}

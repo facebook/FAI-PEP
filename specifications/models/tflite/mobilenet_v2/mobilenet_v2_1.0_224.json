@@ -1,0 +1,29 @@
+{
+  "model": {
+    "category": "CNN", 
+    "description": "Trained MobileNet v2 model on TFLite", 
+    "files": {
+      "graph": {
+        "filename": "mobilenet_v2_1.0_224.tflite", 
+        "location": "mobilenet_v2_1.0_224.tflite", 
+        "md5": "d8065bc96469fdc4f3fdb05b878c6bbc"
+      }
+    }, 
+    "format": "tflite", 
+    "name": "mobilenet_v2_1.0_224"
+  }, 
+  "tests": [
+    {
+      "arguments": "--graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,244,244,3\" --num_threads=4", 
+      "commands": {
+        "tflite": {
+          "num_threads": "4"
+        }
+      }, 
+      "identifier": "mobilenet_v2_1.0_224-4-threads", 
+      "iter": 50, 
+      "metric": "delay", 
+      "warmup": 1
+    }
+  ]
+}
