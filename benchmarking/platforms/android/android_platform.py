@@ -83,6 +83,9 @@ class AndroidPlatform(PlatformBase):
                 log_to_screen_only = True
                 android_kwargs["non_blocking"] = True
                 del platform_args["power"]
+            if "timeout" in platform_args and platform_args["timeout"]:
+                android_kwargs["timeout"] = platform_args["timeout"]
+                del platform_args["timeout"]
         log_screen = self.adb.shell(cmd, **android_kwargs)
         log_logcat = ""
         if not log_to_screen_only:
