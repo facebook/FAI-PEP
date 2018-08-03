@@ -131,6 +131,8 @@ class BenchmarkCollector(object):
                 self._collectOneGroupFiles(test["input_files"], files)
             if "output_files" in test:
                 self._collectOneGroupFiles(test["output_files"], files)
+            if "preprocess" in test and "files" in test["preprocess"]:
+                self._collectOneGroupFiles(test["preprocess"]["files"], files)
         return files
 
     def _collectOneGroupFiles(self, group, files):
