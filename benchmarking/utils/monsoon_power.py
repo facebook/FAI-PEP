@@ -17,7 +17,7 @@ import Monsoon.sampleEngine as sampleEngine
 from utils.custom_logger import getLogger
 
 
-def collectPowerData(sample_time, num_iters):
+def collectPowerData(sample_time, voltage, num_iters):
     # wait till all actions are performed
     sleep(1)
     Mon = HVPM.Monsoon()
@@ -25,7 +25,7 @@ def collectPowerData(sample_time, num_iters):
     # Need to sleep to be functional correctly
     sleep(0.2)
     getLogger().info("Setup Vout")
-    Mon.setVout(4.0)
+    Mon.setVout(voltage)
     getLogger().info("Setup setPowerupTime")
     Mon.setPowerupTime(60)
     getLogger().info("Setup setPowerUpCurrentLimit")
@@ -99,8 +99,8 @@ def _getPowerData(filename):
 # All other scenarios are not caught
 def _calculatePowerDataRange(power_data):
     num = len(power_data)
-    WINDOW_SIZE = 100
-    THRESHOLD = 300
+    WINDOW_SIZE = 500
+    THRESHOLD = 200
     if num <= WINDOW_SIZE:
         return -1, -1
     # first get the sum of the window size values
@@ -166,7 +166,7 @@ def _retrievePowerData(power_data, start_idx, end_idx, num_iters):
         return data
 
     # get base current. It is just an approximation
-    THRESHOLD = 300
+    THRESHOLD = 200
     num = len(power_data)
     i = end_idx
     sum = 0
