@@ -5,7 +5,7 @@
     "files": {
       "graph": {
         "filename": "mobilenet_v2_0.35_96.tflite",
-        "location": "mobilenet_v2_0.35_96.tflite",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/benchmark_models/mobilenet_v2_0.35_96.tflite",
         "md5": "4f808a4ec483447f8c659297f478e485"
       }
     },

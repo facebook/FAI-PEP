@@ -5,7 +5,7 @@
     "files": {
       "graph": {
         "filename": "squeezenet.tflite",
-        "location": "squeezenet.tflite",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/benchmark_models/squeezenet.tflite",
         "md5": "2bb5c960ff74229c0d5999a77027d4ab"
       }
     },
