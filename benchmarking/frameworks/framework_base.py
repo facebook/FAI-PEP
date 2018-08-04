@@ -13,6 +13,7 @@ import os
 import re
 import shutil
 from six import string_types
+import sys
 
 from data_converters.data_converters import getConverters
 from utils.custom_logger import getLogger
@@ -65,6 +66,12 @@ class FrameworkBase(object):
             platform_args = model["platform_args"]
         else:
             platform_args = {}
+
+        if sys.version_info > (3, 0):
+            if 'timeout' in model:
+                platform_args['timeout'] = model['timeout']
+            if 'timeout' in test:
+                platform_args['timeout'] = test['timeout']
 
         if test["metric"] == "power":
             platform_args["power"] = True
