@@ -1,0 +1,58 @@
+{
+  "model": {
+    "category": "CNN",
+    "description": "Trained MobileNet v2 model on TFLite",
+    "files": {
+      "graph": {
+        "filename": "squeezenet.tflite",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/benchmark_models/squeezenet.tflite",
+        "md5": "2bb5c960ff74229c0d5999a77027d4ab"
+      }
+    },
+    "cooldown": 30,
+    "format": "tflite",
+    "name": "squeezenet-taskset-3"
+  },
+  "tests": [
+    {
+      "arguments": "--graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=Placeholder --input_layer_shape=\"1,224,224,3\" --num_threads=1",
+      "identifier": "squeezenet-taskset-3-1-thread",
+      "platform_args": {
+        "taskset": "3"
+      },
+      "iter": 50,
+      "metric": "delay",
+      "warmup": 1
+    },
+    {
+      "arguments": "--graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=Placeholder --input_layer_shape=\"1,224,224,3\" --num_threads=2",
+      "identifier": "squeezenet-taskset-3-2-threads",
+      "platform_args": {
+        "taskset": "3"
+      },
+      "iter": 50,
+      "metric": "delay",
+      "warmup": 1
+    },
+    {
+      "arguments": "--graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=Placeholder --input_layer_shape=\"1,224,224,3\" --num_threads=3",
+      "identifier": "squeezenet-taskset-3-3-threads",
+      "platform_args": {
+        "taskset": "3"
+      },
+      "iter": 50,
+      "metric": "delay",
+      "warmup": 1
+    },
+    {
+      "arguments": "--graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=Placeholder --input_layer_shape=\"1,224,224,3\" --num_threads=4",
+      "identifier": "squeezenet-taskset-3-4-threads",
+      "platform_args": {
+        "taskset": "3"
+      },
+      "iter": 50,
+      "metric": "delay",
+      "warmup": 1
+    }
+  ]
+}

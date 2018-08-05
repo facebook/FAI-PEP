@@ -25,6 +25,7 @@
       "iter": 1000,
       "metric": "power",
       "collection_time": 180,
+      "voltage": 4.2,
       "warmup": 1
     }
   ]

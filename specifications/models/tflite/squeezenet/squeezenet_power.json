@@ -1,0 +1,29 @@
+{
+  "model": {
+    "category": "CNN",
+    "description": "Trained MobileNet v2 model on TFLite",
+    "files": {
+      "graph": {
+        "filename": "squeezenet.tflite",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/benchmark_models/squeezenet.tflite",
+        "md5": "2bb5c960ff74229c0d5999a77027d4ab"
+      }
+    },
+    "format": "tflite",
+    "name": "squeezenet"
+  },
+  "tests": [
+    {
+      "arguments": "--graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=Placeholder --input_layer_shape=\"1,224,224,3\" --num_threads=4",
+      "identifier": "squeezenet-4-threads",
+      "platform_args": {
+        "sleep_before_run": 20
+      },
+      "collection_time": 220,
+      "voltage": 4.2,
+      "iter": 1000,
+      "metric": "power",
+      "warmup": 0
+    }
+  ]
+}
