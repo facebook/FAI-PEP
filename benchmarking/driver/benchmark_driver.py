@@ -297,6 +297,10 @@ def _retrieveMeta(info, benchmark, platform, framework, backend):
         meta["identifier"] = test["identifier"]
     else:
         meta["identifier"] = meta["net_name"]
+    if 'type' in test['inputs']['data']:
+        meta['input_type'] = test['inputs']['data']['type']
+    else:
+        meta['input_type'] = "None"
 
     # info specific
     if "commit" in info["treatment"]:
