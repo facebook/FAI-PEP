@@ -10,16 +10,16 @@
       }
     },
     "format": "tflite",
-    "name": "squeezenet"
+    "name": "squeezenet_power"
   },
   "tests": [
     {
-      "arguments": "--graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=Placeholder --input_layer_shape=\"1,224,224,3\" --num_threads=4",
-      "identifier": "squeezenet-4-threads",
+      "arguments": "--graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=Placeholder --input_layer_shape=\"1,224,224,3\" --num_threads=1",
+      "identifier": "squeezenet-1-thread",
       "platform_args": {
         "sleep_before_run": 20
       },
-      "collection_time": 220,
+      "collection_time": 350,
       "voltage": 4.2,
       "iter": 1000,
       "metric": "power",
