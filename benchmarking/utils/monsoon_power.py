@@ -100,7 +100,7 @@ def _getPowerData(filename):
 def _calculatePowerDataRange(power_data):
     num = len(power_data)
     WINDOW_SIZE = 500
-    THRESHOLD = 200
+    THRESHOLD = 150
     if num <= WINDOW_SIZE:
         return -1, -1
     # first get the sum of the window size values
@@ -166,7 +166,7 @@ def _retrievePowerData(power_data, start_idx, end_idx, num_iters):
         return data
 
     # get base current. It is just an approximation
-    THRESHOLD = 200
+    THRESHOLD = 150
     num = len(power_data)
     i = end_idx
     sum = 0

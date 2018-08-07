@@ -78,6 +78,11 @@ class AndroidPlatform(PlatformBase):
                 sleep_before_run = str(platform_args["sleep_before_run"])
                 cmd = ["sleep", sleep_before_run, "&&"] + cmd
             if "power" in platform_args and platform_args["power"]:
+                # launch settings page to prevent the phone
+                # to go into sleep mode
+                self.adb.shell(["am", "start", "-a",
+                                "android.settings.SETTINGS"])
+                time.sleep(1)
                 cmd = ["nohup"] + ["sh", "-c", "'" + " ".join(cmd) + "'"] + \
                     [">", "/dev/null", "2>&1"]
                 log_to_screen_only = True
