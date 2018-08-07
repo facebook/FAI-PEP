@@ -14,6 +14,7 @@ import hashlib
 import json
 import os
 import requests
+import tempfile
 import shutil
 from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
@@ -98,7 +99,7 @@ class BenchmarkCollector(object):
             model["name"] + "/"
         if not os.path.isdir(model_dir):
             os.makedirs(model_dir)
-        collected_files = self._collectFiles(one_benchmark)
+        collected_files, collected_tmp_files = self._collectFiles(one_benchmark)
         update_json = False
         for file in collected_files:
             update_json |= self._updateOneFile(file, model_dir, filename)
@@ -117,8 +118,14 @@ class BenchmarkCollector(object):
                 self._getDestFilename(file, model_dir)
             file["location"] = cached_filename
 
+        tmp_dir = tempfile.mkdtemp()
+        for tmp_file in collected_tmp_files:
+            tmp_file['location'] = \
+                    tmp_file['location'].replace("{TEMPDIR}", tmp_dir)
+
     def _collectFiles(self, benchmark):
         files = []
+        tmp_files = []
         if "model" in benchmark:
             if "files" in benchmark["model"]:
                 self._collectOneGroupFiles(benchmark["model"]["files"], files)
@@ -130,25 +137,29 @@ class BenchmarkCollector(object):
             if "input_files" in test:
                 self._collectOneGroupFiles(test["input_files"], files)
             if "output_files" in test:
-                self._collectOneGroupFiles(test["output_files"], files)
+                self._collectOneGroupFiles(test["output_files"], files, tmp_files)
             if "preprocess" in test and "files" in test["preprocess"]:
-                self._collectOneGroupFiles(test["preprocess"]["files"], files)
-        return files
+                self._collectOneGroupFiles(test["preprocess"]["files"], files, tmp_files)
+        return files, tmp_files
 
-    def _collectOneGroupFiles(self, group, files):
+    def _collectOneGroupFiles(self, group, files, tmp_files=None):
         if isinstance(group, list):
             for f in group:
-                self._collectOneFile(f, files)
+                self._collectOneFile(f, files, tmp_files)
         elif isinstance(group, dict):
             for name in group:
                 f_or_list = group[name]
                 if isinstance(f_or_list, list):
                     for f in f_or_list:
-                        self._collectOneFile(f, files)
+                        self._collectOneFile(f, files, tmp_files)
                 else:
-                    self._collectOneFile(f_or_list, files)
+                    self._collectOneFile(f_or_list, files, tmp_files)
 
-    def _collectOneFile(self, item, files):
+    def _collectOneFile(self, item, files, tmp_files):
+        if "location" in item and "{TEMPDIR}" in item["location"]:
+            assert tmp_files is not None, "tmp file can only exist for output"
+            tmp_files.append(item)
+            return
         assert "filename" in item, "field filename must exist"
         if "location" not in item:
             return

@@ -34,14 +34,28 @@ class FrameworkBase(object):
         assert len(tests) == 1, "At this point, only one test should " + \
             "exist in one benchmark. However, benchmark " + \
             "{} doesn't.".format(benchmark["name"])
+        model_files = {name: model["files"][name]["location"]
+                       for name in model["files"]}
+
         test = tests[0]
+        preprocess_files = None
+        # Let's handle preprocess comamnd first, since we will copy all files into host
+        if "preprocess" in test:
+            # simple thing first, let's assume preprocess is self contained
+            preprocess_cmd = self.composePreprocessCommand(test["preprocess"], model, test, model_files)
+            # run the preprocess command on host machines
+            self.runOnHost(preprocess_cmd)
+            # copy all files into platform
+            preprocess_files = {name: test["preprocess"]["files"][name]["location"]
+                                for name in test["preprocess"]["files"]}
+            preprocess_files = platform.copyFilesToPlatform(preprocess_files)
+
+
         program = platform.copyFilesToPlatform(info["program"])
         shared_libs = None
         if "shared_libs" in info:
             shared_libs = platform.copyFilesToPlatform(info["shared_libs"])
 
-        model_files = {name: model["files"][name]["location"]
-                       for name in model["files"]}
         model_files = platform.copyFilesToPlatform(model_files)
         input_files = None
         if "input_files" in test:
@@ -54,14 +68,9 @@ class FrameworkBase(object):
             for of in test["output_files"]:
                 result_files[of] = platform.getOutputDir() + "/" + of + ".txt"
 
-        if "preprocess" in test:
-            # simple thing first, let's assume preprocess is self contained
-            preprocess_cmd = self.composePreprocessCommand(test["preprocess"])
-            self.runPreprocessOnPlatform(preprocess_cmd, platform)
-
         cmd = self.composeRunCommand(platform, program, model, test,
                                      model_files, input_files, result_files,
-                                     shared_libs)
+                                     shared_libs, preprocess_files)
         total_num = test["iter"]
 
         platform_args = model["platform_args"] if "platform_args" in model \
@@ -109,54 +118,40 @@ class FrameworkBase(object):
                 platform.delFilesFromPlatform(input_files)
         return output, output_files
 
-    @abc.abstractmethod
-    def composePreprocessCommand(self, preprocess_info):
+    def composePreprocessCommand(self, preprocess_info, model, test, model_files):
         files_db = {'preprocess': {'files': {}}}
         for f_key in preprocess_info["files"]:
             f_value = preprocess_info["files"][f_key]
-            if 'location' in f_value:
-                files_db['preprocess']['files'][f_key] = f_value['location']
-            if 'target' in f_value:
-                files_db['preprocess']['files'][f_key] = f_value['target']
+            files_db['preprocess']['files'][f_key] = f_value['location']
 
-        assert 'program' in files_db['preprocess']['files'], "No program in preprocess"
-        program = files_db['preprocess']['files']['program']
-
-        # parse arguments
-        commands = []
-        arguments = preprocess_info["arguments"].split()
-        pattern = re.compile("\{([\w|\.]+)\}")
-        print(arguments)
-        for arg in arguments:
-            match = pattern.match(arg)
-            if match:
-                paths = match.group(1).split('.')
-                content = files_db
-                for path in paths:
-                    content = content[path]
-                commands.append(content)
-            else:
-                commands.append(arg)
-        return program + ' ' + ' '.join(commands)
+        return self._getReplacedCommand(preprocess_info["command"],
+                                   files_db['preprocess']['files'], model, test, model_files)
 
     @abc.abstractmethod
     def composeRunCommand(self, platform, program, model, test, model_files,
-                          input_files, output_files, shared_libs):
+                          input_files, output_files, shared_libs, preprocess_files=None):
         if "arguments" not in test:
             return None
-        arguments = test["arguments"]
-        command = arguments
+
+        files = input_files.copy() if input_files is not None else {}
+        files.update(output_files if output_files is not None else {})
+        files.update(preprocess_files if preprocess_files is not None else {})
+
+        command = test["arguments"]
+        command = self._getReplacedCommand(command, files, model, test,
+                                           model_files)
+        return  program + " " + command
+
+    def _getReplacedCommand(self, command, files, model, test, model_files):
         pattern = re.compile("\{([\w|\.]+)\}")
         results = []
-        for m in pattern.finditer(arguments):
+        for m in pattern.finditer(command):
             results.append({
                 "start": m.start(),
                 "end": m.end(),
                 "content": m.group(1)
             })
         results.reverse()
-        files = input_files.copy() if input_files is not None else {}
-        files.update(output_files if output_files is not None else {})
         for res in results:
             replace = self._getMatchedString(test, res["content"], files)
             if replace is None:
@@ -166,7 +161,6 @@ class FrameworkBase(object):
             if replace:
                 command = command[:res["start"]] + "'" + replace + "'" + \
                     command[res["end"]:]
-        command = program + " " + command
         return command
 
     def _getMatchedString(self, root, match, files):
@@ -198,10 +192,16 @@ class FrameworkBase(object):
                       converter):
         assert False, "Child class need to implement runOnPlatform"
 
-    @abc.abstractmethod
-    def runPreprocessOnPlatform(self, preprocess_cmd, platform):
-        getLogger().warning("Preprocess is not supported on the platform")
-        pass
+    def runOnHost(self, cmd):
+        getLogger().info("Running on Host: %s", cmd)
+        pipes = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        std_out, std_err = pipes.communicate()
+        assert pipes.returncode == 0, "Benchmark run failed"
+        if len(std_err):
+            return std_err.decode("utf-8", "ignore")
+        else:
+            return std_out
 
     @abc.abstractmethod
     def verifyBenchmarkFile(self, benchmark, filename, is_post):
