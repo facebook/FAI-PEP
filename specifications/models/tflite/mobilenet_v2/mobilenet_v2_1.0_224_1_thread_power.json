@@ -1,0 +1,30 @@
+{
+  "model": {
+    "category": "CNN",
+    "description": "Trained MobileNet v2 model on TFLite",
+    "files": {
+      "graph": {
+        "filename": "mobilenet_v2_1.0_224.tflite",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/benchmark_models/mobilenet_v2_1.0_224.tflite",
+        "md5": "d8065bc96469fdc4f3fdb05b878c6bbc"
+      }
+    },
+    "cooldown": 30,
+    "format": "tflite",
+    "name": "mobilenet_v2_1.0_224_power"
+  },
+  "tests": [
+    {
+      "arguments": "--graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=1",
+      "identifier": "mobilenet_v2_1.0_224-1-thread-power",
+      "platform_args": {
+        "sleep_before_run": 20
+      },
+      "iter": 1000,
+      "metric": "power",
+      "collection_time": 150,
+      "voltage": 4.2,
+      "warmup": 0
+    }
+  ]
+}
