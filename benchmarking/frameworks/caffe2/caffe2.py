@@ -257,10 +257,6 @@ class Caffe2Framework(FrameworkBase):
         cmd = [str(s) for s in cmd]
         return cmd
 
-    def runPreprocessOnPlatform(self, cmd, platform):
-        # run the preprocess command
-        platform.runBenchmark(cmd)
-
     def runOnPlatform(self, total_num, cmd, platform, platform_args,
                       converter_class):
         if converter_class is None:
