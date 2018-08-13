@@ -44,16 +44,19 @@ getParser().add_argument("--framework", required=True,
     choices=["caffe2", "oculus", "generic", "tflite"],
     help="Specify the framework to benchmark on.")
 getParser().add_argument("--frameworks_dir",
-    default=str(os.path.dirname(os.path.realpath(__file__)) + "/../specifications/frameworks"),
+    default=os.path.join(str(os.path.dirname(os.path.realpath(__file__)),
+        "..", "specifications", "frameworks"),
     help="Required. The root directory that all frameworks resides. "
-    "Usually it is the specifications/frameworks directory.")
+    "Usually it is the " + os.path.join("specifications", "frameworks")
+     "directory.")
 getParser().add_argument("--interval", type=int,
     help="The minimum time interval in seconds between two benchmark runs.")
 getParser().add_argument("--platforms", required=True,
     help="Specify the platforms to benchmark on, in comma separated list."
     "Use this flag if the framework"
     " needs special compilation scripts. The scripts are called build.sh "
-    "saved in specifications/frameworks/<framework>/<platforms> directory")
+    "saved in " + os.path.join("specifications", "frameworks", "<framework>",
+    "<platforms>") + " directory")
 getParser().add_argument("--regression", action="store_true",
     help="Indicate whether this run detects regression.")
 getParser().add_argument("--remote_repository", default="origin",
@@ -210,12 +213,10 @@ class ExecutablesBuilder (threading.Thread):
         return repo_info if self._buildProgram(platform, repo_info) else None
 
     def _buildProgram(self, platform, repo_info):
-        directory = "/" + \
-            getDirectory(repo_info['commit'], repo_info['commit_time'])
+        directory = getDirectory(repo_info['commit'], repo_info['commit_time'])
 
-        dst = getArgs().exec_dir + "/" + getArgs().framework + "/" + \
-            platform + "/" + directory + getArgs().framework + \
-            "_benchmark"
+        dst = os.path.join(getArgs().exec_dir, getArgs().framework,
+            platform, directory, getArgs().framework + "_benchmark")
 
         repo_info["program"] = dst
         if not _runIndividual() and os.path.isfile(dst):

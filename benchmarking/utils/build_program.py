@@ -39,14 +39,15 @@ def _getBuildScript(framework, frameworks_dir, platform):
         "Frameworks dir is not specified."
     assert os.path.isdir(frameworks_dir), \
         "{} must be specified.".format(frameworks_dir)
-    framework_dir = frameworks_dir + "/" + framework
+    framework_dir = os.path.join(frameworks_dir, framework)
     assert os.path.isdir(framework_dir), \
         "{} must be specified.".format(framework_dir)
-    platform_dir = framework_dir + "/" + platform
+    platform_dir = os.path.join(framework_dir, platform)
     build_script = None
     if os.path.isdir(platform_dir):
-        if os.path.isfile(platform_dir + "/build.sh"):
-            build_script = platform_dir + "/build.sh"
+        script = os.path.join(platform_dir + "build.sh")
+        if os.path.isfile(script):
+            build_script = script
     if build_script is None:
         # Ideally, should check the parent directory until the
         # framework directory. Save this for the future

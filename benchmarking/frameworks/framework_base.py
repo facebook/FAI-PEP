@@ -53,7 +53,8 @@ class FrameworkBase(object):
         if "output_files" in test:
             result_files = {}
             for of in test["output_files"]:
-                result_files[of] = platform.getOutputDir() + "/" + of + ".txt"
+                result_files[of] = os.path.join(platform.getOutputDir(),
+                                                of + ".txt")
 
         cmd = self.composeRunCommand(platform, program, model, test,
                                      model_files, input_files, result_files,
@@ -90,7 +91,7 @@ class FrameworkBase(object):
                                     converter)
         output_files = None
         if "output_files" in test:
-            target_dir = self.tempdir + "/output/"
+            target_dir = os.path.join(self.tempdir, "output")
             shutil.rmtree(target_dir, True)
             os.makedirs(target_dir)
             output_files = \

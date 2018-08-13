@@ -17,7 +17,7 @@ from utils.custom_logger import getLogger
 
 class OculusFramework(FrameworkBase):
     def __init__(self, tempdir):
-        self.tempdir = tempdir + "/" + self.getName()
+        self.tempdir = os.path.join(tempdir, self.getName())
         os.makedirs(self.tempdir, 0o777)
 
     def getName(self):
@@ -56,7 +56,7 @@ class OculusFramework(FrameworkBase):
         input_files = [f["location"] for f in test["input_files"]]
         inputs = \
             platform.copyFilesToPlatform(input_files)
-        outputs = [platform.getOutputDir() + "/" + t["filename"]
+        outputs = [os.path.join(platform.getOutputDir(), t["filename"])
                    for t in test["output_files"]]
         # Always copy binary to /system/bin/ directory
         program = platform.copyFilesToPlatform(info["program"], "/system/bin/")
@@ -65,7 +65,7 @@ class OculusFramework(FrameworkBase):
                                            inputs, outputs)
         platform.runBenchmark(commands, log_to_screen_only=True)
 
-        target_dir = self.tempdir + "/output/"
+        target_dir = os.path.join(self.tempdir, "output")
         shutil.rmtree(target_dir, True)
         os.makedirs(target_dir)
 

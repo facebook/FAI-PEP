@@ -44,7 +44,7 @@ class BenchmarkCollector(object):
             path = os.path.abspath(os.path.dirname(source))
             assert "meta" in content, "Meta field is missing in benchmarks"
             for benchmark_file in content["benchmarks"]:
-                benchmark_file = path + "/" + benchmark_file
+                benchmark_file = os.path.join(path, benchmark_file)
                 self._collectOneBenchmark(benchmark_file,
                                           meta, benchmarks, info)
         else:
@@ -96,8 +96,8 @@ class BenchmarkCollector(object):
     def _updateFiles(self, one_benchmark, filename):
 
         model = one_benchmark["model"]
-        model_dir = self.model_cache + "/" + model["format"] + "/" + \
-            model["name"] + "/"
+        model_dir = os.path.join(self.model_cache, model["format"],
+            model["name"])
         if not os.path.isdir(model_dir):
             os.makedirs(model_dir)
         collected_files = self._collectFiles(one_benchmark)
@@ -195,7 +195,7 @@ class BenchmarkCollector(object):
 
     def _getDestFilename(self, field, dir):
         fn = os.path.splitext(field["filename"])
-        cached_name = dir + "/" + fn[0] + fn[1]
+        cached_name = os.path.join(dir, fn[0], fn[1])
         return cached_name
 
     def _updateTests(self, one_benchmark, source):
@@ -233,7 +233,7 @@ class BenchmarkCollector(object):
                 "--root_model_dir must be specified."
             return getArgs().root_model_dir + location[1:]
         elif location[0] != "/":
-            abs_dir = os.path.dirname(os.path.abspath(source)) + "/"
-            return abs_dir + location
+            abs_dir = os.path.dirname(os.path.abspath(source))
+            return os.path.join(abs_dir, location)
         else:
             return location
