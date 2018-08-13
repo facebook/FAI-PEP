@@ -16,6 +16,7 @@ from six import string_types
 
 from data_converters.data_converters import getConverters
 from utils.custom_logger import getLogger
+from utils.subprocess_with_logger import processRun
 
 
 class FrameworkBase(object):
@@ -42,14 +43,22 @@ class FrameworkBase(object):
         # Let's handle preprocess comamnd first, since we will copy all files into host
         if "preprocess" in test:
             # simple thing first, let's assume preprocess is self contained
+            # check the program to executable
+            if "files" in test["preprocess"] and \
+                    "program" in test["preprocess"]["files"]:
+                host_program_path = test["preprocess"]["files"]["program"]["location"]
+                os.chmod(host_program_path, 0o777)
+
             preprocess_cmd = self.composePreprocessCommand(test["preprocess"], model, test, model_files)
             # run the preprocess command on host machines
-            self.runOnHost(preprocess_cmd)
+            getLogger().info("Running on Host: %s", preprocess_cmd)
+            run_result, _ = processRun([preprocess_cmd], shell=True)
+            if run_result:
+                getLogger().info("Preprocessing output: %s", run_result)
             # copy all files into platform
             preprocess_files = {name: test["preprocess"]["files"][name]["location"]
                                 for name in test["preprocess"]["files"]}
             preprocess_files = platform.copyFilesToPlatform(preprocess_files)
-
 
         program = platform.copyFilesToPlatform(info["program"])
         shared_libs = None
@@ -158,7 +167,7 @@ class FrameworkBase(object):
                 # TODO: handle shared libraries
                 replace = self._getMatchedString(model, res["content"],
                                                  model_files)
-            if replace:
+            if replace :
                 command = command[:res["start"]] + "'" + replace + "'" + \
                     command[res["end"]:]
         return command
@@ -191,17 +200,6 @@ class FrameworkBase(object):
     def runOnPlatform(self, total_num, cmd, platform, platform_args,
                       converter):
         assert False, "Child class need to implement runOnPlatform"
-
-    def runOnHost(self, cmd):
-        getLogger().info("Running on Host: %s", cmd)
-        pipes = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-        std_out, std_err = pipes.communicate()
-        assert pipes.returncode == 0, "Benchmark run failed"
-        if len(std_err):
-            return std_err.decode("utf-8", "ignore")
-        else:
-            return std_out
 
     @abc.abstractmethod
     def verifyBenchmarkFile(self, benchmark, filename, is_post):
