@@ -21,7 +21,7 @@ class Caffe2Framework(FrameworkBase):
 
     def __init__(self, tempdir):
         super(Caffe2Framework, self).__init__()
-        self.tempdir = tempdir + "/" + self.getName()
+        self.tempdir = os.path.join(tempdir, self.getName())
         os.makedirs(self.tempdir, 0o777)
         # cannot have any variable pass among methods
 

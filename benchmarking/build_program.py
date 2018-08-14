@@ -20,7 +20,8 @@ getParser().add_argument("--framework", required=True,
     choices=["caffe2"],
     help="Specify the framework to benchmark on.")
 getParser().add_argument("--frameworks_dir",
-    default=str(os.path.dirname(os.path.realpath(__file__)) + "/../specifications/frameworks"),
+    default=os.path.join(str(os.path.dirname(os.path.realpath(__file__)),
+        "..", "specifications", "frameworks"),
     help="Required. The root directory that all frameworks resides. "
     "Usually it is the specifications/frameworks directory.")
 getParser().add_argument("--platform", required=True,

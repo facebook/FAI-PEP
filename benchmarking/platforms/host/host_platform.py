@@ -33,7 +33,7 @@ class HostPlatform(PlatformBase):
             self.setPlatform(platform.platform() + "-" + self._getProcessorName())
 
         self.setPlatformHash(str(socket.gethostname()))
-        self.tempdir = tempdir + "/" + self.platform + '_' + str(self.platform_hash)
+        self.tempdir = os.path.join(tempdir, self.platform + '_' + str(self.platform_hash))
         os.makedirs(self.tempdir, 0o777)
         self.type = "host"
 

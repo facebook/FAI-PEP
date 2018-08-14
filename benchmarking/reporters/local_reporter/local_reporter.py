@@ -28,30 +28,31 @@ class LocalReporter(ReporterBase):
             return
         meta = content[self.META]
         net_name = meta['net_name']
-        netdir = getFilename(net_name) + "/"
+        netdir = getFilename(net_name)
         platform_name = meta[self.PLATFORM]
-        platformdir = getFilename(platform_name) + "/"
+        platformdir = getFilename(platform_name)
         framework_name = meta["framework"]
-        frameworkdir = getFilename(framework_name) + "/"
+        frameworkdir = getFilename(framework_name)
         metric_name = meta['metric']
-        metric_dir = getFilename(metric_name) + "/"
-        id_dir = getFilename(meta["identifier"]) + "/"
+        metric_dir = getFilename(metric_name)
+        id_dir = getFilename(meta["identifier"])
         ts = float(meta['commit_time'])
         commit = meta['commit']
         datedir = getDirectory(commit, ts)
-        dirname = platformdir + frameworkdir + netdir + metric_dir + id_dir + datedir
-        dirname = getArgs().local_reporter + "/" + dirname
+        dirname = os.path.join(getArgs().local_reporter, platformdir,
+                               frameworkdir, netdir, metric_dir,
+                               id_dir, datedir)
         i = 0
-        while os.path.exists(dirname + str(i)):
+        while os.path.exists(os.path.join(dirname, str(i))):
             i = i+1
-        dirname = dirname + str(i) + "/"
+        dirname = os.path.join(dirname, str(i))
         os.makedirs(dirname)
         for d in data:
-            filename = dirname + getFilename(d) + ".txt"
+            filename = os.path.join(dirname, getFilename(d) + ".txt")
             content_d = json.dumps(data[d], indent=2, sort_keys=True)
             with open(filename, 'w') as file:
                 file.write(content_d)
-        filename = dirname + getFilename(self.META) + ".txt"
+        filename = os.path.join(dirname, getFilename(self.META) + ".txt")
         with open(filename, 'w') as file:
             content_meta = json.dumps(meta,
                                       indent=2, sort_keys=True)

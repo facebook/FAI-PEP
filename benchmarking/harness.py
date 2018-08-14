@@ -10,6 +10,7 @@
 
 import copy
 import json
+import os
 import shutil
 import sys
 import tempfile
@@ -53,7 +54,8 @@ getParser().add_argument("--model_cache", required=True,
 getParser().add_argument("-p", "--platform", required=True,
     help="Specify the platform to benchmark on. Use this flag if the framework"
     " needs special compilation scripts. The scripts are called build.sh "
-    "saved in specifications/frameworks/<framework>/<platform> directory")
+    "saved in " + os.path.join("specifications",
+    "frameworks", "<framework>", "<platform>") + " directory")
 getParser().add_argument("--platform_sig",
     help="Specify the platform signature")
 getParser().add_argument("--program",

@@ -116,7 +116,7 @@ def _getLatestRun(dir):
         last_run += 1
     last_run -= 1
     if last_run >= 0:
-        return dir + str(last_run) + "/"
+        return os.path.join(dir, str(last_run))
     else:
         getLogger().error("Latest run in directory %s doesn't exist. "
                           "This should not happen." % dir)
@@ -124,19 +124,19 @@ def _getLatestRun(dir):
 
 
 def _getBenchmarkRuns(info, meta, outdir):
-    dir_name = outdir + "/" + getFilename(meta["platform"]) + "/" + \
-        getFilename(meta["framework"]) + "/" + \
-        getFilename(meta["net_name"]) + \
-        "/" + getFilename(meta["metric"]) + "/" + \
-        getFilename(meta["identifier"]) + "/"
+    dir_name = os.path.join(outdir, getFilename(meta["platform"]),
+        getFilename(meta["framework"]),
+        getFilename(meta["net_name"]),
+        getFilename(meta["metric"]),
+        getFilename(meta["identifier"]))
 
     assert "regression_commits" in info, \
         "regression_commits field is missing from info"
 
     dirs = []
     for entry in info["regression_commits"]:
-        one_dir = dir_name + getDirectory(entry["commit"],
-                                          entry["commit_time"]) + "/"
+        one_dir = os.path.jon(dir_name, getDirectory(entry["commit"],
+                                          entry["commit_time"]))
         if not os.path.isdir(one_dir):
             continue
 
