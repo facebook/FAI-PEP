@@ -44,11 +44,11 @@ getParser().add_argument("--framework", required=True,
     choices=["caffe2", "oculus", "generic", "tflite"],
     help="Specify the framework to benchmark on.")
 getParser().add_argument("--frameworks_dir",
-    default=os.path.join(str(os.path.dirname(os.path.realpath(__file__)),
+    default=os.path.join(str(os.path.dirname(os.path.realpath(__file__))),
         "..", "specifications", "frameworks"),
     help="Required. The root directory that all frameworks resides. "
-    "Usually it is the " + os.path.join("specifications", "frameworks")
-     "directory.")
+    "Usually it is the " + os.path.join("specifications", "frameworks") +
+    "directory.")
 getParser().add_argument("--interval", type=int,
     help="The minimum time interval in seconds between two benchmark runs.")
 getParser().add_argument("--platforms", required=True,

@@ -195,7 +195,7 @@ class BenchmarkCollector(object):
 
     def _getDestFilename(self, field, dir):
         fn = os.path.splitext(field["filename"])
-        cached_name = os.path.join(dir, fn[0], fn[1])
+        cached_name = os.path.join(dir, fn[0] + fn[1])
         return cached_name
 
     def _updateTests(self, one_benchmark, source):

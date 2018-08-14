@@ -45,13 +45,13 @@ def _getBuildScript(framework, frameworks_dir, platform):
     platform_dir = os.path.join(framework_dir, platform)
     build_script = None
     if os.path.isdir(platform_dir):
-        script = os.path.join(platform_dir + "build.sh")
+        script = os.path.join(platform_dir, "build.sh")
         if os.path.isfile(script):
             build_script = script
     if build_script is None:
         # Ideally, should check the parent directory until the
         # framework directory. Save this for the future
-        build_script = framework_dir + "/build.sh"
+        build_script = os.path.join(framework_dir, "build.sh")
         getLogger().warning("Directory {} ".format(platform_dir) +
                             "doesn't exist. Use " +
                             "{} instead".format(framework_dir))

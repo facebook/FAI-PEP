@@ -17,7 +17,7 @@ import sys
 def getDirectory(commit_hash, commit_time):
     dt = datetime.datetime.utcfromtimestamp(commit_time)
     directory = os.path.join(str(dt.year), str(dt.month), str(dt.day),
-        commit_hash)
+                             commit_hash)
     return directory
 
 
@@ -29,7 +29,7 @@ def getCommand(command):
 
 
 def getFilename(name):
-    filename = name.replace(' ', '-').replace('/', '-').replace('\', '-')
+    filename = name.replace(' ', '-').replace('/', '-').replace('\\', '-')
     return "".join([c for c in filename
                     if c.isalpha() or c.isdigit() or
                     c == '_' or c == '.' or c == '-']).rstrip()

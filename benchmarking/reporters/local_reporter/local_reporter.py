@@ -40,9 +40,10 @@ class LocalReporter(ReporterBase):
         commit = meta['commit']
         datedir = getDirectory(commit, ts)
         dirname = os.path.join(getArgs().local_reporter, platformdir,
-            frameworkdir, netdir, metric_dir, id_dir, datedir)
+                               frameworkdir, netdir, metric_dir,
+                               id_dir, datedir)
         i = 0
-        while os.path.exists(dirname + str(i)):
+        while os.path.exists(os.path.join(dirname, str(i))):
             i = i+1
         dirname = os.path.join(dirname, str(i))
         os.makedirs(dirname)
