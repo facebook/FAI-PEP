@@ -165,14 +165,13 @@ class FrameworkBase(object):
 
     @abc.abstractmethod
     def composeRunCommand(self, platform, program, model, test, model_files,
-                          input_files, output_files, shared_libs, preprocess_files=None, postprocess_files=None):
+                          input_files, output_files, shared_libs, preprocess_files=None):
         if "arguments" not in test:
             return None
 
         files = input_files.copy() if input_files is not None else {}
         files.update(output_files if output_files is not None else {})
         files.update(preprocess_files if preprocess_files is not None else {})
-        files.update(postprocess_files if postprocess_files is not None else {})
 
         command = test["arguments"]
         command = self._getReplacedCommand(command, files, model, test,
