@@ -50,7 +50,7 @@ class FrameworkBase(object):
                 host_program_path = test["preprocess"]["files"]["program"]["location"]
                 os.chmod(host_program_path, 0o777)
 
-            preprocess_cmd = self.composePreprocessCommand(test["preprocess"], model, test, model_files)
+            preprocess_cmd = self.composeProcessCommand(test["preprocess"], model, test, model_files)
             # run the preprocess command on host machines
             getLogger().info("Running on Host: %s", preprocess_cmd)
             run_result, _ = processRun([preprocess_cmd], shell=True)
@@ -138,16 +138,30 @@ class FrameworkBase(object):
                 platform.delFilesFromPlatform(shared_libs)
             if input_files is not None:
                 platform.delFilesFromPlatform(input_files)
+
+        if "postprocess" in test:
+            if "files" in test["postprocess"] and \
+                    "program" in test["preprocess"]["files"]:
+                host_program_path = test["postprocess"]["files"]["program"]["location"]
+                os.chmod(host_program_path, 0o777)
+
+            postprocess_cmd = self.composeProcessCommand(test["postprocess"], model, test, model_files)
+            # run the preprocess command on host machines
+            getLogger().info("Running on Host for post-processing: %s", postprocess_cmd)
+            run_result, _ = processRun([postprocess_cmd], shell=True)
+            if run_result:
+                getLogger().info("Postprocessing output: %s", run_result)
+
         return output, output_files
 
-    def composePreprocessCommand(self, preprocess_info, model, test, model_files):
-        files_db = {'preprocess': {'files': {}}}
-        for f_key in preprocess_info["files"]:
-            f_value = preprocess_info["files"][f_key]
-            files_db['preprocess']['files'][f_key] = f_value['location']
+    def composeProcessCommand(self, process_info, model, test, model_files):
+        files_db = {"process": {"files": {}}}
+        for f_key in process_info["files"]:
+            f_value = process_info["files"][f_key]
+            files_db["process"]["files"][f_key] = f_value["location"]
 
-        return self._getReplacedCommand(preprocess_info["command"],
-                                   files_db['preprocess']['files'], model, test, model_files)
+        return self._getReplacedCommand(process_info["command"],
+                                   files_db["process"]["files"], model, test, model_files)
 
     @abc.abstractmethod
     def composeRunCommand(self, platform, program, model, test, model_files,
