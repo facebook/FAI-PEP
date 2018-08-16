@@ -8,8 +8,11 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+import os
+
 from .android.android_driver import AndroidDriver
 from .host.host_platform import HostPlatform
+from .windows.windows_platform import WindowsPlatform
 from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
 
@@ -33,6 +36,8 @@ def getPlatforms(tempdir):
             plts = getArgs().devices.strip().split(',')
             platforms = [p for p in platforms if p.platform in plts or
                          p.platform_hash in plts]
+    elif os.name == "nt":
+        platforms.append(WindowsPlatform(tempdir))
     if not platforms:
         getLogger().error("No platform or physical device detected.")
     return platforms

@@ -11,11 +11,10 @@
 import copy
 import json
 import os
-import re
 import six
 from utils.arg_parse import getParser, getArgs, getUnknowns, parseKnown
 from utils.custom_logger import getLogger
-from utils.utilities import getPythonInterpreter
+from utils.utilities import getPythonInterpreter, getString
 
 getParser().add_argument("--reset_options", action="store_true",
     help="Reset all the options that is saved by default.")
@@ -24,7 +23,7 @@ getParser().add_argument("--reset_options", action="store_true",
 class RunBench(object):
     def __init__(self):
         self.home_dir = os.path.expanduser('~')
-        self.root_dir = self.home_dir + "/.aibench/git/"
+        self.root_dir = os.path.join(self.home_dir, ".aibench", "git")
         parseKnown()
 
     def run(self):
@@ -55,18 +54,19 @@ class RunBench(object):
         args = {
             '--remote_repository': 'origin',
             '--commit': 'master',
-            '--commit_file': self.root_dir + "processed_commit",
-            '--exec_dir': self.root_dir + "exec",
+            '--commit_file': os.path.join(self.root_dir, "processed_commit"),
+            '--exec_dir': os.path.join(self.root_dir, "exec"),
             '--framework': 'caffe2',
-            '--local_reporter': self.root_dir + "reporter",
+            '--local_reporter': os.path.join(self.root_dir, "reporter"),
             '--repo': 'git',
-            '--status_file': self.root_dir + "status",
-            '--model_cache': self.root_dir + "model_cache",
+            '--status_file': os.path.join(self.root_dir, "status"),
+            '--model_cache': os.path.join(self.root_dir, "model_cache"),
             '--platforms': 'android',
             '--timeout': 300,
         }
-        if os.path.isfile(self.root_dir + "config.txt"):
-            with open(self.root_dir + "config.txt", "r") as f:
+        config_file = os.path.join(self.root_dir, "config.txt")
+        if os.path.isfile(config_file):
+            with open(config_file, "r") as f:
                 load_args = json.load(f)
                 args.update(load_args)
         args.update(new_args)
@@ -92,7 +92,7 @@ class RunBench(object):
             del args["--benchmark_file"]
         if "-b" in args:
             del args["-b"]
-        with open(self.root_dir + "config.txt", "w") as f:
+        with open(os.path.join(self.root_dir, "config.txt"), "w") as f:
             json_args = json.dumps(args,
                                    indent=2, sort_keys=True)
             f.write(json_args)
@@ -117,10 +117,10 @@ class RunBench(object):
         new_args = self._getUnknownArgs()
         if getArgs().reset_options or \
                 not os.path.isdir(self.root_dir) or \
-                not os.path.isfile(self.root_dir + "config.txt"):
+                not os.path.isfile(os.path.join(self.root_dir, "config.txt")):
             args = self._saveDefaultArgs(new_args)
         else:
-            with open(self.root_dir + "config.txt", "r") as f:
+            with open(os.path.join(self.root_dir, "config.txt"), "r") as f:
                 args = json.load(f)
         for v in new_args:
             if v in args:
@@ -131,20 +131,14 @@ class RunBench(object):
         args = self._getSavedArgs()
         unknowns = getUnknowns()
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        command = getPythonInterpreter() + " " + dir_path + "/repo_driver.py " + \
-            ' '.join([self._getString(u) + ' ' +
-                     (self._getString(args[u])
+        command = getPythonInterpreter() + " " + \
+            os.path.join(dir_path, "repo_driver.py") + " " + \
+            ' '.join([getString(u) + ' ' +
+                     (getString(args[u])
                       if args[u] is not None else "")
                       for u in args]) + ' ' + \
-            ' '.join([self._getString(u) for u in unknowns])
+            ' '.join([getString(u) for u in unknowns])
         return command
-
-    def _getString(self, s):
-        s = str(s)
-        if re.match("^[A-Za-z0-9_/.~-]+$", s):
-            return s
-        else:
-            return '"' + s + '"'
 
 
 if __name__ == "__main__":

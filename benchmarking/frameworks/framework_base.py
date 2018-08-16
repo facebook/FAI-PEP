@@ -113,6 +113,7 @@ class FrameworkBase(object):
 
         output = self.runOnPlatform(total_num, cmd, platform, platform_args,
                                     converter)
+
         output_files = None
         if "output_files" in test:
             target_dir = os.path.join(self.tempdir, "output")
@@ -162,7 +163,7 @@ class FrameworkBase(object):
         command = test["arguments"]
         command = self._getReplacedCommand(command, files, model, test,
                                            model_files)
-        return  program + " " + command
+        return  '"' + program + '" ' + command
 
     def _getReplacedCommand(self, command, files, model, test, model_files):
         pattern = re.compile("\{([\w|\.]+)\}")

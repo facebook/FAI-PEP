@@ -22,7 +22,10 @@ def buildProgramPlatform(dst, repo_dir, framework, frameworks_dir, platform):
     elif not os.path.isdir(dst_dir):
         os.makedirs(dst_dir)
 
-    result = processRun(['sh', script, repo_dir, dst])[0]
+    if os.name == "nt":
+        result = processRun([script, repo_dir, dst])[0]
+    else:
+        result = processRun(['sh', script, repo_dir, dst])[0]
     if result is not None:
         os.chmod(dst, 0o777)
     print(result)
@@ -44,14 +47,15 @@ def _getBuildScript(framework, frameworks_dir, platform):
         "{} must be specified.".format(framework_dir)
     platform_dir = os.path.join(framework_dir, platform)
     build_script = None
+    script = "build.bat" if os.name == "nt" else "build.sh"
     if os.path.isdir(platform_dir):
-        script = os.path.join(platform_dir, "build.sh")
+        script = os.path.join(platform_dir, script)
         if os.path.isfile(script):
             build_script = script
     if build_script is None:
         # Ideally, should check the parent directory until the
         # framework directory. Save this for the future
-        build_script = os.path.join(framework_dir, "build.sh")
+        build_script = os.path.join(framework_dir, script)
         getLogger().warning("Directory {} ".format(platform_dir) +
                             "doesn't exist. Use " +
                             "{} instead".format(framework_dir))

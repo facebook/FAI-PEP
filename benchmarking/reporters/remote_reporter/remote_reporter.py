@@ -8,12 +8,12 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from utils.arg_parse import getArgs
 from reporters.reporter_base import ReporterBase
+from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
+from utils.utilities import requestsJson
 
 import json
-import requests
 
 
 class RemoteReporter(ReporterBase):
@@ -126,10 +126,9 @@ class RemoteReporter(ReporterBase):
             'access_token': access_token,
             'logs': logs_string,
         }
-        request = requests.post(url, json=parameters)
-        result = request.json()
+        result = requestsJson(url, json=parameters, timeout=300)
         count_key = 'count'
-        is_good = request.ok and \
+        is_good = result != {} and \
             count_key in result and \
             result[count_key] == num_logs
         if not is_good:
