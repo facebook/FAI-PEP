@@ -40,19 +40,11 @@ class HostPlatform(PlatformBase):
     def runBenchmark(self, cmd, *args, **kwargs):
         if not isinstance(cmd, list):
             cmd = shlex.split(cmd)
-        getLogger().info("Running: %s", ' '.join(cmd))
-        pipes = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
+        host_kwargs = {}
         if "platform_args" in kwargs and "timeout" in kwargs["platform_args"]:
-            std_out, std_err = pipes.communicate(
-                timeout=kwargs["platform_args"]["timeout"])
-        else:
-            std_out, std_err = pipes.communicate()
-        assert pipes.returncode == 0, "Benchmark run failed"
-        if len(std_err):
-            return std_err.decode("utf-8", "ignore")
-        else:
-            return std_out
+            host_kwargs["timeout"] = kwargs["platform_args"]["timeout"]
+        output, _ = processRun(cmd, **host_kwargs)
+        return output
 
     def _getProcessorName(self):
         if platform.system() == "Windows":
@@ -74,9 +66,9 @@ class HostPlatform(PlatformBase):
             return files
         else:
             if isinstance(files, string_types):
-                tgt_file = target_dir + "/" + os.path.basename(files)
+                tgt_file = os.path.join(target_dir, os.path.basename(files))
                 shutil.copyfile(files, tgt_file)
-                return target_dir + "/" + os.path.basename(files)
+                return tgt_file
             elif isinstance(files, list):
                 target_files = []
                 for f in files:
@@ -114,7 +106,7 @@ class HostPlatform(PlatformBase):
         pass
 
     def getOutputDir(self):
-        out_dir = self.tempdir + "/output/"
+        out_dir = os.path.join(self.tempdir, "output")
         if not os.path.isdir(out_dir):
             os.makedirs(out_dir, 0o777)
         return out_dir

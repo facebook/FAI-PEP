@@ -18,7 +18,8 @@ from utils.arg_parse import getParser, getArgs, getUnknowns, parseKnown
 from repos.repos import getRepo
 from utils.build_program import buildProgramPlatform
 from utils.custom_logger import getLogger
-from utils.utilities import getDirectory, getPythonInterpreter, deepMerge
+from utils.utilities import getDirectory, getPythonInterpreter, \
+    deepMerge, getString
 
 getParser().add_argument("--ab_testing", action="store_true",
     help="Enable A/B testing in benchmark.")
@@ -216,7 +217,9 @@ class ExecutablesBuilder (threading.Thread):
         directory = getDirectory(repo_info['commit'], repo_info['commit_time'])
 
         dst = os.path.join(getArgs().exec_dir, getArgs().framework,
-            platform, directory, getArgs().framework + "_benchmark")
+            platform, directory,
+            getArgs().framework +
+            "_benchmark" + (".exe" if os.name == "nt" else ""))
 
         repo_info["program"] = dst
         if not _runIndividual() and os.path.isfile(dst):
@@ -336,11 +339,13 @@ class RepoDriver(object):
             deepMerge(repo_info, info)
             del unknowns[info_idx+1]
             del unknowns[info_idx]
-        command = getPythonInterpreter() + " " + dir_path + "/harness.py " + \
-            " --platform \'" + platform + "\'" + \
-            " --framework \'" + getArgs().framework + "\'" + \
-            (" --info \'" + json.dumps(repo_info) + "\'") + " " + \
-            ' '.join(['\'' + u + '\'' for u in unknowns])
+        info = getString(json.dumps(repo_info))
+        command = getPythonInterpreter() + " " + \
+            os.path.join(dir_path, "harness.py") + " " + \
+            " --platform " + getString(platform) + \
+            " --framework " + getString(getArgs().framework) + \
+            " --info " + info + " " + \
+            ' '.join([getString(u) for u in unknowns])
         return command
 
 

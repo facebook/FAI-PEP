@@ -11,7 +11,12 @@
 import copy
 import datetime
 import os
+import re
+import requests
 import sys
+from time import sleep
+
+from .custom_logger import getLogger
 
 
 def getDirectory(commit_hash, commit_time):
@@ -56,3 +61,63 @@ def deepMerge(tgt, src):
         # tgt has already specified a value
         # src does not override tgt
         return
+
+
+def getString(s):
+    s = str(s)
+    if re.match("^[A-Za-z0-9_/.~-]+$", s):
+        return s
+    elif os.name == "nt":
+        # escape " with \"
+        return '"' + s.replace('"', '\\"') + '"'
+    else:
+        return "'" + s + "'"
+
+
+def requestsData(url, **kwargs):
+    delay = 0
+    total_delay = 0
+    timeout = -1
+    if "timeout" in kwargs:
+        timeout = kwargs["timeout"]
+    result = None
+    while True:
+        try:
+            result = requests.post(url, **kwargs)
+            if result.status_code != 200:
+                getLogger().error("Post request failed, receiving code {}".
+                                  format(result.status_code))
+            else:
+                if delay > 0:
+                    getLogger().info("Post request successful")
+                return result
+        except requests.ConnectionError as e:
+            getLogger().error("Post Connection failed {}".format(e))
+        except requests.exceptions.ReadTimeout as e:
+            getLogger().error("Post Readtimeout {}".format(e))
+        except requests.exceptions.ChunkedEncodingError as e:
+            getLogger().error("Post ChunkedEncodingError {}".format(e))
+        delay = delay + 1 if delay <= 5 else delay
+        sleep_time = 1 << delay
+        getLogger().info("wait {} seconds. Retrying...".format(sleep_time))
+        sleep(sleep_time)
+        total_delay += sleep_time
+        if timeout > 0 and total_delay > timeout:
+            break
+    getLogger().error("Failed to post to {}, retrying after {} seconds...".
+                      format(url, total_delay))
+    return result
+
+
+def requestsJson(url, **kwargs):
+    try:
+        result = requestsData(url, **kwargs)
+        if result and result.status_code == 200:
+            result_json = result.json()
+            return result_json
+    except ValueError as e:
+        getLogger().error("Cannot decode json {}".format(e.output))
+
+    getLogger().error("Failed to retrieve json from {}".
+                      format(url))
+    return {}
