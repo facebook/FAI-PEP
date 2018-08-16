@@ -219,7 +219,7 @@ class ExecutablesBuilder (threading.Thread):
         dst = os.path.join(getArgs().exec_dir, getArgs().framework,
             platform, directory,
             getArgs().framework +
-            "_benchmark" + ".exe" if os.name == "nt" else "")
+            "_benchmark" + (".exe" if os.name == "nt" else ""))
 
         repo_info["program"] = dst
         if not _runIndividual() and os.path.isfile(dst):

@@ -14,6 +14,9 @@ import os
 import re
 import requests
 import sys
+from time import sleep
+
+from .custom_logger import getLogger
 
 
 def getDirectory(commit_hash, commit_time):
@@ -68,7 +71,7 @@ def getString(s):
         # escape " with \"
         return '"' + s.replace('"', '\\"') + '"'
     else:
-        return '"' + s + '"'
+        return "'" + s + "'"
 
 
 def requestsData(url, **kwargs):
@@ -77,12 +80,13 @@ def requestsData(url, **kwargs):
     timeout = -1
     if "timeout" in kwargs:
         timeout = kwargs["timeout"]
+    result = None
     while True:
         try:
             result = requests.post(url, **kwargs)
             if result.status_code != 200:
                 getLogger().error("Post request failed, receiving code {}".
-                    format(result.status_code))
+                                  format(result.status_code))
             else:
                 if delay > 0:
                     getLogger().info("Post request successful")
@@ -101,19 +105,19 @@ def requestsData(url, **kwargs):
         if timeout > 0 and total_delay > timeout:
             break
     getLogger().error("Failed to post to {}, retrying after {} seconds...".
-        format(url, total_delay))
+                      format(url, total_delay))
     return result
 
 
 def requestsJson(url, **kwargs):
     try:
         result = requestsData(url, **kwargs)
-        if result.status_code == 200:
+        if result and result.status_code == 200:
             result_json = result.json()
             return result_json
     except ValueError as e:
         getLogger().error("Cannot decode json {}".format(e.output))
 
     getLogger().error("Failed to retrieve json from {}".
-        format(url))
+                      format(url))
     return {}
