@@ -222,7 +222,7 @@ class ExecutablesBuilder (threading.Thread):
         filedir = os.path.dirname(dst)
         for fn in os.listdir(filedir):
             if fn != program_name:
-                repo_info[fn] = filedir + '/' + fn
+                repo_info[fn] = os.path.join(filedir, fn)
         if not _runIndividual() and os.path.isfile(dst):
             return True
         else:
