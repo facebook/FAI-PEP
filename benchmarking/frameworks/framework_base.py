@@ -50,7 +50,7 @@ class FrameworkBase(object):
                 host_program_path = test["preprocess"]["files"]["program"]["location"]
                 os.chmod(host_program_path, 0o777)
 
-            preprocess_cmd = self.composeProcessCommand(test["preprocess"], model, test, model_files)
+            preprocess_cmd = self.composeProcessCommand(test["preprocess"], model, test, model_files, info)
             # run the preprocess command on host machines
             getLogger().info("Running on Host: %s", preprocess_cmd)
             run_result, _ = processRun([preprocess_cmd], shell=True)
@@ -81,7 +81,7 @@ class FrameworkBase(object):
 
         cmd = self.composeRunCommand(platform, program, model, test,
                                      model_files, input_files, result_files,
-                                     shared_libs, preprocess_files)
+                                     shared_libs, info, preprocess_files)
         total_num = test["iter"]
 
         if "platform_args" in test:
@@ -146,7 +146,7 @@ class FrameworkBase(object):
                 host_program_path = test["postprocess"]["files"]["program"]["location"]
                 os.chmod(host_program_path, 0o777)
 
-            postprocess_cmd = self.composeProcessCommand(test["postprocess"], model, test, model_files)
+            postprocess_cmd = self.composeProcessCommand(test["postprocess"], model, test, model_files, info)
             # run the preprocess command on host machines
             getLogger().info("Running on Host for post-processing: %s", postprocess_cmd)
             run_result, _ = processRun([postprocess_cmd], shell=True)
@@ -155,18 +155,17 @@ class FrameworkBase(object):
 
         return output, output_files
 
-    def composeProcessCommand(self, process_info, model, test, model_files):
+    def composeProcessCommand(self, process_info, model, test, model_files, info):
         files_db = {"process": {"files": {}}}
         for f_key in process_info["files"]:
             f_value = process_info["files"][f_key]
             files_db["process"]["files"][f_key] = f_value["location"]
-
         return self._getReplacedCommand(process_info["command"],
-                                   files_db["process"]["files"], model, test, model_files)
+                                   files_db["process"]["files"], model, test, model_files, info)
 
     @abc.abstractmethod
     def composeRunCommand(self, platform, program, model, test, model_files,
-                          input_files, output_files, shared_libs, preprocess_files=None):
+                          input_files, output_files, shared_libs, info, preprocess_files=None):
         if "arguments" not in test:
             return None
 
@@ -176,10 +175,10 @@ class FrameworkBase(object):
 
         command = test["arguments"]
         command = self._getReplacedCommand(command, files, model, test,
-                                           model_files)
+                                           model_files, info)
         return  '"' + program + '" ' + command
 
-    def _getReplacedCommand(self, command, files, model, test, model_files):
+    def _getReplacedCommand(self, command, files, model, test, model_files, info):
         pattern = re.compile("\{([\w|\.]+)\}")
         results = []
         for m in pattern.finditer(command):
@@ -195,6 +194,10 @@ class FrameworkBase(object):
                 # TODO: handle shared libraries
                 replace = self._getMatchedString(model, res["content"],
                                                  model_files)
+            if replace is None:
+                info_wrapper = {"info": info}
+                replace = self._getMatchedString(info_wrapper, res["content"], info)
+
             if replace :
                 command = command[:res["start"]] + "'" + replace + "'" + \
                     command[res["end"]:]
@@ -216,6 +219,10 @@ class FrameworkBase(object):
             entry = entry[field]
         if not found:
             return None
+
+        if "info" in root and fields[-1] in files:
+            return str(files[fields[-1]])
+
         if "location" in entry:
             # is a file field
             if files and fields[-1] in files:

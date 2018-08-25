@@ -215,13 +215,14 @@ class ExecutablesBuilder (threading.Thread):
 
     def _buildProgram(self, platform, repo_info):
         directory = getDirectory(repo_info['commit'], repo_info['commit_time'])
-
+        program_name = getArgs().framework + "_benchmark" + (".exe" if os.name == "nt" else "")
         dst = os.path.join(getArgs().exec_dir, getArgs().framework,
-            platform, directory,
-            getArgs().framework +
-            "_benchmark" + (".exe" if os.name == "nt" else ""))
-
+            platform, directory, program_name)
         repo_info["program"] = dst
+        filedir = os.path.dirname(dst)
+        for fn in os.listdir(filedir):
+            if fn != program_name:
+                repo_info[fn] = filedir + '/' + fn
         if not _runIndividual() and os.path.isfile(dst):
             return True
         else:
