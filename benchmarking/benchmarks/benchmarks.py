@@ -161,6 +161,7 @@ class BenchmarkCollector(object):
 
     def _collectOneFile(self, item, files, tmp_files):
         if "location" in item and "{TEMPDIR}" in item["location"]:
+            assert tmp_files is not None, "tmp file can only exist for output"
             tmp_files.append(item)
             return
         assert "filename" in item, "field filename must exist"

@@ -218,15 +218,22 @@ class ExecutablesBuilder (threading.Thread):
         program_name = getArgs().framework + "_benchmark" + (".exe" if os.name == "nt" else "")
         dst = os.path.join(getArgs().exec_dir, getArgs().framework,
             platform, directory, program_name)
-        repo_info["program"] = dst
+        repo_info["programs"] = {
+            "program": {
+                "location": dst
+            }
+        }
         filedir = os.path.dirname(dst)
-        for fn in os.listdir(filedir):
-            if fn != program_name:
-                repo_info[fn] = os.path.join(filedir, fn)
         if not _runIndividual() and os.path.isfile(dst):
             return True
         else:
-            return self._buildProgramPlatform(repo_info, dst, platform)
+            result = self._buildProgramPlatform(repo_info, dst, platform)
+            for fn in os.listdir(filedir):
+                if fn != program_name:
+                    repo_info["programs"][fn] = {
+                        "location": os.path.join(filedir, fn)
+                    }
+            return result
 
     def _buildProgramPlatform(self, repo_info, dst, platform):
         self.repo.checkout(repo_info['commit'])

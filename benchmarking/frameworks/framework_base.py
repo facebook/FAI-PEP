@@ -61,7 +61,10 @@ class FrameworkBase(object):
                                 for name in test["preprocess"]["files"]}
             preprocess_files = platform.copyFilesToPlatform(preprocess_files)
 
-        program = platform.copyFilesToPlatform(info["program"])
+        program_files = {name: info["programs"][name]["location"] for name in info["programs"]}
+        programs = platform.copyFilesToPlatform(program_files)
+
+        test["info"] = info
         shared_libs = None
         if "shared_libs" in info:
             shared_libs = platform.copyFilesToPlatform(info["shared_libs"])
@@ -78,8 +81,7 @@ class FrameworkBase(object):
             for of in test["output_files"]:
                 result_files[of] = os.path.join(platform.getOutputDir(),
                                                 of + ".txt")
-
-        cmd = self.composeRunCommand(platform, program, model, test,
+        cmd = self.composeRunCommand(platform, programs, model, test,
                                      model_files, input_files, result_files,
                                      shared_libs, info, preprocess_files)
         total_num = test["iter"]
@@ -110,10 +112,8 @@ class FrameworkBase(object):
             converter = self.converters[converter_name]
         else:
             converter = None
-
         output = self.runOnPlatform(total_num, cmd, platform, platform_args,
                                     converter)
-
         output_files = None
         if "output_files" in test:
             target_dir = os.path.join(self.tempdir, "output")
@@ -122,6 +122,7 @@ class FrameworkBase(object):
             output_files = \
                 platform.moveFilesFromPlatform(result_files, target_dir)
 
+        program = programs["program"]
         if test["metric"] == "power":
             collection_time = test["collection_time"] \
                 if "collection_time" in test else 180
@@ -152,7 +153,6 @@ class FrameworkBase(object):
             run_result, _ = processRun([postprocess_cmd], shell=True)
             if run_result:
                 getLogger().info("Postprocessing output: %s", run_result)
-
         return output, output_files
 
     def composeProcessCommand(self, process_info, model, test, model_files, info):
@@ -161,24 +161,29 @@ class FrameworkBase(object):
             f_value = process_info["files"][f_key]
             files_db["process"]["files"][f_key] = f_value["location"]
         return self._getReplacedCommand(process_info["command"],
-                                   files_db["process"]["files"], model, test, model_files, info)
+                                   files_db["process"]["files"], model, test, model_files)
 
     @abc.abstractmethod
-    def composeRunCommand(self, platform, program, model, test, model_files,
+    def composeRunCommand(self, platform, programs, model, test, model_files,
                           input_files, output_files, shared_libs, info, preprocess_files=None):
-        if "arguments" not in test:
+        if "arguments" not in test and "command" not in test:
             return None
-
         files = input_files.copy() if input_files is not None else {}
         files.update(output_files if output_files is not None else {})
         files.update(preprocess_files if preprocess_files is not None else {})
+        files.update(programs if programs is not None else {})
+        if "arguments" in test:
+            command = test["arguments"]
+            command = self._getReplacedCommand(command, files, model, test,
+                                            model_files)
+            return '"' + program + '" ' + command
+        else:
+            command = test["command"]
+            command = self._getReplacedCommand(command, files, model, test,
+                                           model_files)
+            return command
 
-        command = test["arguments"]
-        command = self._getReplacedCommand(command, files, model, test,
-                                           model_files, info)
-        return  '"' + program + '" ' + command
-
-    def _getReplacedCommand(self, command, files, model, test, model_files, info):
+    def _getReplacedCommand(self, command, files, model, test, model_files):
         pattern = re.compile("\{([\w|\.]+)\}")
         results = []
         for m in pattern.finditer(command):
@@ -194,10 +199,6 @@ class FrameworkBase(object):
                 # TODO: handle shared libraries
                 replace = self._getMatchedString(model, res["content"],
                                                  model_files)
-            if replace is None:
-                info_wrapper = {"info": info}
-                replace = self._getMatchedString(info_wrapper, res["content"], info)
-
             if replace :
                 command = command[:res["start"]] + "'" + replace + "'" + \
                     command[res["end"]:]
@@ -219,9 +220,6 @@ class FrameworkBase(object):
             entry = entry[field]
         if not found:
             return None
-
-        if "info" in root and fields[-1] in files:
-            return str(files[fields[-1]])
 
         if "location" in entry:
             # is a file field
