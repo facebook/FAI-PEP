@@ -50,7 +50,7 @@ class FrameworkBase(object):
                 host_program_path = test["preprocess"]["files"]["program"]["location"]
                 os.chmod(host_program_path, 0o777)
 
-            preprocess_cmd = self.composeProcessCommand(test["preprocess"], model, test, model_files, info)
+            preprocess_cmd = self.composeProcessCommand(test["preprocess"], model, test, model_files)
             # run the preprocess command on host machines
             getLogger().info("Running on Host: %s", preprocess_cmd)
             run_result, _ = processRun([preprocess_cmd], shell=True)
@@ -83,7 +83,7 @@ class FrameworkBase(object):
                                                 of + ".txt")
         cmd = self.composeRunCommand(platform, programs, model, test,
                                      model_files, input_files, result_files,
-                                     shared_libs, info, preprocess_files)
+                                     shared_libs, preprocess_files)
         total_num = test["iter"]
 
         if "platform_args" in test:
@@ -147,7 +147,7 @@ class FrameworkBase(object):
                 host_program_path = test["postprocess"]["files"]["program"]["location"]
                 os.chmod(host_program_path, 0o777)
 
-            postprocess_cmd = self.composeProcessCommand(test["postprocess"], model, test, model_files, info)
+            postprocess_cmd = self.composeProcessCommand(test["postprocess"], model, test, model_files)
             # run the preprocess command on host machines
             getLogger().info("Running on Host for post-processing: %s", postprocess_cmd)
             run_result, _ = processRun([postprocess_cmd], shell=True)
@@ -155,7 +155,7 @@ class FrameworkBase(object):
                 getLogger().info("Postprocessing output: %s", run_result)
         return output, output_files
 
-    def composeProcessCommand(self, process_info, model, test, model_files, info):
+    def composeProcessCommand(self, process_info, model, test, model_files):
         files_db = {"process": {"files": {}}}
         for f_key in process_info["files"]:
             f_value = process_info["files"][f_key]
@@ -165,7 +165,7 @@ class FrameworkBase(object):
 
     @abc.abstractmethod
     def composeRunCommand(self, platform, programs, model, test, model_files,
-                          input_files, output_files, shared_libs, info, preprocess_files=None):
+                          input_files, output_files, shared_libs, preprocess_files=None):
         if "arguments" not in test and "command" not in test:
             return None
         files = input_files.copy() if input_files is not None else {}

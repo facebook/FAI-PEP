@@ -203,7 +203,7 @@ class Caffe2Framework(FrameworkBase):
         return new_num
 
     def composeRunCommand(self, platform, programs, model, test, model_files,
-                          input_files, output_files, shared_libs, info, preprocess_files=None):
+                          input_files, output_files, shared_libs, preprocess_files=None):
         cmd = super(Caffe2Framework, self).composeRunCommand(platform,
                                                              programs,
                                                              model,
@@ -212,7 +212,6 @@ class Caffe2Framework(FrameworkBase):
                                                              input_files,
                                                              output_files,
                                                              shared_libs,
-                                                             info,
                                                              preprocess_files)
         if cmd:
             if "output_files" in test:
