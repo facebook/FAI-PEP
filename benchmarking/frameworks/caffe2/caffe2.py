@@ -218,7 +218,7 @@ class Caffe2Framework(FrameworkBase):
                 cmd += " --output_folder " + platform.getOutputDir()
             return cmd
         # old format, will deprecate
-        cmd = [programs["program"]["location"],
+        cmd = [programs["program"],
                "--net", model_files["predict"],
                "--warmup", test["warmup"],
                "--iter", test["iter"]
