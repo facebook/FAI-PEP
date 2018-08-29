@@ -41,10 +41,10 @@ class TFLiteFramework(FrameworkBase):
             assert "warmup" in test, "Field warmup is missing in test"
             assert "iter" in test, "Field iter is missing in test"
 
-    def composeRunCommand(self, platform, program, model, test, model_files,
+    def composeRunCommand(self, platform, programs, model, test, model_files,
                           input_files, output_files, shared_libs):
         cmd = super(TFLiteFramework, self).composeRunCommand(platform,
-                                                             program,
+                                                             programs,
                                                              model,
                                                              test,
                                                              model_files,
@@ -61,7 +61,7 @@ class TFLiteFramework(FrameworkBase):
             input_shape = ",".join(str(a) for a in
                                    test["inputs"][layer]["shapes"][0])
         cmd = [
-            program,
+            programs['program'],
             "--graph={}".format(model_files["graph"]),
             "--warmup_runs={}".format(test["warmup"]),
             "--num_runs={}".format(test["iter"]),
