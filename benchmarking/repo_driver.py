@@ -224,10 +224,22 @@ class ExecutablesBuilder (threading.Thread):
                            platform, directory, program)
 
         repo_info["program"] = dst
+        repo_info["programs"] = {
+            "program": {
+                "location": dst
+            }
+        }
+        filedir = os.path.dirname(dst)
         if not _runIndividual() and os.path.isfile(dst):
             return True
         else:
-            return self._buildProgramPlatform(repo_info, dst, platform)
+            result = self._buildProgramPlatform(repo_info, dst, platform)
+            for fn in os.listdir(filedir):
+                if fn != program:
+                    repo_info["programs"][fn] = {
+                        "location": os.path.join(filedir, fn)
+                    }
+            return result
 
     def _buildProgramPlatform(self, repo_info, dst, platform):
         self.repo.checkout(repo_info['commit'])

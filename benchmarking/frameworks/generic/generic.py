@@ -31,7 +31,7 @@ class GenericFramework(FrameworkBase):
         if "model" in benchmark:
             model = benchmark["model"]
 
-        program = platform.copyFilesToPlatform(info["program"])
+        program = platform.copyFilesToPlatform(info["programs"]["program"]["location"])
 
         commands = test["commands"]
         model_files = None

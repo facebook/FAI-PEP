@@ -9,11 +9,12 @@
 ##############################################################################
 
 import logging
-logging.basicConfig()
+import sys
 
+FORMAT = '%(levelname)s %(asctime)s %(filename)s:%(lineno)4d: %(message)s'
+logging.basicConfig(level=logging.DEBUG, format=FORMAT,
+                    datefmt="%H:%M:%S", stream=sys.stdout)
 logger = logging.getLogger("GlobalLogger")
-
-logger.setLevel(logging.DEBUG)
 
 
 def getLogger():
