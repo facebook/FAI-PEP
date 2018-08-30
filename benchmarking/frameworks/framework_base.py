@@ -31,6 +31,7 @@ class FrameworkBase(object):
 
     @abc.abstractmethod
     def runBenchmark(self, info, benchmark, platform):
+        platform.preprocess(program=info["program"])
         model = benchmark["model"]
         tests = benchmark["tests"]
         assert len(tests) == 1, "At this point, only one test should " + \
@@ -162,11 +163,13 @@ class FrameworkBase(object):
             files_db["process"]["files"][f_key] = f_value["location"]
 
         return self._getReplacedCommand(process_info["command"],
-                                   files_db["process"]["files"], model, test, model_files)
+                                        files_db["process"]["files"],
+                                        model, test, model_files)
 
     @abc.abstractmethod
     def composeRunCommand(self, platform, program, model, test, model_files,
-                          input_files, output_files, shared_libs, preprocess_files=None):
+                          input_files, output_files, shared_libs,
+                          preprocess_files=None):
         if "arguments" not in test:
             return None
 
@@ -177,7 +180,7 @@ class FrameworkBase(object):
         command = test["arguments"]
         command = self._getReplacedCommand(command, files, model, test,
                                            model_files)
-        return  '"' + program + '" ' + command
+        return '"' + program + '" ' + command
 
     def _getReplacedCommand(self, command, files, model, test, model_files):
         pattern = re.compile("\{([\w|\.]+)\}")
@@ -195,7 +198,7 @@ class FrameworkBase(object):
                 # TODO: handle shared libraries
                 replace = self._getMatchedString(model, res["content"],
                                                  model_files)
-            if replace :
+            if replace:
                 command = command[:res["start"]] + "'" + replace + "'" + \
                     command[res["end"]:]
         return command

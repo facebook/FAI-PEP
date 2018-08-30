@@ -78,7 +78,7 @@ class OculusFramework(FrameworkBase):
                                                       target_dir)
 
         json_file = platform.moveFilesFromPlatform(
-            platform.getOutputDir() + "report.json",
+            os.path.join(platform.getOutputDir(), "report.json"),
             self.tempdir)
         with open(json_file, 'r') as f:
             json_content = json.load(f)

@@ -8,6 +8,8 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+from six import string_types
+
 from platforms.android.adb import ADB
 from platforms.android.android_platform import AndroidPlatform
 from utils.arg_parse import getArgs
@@ -16,7 +18,7 @@ from utils.arg_parse import getArgs
 class AndroidDriver:
     def __init__(self, devices=None):
         if devices:
-            if isinstance(devices, str):
+            if isinstance(devices, string_types):
                 devices = [devices]
         self.devices = devices
         self.type = "android"
