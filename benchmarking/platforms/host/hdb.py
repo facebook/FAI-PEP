@@ -1,0 +1,30 @@
+#!/usr/bin/env python
+
+##############################################################################
+# Copyright 2017-present, Facebook, Inc.
+# All rights reserved.
+#
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+##############################################################################
+
+import os
+import shutil
+
+from platforms.platform_util_base import PlatformUtilBase
+
+
+class HDB(PlatformUtilBase):
+    def __init__(self, device=None):
+        super(HDB, self).__init__(device)
+
+    def push(self, src, tgt):
+        if src != tgt:
+            shutil.copyfile(src, tgt)
+
+    def pull(self, src, tgt):
+        if src != tgt:
+            shutil.copyfile(src, tgt)
+
+    def deleteFile(self, file):
+        os.remove(file)
