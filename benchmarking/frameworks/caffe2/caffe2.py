@@ -219,11 +219,12 @@ class Caffe2Framework(FrameworkBase):
                 cmd += " --output_folder " + platform.getOutputDir()
             return cmd
         # old format, will deprecate
-        cmd = [programs["program"],
-               "--net", model_files["predict"],
+        cmd = ["--net", model_files["predict"],
                "--warmup", test["warmup"],
                "--iter", test["iter"]
                ]
+        if "program" in programs:
+            cmd = [programs["program"]] + cmd
         if "init" in model_files:
             cmd.append("--init_net")
             cmd.append(model_files["init"])

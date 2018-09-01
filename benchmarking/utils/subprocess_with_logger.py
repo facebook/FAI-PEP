@@ -29,7 +29,8 @@ def processRun(*args, **kwargs):
             output_raw = subprocess.check_output(*args,
                                                  stderr=subprocess.STDOUT,
                                                  **kwargs)
-            output = output_raw.decode("utf-8", "ignore")
+            # without the decode/encode the string cannot be printed out
+            output = output_raw.decode("utf-8", "ignore").encode("utf-8")
         return output, None
     except subprocess.CalledProcessError as e:
         err_output = e.output.decode("utf-8", "ignore")

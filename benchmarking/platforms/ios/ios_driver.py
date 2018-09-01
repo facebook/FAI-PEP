@@ -8,6 +8,7 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+import json
 import re
 from six import string_types
 
@@ -44,8 +45,14 @@ class IOSDriver(object):
     def getIOSPlatforms(self, tempdir):
         platforms = []
         if getArgs().device:
-            idb = IDB(getArgs().device)
-            platforms.append(IOSPlatform(tempdir, idb))
+            device_str = getArgs().device
+            assert device_str[0] == '{', "device must be a json string"
+            device = json.loads(device_str)
+            idb = IDB(device["hash"])
+            platform = IOSPlatform(tempdir, idb)
+            platform.setPlatform(device["kind"])
+            platforms.append(platform)
+            return platforms
 
         if self.devices is None:
             self.devices = self.getDevices()

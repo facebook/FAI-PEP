@@ -31,7 +31,9 @@ class FrameworkBase(object):
 
     @abc.abstractmethod
     def runBenchmark(self, info, benchmark, platform):
-        platform.preprocess(program=info["program"])
+        program_files = {name: info["programs"][name]["location"]
+                         for name in info["programs"]}
+        platform.preprocess(programs=program_files)
         model = benchmark["model"]
         tests = benchmark["tests"]
         assert len(tests) == 1, "At this point, only one test should " + \
@@ -40,8 +42,6 @@ class FrameworkBase(object):
         model_files = {name: model["files"][name]["location"]
                        for name in model["files"]}
 
-        program_files = {name: info["programs"][name]["location"]
-                         for name in info["programs"]}
         programs = platform.copyFilesToPlatform(program_files)
 
         test = tests[0]
@@ -104,7 +104,7 @@ class FrameworkBase(object):
             if 'timeout' in test:
                 platform_args['timeout'] = test['timeout']
 
-        program = programs["program"]
+        program = programs["program"] if "program" in programs else ""
         if test["metric"] == "power":
             platform_args["power"] = True
             # in power metric, the output is ignored
@@ -186,7 +186,10 @@ class FrameworkBase(object):
             command = test["arguments"]
             command = self._getReplacedCommand(command, files, model, test,
                                                programs, model_files)
-            return '"' + programs["program"] + '" ' + command
+            if "program" in programs:
+                return '"' + programs["program"] + '" ' + command
+            else:
+                return command
         else:
             command = test["command"]
             command = self._getReplacedCommand(command, files, model, test,

@@ -15,6 +15,7 @@ import shlex
 from platforms.platform_base import PlatformBase
 from utils.arg_parse import getParser, getArgs
 from utils.custom_logger import getLogger
+from utils.subprocess_with_logger import processRun
 
 getParser().add_argument("--ios_dir", default="/tmp",
     help="The directory in the ios device all files are pushed to.")
@@ -23,7 +24,6 @@ getParser().add_argument("--ios_dir", default="/tmp",
 class IOSPlatform(PlatformBase):
     def __init__(self, tempdir, idb):
         super(IOSPlatform, self).__init__(tempdir, getArgs().ios_dir, idb)
-        self.platform = None
         self.platform_hash = idb.device
         self.type = "ios"
         self.app = None
@@ -32,17 +32,27 @@ class IOSPlatform(PlatformBase):
         return self.util.run(cmd)
 
     def preprocess(self, *args, **kwargs):
-        if "program" not in kwargs:
-            return
+        assert "programs" in kwargs, "Must have programs specified"
 
-        self.app = kwargs["program"]
+        programs = kwargs["programs"]
+        assert "bundle_id" in programs, "bundle_id is not specified"
+        assert os.path.isfile(programs["bundle_id"]), "bundle_id is not a file"
+
         # find out the bundle id
-        assert os.path.isdir(self.app), "app is not a directory"
-        bundle_id_filename = os.path.join(self.app, "bundle_id")
-        assert os.path.isfile(bundle_id_filename), "bundle id file missing"
-        with open(bundle_id_filename, "r") as f:
+        with open(programs["bundle_id"], "r") as f:
             bundle_id = f.read().strip()
             self.util.setBundleId(bundle_id)
+        del programs["bundle_id"]
+        # find the first zipped app file
+        assert "program" in programs, "program is not specified"
+        program = programs["program"]
+        assert program[-8:] == ".app.zip", \
+            "IOS program must be a zipped app file"
+        filename = os.path.basename(program)
+        app_dir = os.path.join(self.tempdir, filename[:-4])
+        processRun(["unzip", "-d", app_dir, program])
+        self.app = app_dir
+        del programs["program"]
 
         self.util.run(["--bundle", self.app,
                       "--uninstall", "--noninteractive"])
@@ -53,7 +63,7 @@ class IOSPlatform(PlatformBase):
         assert self.util.bundle_id is not None, "Bundle id is not specified"
 
         arguments = {}
-        i = 1
+        i = 0
         while i < len(cmd):
             entry = cmd[i]
             if entry[:2] == "--":
@@ -81,8 +91,7 @@ class IOSPlatform(PlatformBase):
             ios_kwargs["timeout"] = platform_args["timeout"]
             del platform_args["timeout"]
 
-        run_cmd = ["--bundle", self.app, "--noninteractive"]
+        run_cmd = ["--bundle", self.app, "--noninteractive", "--noinstall"]
         # the command may fail, but the err_output is what we need
         log_screen = self.util.run(run_cmd, **ios_kwargs)
-        print(log_screen)
         return log_screen

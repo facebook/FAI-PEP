@@ -8,6 +8,7 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+import json
 from six import string_types
 
 from platforms.android.adb import ADB
@@ -39,8 +40,18 @@ class AndroidDriver:
     def getAndroidPlatforms(self, tempdir):
         platforms = []
         if getArgs().device:
-            adb = ADB(getArgs().device)
-            platforms.append(AndroidPlatform(tempdir, adb))
+            device = None
+            device_str = getArgs().device
+            if device_str[0] == '{':
+                device = json.loads(device_str)
+                hash = device["hash"]
+            else:
+                hash = getArgs().device
+            adb = ADB(hash)
+            platform = AndroidPlatform(tempdir, adb)
+            platforms.append(platform)
+            if device:
+                platform.setPlatform(device["kind"])
             return platforms
 
         if self.devices is None:
