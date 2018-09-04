@@ -119,7 +119,7 @@ class AndroidPlatform(PlatformBase):
         count = 0
         ls = None
         while ls is None and count < num:
-            ls = self.util.shell(['ls', self.dir])
+            ls = self.util.shell(['ls', self.tgt_dir])
             time.sleep(period)
         if ls is None:
             getLogger().error("Cannot reach device {} ({}) after {}.".

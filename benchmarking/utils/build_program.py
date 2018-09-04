@@ -31,7 +31,7 @@ def buildProgramPlatform(dst, repo_dir, framework, frameworks_dir, platform):
     print(result)
 
     if not os.path.isfile(dst) and \
-            (not (os.path.isdir(dst) and platform[0:4] == "ios")):
+            (not (os.path.isdir(dst) and platform[:4] == "ios")):
         getLogger().error(
             "Build program using script {} failed.".format(script))
         return False
