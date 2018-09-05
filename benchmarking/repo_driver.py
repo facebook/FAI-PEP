@@ -218,7 +218,7 @@ class ExecutablesBuilder (threading.Thread):
         program = getArgs().framework + "_benchmark"
         if os.name == "nt":
             program = program + ".exe"
-        elif platform[:4] == "ios":
+        elif platform.startswith("ios"):
             program = program + ".app.zip"
         dst = os.path.join(getArgs().exec_dir, getArgs().framework,
                            platform, directory, program)
