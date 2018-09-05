@@ -29,8 +29,7 @@ class HostPlatform(PlatformBase):
         else:
             platform = platform.platform() + "-" + \
                                self._getProcessorName()
-        self.tempdir = os.path.join(tempdir, platform + '_' +
-                                    platform_hash)
+        self.tempdir = os.path.join(tempdir, platform_hash)
         hdb = HDB(platform_hash)
         super(HostPlatform, self).__init__(self.tempdir, self.tempdir, hdb)
 
