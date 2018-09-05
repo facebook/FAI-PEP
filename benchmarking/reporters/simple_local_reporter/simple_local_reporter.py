@@ -29,21 +29,21 @@ class SimpleLocalReporter(ReporterBase):
             getLogger().info("No data to write")
             return
         meta = content[self.META]
+
         dirname = None
         if "identifier" in meta:
-            id_dir = getFilename(meta["identifier"]) + "/"
-            dirname = getArgs().simple_local_reporter + "/" + id_dir
+            id_dir = getFilename(meta["identifier"])
+            dirname = os.path.join(getArgs().simple_local_reporter, id_dir)
         else:
             dirname = tempfile.mkdtemp(dir=getArgs().simple_local_reporter)
 
         if os.path.exists(dirname):
             shutil.rmtree(dirname, True)
         os.makedirs(dirname)
-        with open(dirname + "/data.txt", 'w') as file:
+        with open(os.path.join(dirname, "data.txt"), 'w') as file:
             content_d = json.dumps(data)
             file.write(content_d)
-        platform_name = meta[self.PLATFORM]
-        pname = platform_name
+        pname = meta[self.PLATFORM]
         if "platform_hash" in meta:
             pname = pname + " ({})".format(meta["platform_hash"])
         getLogger().info("Writing file for {}: {}".format(pname, dirname))

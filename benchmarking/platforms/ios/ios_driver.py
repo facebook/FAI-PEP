@@ -9,49 +9,49 @@
 ##############################################################################
 
 import json
+import re
 from six import string_types
 
-from platforms.android.adb import ADB
-from platforms.android.android_platform import AndroidPlatform
+from platforms.ios.idb import IDB
+from platforms.ios.ios_platform import IOSPlatform
 from utils.arg_parse import getArgs
 
 
-class AndroidDriver:
+class IOSDriver(object):
     def __init__(self, devices=None):
         if devices:
             if isinstance(devices, string_types):
                 devices = [devices]
         self.devices = devices
-        self.type = "android"
+        self.type = "ios"
 
     def getDevices(self):
-        adb = ADB()
-        devices_str = adb.run("devices", "-l")
+        idb = IDB()
+        devices_str = idb.run("--detect")
+        if devices_str is None:
+            return {}
         rows = devices_str.split('\n')
         rows.pop(0)
-        devices = set()
+        pattern = re.compile(".* Found ([\d|a-f]+) \((\w+), .+\) a\.k\.a\. .*")
+        devices = {}
         for row in rows:
-            items = row.strip().split(' ')
-            if len(items) > 2 and "device" in items:
-                device_id = items[0].strip()
-                devices.add(device_id)
+            match = pattern.match(row)
+            if match:
+                hash = match.group(1)
+                model = match.group(2)
+                devices[hash] = model
         return devices
 
-    def getAndroidPlatforms(self, tempdir):
+    def getIOSPlatforms(self, tempdir):
         platforms = []
         if getArgs().device:
-            device = None
             device_str = getArgs().device
-            if device_str[0] == '{':
-                device = json.loads(device_str)
-                hash = device["hash"]
-            else:
-                hash = getArgs().device
-            adb = ADB(hash)
-            platform = AndroidPlatform(tempdir, adb)
+            assert device_str[0] == '{', "device must be a json string"
+            device = json.loads(device_str)
+            idb = IDB(device["hash"])
+            platform = IOSPlatform(tempdir, idb)
+            platform.setPlatform(device["kind"])
             platforms.append(platform)
-            if device:
-                platform.setPlatform(device["kind"])
             return platforms
 
         if self.devices is None:
@@ -67,6 +67,10 @@ class AndroidDriver:
                 self.devices = supported_devices
 
         for device in self.devices:
-            adb = ADB(device)
-            platforms.append(AndroidPlatform(tempdir, adb))
+            model = self.devices[device]
+            idb = IDB(device)
+            platform = IOSPlatform(tempdir, idb)
+            platform.setPlatform(model)
+            platforms.append(platform)
+
         return platforms

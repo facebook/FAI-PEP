@@ -31,6 +31,9 @@ class FrameworkBase(object):
 
     @abc.abstractmethod
     def runBenchmark(self, info, benchmark, platform):
+        program_files = {name: info["programs"][name]["location"]
+                         for name in info["programs"]}
+        platform.preprocess(programs=program_files)
         model = benchmark["model"]
         tests = benchmark["tests"]
         assert len(tests) == 1, "At this point, only one test should " + \
@@ -39,29 +42,32 @@ class FrameworkBase(object):
         model_files = {name: model["files"][name]["location"]
                        for name in model["files"]}
 
-        program_files = {name: info["programs"][name]["location"] for name in info["programs"]}
         programs = platform.copyFilesToPlatform(program_files)
 
         test = tests[0]
         preprocess_files = None
-        # Let's handle preprocess comamnd first, since we will copy all files into host
+        # Let's handle preprocess comamnd first,
+        # since we will copy all files into host
         if "preprocess" in test:
             # simple thing first, let's assume preprocess is self contained
             # check the program to executable
             if "files" in test["preprocess"] and \
                     "program" in test["preprocess"]["files"]:
-                host_program_path = test["preprocess"]["files"]["program"]["location"]
+                host_program_path = \
+                    test["preprocess"]["files"]["program"]["location"]
                 os.chmod(host_program_path, 0o777)
 
-            preprocess_cmd = self.composeProcessCommand(test["preprocess"], model, test, programs, model_files)
+            preprocess_cmd = self.composeProcessCommand(
+                test["preprocess"], model, test, programs, model_files)
             # run the preprocess command on host machines
             getLogger().info("Running on Host: %s", preprocess_cmd)
             run_result, _ = processRun([preprocess_cmd], shell=True)
             if run_result:
                 getLogger().info("Preprocessing output: %s", run_result)
             # copy all files into platform
-            preprocess_files = {name: test["preprocess"]["files"][name]["location"]
-                                for name in test["preprocess"]["files"]}
+            preprocess_files = \
+                {name: test["preprocess"]["files"][name]["location"]
+                 for name in test["preprocess"]["files"]}
             preprocess_files = platform.copyFilesToPlatform(preprocess_files)
 
         shared_libs = None
@@ -98,6 +104,7 @@ class FrameworkBase(object):
             if 'timeout' in test:
                 platform_args['timeout'] = test['timeout']
 
+        program = programs["program"] if "program" in programs else ""
         if test["metric"] == "power":
             platform_args["power"] = True
             # in power metric, the output is ignored
@@ -121,7 +128,6 @@ class FrameworkBase(object):
             output_files = \
                 platform.moveFilesFromPlatform(result_files, target_dir)
 
-        program = programs["program"]
         if test["metric"] == "power":
             collection_time = test["collection_time"] \
                 if "collection_time" in test else 180
@@ -143,28 +149,34 @@ class FrameworkBase(object):
         if "postprocess" in test:
             if "files" in test["postprocess"] and \
                     "program" in test["preprocess"]["files"]:
-                host_program_path = test["postprocess"]["files"]["program"]["location"]
+                host_program_path = \
+                    test["postprocess"]["files"]["program"]["location"]
                 os.chmod(host_program_path, 0o777)
 
-            postprocess_cmd = self.composeProcessCommand(test["postprocess"], model, test, programs, model_files)
+            postprocess_cmd = self.composeProcessCommand(
+                test["postprocess"], model, test, programs, model_files)
             # run the preprocess command on host machines
-            getLogger().info("Running on Host for post-processing: %s", postprocess_cmd)
+            getLogger().info(
+                "Running on Host for post-processing: %s", postprocess_cmd)
             run_result, _ = processRun([postprocess_cmd], shell=True)
             if run_result:
                 getLogger().info("Postprocessing output: %s", run_result)
         return output, output_files
 
-    def composeProcessCommand(self, process_info, model, test, programs, model_files):
+    def composeProcessCommand(self, process_info, model, test,
+                              programs, model_files):
         files_db = {"process": {"files": {}}}
         for f_key in process_info["files"]:
             f_value = process_info["files"][f_key]
             files_db["process"]["files"][f_key] = f_value["location"]
         return self._getReplacedCommand(process_info["command"],
-                                   files_db["process"]["files"], model, test, programs, model_files)
+                                        files_db["process"]["files"],
+                                        model, test, programs, model_files)
 
     @abc.abstractmethod
     def composeRunCommand(self, platform, programs, model, test, model_files,
-                          input_files, output_files, shared_libs, preprocess_files=None):
+                          input_files, output_files, shared_libs,
+                          preprocess_files=None):
         if "arguments" not in test and "command" not in test:
             return None
         files = input_files.copy() if input_files is not None else {}
@@ -172,16 +184,20 @@ class FrameworkBase(object):
         files.update(preprocess_files if preprocess_files is not None else {})
         if "arguments" in test:
             command = test["arguments"]
-            command = self._getReplacedCommand(command, files, model, test, programs,
-                                            model_files)
-            return '"' + programs["program"] + '" ' + command
+            command = self._getReplacedCommand(command, files, model, test,
+                                               programs, model_files)
+            if "program" in programs:
+                return '"' + programs["program"] + '" ' + command
+            else:
+                return command
         else:
             command = test["command"]
-            command = self._getReplacedCommand(command, files, model, test, programs,
-                                           model_files)
+            command = self._getReplacedCommand(command, files, model, test,
+                                               programs, model_files)
             return command
 
-    def _getReplacedCommand(self, command, files, model, test, programs, model_files):
+    def _getReplacedCommand(self, command, files, model, test,
+                            programs, model_files):
         pattern = re.compile("\{([\w|\.]+)\}")
         results = []
         for m in pattern.finditer(command):
@@ -200,7 +216,7 @@ class FrameworkBase(object):
             if replace is None:
                 replace = self._getMatchedString(programs, res["content"])
 
-            if replace :
+            if replace:
                 command = command[:res["start"]] + "'" + replace + "'" + \
                     command[res["end"]:]
         return command

@@ -203,7 +203,8 @@ class Caffe2Framework(FrameworkBase):
         return new_num
 
     def composeRunCommand(self, platform, programs, model, test, model_files,
-                          input_files, output_files, shared_libs, preprocess_files=None):
+                          input_files, output_files, shared_libs,
+                          preprocess_files=None):
         cmd = super(Caffe2Framework, self).composeRunCommand(platform,
                                                              programs,
                                                              model,
@@ -218,11 +219,12 @@ class Caffe2Framework(FrameworkBase):
                 cmd += " --output_folder " + platform.getOutputDir()
             return cmd
         # old format, will deprecate
-        cmd = [programs["program"],
-               "--net", model_files["predict"],
+        cmd = ["--net", model_files["predict"],
                "--warmup", test["warmup"],
                "--iter", test["iter"]
                ]
+        if "program" in programs:
+            cmd = [programs["program"]] + cmd
         if "init" in model_files:
             cmd.append("--init_net")
             cmd.append(model_files["init"])

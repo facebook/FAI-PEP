@@ -269,7 +269,6 @@ def _adjustData(info, data):
 
 def _retrieveMeta(info, benchmark, platform, framework, backend):
     assert "treatment" in info, "Treatment is missing in info"
-
     meta = {}
     # common
     meta["backend"] = backend

@@ -215,9 +215,15 @@ class ExecutablesBuilder (threading.Thread):
 
     def _buildProgram(self, platform, repo_info):
         directory = getDirectory(repo_info['commit'], repo_info['commit_time'])
-        program_name = getArgs().framework + "_benchmark" + (".exe" if os.name == "nt" else "")
+        program = getArgs().framework + "_benchmark"
+        if os.name == "nt":
+            program = program + ".exe"
+        elif platform.startswith("ios"):
+            program = program + ".app.zip"
         dst = os.path.join(getArgs().exec_dir, getArgs().framework,
-            platform, directory, program_name)
+                           platform, directory, program)
+
+        repo_info["program"] = dst
         repo_info["programs"] = {
             "program": {
                 "location": dst
@@ -229,7 +235,7 @@ class ExecutablesBuilder (threading.Thread):
         else:
             result = self._buildProgramPlatform(repo_info, dst, platform)
             for fn in os.listdir(filedir):
-                if fn != program_name:
+                if fn != program:
                     repo_info["programs"][fn] = {
                         "location": os.path.join(filedir, fn)
                     }
