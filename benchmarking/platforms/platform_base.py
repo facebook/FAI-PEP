@@ -18,8 +18,7 @@ from utils.utilities import getFilename
 class PlatformBase(object):
     def __init__(self, tempdir, tgt_dir, platform_util):
         self.tempdir = tempdir
-        self.platform = None
-        self.platform_hash = None
+        self.platform_hash = platform_util.device
         self.type = None
         self.util = platform_util
         self.tgt_dir = tgt_dir

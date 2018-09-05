@@ -12,6 +12,7 @@ import platform
 import os
 import re
 import shlex
+import shutil
 import socket
 
 from platforms.host.hdb import HDB
@@ -22,17 +23,23 @@ from utils.subprocess_with_logger import processRun
 
 class HostPlatform(PlatformBase):
     def __init__(self, tempdir):
-        self.setPlatformHash(str(socket.gethostname()))
+        platform_hash = str(socket.gethostname())
         if getArgs().platform_sig is not None:
-            self.setPlatform(str(getArgs().platform_sig))
+            platform = str(getArgs().platform_sig)
         else:
-            self.setPlatform(platform.platform() + "-" +
-                             self._getProcessorName())
-        self.tempdir = os.path.join(tempdir, self.platform + '_' +
-                                    str(self.platform_hash))
-        os.makedirs(self.tempdir, 0o777)
-        hdb = HDB(self.platform_hash)
+            platform = platform.platform() + "-" + \
+                               self._getProcessorName()
+        self.tempdir = os.path.join(tempdir, platform + '_' +
+                                    platform_hash)
+        hdb = HDB(platform_hash)
         super(HostPlatform, self).__init__(self.tempdir, self.tempdir, hdb)
+
+        # reset the platform and platform hash
+        self.setPlatform(platform)
+        self.setPlatformHash(platform_hash)
+        if os.path.exists(self.tempdir):
+            shutil.rmtree(self.tempdir)
+        os.makedirs(self.tempdir, 0o777)
         self.type = "host"
 
     def runBenchmark(self, cmd, *args, **kwargs):
