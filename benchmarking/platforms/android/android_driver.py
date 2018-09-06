@@ -14,6 +14,7 @@ from six import string_types
 from platforms.android.adb import ADB
 from platforms.android.android_platform import AndroidPlatform
 from utils.arg_parse import getArgs
+from utils.custom_logger import getLogger
 
 
 class AndroidDriver:
@@ -23,6 +24,15 @@ class AndroidDriver:
                 devices = [devices]
         self.devices = devices
         self.type = "android"
+        self.hash_platform_mapping = None
+        if getArgs().hash_platform_mapping:
+            try:
+                with open(getArgs().hash_platform_mapping) as f:
+                    self.hash_platform_mapping = json.load(f)
+            except OSError as e:
+                getLogger().info("OSError: {}".format(e))
+            except ValueError as e:
+                getLogger().info('Invalid json: {}'.format(e))
 
     def getDevices(self):
         adb = ADB()
@@ -48,7 +58,7 @@ class AndroidDriver:
             else:
                 hash = getArgs().device
             adb = ADB(hash)
-            platform = AndroidPlatform(tempdir, adb)
+            platform = self.getAndroidPlatform(tempdir, adb)
             platforms.append(platform)
             if device:
                 platform.setPlatform(device["kind"])
@@ -68,5 +78,13 @@ class AndroidDriver:
 
         for device in self.devices:
             adb = ADB(device)
-            platforms.append(AndroidPlatform(tempdir, adb))
+            platforms.append(self.getAndroidPlatform(tempdir, adb))
         return platforms
+
+    def getAndroidPlatform(self, tempdir, adb):
+        platform = AndroidPlatform(tempdir, adb)
+        if self.hash_platform_mapping and \
+            platform.platform_hash in self.hash_platform_mapping:
+            platform.platform = \
+                self.hash_platform_mapping[platform.platform_hash]
+        return platform

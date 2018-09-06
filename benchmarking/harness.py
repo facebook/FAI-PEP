@@ -102,6 +102,8 @@ getParser().add_argument("--user_identifier",
     "output so that the result can be easily identified.")
 getParser().add_argument("--wipe_cache", default=False,
     help="Specify whether to evict cache or not before running")
+getParser().add_argument("--hash_platform_mapping",
+    help="Specify the devices hash platform mapping json file.")
 
 
 class BenchmarkDriver(object):
