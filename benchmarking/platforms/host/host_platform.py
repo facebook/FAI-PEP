@@ -39,8 +39,6 @@ class HostPlatform(PlatformBase):
         if os.path.exists(self.tempdir):
             shutil.rmtree(self.tempdir)
         os.makedirs(self.tempdir, 0o777)
-        hdb = HDB(self.platform_hash)
-        super(HostPlatform, self).__init__(self.tempdir, self.tempdir, hdb)
         self.type = "host"
 
     def runBenchmark(self, cmd, *args, **kwargs):
