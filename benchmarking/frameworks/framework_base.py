@@ -43,7 +43,6 @@ class FrameworkBase(object):
                        for name in model["files"]}
 
         programs = platform.copyFilesToPlatform(program_files)
-
         test = tests[0]
         preprocess_files = None
         # Let's handle preprocess comamnd first,
