@@ -23,7 +23,6 @@ class HDB(PlatformUtilBase):
             shutil.copyfile(src, tgt)
             os.chmod(tgt, 0o777)
 
-
     def pull(self, src, tgt):
         if src != tgt:
             shutil.copyfile(src, tgt)

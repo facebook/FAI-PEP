@@ -30,7 +30,7 @@ def processRun(*args, **kwargs):
                                                  stderr=subprocess.STDOUT,
                                                  **kwargs)
             # without the decode/encode the string cannot be printed out
-            output = output_raw.decode("utf-8", "ignore").encode("utf-8")
+            output = output_raw.decode("utf-8", "ignore")
         return output, None
     except subprocess.CalledProcessError as e:
         err_output = e.output.decode("utf-8", "ignore")
