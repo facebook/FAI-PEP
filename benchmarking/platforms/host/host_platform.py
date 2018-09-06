@@ -25,16 +25,16 @@ class HostPlatform(PlatformBase):
     def __init__(self, tempdir):
         platform_hash = str(socket.gethostname())
         if getArgs().platform_sig is not None:
-            platform = str(getArgs().platform_sig)
+            platform_name = str(getArgs().platform_sig)
         else:
-            platform = platform.platform() + "-" + \
+            platform_name = platform.platform() + "-" + \
                                self._getProcessorName()
         self.tempdir = os.path.join(tempdir, platform_hash)
         hdb = HDB(platform_hash)
         super(HostPlatform, self).__init__(self.tempdir, self.tempdir, hdb)
 
         # reset the platform and platform hash
-        self.setPlatform(platform)
+        self.setPlatform(platform_name)
         self.setPlatformHash(platform_hash)
         if os.path.exists(self.tempdir):
             shutil.rmtree(self.tempdir)
