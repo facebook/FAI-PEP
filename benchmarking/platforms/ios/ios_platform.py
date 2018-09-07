@@ -24,7 +24,7 @@ getParser().add_argument("--ios_dir", default="/tmp",
 class IOSPlatform(PlatformBase):
     def __init__(self, tempdir, idb):
         super(IOSPlatform, self).__init__(tempdir, getArgs().ios_dir, idb)
-        self.platform_hash = idb.device
+        self.platform_hash = self.setPlatformHash(idb.device)
         self.type = "ios"
         self.app = None
 
