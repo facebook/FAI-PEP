@@ -9,9 +9,12 @@
 ##############################################################################
 
 import abc
+import json
 import os
 from six import string_types
 
+from utils.arg_parse import getArgs
+from utils.custom_logger import getLogger
 from utils.utilities import getFilename
 
 
@@ -23,15 +26,30 @@ class PlatformBase(object):
         self.type = None
         self.util = platform_util
         self.tgt_dir = tgt_dir
+        self.hash_platform_mapping = None
+        if getArgs().hash_platform_mapping:
+            try:
+                with open(getArgs().hash_platform_mapping) as f:
+                    self.hash_platform_mapping = json.load(f)
+            except OSError as e:
+                getLogger().info("OSError: {}".format(e))
+            except ValueError as e:
+                getLogger().info('Invalid json: {}'.format(e))
 
     def getType(self):
         return self.type
 
     def setPlatform(self, platform):
         self.platform = getFilename(platform)
+        if self.hash_platform_mapping and \
+                self.platform_hash in self.hash_platform_mapping:
+            self.platform = self.hash_platform_mapping[self.platform_hash]
 
     def setPlatformHash(self, platform_hash):
         self.platform_hash = platform_hash
+        if self.hash_platform_mapping and \
+                self.platform_hash in self.hash_platform_mapping:
+            self.platform = self.hash_platform_mapping[self.platform_hash]
 
     def getName(self):
         return self.platform
