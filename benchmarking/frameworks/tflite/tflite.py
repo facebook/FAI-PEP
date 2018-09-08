@@ -42,7 +42,7 @@ class TFLiteFramework(FrameworkBase):
             assert "iter" in test, "Field iter is missing in test"
 
     def composeRunCommand(self, platform, programs, model, test, model_files,
-                          input_files, output_files, shared_libs):
+                          input_files, output_files, shared_libs, preprocess_files=None):
         cmd = super(TFLiteFramework, self).composeRunCommand(platform,
                                                              programs,
                                                              model,
@@ -50,7 +50,8 @@ class TFLiteFramework(FrameworkBase):
                                                              model_files,
                                                              input_files,
                                                              output_files,
-                                                             shared_libs)
+                                                             shared_libs,
+                                                             preprocess_files)
         if cmd:
             return cmd
         # the following is for backward compatibility purpose
