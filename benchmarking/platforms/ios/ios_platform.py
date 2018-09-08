@@ -35,24 +35,27 @@ class IOSPlatform(PlatformBase):
         assert "programs" in kwargs, "Must have programs specified"
 
         programs = kwargs["programs"]
-        assert "bundle_id" in programs, "bundle_id is not specified"
-        assert os.path.isfile(programs["bundle_id"]), "bundle_id is not a file"
 
-        # find out the bundle id
-        with open(programs["bundle_id"], "r") as f:
-            bundle_id = f.read().strip()
-            self.util.setBundleId(bundle_id)
-        del programs["bundle_id"]
         # find the first zipped app file
         assert "program" in programs, "program is not specified"
         program = programs["program"]
-        assert program[-8:] == ".app.zip", \
-            "IOS program must be a zipped app file"
-        filename = os.path.basename(program)
-        app_dir = os.path.join(self.tempdir, filename[:-4])
-        processRun(["unzip", "-d", app_dir, program])
-        self.app = app_dir
+        assert program.endswith(".ipa"), \
+            "IOS program must be an ipa file"
+
+        processRun(["unzip", "-d", self.tempdir, program])
+        # get the app name
+        app_dir = os.path.join(self.tempdir, "Payload")
+        dirs = [f for f in os.listdir(app_dir)
+                if os.path.isdir(os.path.join(app_dir, f))]
+        assert len(dirs) == 1, "Only one app in the Payload directory"
+        app_name = dirs[0]
+        self.app = os.path.join(app_dir, app_name)
         del programs["program"]
+
+        bundle_id, _ = processRun(["osascript", "-e",
+                                   "id of app \"" + self.app + "\""])
+
+        self.util.setBundleId(bundle_id.strip())
 
         self.util.run(["--bundle", self.app,
                       "--uninstall", "--noninteractive"])

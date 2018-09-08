@@ -37,7 +37,7 @@ def getPlatforms(tempdir):
             plts = getArgs().devices.strip().split(',')
             platforms = [p for p in platforms if p.platform in plts or
                          p.platform_hash in plts]
-    elif getArgs().platform[:4] == "ios":
+    elif getArgs().platform.startswith("ios"):
         driver = IOSDriver()
         platforms.extend(driver.getIOSPlatforms(tempdir))
     elif os.name == "nt":
