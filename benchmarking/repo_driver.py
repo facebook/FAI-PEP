@@ -219,7 +219,7 @@ class ExecutablesBuilder (threading.Thread):
         if os.name == "nt":
             program = program + ".exe"
         elif platform.startswith("ios"):
-            program = program + ".app.zip"
+            program = program + ".ipa"
         dst = os.path.join(getArgs().exec_dir, getArgs().framework,
                            platform, directory, program)
 
