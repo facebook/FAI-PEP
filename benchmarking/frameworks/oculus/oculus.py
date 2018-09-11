@@ -35,24 +35,21 @@ class OculusFramework(FrameworkBase):
 
         assert platform.getType() == "android", \
             "Only android system is supported"
-        platform.adb.run("root")
-        platform.adb.run("remount")
+        platform.util.run("root")
+        platform.util.run("remount")
 
         libraries = []
         if "libraries" in model:
             for entry in model["libraries"]:
                 target = entry["target"] \
-                    if "target" in entry else platform.adb.dir
+                    if "target" in entry else platform.util.dir
                 libraries.append(platform.copyFilesToPlatform(
                     entry["location"], target))
 
         assert "files" in model, "files field is required in model"
-        assert len(model["files"]) == 1, "only one file is specified in model"
 
         model_file = {f: model["files"][f]["location"] for f in model["files"]}
         model_file = platform.copyFilesToPlatform(model_file)
-        for name in model_file:
-            model_filename = model_file[name]
         input_files = [f["location"] for f in test["input_files"]]
         inputs = \
             platform.copyFilesToPlatform(input_files)
@@ -60,8 +57,7 @@ class OculusFramework(FrameworkBase):
                    for t in test["output_files"]]
         # Always copy binary to /system/bin/ directory
         program = platform.copyFilesToPlatform(info["programs"]["program"]["location"], "/system/bin/")
-        commands = self._composeRunCommand(program, platform, model,
-                                           model_filename, test,
+        commands = self._composeRunCommand(program, platform, test,
                                            inputs, outputs)
         platform.runBenchmark(commands, log_to_screen_only=True)
 
@@ -71,7 +67,8 @@ class OculusFramework(FrameworkBase):
 
         platform.delFilesFromPlatform(model_file)
         platform.delFilesFromPlatform(inputs)
-        platform.delFilesFromPlatform(libraries)
+        # Skip deleting the libraries, as they may be used by other binaries
+        # platform.delFilesFromPlatform(libraries)
         platform.delFilesFromPlatform(program)
         # output files are removed after being copied back
         output_files = platform.moveFilesFromPlatform(outputs,
@@ -135,12 +132,10 @@ class OculusFramework(FrameworkBase):
             assert "metric" in test, \
                 "metric must exist in test in benchmark {}".format(filename)
 
-    def _composeRunCommand(self, program, platform, model, model_filename,
+    def _composeRunCommand(self, program, platform,
                            test, inputs, outputs):
         cmd = [program,
                "--json", platform.getOutputDir() + "report.json",
-               "--model", model["name"],
-               "--modelfile", model_filename,
                "--input", ' ' .join(inputs),
                "--output", ' '.join(outputs)]
         if "commands" in test:
