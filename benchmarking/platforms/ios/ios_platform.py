@@ -42,7 +42,7 @@ class IOSPlatform(PlatformBase):
         assert program.endswith(".ipa"), \
             "IOS program must be an ipa file"
 
-        processRun(["unzip", "-d", self.tempdir, program])
+        processRun(["unzip", "-o", "-d", self.tempdir, program])
         # get the app name
         app_dir = os.path.join(self.tempdir, "Payload")
         dirs = [f for f in os.listdir(app_dir)
