@@ -307,4 +307,8 @@ def _retrieveMeta(info, benchmark, platform, framework, backend):
     if "run_type" in info:
         meta["run_type"] = info["run_type"]
 
+    # Local run, user specific information
+    if "user" in info:
+        meta["user"] = info["user"]
+
     return meta

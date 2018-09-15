@@ -104,6 +104,9 @@ getParser().add_argument("--wipe_cache", default=False,
     help="Specify whether to evict cache or not before running")
 getParser().add_argument("--hash_platform_mapping",
     help="Specify the devices hash platform mapping json file.")
+# Avoid the prefix user so that it doesn't collide with --user_identifier
+getParser().add_argument("--user_string",
+    help="Specify the user running the test (to be passed to the remote reporter).")
 
 
 class BenchmarkDriver(object):
@@ -174,6 +177,9 @@ class BenchmarkDriver(object):
                 info["commands"] = {getArgs().framework: {}}
             info["commands"][getArgs().framework]["wipe_cache"] = \
                     getArgs().wipe_cache
+        if getArgs().user_string:
+            info["user"] = getArgs().user_string
+
         return info
 
 
