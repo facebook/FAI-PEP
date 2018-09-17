@@ -78,12 +78,9 @@ class PlatformBase(object):
     def copyFilesToPlatform(self, files, target_dir=None):
         target_dir = (self.tgt_dir if target_dir is None else target_dir)
         if isinstance(files, string_types):
-            if not os.path.isdir(files):
-                target_file = os.path.join(target_dir, os.path.basename(files))
-                self.util.push(files, target_file)
-                return target_file
-            else:
-                return files
+            target_file = os.path.join(target_dir, os.path.basename(files))
+            self.util.push(files, target_file)
+            return target_file
         elif isinstance(files, list):
             target_files = []
             for f in files:
