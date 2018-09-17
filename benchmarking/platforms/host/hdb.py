@@ -20,8 +20,11 @@ class HDB(PlatformUtilBase):
 
     def push(self, src, tgt):
         if src != tgt:
-            shutil.copyfile(src, tgt)
-            os.chmod(tgt, 0o777)
+            if os.path.isdir(src):
+                shutil.move(src, tgt)
+            else:
+                shutil.copyfile(src, tgt)
+                os.chmod(tgt, 0o777)
 
     def pull(self, src, tgt):
         if src != tgt:
