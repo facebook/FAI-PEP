@@ -35,10 +35,6 @@ def processRun(*args, **kwargs):
     except subprocess.CalledProcessError as e:
         err_output = e.output.decode("utf-8", "ignore")
         getLogger().error("Command failed: {}".format(err_output))
-    except subprocess.TimeoutExpired as e:
-        getLogger().error("A child process has been taken over your" +
-                          "timeout = {}".format(kwargs["timeout"]))
-        err_output = e.output.decode("utf-8", "ignore")
     except Exception:
         getLogger().error("Unknown exception {}: {}".format(sys.exc_info()[0],
                                                             ' '.join(*args)))

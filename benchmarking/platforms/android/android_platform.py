@@ -8,6 +8,7 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+import os
 import re
 import shlex
 import time
@@ -104,7 +105,10 @@ class AndroidPlatform(PlatformBase):
         return meta
 
     def killProgram(self, program):
-        res = self.util.shell(["ps", "|", "grep", program])
+        basename = os.path.basename(program)
+        res = self.util.shell(["ps", "|", "grep", basename])
+        if res is None:
+            return
         results = res.split("\n")
         pattern = re.compile(r"^shell\s+(\d+)\s+")
         for result in results:
