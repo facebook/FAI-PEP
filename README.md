@@ -2,10 +2,12 @@
 
 Facebook AI Performance Evaluation Platform is a framework and backend agnostic benchmarking platform to compare machine learning inferencing runtime metrics on a set of models and a variety of backends. It also provides a means to check performance regressions on each commit.
 
-Currently two performance metrics are collected:
+Currently the following performance metrics are collected:
 
-* delay : the delay of running the entire network and/or the delay of running each individual operator.
+* delay : the latency of running the entire network and/or the delay of running each individual operator.
 * error : the error between the values of the outputs running a model and the golden outputs.
+* energy/power : the energy per inference and average power of running the the ML model on a phone without battery.
+* any metric user provides : the harness can accept any metric that the user binary generates.
 
 ## Framework and backend agnostic benchmarking platforms
 
@@ -35,11 +37,11 @@ The flow is composed of three parts:
 * A centralized data consumption
   * One stop to compare the performance
 
-The currently supported frameworks are: Caffe2
+The currently supported frameworks are: Caffe2, TFLite
 
-The currently supported model formats are: Caffe2
+The currently supported model formats are: Caffe2, TFLite
 
-The currently supported backends: CPU, GPU, DSP, Android, linux based systems
+The currently supported backends: CPU, GPU, DSP, Android, iOS, linux based systems
 
 The currently supported libraries: Eigen, MKL, NNPACK, OpenGL, CUDA
 
