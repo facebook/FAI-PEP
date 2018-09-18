@@ -16,12 +16,12 @@
     },
     "format": "caffe2",
     "kind": "deployment",
-    "name": "mobilenet_v2_taskset_f0_quant"
+    "name": "mobilenet_v2_quant_taskset_f0"
   },
   "tests": [
     {
-      "arguments": "--net {files.predict} --init_net {files.init} --warmup {warmup} --iter {iter} --input \"data\" --input_dims \"1,3,224,224\" --input_type float --run_individual true",
-      "identifier": "mobilenet_v2_taskset_f0_quant",
+      "arguments": "{program} --net {files.predict} --init_net {files.init} --warmup {warmup} --iter {iter} --input \"data\" --input_dims \"1,3,224,224\" --input_type float --run_individual true",
+      "identifier": "mobilenet_v2_quant_taskset_f0",
       "platform_args": {
         "taskset": "f0"
       },
