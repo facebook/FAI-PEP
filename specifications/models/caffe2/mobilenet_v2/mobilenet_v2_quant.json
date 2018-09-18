@@ -1,0 +1,30 @@
+{
+  "model": {
+    "category": "CNN",
+    "description": "Trained MobileNet v2 on Caffe2",
+    "files": {
+      "init": {
+        "filename": "init_net.pb",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/mobilenet_v2_quant/init_net.pb",
+        "md5": "c503fcfbac53d8a3b4a5b716e898b59e"
+      },
+      "predict": {
+        "filename": "predict_net.pb",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/mobilenet_v2_quant/predict_net.pb",
+        "md5": "dc2dba5ef9ed216678558301f4690063"
+      }
+    },
+    "format": "caffe2",
+    "kind": "deployment",
+    "name": "mobilenet_v2_quant"
+  },
+  "tests": [
+    {
+      "arguments": "{program} --net {files.predict} --init_net {files.init} --warmup {warmup} --iter {iter} --input \"data\" --input_dims \"1,3,224,224\" --input_type float --run_individual true",
+      "identifier": "mobilenet_v2_quant",
+      "iter": 50,
+      "metric": "delay",
+      "warmup": 1
+    }
+  ]
+}
