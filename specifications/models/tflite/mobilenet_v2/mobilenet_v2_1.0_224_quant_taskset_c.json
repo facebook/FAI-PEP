@@ -6,7 +6,7 @@
     "files": {
       "graph": {
         "filename": "mobilenet_v2_1.0_224_quant.tflite",
-        "location": "/Users/pritam/Downloads/mobilenet_v2_1.0_224_quant.tflite",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/benchmark_models/mobilenet_v2_1.0_224_quant.tflite",
         "md5": "72bd6012812f0c1ff3c8fbc4101e0981"
       }
     },

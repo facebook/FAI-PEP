@@ -4,13 +4,13 @@
     "description": "Trained MobileNet v2 on Caffe2",
     "files": {
       "init": {
-        "filename": "model_init.pb",
-        "location": "/Users/pritam/caffe2_mobilenetv2_quant/model_init.pb",
+        "filename": "init_net.pb",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/mobilenet_v2_quant/init_net.pb",
         "md5": "c503fcfbac53d8a3b4a5b716e898b59e"
       },
       "predict": {
-        "filename": "model.pb",
-        "location": "/Users/pritam/caffe2_mobilenetv2_quant/model.pb",
+        "filename": "predict_net.pb",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/mobilenet_v2_quant/predict_net.pb",
         "md5": "dc2dba5ef9ed216678558301f4690063"
       }
     },
