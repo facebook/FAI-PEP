@@ -11,6 +11,7 @@
 import json
 import os
 import shlex
+import time
 
 from platforms.platform_base import PlatformBase
 from utils.arg_parse import getParser, getArgs
@@ -98,3 +99,8 @@ class IOSPlatform(PlatformBase):
         # the command may fail, but the err_output is what we need
         log_screen = self.util.run(run_cmd, **ios_kwargs)
         return log_screen
+
+    def rebootDevice(self):
+        success = self.util.reboot()
+        if success:
+            time.sleep(180)

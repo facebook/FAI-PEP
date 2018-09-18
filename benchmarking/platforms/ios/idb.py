@@ -9,6 +9,7 @@
 ##############################################################################
 
 import os
+import sys
 
 from platforms.platform_util_base import PlatformUtilBase
 from utils.custom_logger import getLogger
@@ -41,8 +42,17 @@ class IDB(PlatformUtilBase):
         return self.run("--download", src, "--to", tgt)
 
     def reboot(self):
-        # No reboot functionality
-        pass
+        # use idevicediagnostics to reboot device if exists
+        try:
+            super(IDB, self).run("idevicepair",
+                                 "-u", self.device, "pair")
+            super(IDB, self).run("idevicediagnostics",
+                                 "-u", self.device, "restart")
+            return True
+        except Exception:
+            getLogger().error("Rebooting failure...")
+            getLogger().error("Unknown exception {}".format(sys.exc_info()[0]))
+            return False
 
     def deleteFile(self, file):
         # need to make sure the file exists
