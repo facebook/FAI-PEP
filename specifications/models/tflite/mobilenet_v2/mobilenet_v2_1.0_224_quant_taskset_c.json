@@ -1,0 +1,58 @@
+{
+  "model": {
+    "category": "CNN",
+    "cooldown": 30,
+    "description": "Trained MobileNet v2 model on TFLite",
+    "files": {
+      "graph": {
+        "filename": "mobilenet_v2_1.0_224_quant.tflite",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/benchmark_models/mobilenet_v2_1.0_224_quant.tflite",
+        "md5": "72bd6012812f0c1ff3c8fbc4101e0981"
+      }
+    },
+    "format": "tflite",
+    "name": "mobilenet_v2_1.0_224_quant-taskset-c"
+  },
+  "tests": [
+    {
+      "arguments": "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=1",
+      "identifier": "mobilenet_v2_1.0_224_quant-taskset-c-1-thread",
+      "iter": 50,
+      "metric": "delay",
+      "platform_args": {
+        "taskset": "c"
+      },
+      "warmup": 1
+    },
+    {
+      "arguments": "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=2",
+      "identifier": "mobilenet_v2_1.0_224_quant-taskset-c-2-threads",
+      "iter": 50,
+      "metric": "delay",
+      "platform_args": {
+        "taskset": "c"
+      },
+      "warmup": 1
+    },
+    {
+      "arguments": "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=3",
+      "identifier": "mobilenet_v2_1.0_224_quant-taskset-c-3-threads",
+      "iter": 50,
+      "metric": "delay",
+      "platform_args": {
+        "taskset": "c"
+      },
+      "warmup": 1
+    },
+    {
+      "arguments": "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=4",
+      "identifier": "mobilenet_v2_1.0_224_quant-taskset-c-4-threads",
+      "iter": 50,
+      "metric": "delay",
+      "platform_args": {
+        "taskset": "c"
+      },
+      "warmup": 1
+    }
+  ]
+}
