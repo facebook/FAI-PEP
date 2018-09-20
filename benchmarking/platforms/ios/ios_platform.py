@@ -68,6 +68,9 @@ class IOSPlatform(PlatformBase):
 
         arguments = {}
         i = 0
+        if cmd[i][:2] != '--':
+            # skip the first item which may be program
+            i = 1
         while i < len(cmd):
             entry = cmd[i]
             if entry[:2] == "--":
