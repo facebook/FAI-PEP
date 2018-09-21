@@ -21,7 +21,9 @@ class HDB(PlatformUtilBase):
     def push(self, src, tgt):
         if src != tgt:
             if os.path.isdir(src):
-                shutil.move(src, tgt)
+                if os.path.exists(tgt):
+                    shutil.rmtree(tgt)
+                shutil.copytree(src, tgt)
             else:
                 shutil.copyfile(src, tgt)
                 os.chmod(tgt, 0o777)
