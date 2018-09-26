@@ -65,14 +65,17 @@ class JsonConverter(DataConverterBase):
                 key = d["type"] + " " + d["metric"]
                 if "info_string" in d:
                     if "info_string" in details[key]:
-                        assert details[key]["info_string"] == \
-                            d["info_string"], \
-                            "info_string values for {} ".format(key) + \
-                            "do not match.\n" + \
-                            "Current info_string: " + \
-                            "{}\n ".format(details[key]["info_string"]) + \
-                            "does not match new info_string: " + \
-                            "{}".format(d["info_string"])
+                        old_string = details[key]["info_string"]
+                        new_string = d["info_string"]
+                        if old_string != new_string:
+                            getLogger().warning("info_string values "
+                                                "for {} ".format(key) +
+                                                "do not match.\n" +
+                                                "Current info_string: " +
+                                                "{}\n ".format(old_string) +
+                                                "does not match new " +
+                                                "info_string: " +
+                                                "{}".format(new_string))
                     else:
                         details[key]["info_string"] = d["info_string"]
                 if "value" in d:
