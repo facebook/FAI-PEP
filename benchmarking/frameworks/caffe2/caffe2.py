@@ -247,11 +247,6 @@ class Caffe2Framework(FrameworkBase):
             cmd.extend(["--output", outputs])
             cmd.extend(["--text_output", "true"])
             cmd.extend(["--output_folder", platform.getOutputDir()])
-        if "commands" in test:
-            if "caffe2" in test["commands"]:
-                for key in test["commands"]["caffe2"]:
-                    val = test["commands"]["caffe2"][key]
-                    cmd.extend(["--" + key, val])
 
         if shared_libs:
             cmd = ["export", "LD_LIBRARY_PATH=$\{LD_LIBRARY_PATH\}:" +

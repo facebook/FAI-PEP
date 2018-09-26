@@ -71,10 +71,6 @@ class BenchmarkCollector(object):
         # following change should not appear in updated_json file
         if meta:
             deepMerge(one_benchmark["model"], meta)
-        if "commands" in info:
-            if "commands" not in one_benchmark["model"]:
-                one_benchmark["model"]["commands"] = {}
-            deepMerge(one_benchmark["model"]["commands"], info["commands"])
 
         self._updateTests(one_benchmark, source)
         # Add fields that should not appear in the saved benchmark file
@@ -229,12 +225,6 @@ class BenchmarkCollector(object):
             identifier = test["identifier"].replace("{ID}", str(idx))
             test["identifier"] = identifier
             idx += 1
-
-        if "commands" in one_benchmark["model"]:
-            for test in tests:
-                if "commands" not in test:
-                    test["commands"] = {}
-                deepMerge(test["commands"], one_benchmark["model"]["commands"])
 
     def _getAbsFilename(self, file, source, cache_dir):
         location = file["location"]

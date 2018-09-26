@@ -15,11 +15,6 @@
   "tests": [
     {
       "arguments": "--graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,96,96,3\" --num_threads=4",
-      "commands": {
-        "tflite": {
-          "num_threads": "4"
-        }
-      },
       "identifier": "mobilenet_v2_0.35_96-4-threads",
       "iter": 50,
       "metric": "delay",

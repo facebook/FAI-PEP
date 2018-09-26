@@ -69,11 +69,6 @@ class TFLiteFramework(FrameworkBase):
             "--input_layer={}".format(input),
             "--input_layer_shape={}".format(input_shape)
         ]
-        if "commands" in test:
-            if "tflite" in test["commands"]:
-                for key in test["commands"]["tflite"]:
-                    val = test["commands"]["tflite"][key]
-                    cmd.extend(["--{}={}".format(key, val)])
 
         cmd = [str(s) for s in cmd]
         return cmd

@@ -181,19 +181,20 @@ class FrameworkBase(object):
         files = input_files.copy() if input_files is not None else {}
         files.update(output_files if output_files is not None else {})
         files.update(preprocess_files if preprocess_files is not None else {})
+        extra_arguments = model["command_args"] \
+            if "command_args" in model else ""
         if "arguments" in test:
             command = test["arguments"]
             command = self._getReplacedCommand(command, files, model, test,
                                                programs, model_files)
             if "program" in programs:
-                return '"' + programs["program"] + '" ' + command
-            else:
-                return command
+                command = '"' + programs["program"] + '" ' + command
         else:
             command = test["command"]
             command = self._getReplacedCommand(command, files, model, test,
                                                programs, model_files)
-            return command
+        command += " " + extra_arguments
+        return command
 
     def _getReplacedCommand(self, command, files, model, test,
                             programs, model_files):
