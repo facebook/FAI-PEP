@@ -87,7 +87,7 @@ class Caffe2Framework(FrameworkBase):
             assert "identifier" in test, "Identifier field is missing in " + \
                 "benchmark {}".format(filename)
 
-            if "command" in test or "arguments" in test:
+            if "commands" in test or "command" in test or "arguments" in test:
                 continue
             # for backward compatibility purpose
             assert "inputs" in test, "Inputs field is missing in " + \
@@ -128,35 +128,7 @@ class Caffe2Framework(FrameworkBase):
     def rewriteBenchmarkTests(self, benchmark, filename):
         tests = benchmark.pop("tests")
         new_tests = self._replicateTestsOnDims(tests, filename)
-        # dealing with multiple input files
-        new_tests = self._replicateTestsOnFiles(new_tests, filename)
         benchmark["tests"] = new_tests
-
-    def _replicateTestsOnFiles(self, tests, source):
-        new_tests = []
-        for test in tests:
-            num = -1
-            if "input_files" not in test:
-                new_tests.append(copy.deepcopy(test))
-                continue
-
-            input_files = test["input_files"]
-            output_files = []
-            num = self._checkNumFiles(input_files, source, num, True)
-            if "output_files" in test:
-                output_files = test["output_files"]
-                num = self._checkNumFiles(output_files, source, num, False)
-
-            for i in range(num):
-                t = copy.deepcopy(test)
-                for iname in input_files:
-                    t["input_files"][iname] = test["input_files"][iname][i]
-                for oname in output_files:
-                    t["output_files"][oname] = \
-                        test["output_files"][oname][i]
-                new_tests.append(t)
-
-        return new_tests
 
     def _replicateTestsOnDims(self, tests, source):
         new_tests = []
@@ -202,22 +174,23 @@ class Caffe2Framework(FrameworkBase):
 
         return new_num
 
-    def composeRunCommand(self, platform, programs, model, test, model_files,
+    def composeRunCommand(self, commands, platform, programs,
+                          model, test, model_files,
                           input_files, output_files, shared_libs,
                           preprocess_files=None):
-        cmd = super(Caffe2Framework, self).composeRunCommand(platform,
-                                                             programs,
-                                                             model,
-                                                             test,
-                                                             model_files,
-                                                             input_files,
-                                                             output_files,
-                                                             shared_libs,
-                                                             preprocess_files)
-        if cmd:
-            if "output_files" in test:
-                cmd += " --output_folder " + platform.getOutputDir()
-            return cmd
+        cmds = super(Caffe2Framework, self).composeRunCommand(commands,
+                                                              platform,
+                                                              programs,
+                                                              model,
+                                                              test,
+                                                              model_files,
+                                                              input_files,
+                                                              output_files,
+                                                              shared_libs,
+                                                              preprocess_files)
+        if cmds:
+            return cmds
+
         # old format, will deprecate
         cmd = ["--net", model_files["predict"],
                "--warmup", test["warmup"],
@@ -256,8 +229,8 @@ class Caffe2Framework(FrameworkBase):
         if shared_libs:
             cmd = ["export", "LD_LIBRARY_PATH=$\{LD_LIBRARY_PATH\}:" +
                    os.path.dirname(shared_libs[0]), "&&"] + cmd
-        cmd = [str(s) for s in cmd]
-        return cmd
+        cmd = ' '.join(str(s) for s in cmd)
+        return [cmd]
 
     def runOnPlatform(self, total_num, cmd, platform, platform_args,
                       converter_class):

@@ -13,6 +13,7 @@ import datetime
 import os
 import re
 import requests
+from six import string_types
 import sys
 from time import sleep
 
@@ -61,6 +62,20 @@ def deepMerge(tgt, src):
         # tgt has already specified a value
         # src does not override tgt
         return
+
+
+def deepReplace(root, pattern, replacement):
+    if isinstance(root, list):
+        for idx in range(len(root)):
+            item = root[idx]
+            root[idx] = deepReplace(item, pattern, replacement)
+    elif isinstance(root, dict):
+        for name in root:
+            m = root[name]
+            root[name] = deepReplace(m, pattern, replacement)
+    elif isinstance(root, string_types):
+        return root.replace(pattern, replacement)
+    return root
 
 
 def getString(s):
