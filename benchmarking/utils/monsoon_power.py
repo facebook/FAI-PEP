@@ -8,6 +8,7 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+import json
 import re
 import tempfile
 from time import sleep
@@ -15,13 +16,15 @@ from time import sleep
 import Monsoon.HVPM as HVPM
 import Monsoon.sampleEngine as sampleEngine
 from utils.custom_logger import getLogger
+from utils.arg_parse import getArgs
 
 
-def collectPowerData(sample_time, voltage, num_iters):
+def collectPowerData(hash, sample_time, voltage, num_iters):
+    serialno = _getSerialno(hash)
     # wait till all actions are performed
     sleep(1)
     Mon = HVPM.Monsoon()
-    Mon.setup_usb()
+    Mon.setup_usb(serialno)
     # Need to sleep to be functional correctly
     sleep(0.2)
     getLogger().info("Setup Vout")
@@ -218,3 +221,12 @@ def _composeStructuredData(data, metric, unit):
             "MAD": 0,
         }
     }
+
+
+def _getSerialno(hash):
+    serialno = None
+    if getArgs().monsoon_map:
+        map = json.loads(getArgs().monsoon_map)
+        if hash in map:
+            serialno = map[hash]
+    return serialno

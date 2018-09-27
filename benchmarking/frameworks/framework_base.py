@@ -119,6 +119,18 @@ class FrameworkBase(object):
             converter = None
         output = self.runOnPlatform(total_num, cmd, platform, platform_args,
                                     converter)
+
+        if test["metric"] == "power":
+            collection_time = test["collection_time"] \
+                if "collection_time" in test else 180
+            voltage = float(test["voltage"]) if "voltage" in test else 4.0
+            from utils.monsoon_power import collectPowerData
+            output = collectPowerData(platform.platform_hash,
+                                      collection_time, voltage, test["iter"])
+            platform.waitForDevice(20)
+            # kill the process if exists
+            platform.killProgram(program)
+
         output_files = None
         if "output_files" in test:
             target_dir = os.path.join(self.tempdir, "output")
@@ -126,16 +138,6 @@ class FrameworkBase(object):
             os.makedirs(target_dir)
             output_files = \
                 platform.moveFilesFromPlatform(result_files, target_dir)
-
-        if test["metric"] == "power":
-            collection_time = test["collection_time"] \
-                if "collection_time" in test else 180
-            voltage = float(test["voltage"]) if "voltage" in test else 4.0
-            from utils.monsoon_power import collectPowerData
-            output = collectPowerData(collection_time, voltage, test["iter"])
-            platform.waitForDevice(20)
-            # kill the process if exists
-            platform.killProgram(program)
 
         if len(output) > 0:
             platform.delFilesFromPlatform(model_files)
