@@ -23,7 +23,7 @@ def collectPowerData(hash, sample_time, voltage, num_iters):
     serialno = _getSerialno(hash)
     if serialno is not None:
         getLogger().info("Collecting current from "
-                         "monsoon {}".format(str(serialno)))
+                         "monsoon {} for {}".format(str(serialno), hash))
     # wait till all actions are performed
     sleep(1)
     Mon = HVPM.Monsoon()
