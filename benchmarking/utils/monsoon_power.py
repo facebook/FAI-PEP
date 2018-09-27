@@ -21,6 +21,9 @@ from utils.arg_parse import getArgs
 
 def collectPowerData(hash, sample_time, voltage, num_iters):
     serialno = _getSerialno(hash)
+    if serialno is not None:
+        getLogger().info("Collecting current from "
+                         "monsoon {}".format(str(serialno)))
     # wait till all actions are performed
     sleep(1)
     Mon = HVPM.Monsoon()
