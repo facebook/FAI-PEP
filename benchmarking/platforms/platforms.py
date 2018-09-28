@@ -45,3 +45,10 @@ def getPlatforms(tempdir):
     if not platforms:
         getLogger().error("No platform or physical device detected.")
     return platforms
+
+
+def getHostPlatform(tempdir):
+    if os.name == "nt":
+        return WindowsPlatform(tempdir)
+    else:
+        return HostPlatform(tempdir)

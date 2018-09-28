@@ -9,6 +9,7 @@
 ##############################################################################
 
 import abc
+import json
 import os
 import re
 import shutil
@@ -16,15 +17,17 @@ from six import string_types
 import sys
 
 from data_converters.data_converters import getConverters
+from platforms.platforms import getHostPlatform
+from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
-from utils.subprocess_with_logger import processRun
-from utils.utilities import deepMerge, deepReplace
+from utils.utilities import deepMerge, deepReplace, getFAIPEPROOT
 
 
 class FrameworkBase(object):
     def __init__(self):
         self.converters = getConverters()
         self.tmpdir = None
+        self.host_platform = None
         pass
 
     @abc.abstractmethod
@@ -39,9 +42,11 @@ class FrameworkBase(object):
             "exist in one benchmark. However, benchmark " + \
             "{} doesn't.".format(benchmark["name"])
         test = tests[0]
-        hostdir = self._createHostDir()
-        deepReplace(test, "{TGTDIR}", platform.getOutputDir())
-        deepReplace(test, "{HOSTDIR}", hostdir)
+
+        if self.host_platform is None:
+            self.host_platform = getHostPlatform(self.tempdir)
+
+        self._replaceStringMap(test, platform)
 
         program_files = {name: info["programs"][name]["location"]
                          for name in info["programs"]}
@@ -54,6 +59,14 @@ class FrameworkBase(object):
         programs = platform.copyFilesToPlatform(tgt_program_files)
         deepMerge(programs, host_program_files)
 
+        if "converter" in model:
+            converter_name = model["converter"]
+            assert converter_name in self.converters, \
+                "Unknown converter {}".format(converter_name)
+            converter = self.converters[converter_name]
+        else:
+            converter = None
+
         input_files = None
         if "input_files" in test:
             input_files = {name: test["input_files"][name]["location"]
@@ -63,6 +76,8 @@ class FrameworkBase(object):
         if "files" in test:
             test_files = {name: test["files"][name]["location"]
                           for name in test["files"]}
+
+        output = {}
         # Let's handle preprocess comamnd first,
         # since we will copy all files into host
         if "preprocess" in test:
@@ -89,13 +104,14 @@ class FrameworkBase(object):
                                                      programs, model,
                                                      test, model_files,
                                                      input_files, None,
-                                                     None, None)
+                                                     None, test_files)
             # run the preprocess command on host machines
             for cmd in preprocess_cmds:
                 getLogger().info("Running on Host: %s", cmd)
-                run_result, _ = processRun([cmd], shell=True)
-                if run_result:
-                    getLogger().info("Preprocessing output: %s", run_result)
+                one_output = self.runOnPlatform(-1, cmd, self.host_platform,
+                                                {},
+                                                converter)
+                deepMerge(output, one_output)
 
         if input_files:
             tgt_input_files = platform.copyFilesToPlatform(input_files)
@@ -107,16 +123,13 @@ class FrameworkBase(object):
 
         tgt_result_files = None
         if "output_files" in test:
-            tgt_result_files = {}
-            for of in test["output_files"]:
-                tgt_result_files[of] = \
-                    {name: test["output_files"][name]["location"]
-                     for name in test["output_files"]}
+            tgt_result_files = {name: test["output_files"][name]["location"]
+                                for name in test["output_files"]}
         cmds = self.composeRunCommand(test["commands"], platform,
                                       programs, model, test,
                                       tgt_model_files,
                                       tgt_input_files, tgt_result_files,
-                                      shared_libs, preprocess_files)
+                                      shared_libs, test_files)
         total_num = test["iter"]
 
         if "platform_args" in test:
@@ -139,22 +152,11 @@ class FrameworkBase(object):
             total_num = 0
             platform.killProgram(program)
 
-        if "converter" in model:
-            converter_name = model["converter"]
-            assert converter_name in self.converters, \
-                "Unknown converter {}".format(converter_name)
-            converter = self.converters[converter_name]
-        else:
-            converter = None
-        output = self.runOnPlatform(total_num, cmds, platform, platform_args,
-                                    converter)
-        output_files = None
-        if "output_files" in test:
-            target_dir = os.path.join(self.tempdir, "output")
-            shutil.rmtree(target_dir, True)
-            os.makedirs(target_dir)
-            output_files = \
-                platform.moveFilesFromPlatform(tgt_result_files, target_dir)
+        for cmd in cmds:
+            one_output = self.runOnPlatform(total_num, cmd, platform,
+                                            platform_args,
+                                            converter)
+            deepMerge(output, one_output)
 
         if test["metric"] == "power":
             collection_time = test["collection_time"] \
@@ -166,13 +168,13 @@ class FrameworkBase(object):
             # kill the process if exists
             platform.killProgram(program)
 
-        if len(output) > 0:
-            platform.delFilesFromPlatform(tgt_model_files)
-            platform.delFilesFromPlatform(program)
-            if shared_libs is not None:
-                platform.delFilesFromPlatform(shared_libs)
-            if input_files is not None:
-                platform.delFilesFromPlatform(input_files)
+        output_files = None
+        if "output_files" in test:
+            target_dir = os.path.join(self.tempdir, "output")
+            shutil.rmtree(target_dir, True)
+            os.makedirs(target_dir)
+            output_files = \
+                platform.moveFilesFromPlatform(tgt_result_files, target_dir)
 
         if "postprocess" in test:
             if "files" in test["postprocess"] and \
@@ -181,14 +183,36 @@ class FrameworkBase(object):
                     test["postprocess"]["files"]["program"]["location"]
                 os.chmod(host_program_path, 0o777)
 
-            postprocess_cmd = self.composeProcessCommand(
-                test["postprocess"], model, test, programs, model_files)
+            # will deprecate in the future
+            if "files" in test["postprocess"]:
+                postprocess_files = \
+                    {name: test["postprocess"]["files"][name]["location"]
+                     for name in test["postprocess"]["files"]}
+                deepMerge(test_files, postprocess_files)
+
+            commands = test["postprocess"]["commands"]
+            postprocess_cmds = self.composeRunCommand(commands, platform,
+                                                      programs, model,
+                                                      test, model_files,
+                                                      input_files,
+                                                      output_files,
+                                                      None, test_files)
             # run the preprocess command on host machines
-            getLogger().info(
-                "Running on Host for post-processing: %s", postprocess_cmd)
-            run_result, _ = processRun([postprocess_cmd], shell=True)
-            if run_result:
-                getLogger().info("Postprocessing output: %s", run_result)
+            for cmd in postprocess_cmds:
+                getLogger().info("Running on Host: %s", cmd)
+                one_output = self.runOnPlatform(-1, cmd, self.host_platform,
+                                                {},
+                                                converter)
+                deepMerge(output, one_output)
+
+        if len(output) > 0:
+            platform.delFilesFromPlatform(tgt_model_files)
+            platform.delFilesFromPlatform(program)
+            if shared_libs is not None:
+                platform.delFilesFromPlatform(shared_libs)
+            if input_files is not None:
+                platform.delFilesFromPlatform(input_files)
+
         return output, output_files
 
     def composeProcessCommand(self, process_info, model, test,
@@ -296,7 +320,7 @@ class FrameworkBase(object):
             for name in program_files:
                 if "{"+name+"}" in command:
                     tgt_program_files[name] = program_files[name]
-        host_program_files = {name : program_files[name]
+        host_program_files = {name: program_files[name]
                               for name in program_files
                               if name not in tgt_program_files}
         return tgt_program_files, host_program_files
@@ -309,3 +333,15 @@ class FrameworkBase(object):
             i = i + 1
         os.makedirs(hostdir, 0o777)
         return hostdir
+
+    def _replaceStringMap(self, test, platform):
+        string_map = json.loads(getArgs().string_map) \
+            if getArgs().string_map else {}
+
+        string_map["TGTDIR"] = platform.getOutputDir()
+        string_map["HOSTDIR"] = self._createHostDir()
+        string_map["FAIPEPROOT"] = getFAIPEPROOT()
+
+        for name in string_map:
+            value = string_map[name]
+            deepReplace(test, "{"+name+"}", value)

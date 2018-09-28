@@ -23,8 +23,10 @@ parser.add_argument("--image-dir", required=True,
     help="The directory of the images in imagenet database format.")
 parser.add_argument("--label-file", required=True,
     help="The file of the labels in imagenet database format.")
-parser.add_argument("--limit", type=int, default=1000000000,
+parser.add_argument("--limit-per-category", type=int,
     help="Limit the number of files to get from each folder.")
+parser.add_argument("--limit-files", type=int,
+    help="Limit the total number of files to the test set.")
 parser.add_argument("--output-image-file",
     help="The file containing the absolute path of all images.")
 parser.add_argument("--output-label-file", required=True,
@@ -74,14 +76,17 @@ class ImageLableMap(object):
                 }
                 for filename in files
             ]
-            if len(images_map) > self.args.limit:
-                if self.args.shuffle:
-                    random.shuffle(images_map)
-                images_map = images_map[:self.args.limit]
+            if self.args.shuffle:
+                random.shuffle(images_map)
+            if self.args.limit_per_category:
+                images_map = images_map[:self.args.limit_per_category]
 
             all_images_map.extend(images_map)
         if self.args.shuffle:
             random.shuffle(all_images_map)
+        if self.args.limit_files:
+            all_images_map = all_images_map[:self.args.limit_files]
+
         if self.args.output_image_file:
             with open(self.args.output_image_file, "w") as f:
                 image_files = [item["path"] for item in all_images_map]

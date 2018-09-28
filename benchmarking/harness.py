@@ -96,6 +96,10 @@ getParser().add_argument("--set_freq",
 getParser().add_argument("--shared_libs",
     help="Pass the shared libs that the framework depends on, "
     "in a comma separated list.")
+getParser().add_argument("--string_map",
+    help="A json string mapping tokens to replacement strings. "
+    "The tokens, surrended by \{\}, when appearing in the test fields of "
+    "the json file, are to be replaced with the mapped values.")
 getParser().add_argument("--timeout", default=300, type=float,
     help="Specify a timeout running the test on the platforms. "
     "The timeout value needs to be large enough so that the low end devices "
@@ -167,7 +171,7 @@ class BenchmarkDriver(object):
             threads.append(t)
         for t in threads:
             t.join()
-        shutil.rmtree(tempdir, True)
+        # shutil.rmtree(tempdir, True)
 
     def _getInfo(self):
         info = json.loads(getArgs().info)

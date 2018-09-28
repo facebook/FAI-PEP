@@ -89,6 +89,11 @@ def getString(s):
         return "'" + s + "'"
 
 
+def getFAIPEPROOT():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    root_dir = os.path.join(dir_path, "../../")
+    return os.path.abspath(root_dir)
+
 def requestsData(url, **kwargs):
     delay = 0
     total_delay = 0

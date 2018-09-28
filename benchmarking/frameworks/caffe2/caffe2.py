@@ -258,7 +258,7 @@ class Caffe2Framework(FrameworkBase):
                 else:
                     getLogger().info("No new items collected, "
                                      "finish collecting...")
-            elif num > total_num:
+            elif total_num >= 0 and num > total_num:
                 # if collect more than the needed number, get the
                 # latest entries. This may happen when the data in
                 # the previous runs are not cleared. e.g. on some

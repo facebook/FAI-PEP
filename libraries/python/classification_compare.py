@@ -27,7 +27,7 @@ parser.add_argument("--labels", required=True,
 parser.add_argument("--metric-keyword",
     help="The keyword prefix each metric so that the harness can parse.")
 parser.add_argument("--result-file",
-    help="Write the prediction result to a file for debugging purpose.")
+    help="Write the prediction result to a file.")
 parser.add_argument("--top", type=int, default=1,
     help="Integer indicating whether it is a top one or top five.")
 
@@ -46,19 +46,6 @@ class OutputCompare(object):
         with open(filename, "r") as f:
             content = f.read()
             batches = content.strip().split('\n')
-        # separate out for debugging purpose
-        '''
-        data = []
-        for batch in batches:
-            one_batch = batch.strip().split(',')
-            print(batch)
-            import pdb; pdb.set_trace()
-            one_data = []
-            for item in one_batch:
-                print(item + " <--")
-                one_data.append(float(item.strip()))
-            data.append(one_data)
-        '''
         data = [[float(item) for item in batch.strip().split(',')]
                 for batch in batches]
         return data
@@ -83,15 +70,23 @@ class OutputCompare(object):
         if self.args.metric_keyword:
             s = self.args.metric_keyword + " " + s
         print(s)
+        return entry
 
     def writeResult(self, results):
         values = [item["predict"] for item in results]
         num_corrects = sum(values)
-        percent = num_corrects * 1. / len(values)
-        self.writeOneResult(values, num_corrects,
-                            "number of corrects", "number")
-        self.writeOneResult(values, percent,
-                            "percent of corrects", "percent")
+        percent = num_corrects * 100. / len(values)
+        output = []
+        res = self.writeOneResult(values, num_corrects,
+                                  "number of corrects", "number")
+        output.append(res)
+        res = self.writeOneResult(values, percent,
+                                  "percent of corrects", "percent")
+        output.append(res)
+        if self.args.result_file:
+            s = json.dumps(output, sort_keys=True, indent=2)
+            with open(self.args.result_file, "w") as f:
+                f.write(s)
 
     def compare(self):
         benchmark_data = self.getData(self.args.benchmark_output)
