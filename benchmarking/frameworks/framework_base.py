@@ -29,7 +29,6 @@ class FrameworkBase(object):
         self.converters = getConverters()
         self.tmpdir = None
         self.host_platform = None
-        pass
 
     @abc.abstractmethod
     def getName(self):
@@ -43,7 +42,10 @@ class FrameworkBase(object):
             "exist in one benchmark. However, benchmark " + \
             "{} doesn't.".format(benchmark["name"])
         test = tests[0]
-        index = test["INDEX"]
+        index = test["INDEX"] if "INDEX" in test else 0
+        first_iteration = index == 0
+        last_iteration = (("repeat" not in model) or
+                          ("repeat" in model and index == model["repeat"] - 1))
 
         if self.host_platform is None:
             self.host_platform = getHostPlatform(self.tempdir)
@@ -54,12 +56,17 @@ class FrameworkBase(object):
                          for name in info["programs"]}
         tgt_program_files, host_program_files = \
             self._separatePrograms(program_files, test["commands"])
-        platform.preprocess(programs=program_files)
-        model_files = {name: model["files"][name]["location"]
-                       for name in model["files"]}
 
+        platform.preprocess(programs=program_files)
+        # we need to copy programs in all iterations, because this is
+        # how we get the absolute path of the programs in the target platform
+        # may consider optimize this later that only copying for the first
+        # iteration
         programs = platform.copyFilesToPlatform(tgt_program_files)
         deepMerge(programs, host_program_files)
+
+        model_files = {name: model["files"][name]["location"]
+                       for name in model["files"]}
 
         if "converter" in model:
             converter_name = model["converter"]
@@ -72,7 +79,7 @@ class FrameworkBase(object):
         log_output = {"log_output": True}
         output = {}
         # overall preprocess
-        if "preprocess" in model and index == 0:
+        if "preprocess" in model and first_iteration:
             commands = model["preprocess"]["commands"]
             self._runCommands(output, commands, self.host_platform, programs,
                               model, None, model_files, None, None, None,
@@ -121,6 +128,9 @@ class FrameworkBase(object):
         if "shared_libs" in info:
             shared_libs = platform.copyFilesToPlatform(info["shared_libs"])
 
+        # We need to copy the model files in every iteration, because this
+        # is how we get the absolute path in the target platform,
+        # will optimize that later.
         tgt_model_files = platform.copyFilesToPlatform(model_files)
 
         tgt_result_files = None
@@ -201,8 +211,7 @@ class FrameworkBase(object):
             if input_files is not None:
                 platform.delFilesFromPlatform(input_files)
 
-        if "postprocess" in model and "repeat" in model and \
-                index == model["repeat"] - 1:
+        if "postprocess" in model and last_iteration:
             commands = model["postprocess"]["commands"]
             self._runCommands(output, commands, self.host_platform, programs,
                               model, test, model_files, None, None, None, None,
