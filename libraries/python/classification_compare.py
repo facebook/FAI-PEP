@@ -30,6 +30,8 @@ parser.add_argument("--result-file",
     help="Write the prediction result to a file.")
 parser.add_argument("--top", type=int, default=1,
     help="Integer indicating whether it is a top one or top five.")
+parser.add_argument("--name", required=True,
+    help="Specify the type of the metric.")
 
 
 class OutputCompare(object):
@@ -52,7 +54,7 @@ class OutputCompare(object):
 
     def writeOneResult(self, values, data, metric, unit):
         entry = {
-            "type": "model",
+            "type": self.args.name,
             "values": values,
             "summary": {
                 "num_runs": len(values),
@@ -76,13 +78,13 @@ class OutputCompare(object):
         values = [item["predict"] for item in results]
         num_corrects = sum(values)
         percent = num_corrects * 100. / len(values)
-        output = []
+        output = {}
         res = self.writeOneResult(values, num_corrects,
-                                  "number of corrects", "number")
-        output.append(res)
+                                  "number_of_corrects", "number")
+        output[res["type"] + "_" + res["metric"]] = res
         res = self.writeOneResult(values, percent,
-                                  "percent of corrects", "percent")
-        output.append(res)
+                                  "percent_of_corrects", "percent")
+        output[res["type"] + "_" + res["metric"]] = res
         if self.args.result_file:
             s = json.dumps(output, sort_keys=True, indent=2)
             with open(self.args.result_file, "w") as f:
@@ -99,7 +101,7 @@ class OutputCompare(object):
                         "path": item[2]} for item in golden_lines]
         assert len(benchmark_data) == len(golden_data), \
             "Benchmark data has {} entries, ".format(len(benchmark_data)) + \
-            "but genden data has {} entries".format(len(golden_data))
+            "but golden data has {} entries".format(len(golden_data))
 
         def sort_key(elem):
             return elem["value"]

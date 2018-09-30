@@ -124,9 +124,14 @@ class BenchmarkDriver(object):
         self._lock = threading.Lock()
         self.success = True
 
-    def runBenchmark(self, info, platform, benchmarks, framework):
+    def runBenchmark(self, info, platform, benchmarks):
         if getArgs().reboot:
             platform.rebootDevice()
+        tempdir = tempfile.mkdtemp()
+        # we need to get a different framework instance per thread
+        # will consolidate later. For now create a new framework
+        frameworks = getFrameworks()
+        framework = frameworks[getArgs().framework](tempdir)
         reporters = getReporters()
         for idx in range(len(benchmarks)):
             benchmark = benchmarks[idx]
@@ -150,6 +155,7 @@ class BenchmarkDriver(object):
                 if "model" in benchmark and "cooldown" in benchmark["model"]:
                     cooldown = float(benchmark["model"]["cooldown"])
                 time.sleep(cooldown)
+        # shutil.rmtree(tempdir, True)
 
     def run(self):
         tempdir = tempfile.mkdtemp()
@@ -166,12 +172,12 @@ class BenchmarkDriver(object):
         threads = []
         for platform in platforms:
             t = threading.Thread(target=self.runBenchmark,
-                                 args=(info, platform, benchmarks, framework))
+                                 args=(info, platform, benchmarks))
             t.start()
             threads.append(t)
         for t in threads:
             t.join()
-        # shutil.rmtree(tempdir, True)
+        shutil.rmtree(tempdir, True)
 
     def _getInfo(self):
         info = json.loads(getArgs().info)

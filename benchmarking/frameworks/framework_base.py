@@ -20,7 +20,8 @@ from data_converters.data_converters import getConverters
 from platforms.platforms import getHostPlatform
 from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
-from utils.utilities import deepMerge, deepReplace, getFAIPEPROOT
+from utils.utilities import deepMerge, deepReplace, \
+                            getFAIPEPROOT, getString
 
 
 class FrameworkBase(object):
@@ -42,11 +43,12 @@ class FrameworkBase(object):
             "exist in one benchmark. However, benchmark " + \
             "{} doesn't.".format(benchmark["name"])
         test = tests[0]
+        index = test["INDEX"]
 
         if self.host_platform is None:
             self.host_platform = getHostPlatform(self.tempdir)
 
-        self._replaceStringMap(test, platform)
+        self._replaceStringMap(benchmark, platform)
 
         program_files = {name: info["programs"][name]["location"]
                          for name in info["programs"]}
@@ -67,6 +69,15 @@ class FrameworkBase(object):
         else:
             converter = None
 
+        log_output = {"log_output": True}
+        output = {}
+        # overall preprocess
+        if "preprocess" in model and index == 0:
+            commands = model["preprocess"]["commands"]
+            self._runCommands(output, commands, self.host_platform, programs,
+                              model, None, model_files, None, None, None,
+                              None, -1, log_output, converter)
+
         input_files = None
         if "input_files" in test:
             input_files = {name: test["input_files"][name]["location"]
@@ -77,7 +88,6 @@ class FrameworkBase(object):
             test_files = {name: test["files"][name]["location"]
                           for name in test["files"]}
 
-        output = {}
         # Let's handle preprocess comamnd first,
         # since we will copy all files into host
         if "preprocess" in test:
@@ -100,18 +110,10 @@ class FrameworkBase(object):
                 commands = test["preprocess"]["commands"]
             elif "command" in test["preprocess"]:
                 commands = [test["preprocess"]["command"]]
-            preprocess_cmds = self.composeRunCommand(commands, platform,
-                                                     programs, model,
-                                                     test, model_files,
-                                                     input_files, None,
-                                                     None, test_files)
-            # run the preprocess command on host machines
-            for cmd in preprocess_cmds:
-                getLogger().info("Running on Host: %s", cmd)
-                one_output = self.runOnPlatform(-1, cmd, self.host_platform,
-                                                {},
-                                                converter)
-                deepMerge(output, one_output)
+            self._runCommands(output, commands, self.host_platform, programs,
+                              model,
+                              test, model_files, input_files, None, None,
+                              test_files, -1, log_output, converter)
 
         if input_files:
             tgt_input_files = platform.copyFilesToPlatform(input_files)
@@ -125,11 +127,7 @@ class FrameworkBase(object):
         if "output_files" in test:
             tgt_result_files = {name: test["output_files"][name]["location"]
                                 for name in test["output_files"]}
-        cmds = self.composeRunCommand(test["commands"], platform,
-                                      programs, model, test,
-                                      tgt_model_files,
-                                      tgt_input_files, tgt_result_files,
-                                      shared_libs, test_files)
+
         total_num = test["iter"]
 
         if "platform_args" in test:
@@ -152,11 +150,10 @@ class FrameworkBase(object):
             total_num = 0
             platform.killProgram(program)
 
-        for cmd in cmds:
-            one_output = self.runOnPlatform(total_num, cmd, platform,
-                                            platform_args,
-                                            converter)
-            deepMerge(output, one_output)
+        self._runCommands(output, test["commands"], platform, programs, model,
+                          test, tgt_model_files, tgt_input_files,
+                          tgt_result_files, shared_libs, test_files,
+                          total_num, platform_args, converter)
 
         if test["metric"] == "power":
             collection_time = test["collection_time"] \
@@ -191,19 +188,10 @@ class FrameworkBase(object):
                 deepMerge(test_files, postprocess_files)
 
             commands = test["postprocess"]["commands"]
-            postprocess_cmds = self.composeRunCommand(commands, platform,
-                                                      programs, model,
-                                                      test, model_files,
-                                                      input_files,
-                                                      output_files,
-                                                      None, test_files)
-            # run the preprocess command on host machines
-            for cmd in postprocess_cmds:
-                getLogger().info("Running on Host: %s", cmd)
-                one_output = self.runOnPlatform(-1, cmd, self.host_platform,
-                                                {},
-                                                converter)
-                deepMerge(output, one_output)
+            self._runCommands(output, commands, self.host_platform, programs,
+                              model, test, model_files, input_files,
+                              output_files, None, test_files, -1, log_output,
+                              converter)
 
         if len(output) > 0:
             platform.delFilesFromPlatform(tgt_model_files)
@@ -213,29 +201,25 @@ class FrameworkBase(object):
             if input_files is not None:
                 platform.delFilesFromPlatform(input_files)
 
-        return output, output_files
+        if "postprocess" in model and "repeat" in model and \
+                index == model["repeat"] - 1:
+            commands = model["postprocess"]["commands"]
+            self._runCommands(output, commands, self.host_platform, programs,
+                              model, test, model_files, None, None, None, None,
+                              -1, log_output, converter)
 
-    def composeProcessCommand(self, process_info, model, test,
-                              programs, model_files):
-        files_db = {}
-        if "files" in process_info:
-            for f_key in process_info["files"]:
-                f_value = process_info["files"][f_key]
-                files_db[f_key] = f_value["location"]
-        return self._getReplacedCommand(process_info["command"],
-                                        files_db,
-                                        model, test, programs, model_files)
+        return output, output_files
 
     @abc.abstractmethod
     def composeRunCommand(self, commands, platform,
                           programs, model, test, model_files,
                           input_files, output_files, shared_libs,
-                          preprocess_files=None):
+                          test_files=None):
         if commands is None or not isinstance(commands, list):
             return None
         files = input_files.copy() if input_files is not None else {}
         files.update(output_files if output_files is not None else {})
-        files.update(preprocess_files if preprocess_files is not None else {})
+        files.update(test_files if test_files is not None else {})
         extra_arguments = " " + model["command_args"] \
             if "command_args" in model else ""
         composed_commands = []
@@ -273,14 +257,15 @@ class FrameworkBase(object):
                     replace = self._getMatchedString(programs, res["content"])
 
                 if replace:
-                    command = command[:res["start"]] + "'" + replace + "'" + \
+                    command = command[:res["start"]] + replace + \
                         command[res["end"]:]
         return command
 
     def _getMatchedString(self, root, match, files=None):
-        assert isinstance(root, dict), "Root must be a dictionary"
+        if not isinstance(root, dict):
+            return None
         if match in root:
-            return str(root[match])
+            return getString(root[match])
         # split on .
         fields = match.split('.')
         found = True
@@ -297,15 +282,29 @@ class FrameworkBase(object):
         if "location" in entry:
             # is a file field
             if files and fields[-1] in files:
-                return str(files[fields[-1]])
+                return getString(files[fields[-1]])
         assert isinstance(entry, string_types), "Output {}".format(entry) + \
             " is not string type"
-        return str(entry)
+        return getString(entry)
 
     @abc.abstractmethod
     def runOnPlatform(self, total_num, cmd, platform, platform_args,
                       converter):
         assert False, "Child class need to implement runOnPlatform"
+
+    def _runCommands(self, output, commands, platform, programs, model, test,
+                     model_files, input_files, output_files, shared_libs,
+                     test_files, total_num, platform_args, converter):
+        cmds = self.composeRunCommand(commands, platform,
+                                      programs, model, test,
+                                      model_files,
+                                      input_files, output_files,
+                                      shared_libs, test_files)
+        for cmd in cmds:
+            one_output = self.runOnPlatform(total_num, cmd, platform,
+                                            platform_args,
+                                            converter)
+            deepMerge(output, one_output)
 
     @abc.abstractmethod
     def verifyBenchmarkFile(self, benchmark, filename, is_post):
@@ -334,7 +333,7 @@ class FrameworkBase(object):
         os.makedirs(hostdir, 0o777)
         return hostdir
 
-    def _replaceStringMap(self, test, platform):
+    def _replaceStringMap(self, root, platform):
         string_map = json.loads(getArgs().string_map) \
             if getArgs().string_map else {}
 
@@ -344,4 +343,4 @@ class FrameworkBase(object):
 
         for name in string_map:
             value = string_map[name]
-            deepReplace(test, "{"+name+"}", value)
+            deepReplace(root, "{"+name+"}", value)

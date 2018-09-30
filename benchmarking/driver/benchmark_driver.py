@@ -25,7 +25,8 @@ def runOneBenchmark(info, benchmark, framework, platform,
     minfo = copy.deepcopy(info["treatment"])
     if "shared_libs" in info:
         minfo["shared_libs"] = info["shared_libs"]
-    try:
+    if True:
+    # try:
         data = _runOnePass(minfo, benchmark, framework, platform)
         meta = None
         if "control" in info and benchmark["tests"][0]["metric"] == "delay":
@@ -48,6 +49,7 @@ def runOneBenchmark(info, benchmark, framework, platform,
             "meta": meta,
             "data": data
         }
+    '''
     except Exception as e:
         # Catch all exceptions so that failure in one test does not
         # affect other tests
@@ -55,7 +57,7 @@ def runOneBenchmark(info, benchmark, framework, platform,
             "Exception caught when running benchmark")
         getLogger().info(e)
         data = None
-
+    '''
     if data is None or len(data) == 0:
         name = platform.getMangledName()
         model_name = ""

@@ -20,8 +20,7 @@ from .custom_logger import getLogger
 def processRun(*args, **kwargs):
     getLogger().info("Running: %s", ' '.join(*args))
     err_output = None
-    if True:
-    # try:
+    try:
         output = None
         if "non_blocking" in kwargs and kwargs["non_blocking"]:
             subprocess.Popen(*args)
@@ -33,13 +32,11 @@ def processRun(*args, **kwargs):
             # without the decode/encode the string cannot be printed out
             output = output_raw.decode("utf-8", "ignore")
         return output, None
-    '''
     except subprocess.CalledProcessError as e:
         err_output = e.output.decode("utf-8", "ignore")
         getLogger().error("Command failed: {}".format(err_output))
     except Exception:
         getLogger().error("Unknown exception {}: {}".format(sys.exc_info()[0],
                                                             ' '.join(*args)))
-        err_output = "{}".format(sys.exc_info()[2]
-    '''
+        err_output = "{}".format(sys.exc_info()[0])
     return None, err_output

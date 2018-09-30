@@ -48,9 +48,7 @@ def getPythonInterpreter():
 def deepMerge(tgt, src):
     if isinstance(src, list):
         # only handle simple lists
-        for item in src:
-            if item not in tgt:
-                tgt.append(copy.deepcopy(item))
+        tgt.extend(src)
     elif isinstance(src, dict):
         for name in src:
             m = src[name]

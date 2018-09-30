@@ -18,6 +18,7 @@ import socket
 from platforms.host.hdb import HDB
 from platforms.platform_base import PlatformBase
 from utils.arg_parse import getArgs
+from utils.custom_logger import getLogger
 from utils.subprocess_with_logger import processRun
 
 
@@ -45,9 +46,15 @@ class HostPlatform(PlatformBase):
         if not isinstance(cmd, list):
             cmd = shlex.split(cmd)
         host_kwargs = {}
-        if "platform_args" in kwargs and "timeout" in kwargs["platform_args"]:
-            host_kwargs["timeout"] = kwargs["platform_args"]["timeout"]
+        if "platform_args" in kwargs:
+            platform_args = kwargs["platform_args"]
+            if "timeout" in platform_args:
+                host_kwargs["timeout"] = platform_args["timeout"]
         output, _ = processRun(cmd, **host_kwargs)
+        if "platform_args" in kwargs:
+            platform_args = kwargs["platform_args"]
+            if "log_output" in platform_args and platform_args["log_output"]:
+                getLogger().info(output)
         return output
 
     def _getProcessorName(self):
