@@ -75,15 +75,18 @@ class OutputCompare(object):
         return entry
 
     def writeResult(self, results):
+        top = "top{}".format(str(self.args.top))
         values = [item["predict"] for item in results]
         num_corrects = sum(values)
         percent = num_corrects * 100. / len(values)
         output = {}
         res = self.writeOneResult(values, num_corrects,
-                                  "number_of_corrects", "number")
+                                  "number_of_{}_corrects".format(top),
+                                  "number")
         output[res["type"] + "_" + res["metric"]] = res
         res = self.writeOneResult(values, percent,
-                                  "percent_of_corrects", "percent")
+                                  "percent_of_{}_corrects".format(top),
+                                  "percent")
         output[res["type"] + "_" + res["metric"]] = res
         if self.args.result_file:
             s = json.dumps(output, sort_keys=True, indent=2)

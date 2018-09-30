@@ -85,15 +85,12 @@ class FrameworkBase(object):
                               model, None, model_files, None, None, None,
                               None, -1, log_output, converter)
 
-        input_files = None
-        if "input_files" in test:
-            input_files = {name: test["input_files"][name]["location"]
-                           for name in test["input_files"]}
+        input_files = {name: test["input_files"][name]["location"]
+                       for name in test["input_files"]} \
+            if "input_files" in test else None
 
-        test_files = {}
-        if "files" in test:
-            test_files = {name: test["files"][name]["location"]
-                          for name in test["files"]}
+        test_files = {name: test["files"][name]["location"]
+                      for name in test["files"]} if "files" in test else {}
 
         # Let's handle preprocess comamnd first,
         # since we will copy all files into host
@@ -122,8 +119,8 @@ class FrameworkBase(object):
                               test, model_files, input_files, None, None,
                               test_files, -1, log_output, converter)
 
-        if input_files:
-            tgt_input_files = platform.copyFilesToPlatform(input_files)
+        tgt_input_files = platform.copyFilesToPlatform(input_files) \
+            if input_files else None
         shared_libs = None
         if "shared_libs" in info:
             shared_libs = platform.copyFilesToPlatform(info["shared_libs"])

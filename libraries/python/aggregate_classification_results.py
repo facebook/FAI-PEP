@@ -14,6 +14,7 @@
 import argparse
 import json
 import os
+import re
 
 
 parser = argparse.ArgumentParser(description="Aggregate output results")
@@ -67,12 +68,16 @@ class AggregateOutputs(object):
                     results[key] = value
                 else:
                     results[key]["values"].extend(value["values"])
+        pattern = re.compile("(\w+)_of_top(\d+)_corrects")
         # finally patch up the summary
         for res in results:
             one_result = results[res]
-            one_result["type"] = "total_" + one_result["type"]
+            one_result["type"] = one_result["type"]
             values = one_result["values"]
-            if one_result["metric"] == "number_of_corrects":
+            match = pattern.match(one_result["metric"])
+            if not match:
+                continue
+            if match.group(1) == "number":
                 data = sum(values)
                 one_result["summary"] = {
                     "num_runs": len(values),
@@ -83,7 +88,7 @@ class AggregateOutputs(object):
                     "p100": data,
                     "mean": data,
                 }
-            elif one_result["metric"] == "percent_of_corrects":
+            elif match.group(1) == "percent":
                 data = sum(values) * 100. / len(values)
                 one_result["summary"] = {
                     "num_runs": len(values),
@@ -94,6 +99,7 @@ class AggregateOutputs(object):
                     "p100": data,
                     "mean": data,
                 }
+            one_result["metric"] = "total_" + one_result["metric"]
             # there may be too many values, only keep the summary
             if len(values) > 200:
                 del one_result["values"]
