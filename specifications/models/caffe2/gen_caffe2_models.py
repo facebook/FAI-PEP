@@ -183,14 +183,8 @@ json_template = {
   },
   "tests": [
     {
-      "commands": {
-        "caffe2": {
-          "run_individual": "true"
-        }
-      },
+      "command": "{program} --net {files.predict} --init_net {files.init} --warmup {warmup} --iter {iter} --input \"data\" --input_dims \"1,3,224,224\" --input_type float --run_individual true",
       "identifier": "{ID}",
-      "inputs": {
-      },
       "iter": 50,
       "metric": "delay",
       "warmup": 1

@@ -25,10 +25,14 @@ from reporters.reporters import getReporters
 from utils.arg_parse import getParser, getArgs, parseKnown
 from utils.custom_logger import getLogger
 
+# for backward compatible purpose
 getParser().add_argument("--backend",
     help="Specify the backend the test runs on.")
 getParser().add_argument("-b", "--benchmark_file", required=True,
     help="Specify the json file for the benchmark or a number of benchmarks")
+getParser().add_argument("--command_args",
+    help="Specify optional command arguments that would go with the "
+    "main benchmark command")
 getParser().add_argument("--cooldown", default=0, type=float,
     help = "Specify the time interval between two test runs.")
 getParser().add_argument("--device",
@@ -102,6 +106,7 @@ getParser().add_argument("--timeout", default=300, type=float,
 getParser().add_argument("--user_identifier",
     help="User can specify an identifier and that will be passed to the "
     "output so that the result can be easily identified.")
+# for backward compabile purpose
 getParser().add_argument("--wipe_cache", default=False,
     help="Specify whether to evict cache or not before running")
 getParser().add_argument("--hash_platform_mapping",
@@ -169,16 +174,18 @@ class BenchmarkDriver(object):
     def _getInfo(self):
         info = json.loads(getArgs().info)
         info["run_type"] = "benchmark"
+        if "meta" not in info:
+            info["meta"] = {}
+        info["meta"]["command_args"] = getArgs().command_args \
+            if getArgs().command_args else ""
+
+        # for backward compatible purpose
         if getArgs().backend:
-            info["commands"] = {}
-            info["commands"][getArgs().framework] = {
-                "backend": getArgs().backend
-            }
+            info["meta"]["command_args"] += \
+                " --backend {}".format(getArgs().backend)
         if getArgs().wipe_cache:
-            if "commands" not in info:
-                info["commands"] = {getArgs().framework: {}}
-            info["commands"][getArgs().framework]["wipe_cache"] = \
-                    getArgs().wipe_cache
+            info["meta"]["command_args"] += \
+                " --wipe_cache {}".format(getArgs().wipe_cache)
         if getArgs().user_string:
             info["user"] = getArgs().user_string
 
