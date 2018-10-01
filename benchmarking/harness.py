@@ -50,6 +50,8 @@ getParser().add_argument("--info", required=True,
     help="The json serialized options describing the control and treatment.")
 getParser().add_argument("--local_reporter",
     help="Save the result to a directory specified by this argument.")
+getParser().add_argument("--monsoon_map",
+    help="Map the phone hash to the monsoon serial number.")
 getParser().add_argument("--simple_local_reporter",
     help="Same as local reporter, but the directory hierarchy is reduced.")
 getParser().add_argument("--model_cache", required=True,

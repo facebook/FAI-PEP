@@ -74,8 +74,8 @@ class TFLiteFramework(FrameworkBase):
             "--input_layer_shape={}".format(input_shape)
         ]
 
-        cmd = ' '.join([str(s) for s in cmd])
-        return [cmd]
+        cmd = [str(s) for s in cmd]
+        return cmd
 
     def runOnPlatform(self, total_num, cmd, platform, platform_args,
                       converter_class):

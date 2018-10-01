@@ -167,7 +167,8 @@ class FrameworkBase(object):
                 if "collection_time" in test else 180
             voltage = float(test["voltage"]) if "voltage" in test else 4.0
             from utils.monsoon_power import collectPowerData
-            output = collectPowerData(collection_time, voltage, test["iter"])
+            output = collectPowerData(platform.platform_hash,
+                                      collection_time, voltage, test["iter"])
             platform.waitForDevice(20)
             # kill the process if exists
             platform.killProgram(program)
