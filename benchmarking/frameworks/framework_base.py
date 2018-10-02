@@ -9,6 +9,7 @@
 ##############################################################################
 
 import abc
+import json
 import os
 import re
 import shutil
@@ -16,14 +17,18 @@ from six import string_types
 import sys
 
 from data_converters.data_converters import getConverters
+from platforms.platforms import getHostPlatform
+from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
-from utils.subprocess_with_logger import processRun
+from utils.utilities import deepMerge, deepReplace, \
+                            getFAIPEPROOT, getString
 
 
 class FrameworkBase(object):
     def __init__(self):
         self.converters = getConverters()
-        pass
+        self.tmpdir = None
+        self.host_platform = None
 
     @abc.abstractmethod
     def getName(self):
@@ -31,20 +36,62 @@ class FrameworkBase(object):
 
     @abc.abstractmethod
     def runBenchmark(self, info, benchmark, platform):
-        program_files = {name: info["programs"][name]["location"]
-                         for name in info["programs"]}
-        platform.preprocess(programs=program_files)
         model = benchmark["model"]
         tests = benchmark["tests"]
         assert len(tests) == 1, "At this point, only one test should " + \
             "exist in one benchmark. However, benchmark " + \
             "{} doesn't.".format(benchmark["name"])
+        test = tests[0]
+        index = test["INDEX"] if "INDEX" in test else 0
+        first_iteration = index == 0
+        last_iteration = (("repeat" not in model) or
+                          ("repeat" in model and index == model["repeat"] - 1))
+
+        if self.host_platform is None:
+            self.host_platform = getHostPlatform(self.tempdir)
+
+        self._replaceStringMap(benchmark, platform)
+
+        program_files = {name: info["programs"][name]["location"]
+                         for name in info["programs"]}
+        tgt_program_files, host_program_files = \
+            self._separatePrograms(program_files, test["commands"])
+
+        platform.preprocess(programs=program_files)
+        # we need to copy programs in all iterations, because this is
+        # how we get the absolute path of the programs in the target platform
+        # may consider optimize this later that only copying for the first
+        # iteration
+        programs = platform.copyFilesToPlatform(tgt_program_files)
+        deepMerge(programs, host_program_files)
+
         model_files = {name: model["files"][name]["location"]
                        for name in model["files"]}
 
-        programs = platform.copyFilesToPlatform(program_files)
-        test = tests[0]
-        preprocess_files = None
+        if "converter" in model:
+            converter_name = model["converter"]
+            assert converter_name in self.converters, \
+                "Unknown converter {}".format(converter_name)
+            converter = self.converters[converter_name]
+        else:
+            converter = None
+
+        log_output = {"log_output": True}
+        output = {}
+        # overall preprocess
+        if "preprocess" in model and first_iteration:
+            commands = model["preprocess"]["commands"]
+            self._runCommands(output, commands, self.host_platform, programs,
+                              model, None, model_files, None, None, None,
+                              None, -1, log_output, converter)
+
+        input_files = {name: test["input_files"][name]["location"]
+                       for name in test["input_files"]} \
+            if "input_files" in test else None
+
+        test_files = {name: test["files"][name]["location"]
+                      for name in test["files"]} if "files" in test else {}
+
         # Let's handle preprocess comamnd first,
         # since we will copy all files into host
         if "preprocess" in test:
@@ -56,38 +103,38 @@ class FrameworkBase(object):
                     test["preprocess"]["files"]["program"]["location"]
                 os.chmod(host_program_path, 0o777)
 
-            preprocess_cmd = self.composeProcessCommand(
-                test["preprocess"], model, test, programs, model_files)
-            # run the preprocess command on host machines
-            getLogger().info("Running on Host: %s", preprocess_cmd)
-            run_result, _ = processRun([preprocess_cmd], shell=True)
-            if run_result:
-                getLogger().info("Preprocessing output: %s", run_result)
-            # copy all files into platform
-            preprocess_files = \
-                {name: test["preprocess"]["files"][name]["location"]
-                 for name in test["preprocess"]["files"]}
-            preprocess_files = platform.copyFilesToPlatform(preprocess_files)
+            # will deprecate in the future
+            if "files" in test["preprocess"]:
+                preprocess_files = \
+                    {name: test["preprocess"]["files"][name]["location"]
+                     for name in test["preprocess"]["files"]}
+                deepMerge(test_files, preprocess_files)
 
+            if "commands" in test["preprocess"]:
+                commands = test["preprocess"]["commands"]
+            elif "command" in test["preprocess"]:
+                commands = [test["preprocess"]["command"]]
+            self._runCommands(output, commands, self.host_platform, programs,
+                              model,
+                              test, model_files, input_files, None, None,
+                              test_files, -1, log_output, converter)
+
+        tgt_input_files = platform.copyFilesToPlatform(input_files) \
+            if input_files else None
         shared_libs = None
         if "shared_libs" in info:
             shared_libs = platform.copyFilesToPlatform(info["shared_libs"])
 
-        model_files = platform.copyFilesToPlatform(model_files)
-        input_files = None
-        if "input_files" in test:
-            input_files = {name: test["input_files"][name]["location"]
-                           for name in test["input_files"]}
-            input_files = platform.copyFilesToPlatform(input_files)
-        result_files = None
+        # We need to copy the model files in every iteration, because this
+        # is how we get the absolute path in the target platform,
+        # will optimize that later.
+        tgt_model_files = platform.copyFilesToPlatform(model_files)
+
+        tgt_result_files = None
         if "output_files" in test:
-            result_files = {}
-            for of in test["output_files"]:
-                result_files[of] = os.path.join(platform.getOutputDir(),
-                                                of + ".txt")
-        cmd = self.composeRunCommand(platform, programs, model, test,
-                                     model_files, input_files, result_files,
-                                     shared_libs, preprocess_files)
+            tgt_result_files = {name: test["output_files"][name]["location"]
+                                for name in test["output_files"]}
+
         total_num = test["iter"]
 
         if "platform_args" in test:
@@ -110,15 +157,10 @@ class FrameworkBase(object):
             total_num = 0
             platform.killProgram(program)
 
-        if "converter" in model:
-            converter_name = model["converter"]
-            assert converter_name in self.converters, \
-                "Unknown converter {}".format(converter_name)
-            converter = self.converters[converter_name]
-        else:
-            converter = None
-        output = self.runOnPlatform(total_num, cmd, platform, platform_args,
-                                    converter)
+        self._runCommands(output, test["commands"], platform, programs, model,
+                          test, tgt_model_files, tgt_input_files,
+                          tgt_result_files, shared_libs, test_files,
+                          total_num, platform_args, converter)
 
         if test["metric"] == "power":
             collection_time = test["collection_time"] \
@@ -137,15 +179,7 @@ class FrameworkBase(object):
             shutil.rmtree(target_dir, True)
             os.makedirs(target_dir)
             output_files = \
-                platform.moveFilesFromPlatform(result_files, target_dir)
-
-        if len(output) > 0:
-            platform.delFilesFromPlatform(model_files)
-            platform.delFilesFromPlatform(program)
-            if shared_libs is not None:
-                platform.delFilesFromPlatform(shared_libs)
-            if input_files is not None:
-                platform.delFilesFromPlatform(input_files)
+                platform.moveFilesFromPlatform(tgt_result_files, target_dir)
 
         if "postprocess" in test:
             if "files" in test["postprocess"] and \
@@ -154,79 +188,91 @@ class FrameworkBase(object):
                     test["postprocess"]["files"]["program"]["location"]
                 os.chmod(host_program_path, 0o777)
 
-            postprocess_cmd = self.composeProcessCommand(
-                test["postprocess"], model, test, programs, model_files)
-            # run the preprocess command on host machines
-            getLogger().info(
-                "Running on Host for post-processing: %s", postprocess_cmd)
-            run_result, _ = processRun([postprocess_cmd], shell=True)
-            if run_result:
-                getLogger().info("Postprocessing output: %s", run_result)
+            # will deprecate in the future
+            if "files" in test["postprocess"]:
+                postprocess_files = \
+                    {name: test["postprocess"]["files"][name]["location"]
+                     for name in test["postprocess"]["files"]}
+                deepMerge(test_files, postprocess_files)
+
+            commands = test["postprocess"]["commands"]
+            self._runCommands(output, commands, self.host_platform, programs,
+                              model, test, model_files, input_files,
+                              output_files, None, test_files, -1, log_output,
+                              converter)
+
+        if len(output) > 0:
+            platform.delFilesFromPlatform(tgt_model_files)
+            platform.delFilesFromPlatform(program)
+            if shared_libs is not None:
+                platform.delFilesFromPlatform(shared_libs)
+            if input_files is not None:
+                platform.delFilesFromPlatform(input_files)
+
+        if "postprocess" in model and last_iteration:
+            commands = model["postprocess"]["commands"]
+            self._runCommands(output, commands, self.host_platform, programs,
+                              model, test, model_files, None, None, None, None,
+                              -1, log_output, converter)
+
         return output, output_files
 
-    def composeProcessCommand(self, process_info, model, test,
-                              programs, model_files):
-        files_db = {"process": {"files": {}}}
-        for f_key in process_info["files"]:
-            f_value = process_info["files"][f_key]
-            files_db["process"]["files"][f_key] = f_value["location"]
-        return self._getReplacedCommand(process_info["command"],
-                                        files_db["process"]["files"],
-                                        model, test, programs, model_files)
-
     @abc.abstractmethod
-    def composeRunCommand(self, platform, programs, model, test, model_files,
+    def composeRunCommand(self, commands, platform,
+                          programs, model, test, model_files,
                           input_files, output_files, shared_libs,
-                          preprocess_files=None):
-        if "arguments" not in test and "command" not in test:
+                          test_files=None):
+        if commands is None or not isinstance(commands, list):
             return None
         files = input_files.copy() if input_files is not None else {}
         files.update(output_files if output_files is not None else {})
-        files.update(preprocess_files if preprocess_files is not None else {})
-        extra_arguments = model["command_args"] \
+        files.update(test_files if test_files is not None else {})
+        extra_arguments = " " + model["command_args"] \
             if "command_args" in model else ""
-        if "arguments" in test:
-            command = test["arguments"]
+        composed_commands = []
+        for command in commands:
+            more_args = extra_arguments if "{program}" in command else ""
             command = self._getReplacedCommand(command, files, model, test,
                                                programs, model_files)
-            if "program" in programs:
-                command = '"' + programs["program"] + '" ' + command
-        else:
-            command = test["command"]
-            command = self._getReplacedCommand(command, files, model, test,
-                                               programs, model_files)
-        command += " " + extra_arguments
-        return command
+            command += more_args
+            composed_commands.append(command)
+        return composed_commands
 
     def _getReplacedCommand(self, command, files, model, test,
                             programs, model_files):
         pattern = re.compile("\{([\w|\.]+)\}")
-        results = []
-        for m in pattern.finditer(command):
-            results.append({
-                "start": m.start(),
-                "end": m.end(),
-                "content": m.group(1)
-            })
-        results.reverse()
-        for res in results:
-            replace = self._getMatchedString(test, res["content"], files)
-            if replace is None:
-                # TODO: handle shared libraries
-                replace = self._getMatchedString(model, res["content"],
-                                                 model_files)
-            if replace is None:
-                replace = self._getMatchedString(programs, res["content"])
+        prev_count = 1000000
+        while True:
+            results = []
+            for m in pattern.finditer(command):
+                results.append({
+                    "start": m.start(),
+                    "end": m.end(),
+                    "content": m.group(1)
+                })
+            if len(results) == prev_count:
+                break
+            prev_count = len(results)
+            results.reverse()
+            for res in results:
+                replace = self._getMatchedString(test, res["content"], files)
+                if replace is None:
+                    # TODO: handle shared libraries
+                    replace = self._getMatchedString(model, res["content"],
+                                                     model_files)
+                if replace is None:
+                    replace = self._getMatchedString(programs, res["content"])
 
-            if replace:
-                command = command[:res["start"]] + "'" + replace + "'" + \
-                    command[res["end"]:]
+                if replace:
+                    command = command[:res["start"]] + replace + \
+                        command[res["end"]:]
         return command
 
     def _getMatchedString(self, root, match, files=None):
-        assert isinstance(root, dict), "Root must be a dictionary"
+        if not isinstance(root, dict):
+            return None
         if match in root:
-            return str(root[match])
+            return getString(root[match])
         # split on .
         fields = match.split('.')
         found = True
@@ -243,15 +289,29 @@ class FrameworkBase(object):
         if "location" in entry:
             # is a file field
             if files and fields[-1] in files:
-                return str(files[fields[-1]])
+                return getString(files[fields[-1]])
         assert isinstance(entry, string_types), "Output {}".format(entry) + \
             " is not string type"
-        return str(entry)
+        return getString(entry)
 
     @abc.abstractmethod
     def runOnPlatform(self, total_num, cmd, platform, platform_args,
                       converter):
         assert False, "Child class need to implement runOnPlatform"
+
+    def _runCommands(self, output, commands, platform, programs, model, test,
+                     model_files, input_files, output_files, shared_libs,
+                     test_files, total_num, platform_args, converter):
+        cmds = self.composeRunCommand(commands, platform,
+                                      programs, model, test,
+                                      model_files,
+                                      input_files, output_files,
+                                      shared_libs, test_files)
+        for cmd in cmds:
+            one_output = self.runOnPlatform(total_num, cmd, platform,
+                                            platform_args,
+                                            converter)
+            deepMerge(output, one_output)
 
     @abc.abstractmethod
     def verifyBenchmarkFile(self, benchmark, filename, is_post):
@@ -259,3 +319,35 @@ class FrameworkBase(object):
 
     def rewriteBenchmarkTests(self, benchmark, filename):
         pass
+
+    def _separatePrograms(self, program_files, commands):
+        tgt_program_files = {}
+        for command in commands:
+            for name in program_files:
+                if "{"+name+"}" in command:
+                    tgt_program_files[name] = program_files[name]
+        host_program_files = {name: program_files[name]
+                              for name in program_files
+                              if name not in tgt_program_files}
+        return tgt_program_files, host_program_files
+
+    def _createHostDir(self):
+        hostdir = os.path.join(self.tempdir, "host")
+        i = 0
+        while os.path.exists(hostdir):
+            hostdir = os.path.join(self.tempdir, "host" + str(i))
+            i = i + 1
+        os.makedirs(hostdir, 0o777)
+        return hostdir
+
+    def _replaceStringMap(self, root, platform):
+        string_map = json.loads(getArgs().string_map) \
+            if getArgs().string_map else {}
+
+        string_map["TGTDIR"] = platform.getOutputDir()
+        string_map["HOSTDIR"] = self._createHostDir()
+        string_map["FAIPEPROOT"] = getFAIPEPROOT()
+
+        for name in string_map:
+            value = string_map[name]
+            deepReplace(root, "{"+name+"}", value)

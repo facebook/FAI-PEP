@@ -27,9 +27,11 @@ parser.add_argument("--labels", required=True,
 parser.add_argument("--metric-keyword",
     help="The keyword prefix each metric so that the harness can parse.")
 parser.add_argument("--result-file",
-    help="Write the prediction result to a file for debugging purpose.")
+    help="Write the prediction result to a file.")
 parser.add_argument("--top", type=int, default=1,
     help="Integer indicating whether it is a top one or top five.")
+parser.add_argument("--name", required=True,
+    help="Specify the type of the metric.")
 
 
 class OutputCompare(object):
@@ -46,26 +48,13 @@ class OutputCompare(object):
         with open(filename, "r") as f:
             content = f.read()
             batches = content.strip().split('\n')
-        # separate out for debugging purpose
-        '''
-        data = []
-        for batch in batches:
-            one_batch = batch.strip().split(',')
-            print(batch)
-            import pdb; pdb.set_trace()
-            one_data = []
-            for item in one_batch:
-                print(item + " <--")
-                one_data.append(float(item.strip()))
-            data.append(one_data)
-        '''
         data = [[float(item) for item in batch.strip().split(',')]
                 for batch in batches]
         return data
 
     def writeOneResult(self, values, data, metric, unit):
         entry = {
-            "type": "model",
+            "type": self.args.name,
             "values": values,
             "summary": {
                 "num_runs": len(values),
@@ -83,15 +72,26 @@ class OutputCompare(object):
         if self.args.metric_keyword:
             s = self.args.metric_keyword + " " + s
         print(s)
+        return entry
 
     def writeResult(self, results):
+        top = "top{}".format(str(self.args.top))
         values = [item["predict"] for item in results]
         num_corrects = sum(values)
-        percent = num_corrects * 1. / len(values)
-        self.writeOneResult(values, num_corrects,
-                            "number of corrects", "number")
-        self.writeOneResult(values, percent,
-                            "percent of corrects", "percent")
+        percent = num_corrects * 100. / len(values)
+        output = {}
+        res = self.writeOneResult(values, num_corrects,
+                                  "number_of_{}_corrects".format(top),
+                                  "number")
+        output[res["type"] + "_" + res["metric"]] = res
+        res = self.writeOneResult(values, percent,
+                                  "percent_of_{}_corrects".format(top),
+                                  "percent")
+        output[res["type"] + "_" + res["metric"]] = res
+        if self.args.result_file:
+            s = json.dumps(output, sort_keys=True, indent=2)
+            with open(self.args.result_file, "w") as f:
+                f.write(s)
 
     def compare(self):
         benchmark_data = self.getData(self.args.benchmark_output)
@@ -104,7 +104,7 @@ class OutputCompare(object):
                         "path": item[2]} for item in golden_lines]
         assert len(benchmark_data) == len(golden_data), \
             "Benchmark data has {} entries, ".format(len(benchmark_data)) + \
-            "but genden data has {} entries".format(len(golden_data))
+            "but golden data has {} entries".format(len(golden_data))
 
         def sort_key(elem):
             return elem["value"]

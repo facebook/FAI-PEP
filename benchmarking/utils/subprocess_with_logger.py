@@ -38,5 +38,5 @@ def processRun(*args, **kwargs):
     except Exception:
         getLogger().error("Unknown exception {}: {}".format(sys.exc_info()[0],
                                                             ' '.join(*args)))
-        err_output = "{}".format(sys.exc_info()[2].decode("utf-8", "ignore"))
+        err_output = "{}".format(sys.exc_info()[0])
     return None, err_output
