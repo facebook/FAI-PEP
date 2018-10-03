@@ -15,8 +15,8 @@ from platforms.platform_util_base import PlatformUtilBase
 
 
 class HDB(PlatformUtilBase):
-    def __init__(self, device=None):
-        super(HDB, self).__init__(device)
+    def __init__(self, device=None, tempdir=None):
+        super(HDB, self).__init__(device, tempdir)
 
     def push(self, src, tgt):
         if src != tgt:
