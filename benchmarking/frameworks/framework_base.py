@@ -54,10 +54,13 @@ class FrameworkBase(object):
 
         program_files = {name: info["programs"][name]["location"]
                          for name in info["programs"]}
+        # better to be before target program files separation.
+        # this way, in ios, the platform may not be copied to the target.
+        platform.preprocess(programs=program_files)
+
         tgt_program_files, host_program_files = \
             self._separatePrograms(program_files, test["commands"])
 
-        platform.preprocess(programs=program_files)
         # we need to copy programs in all iterations, because this is
         # how we get the absolute path of the programs in the target platform
         # may consider optimize this later that only copying for the first
@@ -173,6 +176,17 @@ class FrameworkBase(object):
             # kill the process if exists
             platform.killProgram(program)
 
+        # remove the files before copying out the output files
+        # this will save some time in ios platform, since in ios
+        # all files are copied back to the host system
+        if len(output) > 0:
+            platform.delFilesFromPlatform(tgt_model_files)
+            platform.delFilesFromPlatform(program)
+            if shared_libs is not None:
+                platform.delFilesFromPlatform(shared_libs)
+            if input_files is not None:
+                platform.delFilesFromPlatform(input_files)
+
         output_files = None
         if "output_files" in test:
             target_dir = os.path.join(self.tempdir, "output")
@@ -200,14 +214,6 @@ class FrameworkBase(object):
                               model, test, model_files, input_files,
                               output_files, None, test_files, -1, log_output,
                               converter)
-
-        if len(output) > 0:
-            platform.delFilesFromPlatform(tgt_model_files)
-            platform.delFilesFromPlatform(program)
-            if shared_libs is not None:
-                platform.delFilesFromPlatform(shared_libs)
-            if input_files is not None:
-                platform.delFilesFromPlatform(input_files)
 
         if "postprocess" in model and last_iteration:
             commands = model["postprocess"]["commands"]

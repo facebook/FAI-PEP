@@ -14,8 +14,9 @@ from utils.subprocess_with_logger import processRun
 
 
 class PlatformUtilBase(object):
-    def __init__(self, device=None):
+    def __init__(self, device=None, tempdir=None):
         self.device = device
+        self.tempdir = tempdir
 
     def run(self, *args, **kwargs):
         cmd = []

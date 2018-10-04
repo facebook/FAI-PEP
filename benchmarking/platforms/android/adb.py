@@ -16,8 +16,8 @@ from utils.custom_logger import getLogger
 
 
 class ADB(PlatformUtilBase):
-    def __init__(self, device=None):
-        super(ADB, self).__init__(device)
+    def __init__(self, device=None, tempdir=None):
+        super(ADB, self).__init__(device, tempdir)
 
     def run(self, *args, **kwargs):
         adb = ["adb"]
