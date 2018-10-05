@@ -65,9 +65,9 @@ A few key items in the specifications
 * In some field, such as `identifier`, you may find some string like `{ID}`. This is a placeholder to be replaced by the benchmarking tool to differentiate multiple test runs specified in one test specification, as in the above item.
 
 ## Run benchmark
-To run the benchmark, you need to run `run_bench.py`, given a model meta data or a benchmark meta data. An example of the command is:
+To run the benchmark, you need to run `run_bench.py`, given a model meta data or a benchmark meta data. An example of the command is the following (when running under FAI-PEP directory):
 ```
-run_bench.py -b caffe2-benchmarking/specifications/models/caffe2/shufflenet/shufflenet.json
+benchmarking/run_bench.py -b specifications/models/caffe2/shufflenet/shufflenet.json
 ```
 When you run the command for the first time, you are asked several questions. The answers to those questions, together with other sensible defaults, are saved in a config file: `~/.aibench/git/config.txt`. You can edit the file to update your default arguments.
 
