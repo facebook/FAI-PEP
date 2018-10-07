@@ -160,6 +160,9 @@ class FrameworkBase(object):
             total_num = 0
             platform.killProgram(program)
 
+        if test.get("log_output", False):
+            platform_args["log_output"] = True
+
         self._runCommands(output, test["commands"], platform, programs, model,
                           test, tgt_model_files, tgt_input_files,
                           tgt_result_files, shared_libs, test_files,
