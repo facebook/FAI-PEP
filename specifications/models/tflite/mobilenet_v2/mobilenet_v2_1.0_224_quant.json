@@ -15,56 +15,72 @@
   },
   "tests": [
     {
-      "command": "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=1",
+      "commands": [
+        "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=1"
+      ],
       "identifier": "mobilenet_v2_1.0_224_quant-1-thread",
       "iter": 50,
       "metric": "delay",
       "warmup": 1
     },
     {
-      "command": "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=2",
+      "commands": [
+        "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=2"
+      ],
       "identifier": "mobilenet_v2_1.0_224_quant-2-threads",
       "iter": 50,
       "metric": "delay",
       "warmup": 1
     },
     {
-      "command": "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=3",
+      "commands": [
+        "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=3"
+      ],
       "identifier": "mobilenet_v2_1.0_224_quant-3-threads",
       "iter": 50,
       "metric": "delay",
       "warmup": 1
     },
     {
-      "command": "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=4",
+      "commands": [
+        "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=4"
+      ],
       "identifier": "mobilenet_v2_1.0_224_quant-4-threads",
       "iter": 50,
       "metric": "delay",
       "warmup": 1
     },
     {
-      "command": "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=5",
+      "commands": [
+        "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=5"
+      ],
       "identifier": "mobilenet_v2_1.0_224_quant-5-threads",
       "iter": 50,
       "metric": "delay",
       "warmup": 1
     },
     {
-      "command": "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=6",
+      "commands": [
+        "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=6"
+      ],
       "identifier": "mobilenet_v2_1.0_224_quant-6-threads",
       "iter": 50,
       "metric": "delay",
       "warmup": 1
     },
     {
-      "command": "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=7",
+      "commands": [
+        "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=7"
+      ],
       "identifier": "mobilenet_v2_1.0_224_quant-7-threads",
       "iter": 50,
       "metric": "delay",
       "warmup": 1
     },
     {
-      "command": "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=8",
+      "commands": [
+        "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=8"
+      ],
       "identifier": "mobilenet_v2_1.0_224_quant-8-threads",
       "iter": 50,
       "metric": "delay",

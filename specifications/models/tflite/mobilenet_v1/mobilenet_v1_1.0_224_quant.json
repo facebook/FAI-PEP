@@ -14,7 +14,9 @@
   },
   "tests": [
     {
-      "arguments": "--graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,244,244,3\" --num_threads=4",
+      "commands": [
+        "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,244,244,3\" --num_threads=4"
+      ],
       "identifier": "mobilenet_v1_1.0_224_quant-4-threads",
       "iter": 50,
       "metric": "delay",
