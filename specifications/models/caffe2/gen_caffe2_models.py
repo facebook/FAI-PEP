@@ -183,7 +183,9 @@ json_template = {
   },
   "tests": [
     {
-      "command": "{program} --net {files.predict} --init_net {files.init} --warmup {warmup} --iter {iter} --input \"data\" --input_dims \"1,3,224,224\" --input_type float --run_individual true",
+      "commands": [
+        "{program} --net {files.predict} --init_net {files.init} --warmup {warmup} --iter {iter} --input \"data\" --input_dims \"1,3,224,224\" --input_type float --run_individual true"
+      ],
       "identifier": "{ID}",
       "iter": 50,
       "metric": "delay",
