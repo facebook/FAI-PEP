@@ -35,6 +35,8 @@ getParser().add_argument("--command_args",
     "main benchmark command")
 getParser().add_argument("--cooldown", default=0, type=float,
     help = "Specify the time interval between two test runs.")
+getParser().add_argument("--debug", action="store_true",
+    help="Debug mode to retain all the running binaries and models.")
 getParser().add_argument("--device",
     help="The single device to run this benchmark on")
 getParser().add_argument("-d", "--devices",
@@ -145,6 +147,10 @@ class BenchmarkDriver(object):
                     "{} ".format(benchmark["model"]["framework"]) + \
                     "does not match the command line argument " \
                     "{}".format(getArgs().framework)
+            if getArgs().debug:
+                for test in benchmark["tests"]:
+                    test["log_output"] = True
+
             b = copy.deepcopy(benchmark)
             i = copy.deepcopy(info)
             success = runOneBenchmark(i, b, framework, platform,
@@ -179,7 +185,9 @@ class BenchmarkDriver(object):
             threads.append(t)
         for t in threads:
             t.join()
-        shutil.rmtree(tempdir, True)
+
+        if not getArgs().debug:
+            shutil.rmtree(tempdir, True)
 
     def _getInfo(self):
         info = json.loads(getArgs().info)
