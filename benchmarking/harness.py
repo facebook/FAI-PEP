@@ -147,6 +147,10 @@ class BenchmarkDriver(object):
                     "{} ".format(benchmark["model"]["framework"]) + \
                     "does not match the command line argument " \
                     "{}".format(getArgs().framework)
+            if getArgs().debug:
+                for test in benchmark["tests"]:
+                    test["log_output"] = True
+
             b = copy.deepcopy(benchmark)
             i = copy.deepcopy(info)
             success = runOneBenchmark(i, b, framework, platform,
