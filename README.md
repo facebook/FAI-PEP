@@ -1,6 +1,6 @@
 # Facebook AI Performance Evaluation Platform
 
-Facebook AI Performance Evaluation Platform is a framework and backend agnostic benchmarking platform to compare machine learning inferencing runtime metrics on a set of models and a variety of backends. It also provides a means to check performance regressions on each commit.
+Facebook AI Performance Evaluation Platform is a framework and backend agnostic benchmarking platform to compare machine learning inferencing runtime metrics on a set of models and a variety of backends. It also provides a means to check performance regressions on each commit. It is licensed under Apache License 2.0. Please refer to the [LICENSE](/LICENSE) file for details.
 
 Currently the following performance metrics are collected:
 
@@ -88,23 +88,28 @@ optional arguments:
 The `harness.py` is the entry point for one benchmark run. It collects the runtime for an entire net and/or individual operator, and saves the data locally or pushes to a remote server. The usage of the script is as follows:
 
 ```
-usage: harness.py [-h] [--android_dir ANDROID_DIR] [--backend BACKEND] -b
-                  BENCHMARK_FILE [-d DEVICES]
+usage: harness.py [-h] [--android_dir ANDROID_DIR] [--ios_dir IOS_DIR]
+                  [--backend BACKEND] -b BENCHMARK_FILE
+                  [--command_args COMMAND_ARGS] [--cooldown COOLDOWN]
+                  [--device DEVICE] [-d DEVICES]
                   [--excluded_devices EXCLUDED_DEVICES] --framework
-                  {caffe2,generic,oculus} --info INFO
+                  {caffe2,generic,oculus,tflite} --info INFO
                   [--local_reporter LOCAL_REPORTER]
+                  [--monsoon_map MONSOON_MAP]
                   [--simple_local_reporter SIMPLE_LOCAL_REPORTER]
-                  --model_cache MODEL_CACHE [--device DEVICE] -p PLATFORM
-                  [--platform_sig PLATFORM_SIG] [--wipe_cache WIPE_CACHE]
-                  [--program PROGRAM] [--reboot]
+                  --model_cache MODEL_CACHE -p PLATFORM
+                  [--platform_sig PLATFORM_SIG] [--program PROGRAM] [--reboot]
                   [--regressed_types REGRESSED_TYPES]
                   [--remote_reporter REMOTE_REPORTER]
                   [--remote_access_token REMOTE_ACCESS_TOKEN]
                   [--root_model_dir ROOT_MODEL_DIR]
                   [--run_type {benchmark,verify,regress}] [--screen_reporter]
                   [--simple_screen_reporter] [--set_freq SET_FREQ]
-                  [--shared_libs SHARED_LIBS] [--timeout TIMEOUT]
-                  [--user_identifier USER_IDENTIFIER]
+                  [--shared_libs SHARED_LIBS] [--string_map STRING_MAP]
+                  [--timeout TIMEOUT] [--user_identifier USER_IDENTIFIER]
+                  [--wipe_cache WIPE_CACHE]
+                  [--hash_platform_mapping HASH_PLATFORM_MAPPING]
+                  [--user_string USER_STRING]
 
 Perform one benchmark run
 
@@ -113,10 +118,17 @@ optional arguments:
   --android_dir ANDROID_DIR
                         The directory in the android device all files are
                         pushed to.
+  --ios_dir IOS_DIR     The directory in the ios device all files are pushed
+                        to.
   --backend BACKEND     Specify the backend the test runs on.
   -b BENCHMARK_FILE, --benchmark_file BENCHMARK_FILE
                         Specify the json file for the benchmark or a number of
                         benchmarks
+  --command_args COMMAND_ARGS
+                        Specify optional command arguments that would go with
+                        the main benchmark command
+  --cooldown COOLDOWN   Specify the time interval between two test runs.
+  --device DEVICE       The single device to run this benchmark on
   -d DEVICES, --devices DEVICES
                         Specify the devices to run the benchmark, in a comma
                         separated list. The value is the device or device_hash
@@ -125,20 +137,21 @@ optional arguments:
                         Specify the devices that skip the benchmark, in a
                         comma separated list. The value is the device or
                         device_hash field of the meta info.
-  --framework {caffe2,generic,oculus}
+  --framework {caffe2,generic,oculus,tflite}
                         Specify the framework to benchmark on.
   --info INFO           The json serialized options describing the control and
                         treatment.
   --local_reporter LOCAL_REPORTER
                         Save the result to a directory specified by this
                         argument.
+  --monsoon_map MONSOON_MAP
+                        Map the phone hash to the monsoon serial number.
   --simple_local_reporter SIMPLE_LOCAL_REPORTER
                         Same as local reporter, but the directory hierarchy is
                         reduced.
   --model_cache MODEL_CACHE
                         The local directory containing the cached models. It
                         should not be part of a git directory.
-  --device DEVICE       The single device to run this benchmark on
   -p PLATFORM, --platform PLATFORM
                         Specify the platform to benchmark on. Use this flag if
                         the framework needs special compilation scripts. The
@@ -147,8 +160,6 @@ optional arguments:
                         directory
   --platform_sig PLATFORM_SIG
                         Specify the platform signature
-  --wipe_cache WIPE_CACHE
-                        Specify whether to evict cache or not before running
   --program PROGRAM     The program to run on the platform.
   --reboot              Tries to reboot the devices before launching
                         benchmarks for one commit.
@@ -180,6 +191,11 @@ optional arguments:
   --shared_libs SHARED_LIBS
                         Pass the shared libs that the framework depends on, in
                         a comma separated list.
+  --string_map STRING_MAP
+                        A json string mapping tokens to replacement strings.
+                        The tokens, surrended by \{\}, when appearing in the
+                        test fields of the json file, are to be replaced with
+                        the mapped values.
   --timeout TIMEOUT     Specify a timeout running the test on the platforms.
                         The timeout value needs to be large enough so that the
                         low end devices can safely finish the execution in
@@ -189,6 +205,13 @@ optional arguments:
                         User can specify an identifier and that will be passed
                         to the output so that the result can be easily
                         identified.
+  --wipe_cache WIPE_CACHE
+                        Specify whether to evict cache or not before running
+  --hash_platform_mapping HASH_PLATFORM_MAPPING
+                        Specify the devices hash platform mapping json file.
+  --user_string USER_STRING
+                        Specify the user running the test (to be passed to the
+                        remote reporter).
 ```
 
 ## Continuous benchmark run
@@ -200,7 +223,7 @@ The accepted arguments are as follows:
 usage: repo_driver.py [-h] [--ab_testing] [--base_commit BASE_COMMIT]
                       [--branch BRANCH] [--commit COMMIT]
                       [--commit_file COMMIT_FILE] --exec_dir EXEC_DIR
-                      --framework {caffe2,oculus,generic}
+                      --framework {caffe2,oculus,generic,tflite}
                       [--frameworks_dir FRAMEWORKS_DIR] [--interval INTERVAL]
                       --platforms PLATFORMS [--regression]
                       [--remote_repository REMOTE_REPOSITORY]
@@ -234,12 +257,12 @@ optional arguments:
                         an executable is found for a commit, no re-compilation
                         is performed. Instead, the previous compiled
                         executable is reused.
-  --framework {caffe2,oculus,generic}
+  --framework {caffe2,oculus,generic,tflite}
                         Specify the framework to benchmark on.
   --frameworks_dir FRAMEWORKS_DIR
                         Required. The root directory that all frameworks
-                        resides. Usually it is the specifications/frameworks
-                        directory.
+                        resides. Usually it is the
+                        specifications/frameworksdirectory.
   --interval INTERVAL   The minimum time interval in seconds between two
                         benchmark runs.
   --platforms PLATFORMS
