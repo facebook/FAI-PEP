@@ -46,15 +46,21 @@ class HostPlatform(PlatformBase):
         if not isinstance(cmd, list):
             cmd = shlex.split(cmd)
         host_kwargs = {}
+        log_output = False
         if "platform_args" in kwargs:
             platform_args = kwargs["platform_args"]
             if "timeout" in platform_args:
                 host_kwargs["timeout"] = platform_args["timeout"]
-        output, _ = processRun(cmd, **host_kwargs)
-        if "platform_args" in kwargs:
-            platform_args = kwargs["platform_args"]
+            # used for local or remote log control
             if "log_output" in platform_args and platform_args["log_output"]:
-                getLogger().info(output)
+                log_output = True
+        output, _ = processRun(cmd, **host_kwargs)
+        if log_output:
+            # for remote and test overwrite
+            print(output)
+        else:
+            # for local
+            getLogger().info(output)
         return output
 
     def _getProcessorName(self):
