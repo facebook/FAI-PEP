@@ -18,7 +18,6 @@ import socket
 from platforms.host.hdb import HDB
 from platforms.platform_base import PlatformBase
 from utils.arg_parse import getArgs
-from utils.custom_logger import getLogger
 from utils.subprocess_with_logger import processRun
 
 
@@ -56,11 +55,7 @@ class HostPlatform(PlatformBase):
                 log_output = True
         output, _ = processRun(cmd, **host_kwargs)
         if log_output:
-            # for remote and test overwrite
             print(output)
-        else:
-            # for local
-            getLogger().info(output)
         return output
 
     def _getProcessorName(self):
