@@ -46,6 +46,7 @@ class HostPlatform(PlatformBase):
             cmd = shlex.split(cmd)
         host_kwargs = {}
         log_output = False
+        env = os.environ
         if "platform_args" in kwargs:
             platform_args = kwargs["platform_args"]
             if "timeout" in platform_args:
@@ -53,6 +54,11 @@ class HostPlatform(PlatformBase):
             # used for local or remote log control
             if "log_output" in platform_args and platform_args["log_output"]:
                 log_output = True
+            if "env" in platform_args:
+                customized_env = platform_args["env"]
+                for k in customized_env:
+                    env[k] = str(customized_env[k])
+                host_kwargs["env"] = env
         output, _ = processRun(cmd, **host_kwargs)
         if log_output:
             print(output)

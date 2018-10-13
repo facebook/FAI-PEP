@@ -24,6 +24,7 @@ from platforms.platforms import getPlatforms
 from reporters.reporters import getReporters
 from utils.arg_parse import getParser, getArgs, parseKnown
 from utils.custom_logger import getLogger
+from utils.utilities import parse_kwarg
 
 # for backward compatible purpose
 getParser().add_argument("--backend",
@@ -42,6 +43,8 @@ getParser().add_argument("--device",
 getParser().add_argument("-d", "--devices",
     help="Specify the devices to run the benchmark, in a comma separated "
     "list. The value is the device or device_hash field of the meta info.")
+getParser().add_argument("--env", help="environment variables passed to runtime binary.",
+    nargs="*", type=parse_kwarg, default=[])
 getParser().add_argument("--excluded_devices",
     help="Specify the devices that skip the benchmark, in a comma separated "
     "list. The value is the device or device_hash field of the meta info.")
@@ -150,6 +153,9 @@ class BenchmarkDriver(object):
             if getArgs().debug:
                 for test in benchmark["tests"]:
                     test["log_output"] = True
+            if getArgs().env:
+                for test in benchmark["tests"]:
+                    test["env"] = dict(getArgs().env)
 
             b = copy.deepcopy(benchmark)
             i = copy.deepcopy(info)

@@ -162,6 +162,8 @@ class FrameworkBase(object):
 
         if test.get("log_output", False):
             platform_args["log_output"] = True
+        if test.get("env", False):
+            platform_args["env"] = test["env"]
 
         self._runCommands(output, test["commands"], platform, programs, model,
                           test, tgt_model_files, tgt_input_files,
