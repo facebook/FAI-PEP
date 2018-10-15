@@ -154,8 +154,11 @@ class BenchmarkDriver(object):
                 for test in benchmark["tests"]:
                     test["log_output"] = True
             if getArgs().env:
+                cmd_env = dict(getArgs().env)
                 for test in benchmark["tests"]:
-                    test["env"].update(dict(getArgs().env))
+                    if "env" in test:
+                        cmd_env.update(test["env"])
+                    test["env"] = cmd_env
 
             b = copy.deepcopy(benchmark)
             i = copy.deepcopy(info)
