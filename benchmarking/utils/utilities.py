@@ -147,5 +147,5 @@ def parse_kwarg(kwarg_str):
     try:
         value = ast.literal_eval(value)
     except ValueError:
-        pass
+        getLogger().error("Failed to parse kwarg str: {}".format(kwarg_str))
     return key, value
