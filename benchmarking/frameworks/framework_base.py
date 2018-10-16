@@ -250,8 +250,9 @@ class FrameworkBase(object):
     def _getReplacedCommand(self, command, files, model, test,
                             programs, model_files):
         pattern = re.compile("\{([\w|\.]+)\}")
-        prev_count = 1000000
-        while True:
+        repeat = True
+        while repeat:
+            repeat = False
             results = []
             for m in pattern.finditer(command):
                 results.append({
@@ -259,9 +260,6 @@ class FrameworkBase(object):
                     "end": m.end(),
                     "content": m.group(1)
                 })
-            if len(results) == prev_count:
-                break
-            prev_count = len(results)
             results.reverse()
             for res in results:
                 replace = self._getMatchedString(test, res["content"], files)
@@ -275,6 +273,7 @@ class FrameworkBase(object):
                 if replace:
                     command = command[:res["start"]] + replace + \
                         command[res["end"]:]
+                    repeat = True
         return command
 
     def _getMatchedString(self, root, match, files=None):
