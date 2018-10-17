@@ -59,7 +59,7 @@ class FrameworkBase(object):
         platform.preprocess(programs=program_files)
 
         tgt_program_files, host_program_files = \
-            self._separatePrograms(program_files, test["commands"])
+            self._separatePrograms(program_files, test.get("commands"))
 
         # we need to copy programs in all iterations, because this is
         # how we get the absolute path of the programs in the target platform
@@ -329,6 +329,8 @@ class FrameworkBase(object):
         pass
 
     def _separatePrograms(self, program_files, commands):
+        if commands is None or not isinstance(commands, list):
+            return program_files, {}
         tgt_program_files = {}
         for command in commands:
             for name in program_files:
