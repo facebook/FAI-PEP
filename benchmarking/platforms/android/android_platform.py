@@ -45,7 +45,7 @@ class AndroidPlatform(PlatformBase):
         while (repeat and size > 256):
             repeat = False
             ret = self.util.logcat("-G", str(size) + "K")
-            if ret.find("failed to") >= 0:
+            if ret and ret.find("failed to") >= 0:
                 repeat = True
                 size = int(size / 2)
 
