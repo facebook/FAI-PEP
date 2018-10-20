@@ -243,8 +243,8 @@ class FrameworkBase(object):
                 with open(file, "r") as f:
                     content = f.read()
                 convert = converter()
-                results = convert.collect(content)
-                one_output = convert.convecrt(results)
+                results, _ = convert.collect(content)
+                one_output = convert.convert(results)
                 deepMerge(output, one_output)
 
         return output, output_files
