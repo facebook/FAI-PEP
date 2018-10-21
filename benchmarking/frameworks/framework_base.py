@@ -50,16 +50,18 @@ class FrameworkBase(object):
         if self.host_platform is None:
             self.host_platform = getHostPlatform(self.tempdir)
 
-        self._replaceStringMap(benchmark, platform)
-
         program_files = {name: info["programs"][name]["location"]
                          for name in info["programs"]}
+        program_path = os.path.dirname(program_files["program"]) \
+            if "program" in program_files else None
+        self._replaceStringMap(benchmark, platform, program_path)
+
         # better to be before target program files separation.
         # this way, in ios, the platform may not be copied to the target.
         platform.preprocess(programs=program_files)
 
         tgt_program_files, host_program_files = \
-            self._separatePrograms(program_files, test["commands"])
+            self._separatePrograms(program_files, test.get("commands"))
 
         # we need to copy programs in all iterations, because this is
         # how we get the absolute path of the programs in the target platform
@@ -226,6 +228,27 @@ class FrameworkBase(object):
                               model, test, model_files, None, None, None, None,
                               -1, log_output, converter)
 
+        # after everything is done, some of the output files may
+        # contain metrics that can be processed. Those files have
+        # field converter, and specify which convert to use to
+        # convert the metrics
+        if output_files:
+            for filename in output_files:
+                file = output_files[filename]
+                converter_name = \
+                    test["output_files"][filename].get("converter")
+                if not converter_name:
+                    continue
+                assert converter_name in self.converters, \
+                    "Unknown converter {}".format(converter_name)
+                converter = self.converters[converter_name]
+                with open(file, "r") as f:
+                    content = f.read()
+                convert = converter()
+                results, _ = convert.collect(content)
+                one_output = convert.convert(results)
+                deepMerge(output, one_output)
+
         return output, output_files
 
     @abc.abstractmethod
@@ -252,8 +275,9 @@ class FrameworkBase(object):
     def _getReplacedCommand(self, command, files, model, test,
                             programs, model_files):
         pattern = re.compile("\{([\w|\.]+)\}")
-        prev_count = 1000000
-        while True:
+        repeat = True
+        while repeat:
+            repeat = False
             results = []
             for m in pattern.finditer(command):
                 results.append({
@@ -261,9 +285,6 @@ class FrameworkBase(object):
                     "end": m.end(),
                     "content": m.group(1)
                 })
-            if len(results) == prev_count:
-                break
-            prev_count = len(results)
             results.reverse()
             for res in results:
                 replace = self._getMatchedString(test, res["content"], files)
@@ -277,6 +298,7 @@ class FrameworkBase(object):
                 if replace:
                     command = command[:res["start"]] + replace + \
                         command[res["end"]:]
+                    repeat = True
         return command
 
     def _getMatchedString(self, root, match, files=None):
@@ -332,6 +354,8 @@ class FrameworkBase(object):
         pass
 
     def _separatePrograms(self, program_files, commands):
+        if commands is None or not isinstance(commands, list):
+            return program_files, {}
         tgt_program_files = {}
         for command in commands:
             for name in program_files:
@@ -351,13 +375,15 @@ class FrameworkBase(object):
         os.makedirs(hostdir, 0o777)
         return hostdir
 
-    def _replaceStringMap(self, root, platform):
+    def _replaceStringMap(self, root, platform, program_path):
         string_map = json.loads(getArgs().string_map) \
             if getArgs().string_map else {}
 
         string_map["TGTDIR"] = platform.getOutputDir()
         string_map["HOSTDIR"] = self._createHostDir()
         string_map["FAIPEPROOT"] = getFAIPEPROOT()
+        if program_path:
+            string_map["BUILDDIR"] = program_path
 
         for name in string_map:
             value = string_map[name]

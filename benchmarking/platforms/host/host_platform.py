@@ -59,6 +59,7 @@ class HostPlatform(PlatformBase):
                 for k in customized_env:
                     env[k] = str(customized_env[k])
                 host_kwargs["env"] = env
+                
         output, _ = processRun(cmd, **host_kwargs)
         if log_output:
             print(output)

@@ -53,9 +53,10 @@ class Caffe2Framework(FrameworkBase):
                 assert "location" in field, \
                     "Location is missing in file" + \
                     " {} of benchmark {}".format(f, filename)
-                assert "md5" in field, \
-                    "MD5 is missing in file" + \
-                    " {} of benchmark {}".format(f, filename)
+                if "md5" not in field:
+                    assert not field["location"].startswith("//"), \
+                        "MD5 is missing in file" + \
+                        " {} of benchmark {}".format(f, filename)
 
         # tests is mandatory
         assert "tests" in benchmark, \
