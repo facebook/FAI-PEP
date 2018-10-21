@@ -37,6 +37,7 @@ getParser().add_argument("--commit", default="master",
 getParser().add_argument("--commit_file",
     help="The file saves the last commit hash that the regression has finished. " +
     "If this argument is specified and is valid, the --commit has no use.")
+getParser().add_argument("--env", help="environment variables passed to runtime binary")
 getParser().add_argument("--exec_dir", required=True,
     help="The executable is saved in the specified directory. " +
     "If an executable is found for a commit, no re-compilation is performed. " +
@@ -360,6 +361,11 @@ class RepoDriver(object):
             " --framework " + getString(getArgs().framework) + \
             " --info " + info + " " + \
             ' '.join([getString(u) for u in unknowns])
+        if getArgs().env:
+            command = command + " --env "
+            env_vars = getArgs().env.split()
+            for env_var in env_vars:
+                command = command + ' ' + env_var + ' '
         return command
 
 

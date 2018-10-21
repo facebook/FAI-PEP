@@ -8,6 +8,7 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+import ast
 import copy
 import datetime
 import os
@@ -139,3 +140,12 @@ def requestsJson(url, **kwargs):
     getLogger().error("Failed to retrieve json from {}".
                       format(url))
     return {}
+
+
+def parse_kwarg(kwarg_str):
+    key, value = kwarg_str.split('=')
+    try:
+        value = ast.literal_eval(value)
+    except ValueError:
+        getLogger().error("Failed to parse kwarg str: {}".format(kwarg_str))
+    return key, value
