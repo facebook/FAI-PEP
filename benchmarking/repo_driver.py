@@ -12,6 +12,7 @@ from collections import deque
 import datetime
 import json
 import os
+import sys
 import threading
 import time
 from utils.arg_parse import getParser, getArgs, getUnknowns, parseKnown
@@ -292,6 +293,7 @@ class RepoDriver(object):
         self.executables_builder = ExecutablesBuilder(self.repo,
                                                       self.work_queue,
                                                       self.queue_lock)
+        self.ret = 0
 
     def run(self):
         getLogger().info(
@@ -322,7 +324,7 @@ class RepoDriver(object):
             repo_info = self.work_queue.popleft()
             if not same_host:
                 self.queue_lock.release()
-            self._runOneBenchmarkSuite(repo_info)
+            self.ret |= self._runOneBenchmarkSuite(repo_info)
             if same_host:
                 self.queue_lock.release()
 
@@ -334,12 +336,14 @@ class RepoDriver(object):
             # consistent state
             time.sleep(10)
         # cannot use subprocess because it conflicts with requests
-        os.system(cmd)
+        ret = os.system(cmd)
         if getArgs().commit_file and getArgs().regression:
             with open(getArgs().commit_file, 'w') as file:
                 file.write(repo_info['treatment']['commit'])
-        getLogger().info("Done one benchmark run for " +
+        getLogger().info("One benchmark run {} for ".format(
+                         "successful" if ret == 0 else "failed") +
                          repo_info['treatment']['commit'])
+        return ret
 
     def _getCommand(self, repo_info):
         platform = repo_info["platform"]
@@ -372,3 +376,4 @@ class RepoDriver(object):
 if __name__ == "__main__":
     app = RepoDriver()
     app.run()
+    sys.exit(app.ret)
