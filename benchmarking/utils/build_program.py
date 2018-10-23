@@ -9,6 +9,7 @@
 ##############################################################################
 
 import os
+import shutil
 
 from .custom_logger import getLogger
 from .subprocess_with_logger import processRun
@@ -17,10 +18,9 @@ from .subprocess_with_logger import processRun
 def buildProgramPlatform(dst, repo_dir, framework, frameworks_dir, platform):
     script = _getBuildScript(framework, frameworks_dir, platform)
     dst_dir = os.path.dirname(dst)
-    if os.path.isfile(dst):
-        os.remove(dst)
-    elif not os.path.isdir(dst_dir):
-        os.makedirs(dst_dir)
+    if os.path.isdir(dst_dir):
+        shutil.rmtree(dst_dir, True)
+    os.makedirs(dst_dir)
 
     if os.name == "nt":
         result = processRun([script, repo_dir, dst])[0]
@@ -30,7 +30,8 @@ def buildProgramPlatform(dst, repo_dir, framework, frameworks_dir, platform):
         os.chmod(dst, 0o777)
     print(result)
 
-    if not os.path.isfile(dst):
+    if not os.path.isfile(dst) and \
+            (not (os.path.isdir(dst) and platform.startswith("ios"))):
         getLogger().error(
             "Build program using script {} failed.".format(script))
         return False

@@ -8,11 +8,13 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+import ast
 import copy
 import datetime
 import os
 import re
 import requests
+from six import string_types
 import sys
 from time import sleep
 
@@ -47,9 +49,7 @@ def getPythonInterpreter():
 def deepMerge(tgt, src):
     if isinstance(src, list):
         # only handle simple lists
-        for item in src:
-            if item not in tgt:
-                tgt.append(copy.deepcopy(item))
+        tgt.extend(src)
     elif isinstance(src, dict):
         for name in src:
             m = src[name]
@@ -63,6 +63,20 @@ def deepMerge(tgt, src):
         return
 
 
+def deepReplace(root, pattern, replacement):
+    if isinstance(root, list):
+        for idx in range(len(root)):
+            item = root[idx]
+            root[idx] = deepReplace(item, pattern, replacement)
+    elif isinstance(root, dict):
+        for name in root:
+            m = root[name]
+            root[name] = deepReplace(m, pattern, replacement)
+    elif isinstance(root, string_types):
+        return root.replace(pattern, replacement)
+    return root
+
+
 def getString(s):
     s = str(s)
     if re.match("^[A-Za-z0-9_/.~-]+$", s):
@@ -73,6 +87,11 @@ def getString(s):
     else:
         return "'" + s + "'"
 
+
+def getFAIPEPROOT():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    root_dir = os.path.join(dir_path, "../../")
+    return os.path.abspath(root_dir)
 
 def requestsData(url, **kwargs):
     delay = 0
@@ -121,3 +140,12 @@ def requestsJson(url, **kwargs):
     getLogger().error("Failed to retrieve json from {}".
                       format(url))
     return {}
+
+
+def parse_kwarg(kwarg_str):
+    key, value = kwarg_str.split('=')
+    try:
+        value = ast.literal_eval(value)
+    except ValueError:
+        getLogger().error("Failed to parse kwarg str: {}".format(kwarg_str))
+    return key, value

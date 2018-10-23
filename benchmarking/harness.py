@@ -24,18 +24,27 @@ from platforms.platforms import getPlatforms
 from reporters.reporters import getReporters
 from utils.arg_parse import getParser, getArgs, parseKnown
 from utils.custom_logger import getLogger
+from utils.utilities import parse_kwarg
 
+# for backward compatible purpose
 getParser().add_argument("--backend",
     help="Specify the backend the test runs on.")
 getParser().add_argument("-b", "--benchmark_file", required=True,
     help="Specify the json file for the benchmark or a number of benchmarks")
+getParser().add_argument("--command_args",
+    help="Specify optional command arguments that would go with the "
+    "main benchmark command")
 getParser().add_argument("--cooldown", default=0, type=float,
     help = "Specify the time interval between two test runs.")
+getParser().add_argument("--debug", action="store_true",
+    help="Debug mode to retain all the running binaries and models.")
 getParser().add_argument("--device",
     help="The single device to run this benchmark on")
 getParser().add_argument("-d", "--devices",
     help="Specify the devices to run the benchmark, in a comma separated "
     "list. The value is the device or device_hash field of the meta info.")
+getParser().add_argument("--env", help="environment variables passed to runtime binary.",
+    nargs="*", type=parse_kwarg, default=[])
 getParser().add_argument("--excluded_devices",
     help="Specify the devices that skip the benchmark, in a comma separated "
     "list. The value is the device or device_hash field of the meta info.")
@@ -46,6 +55,8 @@ getParser().add_argument("--info", required=True,
     help="The json serialized options describing the control and treatment.")
 getParser().add_argument("--local_reporter",
     help="Save the result to a directory specified by this argument.")
+getParser().add_argument("--monsoon_map",
+    help="Map the phone hash to the monsoon serial number.")
 getParser().add_argument("--simple_local_reporter",
     help="Same as local reporter, but the directory hierarchy is reduced.")
 getParser().add_argument("--model_cache", required=True,
@@ -92,6 +103,10 @@ getParser().add_argument("--set_freq",
 getParser().add_argument("--shared_libs",
     help="Pass the shared libs that the framework depends on, "
     "in a comma separated list.")
+getParser().add_argument("--string_map",
+    help="A json string mapping tokens to replacement strings. "
+    "The tokens, surrended by \{\}, when appearing in the test fields of "
+    "the json file, are to be replaced with the mapped values.")
 getParser().add_argument("--timeout", default=300, type=float,
     help="Specify a timeout running the test on the platforms. "
     "The timeout value needs to be large enough so that the low end devices "
@@ -100,8 +115,14 @@ getParser().add_argument("--timeout", default=300, type=float,
 getParser().add_argument("--user_identifier",
     help="User can specify an identifier and that will be passed to the "
     "output so that the result can be easily identified.")
+# for backward compabile purpose
 getParser().add_argument("--wipe_cache", default=False,
     help="Specify whether to evict cache or not before running")
+getParser().add_argument("--hash_platform_mapping",
+    help="Specify the devices hash platform mapping json file.")
+# Avoid the prefix user so that it doesn't collide with --user_identifier
+getParser().add_argument("--user_string",
+    help="Specify the user running the test (to be passed to the remote reporter).")
 
 
 class BenchmarkDriver(object):
@@ -110,9 +131,14 @@ class BenchmarkDriver(object):
         self._lock = threading.Lock()
         self.success = True
 
-    def runBenchmark(self, info, platform, benchmarks, framework):
+    def runBenchmark(self, info, platform, benchmarks):
         if getArgs().reboot:
             platform.rebootDevice()
+        tempdir = tempfile.mkdtemp()
+        # we need to get a different framework instance per thread
+        # will consolidate later. For now create a new framework
+        frameworks = getFrameworks()
+        framework = frameworks[getArgs().framework](tempdir)
         reporters = getReporters()
         for idx in range(len(benchmarks)):
             benchmark = benchmarks[idx]
@@ -124,6 +150,16 @@ class BenchmarkDriver(object):
                     "{} ".format(benchmark["model"]["framework"]) + \
                     "does not match the command line argument " \
                     "{}".format(getArgs().framework)
+            if getArgs().debug:
+                for test in benchmark["tests"]:
+                    test["log_output"] = True
+            if getArgs().env:
+                for test in benchmark["tests"]:
+                    cmd_env = dict(getArgs().env)
+                    if "env" in test:
+                        cmd_env.update(test["env"])
+                    test["env"] = cmd_env
+
             b = copy.deepcopy(benchmark)
             i = copy.deepcopy(info)
             success = runOneBenchmark(i, b, framework, platform,
@@ -136,6 +172,7 @@ class BenchmarkDriver(object):
                 if "model" in benchmark and "cooldown" in benchmark["model"]:
                     cooldown = float(benchmark["model"]["cooldown"])
                 time.sleep(cooldown)
+        shutil.rmtree(tempdir, True)
 
     def run(self):
         tempdir = tempfile.mkdtemp()
@@ -152,26 +189,33 @@ class BenchmarkDriver(object):
         threads = []
         for platform in platforms:
             t = threading.Thread(target=self.runBenchmark,
-                                 args=(info, platform, benchmarks, framework))
+                                 args=(info, platform, benchmarks))
             t.start()
             threads.append(t)
         for t in threads:
             t.join()
-        shutil.rmtree(tempdir, True)
+
+        if not getArgs().debug:
+            shutil.rmtree(tempdir, True)
 
     def _getInfo(self):
         info = json.loads(getArgs().info)
         info["run_type"] = "benchmark"
+        if "meta" not in info:
+            info["meta"] = {}
+        info["meta"]["command_args"] = getArgs().command_args \
+            if getArgs().command_args else ""
+
+        # for backward compatible purpose
         if getArgs().backend:
-            info["commands"] = {}
-            info["commands"][getArgs().framework] = {
-                "backend": getArgs().backend
-            }
+            info["meta"]["command_args"] += \
+                " --backend {}".format(getArgs().backend)
         if getArgs().wipe_cache:
-            if "commands" not in info:
-                info["commands"] = {getArgs().framework: {}}
-            info["commands"][getArgs().framework]["wipe_cache"] = \
-                    getArgs().wipe_cache
+            info["meta"]["command_args"] += \
+                " --wipe_cache {}".format(getArgs().wipe_cache)
+        if getArgs().user_string:
+            info["user"] = getArgs().user_string
+
         return info
 
 

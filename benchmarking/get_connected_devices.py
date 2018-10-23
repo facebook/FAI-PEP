@@ -39,6 +39,8 @@ getParser().add_argument("--platform", default="android",
     help="Specify the platforms to benchmark on. ")
 getParser().add_argument("--platform_sig",
     help="Specify the platforms signature which clusters the same type machine. ")
+getParser().add_argument("--hash_platform_mapping",
+    help="Specify the devices hash platform mapping json file.")
 
 
 class GetConnectedDevices(object):

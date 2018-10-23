@@ -37,6 +37,7 @@ getParser().add_argument("--commit", default="master",
 getParser().add_argument("--commit_file",
     help="The file saves the last commit hash that the regression has finished. " +
     "If this argument is specified and is valid, the --commit has no use.")
+getParser().add_argument("--env", help="environment variables passed to runtime binary")
 getParser().add_argument("--exec_dir", required=True,
     help="The executable is saved in the specified directory. " +
     "If an executable is found for a commit, no re-compilation is performed. " +
@@ -215,17 +216,31 @@ class ExecutablesBuilder (threading.Thread):
 
     def _buildProgram(self, platform, repo_info):
         directory = getDirectory(repo_info['commit'], repo_info['commit_time'])
-
+        program = getArgs().framework + "_benchmark"
+        if os.name == "nt":
+            program = program + ".exe"
+        elif platform.startswith("ios"):
+            program = program + ".ipa"
         dst = os.path.join(getArgs().exec_dir, getArgs().framework,
-            platform, directory,
-            getArgs().framework +
-            "_benchmark" + (".exe" if os.name == "nt" else ""))
+                           platform, directory, program)
 
         repo_info["program"] = dst
+        repo_info["programs"] = {
+            "program": {
+                "location": dst
+            }
+        }
+        filedir = os.path.dirname(dst)
         if not _runIndividual() and os.path.isfile(dst):
             return True
         else:
-            return self._buildProgramPlatform(repo_info, dst, platform)
+            result = self._buildProgramPlatform(repo_info, dst, platform)
+            for fn in os.listdir(filedir):
+                if fn != program:
+                    repo_info["programs"][fn] = {
+                        "location": os.path.join(filedir, fn)
+                    }
+            return result
 
     def _buildProgramPlatform(self, repo_info, dst, platform):
         self.repo.checkout(repo_info['commit'])
@@ -346,6 +361,11 @@ class RepoDriver(object):
             " --framework " + getString(getArgs().framework) + \
             " --info " + info + " " + \
             ' '.join([getString(u) for u in unknowns])
+        if getArgs().env:
+            command = command + " --env "
+            env_vars = getArgs().env.split()
+            for env_var in env_vars:
+                command = command + ' ' + env_var + ' '
         return command
 
 

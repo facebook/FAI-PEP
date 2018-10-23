@@ -20,46 +20,27 @@
   },
   "tests": [
     {
-      "identifier": "{ID}",
-      "input_files": {
-        "data": [
-          {
-            "filename": "data.txt",
-            "location": "tests/test0/data.txt",
-            "md5": "93015ae541c3c9b84c2bb97de9252ad9"
-          }
-        ]
-      },
-      "arguments": "--net {files.predict} --init_net {files.init} --warmup {warmup} --iter {iter} --input \"data\" --input_file {input_files.data} --input_type float --output softmaxout --text_output true ",
-      "iter": 1,
-      "metric": "error",
-      "output_files": {
-        "softmaxout": [
-          {
-            "filename": "softmaxout.txt",
-            "location": "tests/test0/softmaxout.txt",
-            "md5": "a0340f00ea3e012e8aad8b96caee6c9f"
-          }
-        ]
-      },
-      "warmup": 0
-    },
-    {
-      "arguments": "--net {files.predict} --init_net {files.init} --warmup {warmup} --iter {iter} --input \"data\" --input_dims \"1,3,30,30\" --input_type float --run_individual true",
+      "commands": [
+        "{program} --net {files.predict} --init_net {files.init} --warmup {warmup} --iter {iter} --input \"data\" --input_dims \"1,3,30,30\" --input_type float --run_individual true"
+      ],
       "identifier": "{ID}",
       "iter": 50,
       "metric": "delay",
       "warmup": 1
     },
     {
-      "arguments": "--net {files.predict} --init_net {files.init} --warmup {warmup} --iter {iter} --input \"data\" --input_dims \"64,3,30,30\" --input_type float --run_individual true",
+      "commands": [
+        "{program} --net {files.predict} --init_net {files.init} --warmup {warmup} --iter {iter} --input \"data\" --input_dims \"64,3,30,30\" --input_type float --run_individual true"
+      ],
       "identifier": "{ID}",
       "iter": 50,
       "metric": "delay",
       "warmup": 1
     },
     {
-      "arguments": "--net {files.predict} --init_net {files.init} --warmup {warmup} --iter {iter} --input \"data\" --input_dims \"1,3,224,224\" --input_type float --run_individual true",
+      "commands": [
+        "{program} --net {files.predict} --init_net {files.init} --warmup {warmup} --iter {iter} --input \"data\" --input_dims \"1,3,224,224\" --input_type float --run_individual true"
+      ],
       "identifier": "{ID}",
       "iter": 50,
       "metric": "delay",

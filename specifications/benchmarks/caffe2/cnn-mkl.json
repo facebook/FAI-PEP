@@ -1,10 +1,7 @@
 {
   "meta": {
     "group": "CNN-MKL",
-    "commands": {
-      "caffe2": {
-        "backend": "mkl"
-      }
+    "command_args": "--backend mkl"
     }
   },
   "benchmarks": [

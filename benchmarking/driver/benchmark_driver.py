@@ -14,7 +14,7 @@ import sys
 import time
 from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
-from utils.utilities import getCommand
+from utils.utilities import getCommand, deepMerge
 
 
 def runOneBenchmark(info, benchmark, framework, platform,
@@ -55,6 +55,7 @@ def runOneBenchmark(info, benchmark, framework, platform,
             "Exception caught when running benchmark")
         getLogger().info(e)
         data = None
+
     if data is None or len(data) == 0:
         name = platform.getMangledName()
         model_name = ""
@@ -87,51 +88,30 @@ def runOneBenchmark(info, benchmark, framework, platform,
 def _runOnePass(info, benchmark, framework, platform):
     assert len(benchmark["tests"]) == 1, \
         "At this moment, only one test exists in the benchmark"
-    output, treatment_files = \
-        framework.runBenchmark(info, benchmark, platform)
-    data = None
-    test = benchmark["tests"][0]
-    if treatment_files and test["metric"] == "error":
-        output_files = test["output_files"]
-        golden_files = {t: output_files[t]["location"] for t in output_files}
-        data = _processErrorData(treatment_files, golden_files)
-    elif test["metric"] == "delay":
-        data = _processDelayData(output)
-    elif test["metric"] == "generic":
-        data = output
-    elif test["metric"] == "power":
-        data = output
-    else:
-        assert False, "Should not be here"
+    to = benchmark["model"]["repeat"] if "repeat" in benchmark["model"] else 1
+    output = {}
+    for idx in range(to):
+        benchmark["tests"][0]["INDEX"] = idx
+        one_output, output_files = \
+            framework.runBenchmark(info, benchmark, platform)
+        deepMerge(output, one_output)
+    data = _processDelayData(output)
     return data
 
 
 def _processDelayData(input_data):
+    if not isinstance(input_data, dict):
+        return input_data
     data = {}
     for k in input_data:
         d = input_data[k]
-        data[k] = {}
-        if "info_string" in d:
-            data[k]["info_string"] = d["info_string"]
-        if "values" in d:
-            data[k]["values"] = input_data[k]["values"]
-            data[k]["summary"] = _getStatistics(input_data[k]["values"])
-            data[k]["num_runs"] = len(data[k]["values"])
-        elif "summary" in d:
-            data[k]["summary"] = d["summary"]
-            if "num_runs" in d:
-                data[k]["num_runs"] = d["num_runs"]
+        data[k] = copy.deepcopy(d)
 
-        if "type" in d:
-            data[k]["type"] = d["type"]
-        if "operator" in d:
-            data[k]["operator"] = d["operator"]
-        if "id" in d:
-            data[k]["id"] = d["id"]
-        if "unit" in d:
-            data[k]["unit"] = d["unit"]
-        if "metric" in d:
-            data[k]["metric"] = d["metric"]
+        if "values" in d:
+            if "summary" not in d:
+                data[k]["summary"] = _getStatistics(d["values"])
+            if "num_runs" not in d:
+                data[k]["num_runs"] = len(data[k]["values"])
     return data
 
 
@@ -269,7 +249,6 @@ def _adjustData(info, data):
 
 def _retrieveMeta(info, benchmark, platform, framework, backend):
     assert "treatment" in info, "Treatment is missing in info"
-
     meta = {}
     # common
     meta["backend"] = backend
@@ -307,5 +286,9 @@ def _retrieveMeta(info, benchmark, platform, framework, backend):
         meta["control_commit_time"] = info["control"]["commit_time"]
     if "run_type" in info:
         meta["run_type"] = info["run_type"]
+
+    # Local run, user specific information
+    if "user" in info:
+        meta["user"] = info["user"]
 
     return meta

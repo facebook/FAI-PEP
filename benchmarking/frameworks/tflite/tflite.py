@@ -41,18 +41,23 @@ class TFLiteFramework(FrameworkBase):
             assert "warmup" in test, "Field warmup is missing in test"
             assert "iter" in test, "Field iter is missing in test"
 
-    def composeRunCommand(self, platform, program, model, test, model_files,
-                          input_files, output_files, shared_libs):
-        cmd = super(TFLiteFramework, self).composeRunCommand(platform,
-                                                             program,
-                                                             model,
-                                                             test,
-                                                             model_files,
-                                                             input_files,
-                                                             output_files,
-                                                             shared_libs)
-        if cmd:
-            return cmd
+    def composeRunCommand(self, commands, platform, programs,
+                          model, test, model_files,
+                          input_files, output_files, shared_libs,
+                          preprocess_files=None):
+        cmds = super(TFLiteFramework, self).composeRunCommand(commands,
+                                                              platform,
+                                                              programs,
+                                                              model,
+                                                              test,
+                                                              model_files,
+                                                              input_files,
+                                                              output_files,
+                                                              shared_libs,
+                                                              preprocess_files)
+        if cmds:
+            return cmds
+
         # the following is for backward compatibility purpose
         input = None
         input_shape = None
@@ -61,18 +66,13 @@ class TFLiteFramework(FrameworkBase):
             input_shape = ",".join(str(a) for a in
                                    test["inputs"][layer]["shapes"][0])
         cmd = [
-            program,
+            programs['program'],
             "--graph={}".format(model_files["graph"]),
             "--warmup_runs={}".format(test["warmup"]),
             "--num_runs={}".format(test["iter"]),
             "--input_layer={}".format(input),
             "--input_layer_shape={}".format(input_shape)
         ]
-        if "commands" in test:
-            if "tflite" in test["commands"]:
-                for key in test["commands"]["tflite"]:
-                    val = test["commands"]["tflite"][key]
-                    cmd.extend(["--{}={}".format(key, val)])
 
         cmd = [str(s) for s in cmd]
         return cmd

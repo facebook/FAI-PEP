@@ -14,7 +14,9 @@
   },
   "tests": [
     {
-      "arguments": "--graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=Placeholder --input_layer_shape=\"1,224,224,3\" --num_threads=2",
+      "commands": [
+        "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=Placeholder --input_layer_shape=\"1,224,224,3\" --num_threads=2"
+      ],
       "identifier": "squeezenet-2-threads",
       "platform_args": {
         "sleep_before_run": 20

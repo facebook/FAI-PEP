@@ -1,0 +1,70 @@
+{
+  "model": {
+    "category": "CNN",
+    "description": "Trained SqueezeNet model on Caffe2",
+    "files": {
+      "init": {
+        "filename": "init_net.pb",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/squeezenet/init_net.pb",
+        "md5": "a589d31d93c44d353ae2cd92af4d5a3f"
+      },
+      "predict": {
+        "filename": "predict_net.pb",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/squeezenet/predict_net.pb",
+        "md5": "694bfdd02e9ccb57bfc4acb451fbfb2d"
+      }
+    },
+    "format": "caffe2",
+    "kind": "deployment",
+    "name": "squeezenet",
+    "preprocess": {
+      "commands": [
+        "mkdir -p {HOSTDIR}/inputs",
+        "mkdir -p {HOSTDIR}/outputs",
+        "{FAIPEPROOT}/libraries/python/imagenet_test_map.py --limit-files {total_images} --limit-per-category 1 --image-dir {imagenet_dir}/val/ --label-file {imagenet_dir}/labels.txt --output-image-file {HOSTDIR}/images.txt --output-label-file {HOSTDIR}/labels.txt --shuffle"
+      ]
+    },
+    "postprocess": {
+      "commands": [
+        "{FAIPEPROOT}/libraries/python/aggregate_classification_results.py --dir {HOSTDIR}/outputs --prefix accuracy --limit {repeat} --metric-keyword 'Caffe2Observer ' "
+      ]
+    },
+    "repeat": 10,
+    "total_images": 100,
+    "images_per_batch": "{total_images}/{repeat}"
+  },
+  "tests": [
+    {
+      "preprocess": {
+        "commands": [
+          "awk '(NR>{INDEX}*{images_per_batch})&&(NR<={INDEX}*{images_per_batch}+{images_per_batch}) {print > \"{HOSTDIR}/inputs/labels_{INDEX}.txt\"}' {HOSTDIR}/labels.txt",
+          "{convert_image_to_tensor} --input_image_file {HOSTDIR}/inputs/labels_{INDEX}.txt --output_tensor {input_files.images_tensor} --scale 224 --text_output true --preprocess subtract128"
+        ]
+      },
+      "input_files": {
+        "images_tensor" : {
+          "filename": "images_tensor.pb",
+          "location": "{HOSTDIR}/images_tensor.pb"
+        }
+      },
+      "commands": [
+        "{program} --net {files.predict} --init_net {files.init} --warmup {warmup} --iter {iter} --input \"data\" --input_file {input_files.images_tensor} --input_type float --output softmaxout --text_output true --output_folder '{TGTDIR}'"
+      ],
+      "identifier": "{ID}",
+      "iter": 1,
+      "metric": "accuracy",
+      "warmup": 0,
+      "output_files": {
+        "softmaxout": {
+          "filename": "softmaxout.txt",
+          "location": "{TGTDIR}/softmaxout.txt"
+        }
+      },
+      "postprocess": {
+        "commands": [
+          "{FAIPEPROOT}/libraries/python/classification_compare.py --name {name} --benchmark-output {output_files.softmaxout} --labels {HOSTDIR}/inputs/labels_{INDEX}.txt --top 1 --result-file {HOSTDIR}/outputs/accuracy_{INDEX}.txt"
+        ]
+      }
+    }
+  ]
+}

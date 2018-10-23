@@ -26,20 +26,17 @@ def processRun(*args, **kwargs):
             subprocess.Popen(*args)
             return "", None
         else:
-            output = subprocess.check_output(*args,
-                                             stderr=subprocess.STDOUT,
-                                             **kwargs).\
-                decode("utf-8", "ignore")
+            output_raw = subprocess.check_output(*args,
+                                                 stderr=subprocess.STDOUT,
+                                                 **kwargs)
+            # without the decode/encode the string cannot be printed out
+            output = output_raw.decode("utf-8", "ignore")
         return output, None
     except subprocess.CalledProcessError as e:
-        getLogger().error("Command failed: {}".format(e.output))
         err_output = e.output.decode("utf-8", "ignore")
-    except subprocess.TimeoutExpired as e:
-        getLogger().error("A child process has been taken over your" +
-                          "timeout = {}".format(kwargs["timeout"]))
-        err_output = e.output.decode("utf-8", "ignore")
+        getLogger().error("Command failed: {}".format(err_output))
     except Exception:
-        getLogger().error("Unknown failure {}: {}".format(sys.exc_info()[0],
-                                                          ' '.join(*args)))
-        err_output = "{}".format(sys.exc_info()[2].decode("utf-8", "ignore"))
+        getLogger().error("Unknown exception {}: {}".format(sys.exc_info()[0],
+                                                            ' '.join(*args)))
+        err_output = "{}".format(sys.exc_info()[0])
     return None, err_output

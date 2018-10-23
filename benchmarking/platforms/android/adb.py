@@ -9,39 +9,26 @@
 ##############################################################################
 
 import re
+from six import string_types
 
+from platforms.platform_util_base import PlatformUtilBase
 from utils.custom_logger import getLogger
-from utils.subprocess_with_logger import processRun
-import os.path as path
-from utils.arg_parse import getParser, getArgs
-
-getParser().add_argument("--android_dir", default="/data/local/tmp/",
-    help="The directory in the android device all files are pushed to.")
 
 
-class ADB(object):
-    def __init__(self, device=None):
-        self.device = device
-        self.dir = getArgs().android_dir
+class ADB(PlatformUtilBase):
+    def __init__(self, device=None, tempdir=None):
+        super(ADB, self).__init__(device, tempdir)
 
-    def run(self, cmd, *args, **kwargs):
+    def run(self, *args, **kwargs):
         adb = ["adb"]
         if self.device:
-            adb.append("-s")
-            adb.append(self.device)
-        adb.append(cmd)
-        for item in args:
-            if isinstance(item, list):
-                adb.extend(item)
-            else:
-                adb.append(item)
-        return processRun(adb, **kwargs)[0]
+            adb.extend(["-s", self.device])
+        return super(ADB, self).run(adb, *args, **kwargs)
 
-    def push(self, src, tgt=None):
-        target = tgt if tgt is not None else self.dir + path.basename(src)
+    def push(self, src, tgt):
         # Always remove the old file before pushing the new file
-        self.deleteFile(target)
-        return self.run("push", src, target)
+        self.deleteFile(tgt)
+        return self.run("push", src, tgt)
 
     def pull(self, src, tgt):
         return self.run("pull", src, tgt)
@@ -83,7 +70,7 @@ class ADB(object):
                     freq_target = target[cpu]
                 else:
                     freq_target = "mid"
-            elif isinstance(target, str):
+            elif isinstance(target, string_types):
                 freq_target = target
             else:
                 assert False, "Unsupported frequency target"
