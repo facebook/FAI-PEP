@@ -34,4 +34,7 @@ class HDB(PlatformUtilBase):
             os.chmod(tgt, 0o777)
 
     def deleteFile(self, file):
-        os.remove(file)
+        if os.path.isdir(file):
+            shutil.rmtree(file)
+        else:
+            os.remove(file)
