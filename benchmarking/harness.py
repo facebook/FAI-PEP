@@ -24,7 +24,7 @@ from platforms.platforms import getPlatforms
 from reporters.reporters import getReporters
 from utils.arg_parse import getParser, getArgs, parseKnown
 from utils.custom_logger import getLogger
-from utils.utilities import parse_kwarg
+from utils.utilities import parse_kwarg, isRunSuccess
 
 # for backward compatible purpose
 getParser().add_argument("--backend",
@@ -223,6 +223,6 @@ class BenchmarkDriver(object):
 if __name__ == "__main__":
     app = BenchmarkDriver()
     app.run()
-    getLogger().info(" ======= Run {}".format("success" if app.success else "failure"))
-    if not app.success:
-        sys.exit(1)
+    getLogger().info(" ======= Run {}".format(
+        "success" if app.success and isRunSuccess() else "failure"))
+    sys.exit(0 if app.success else 1)

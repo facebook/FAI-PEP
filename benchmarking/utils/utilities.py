@@ -149,3 +149,15 @@ def parse_kwarg(kwarg_str):
     except ValueError:
         getLogger().error("Failed to parse kwarg str: {}".format(kwarg_str))
     return key, value
+
+
+run_success = True
+
+
+def isRunSuccess():
+    return run_success
+
+
+def setRunFailure():
+    global run_success
+    run_success = False
