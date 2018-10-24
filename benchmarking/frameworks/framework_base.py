@@ -67,8 +67,10 @@ class FrameworkBase(object):
         # how we get the absolute path of the programs in the target platform
         # may consider optimize this later that only copying for the first
         # iteration
-        programs = platform.copyFilesToPlatform(tgt_program_files)
+        tgt_program_files = platform.copyFilesToPlatform(tgt_program_files)
+        programs = {}
         deepMerge(programs, host_program_files)
+        deepMerge(programs, tgt_program_files)
 
         model_files = {name: model["files"][name]["location"]
                        for name in model["files"]}
@@ -188,7 +190,7 @@ class FrameworkBase(object):
         # all files are copied back to the host system
         if len(output) > 0:
             platform.delFilesFromPlatform(tgt_model_files)
-            platform.delFilesFromPlatform(program)
+            platform.delFilesFromPlatform(tgt_program_files)
             if shared_libs is not None:
                 platform.delFilesFromPlatform(shared_libs)
             if input_files is not None:
