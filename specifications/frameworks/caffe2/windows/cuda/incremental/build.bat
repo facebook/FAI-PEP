@@ -1,5 +1,4 @@
 setlocal
-rd /Q /S %1\build
 SET USE_OBSERVERS=ON
 SET USE_CUDA=ON
 SET BUILD_BINARY=ON
