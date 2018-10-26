@@ -256,11 +256,11 @@ class ExecutablesBuilder (threading.Thread):
         start_of_week = monday.replace(hour=0, minute=0,
                                        second=0, microsecond=0)
 
-        ut_start_of_week = float(start_of_week.strftime("%s"))
-
         if base_commit:
             base_commit_time = self.repo.getCommitTime(base_commit)
-            if base_commit_time >= ut_start_of_week:
+            base_commit_datetime = \
+                datetime.datetime.utcfromtimestamp(base_commit_time)
+            if base_commit_datetime >= start_of_week:
                 return base_commit
 
         # Give more buffer to the date range to avoid the timezone issues
@@ -278,7 +278,8 @@ class ExecutablesBuilder (threading.Thread):
             assert len(items) == 2, "Repo log format is wrong"
             commit_hash = items[0].strip()
             unix_time = int(float(items[1].strip()))
-            if unix_time >= ut_start_of_week:
+            unix_datetime = datetime.datetime.utcfromtimestamp(unix_time)
+            if unix_datetime >= start_of_week:
                 return commit_hash
         assert False, "Cannot find the control commit"
         return None
