@@ -22,6 +22,10 @@ def processRun(*args, **kwargs):
     getLogger().info("Running: %s", ' '.join(*args))
     err_output = None
     try:
+        log_output = False
+        if "log_output" in kwargs:
+            log_output = kwargs["log_output"]
+            del kwargs["log_output"]
         output = None
         if "non_blocking" in kwargs and kwargs["non_blocking"]:
             subprocess.Popen(*args)
@@ -32,6 +36,8 @@ def processRun(*args, **kwargs):
                                                  **kwargs)
             # without the decode/encode the string cannot be printed out
             output = output_raw.decode("utf-8", "ignore")
+            if log_output:
+                getLogger().info(output)
         return output, None
     except subprocess.CalledProcessError as e:
         err_output = e.output.decode("utf-8", "ignore")

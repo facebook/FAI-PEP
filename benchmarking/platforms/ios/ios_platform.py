@@ -97,6 +97,7 @@ class IOSPlatform(PlatformBase):
             if "timeout" in platform_args and platform_args["timeout"]:
                 ios_kwargs["timeout"] = platform_args["timeout"]
                 del platform_args["timeout"]
+            ios_kwargs["log_output"] = platform_args.get("log_output", False)
 
         run_cmd = ["--bundle", self.app, "--noninteractive", "--noinstall"]
         # the command may fail, but the err_output is what we need
