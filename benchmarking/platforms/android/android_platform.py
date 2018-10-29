@@ -93,6 +93,8 @@ class AndroidPlatform(PlatformBase):
             if "timeout" in platform_args and platform_args["timeout"]:
                 android_kwargs["timeout"] = platform_args["timeout"]
                 del platform_args["timeout"]
+            android_kwargs["log_output"] = \
+                platform_args.get("log_output", False)
         log_screen = self.util.shell(cmd, **android_kwargs)
         log_logcat = ""
         if not log_to_screen_only:
