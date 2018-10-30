@@ -14,7 +14,7 @@ import sys
 import time
 from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
-from utils.utilities import getCommand, deepMerge, setRunFailure
+from utils.utilities import getCommand, deepMerge, setRunStatus
 
 
 def runOneBenchmark(info, benchmark, framework, platform,
@@ -55,7 +55,7 @@ def runOneBenchmark(info, benchmark, framework, platform,
             "Exception caught when running benchmark")
         getLogger().info(e)
         data = None
-        setRunFailure()
+        setRunStatus(False)
 
     if data is None or len(data) == 0:
         name = platform.getMangledName()

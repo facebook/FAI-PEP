@@ -158,6 +158,6 @@ def isRunSuccess():
     return run_success
 
 
-def setRunFailure():
+def setRunStatus(status):
     global run_success
-    run_success = False
+    run_success = status
