@@ -47,7 +47,7 @@ class AndroidDriver:
                 hash = device["hash"]
             else:
                 hash = getArgs().device
-            adb = ADB(hash)
+            adb = ADB(hash, tempdir)
             platform = AndroidPlatform(tempdir, adb)
             platforms.append(platform)
             if device:
@@ -67,6 +67,6 @@ class AndroidDriver:
                 self.devices = supported_devices
 
         for device in self.devices:
-            adb = ADB(device)
+            adb = ADB(device, tempdir)
             platforms.append(AndroidPlatform(tempdir, adb))
         return platforms

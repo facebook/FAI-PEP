@@ -71,10 +71,6 @@ class BenchmarkCollector(object):
         # following change should not appear in updated_json file
         if meta:
             deepMerge(one_benchmark["model"], meta)
-        if "commands" in info:
-            if "commands" not in one_benchmark["model"]:
-                one_benchmark["model"]["commands"] = {}
-            deepMerge(one_benchmark["model"]["commands"], info["commands"])
 
         self._updateTests(one_benchmark, source)
         # Add fields that should not appear in the saved benchmark file
@@ -115,10 +111,13 @@ class BenchmarkCollector(object):
 
         # update the file field with the absolute path
         # needs to be after the file is updated
+        # only update files with md5, which means those files are not
+        # temporary files
         for file in collected_files:
-            cached_filename = \
-                self._getDestFilename(file, model_dir)
-            file["location"] = cached_filename
+            if "md5" in file:
+                cached_filename = \
+                    self._getDestFilename(file, model_dir)
+                file["location"] = cached_filename
 
         tmp_dir = tempfile.mkdtemp()
         for tmp_file in collected_tmp_files:
@@ -136,6 +135,8 @@ class BenchmarkCollector(object):
                                            files)
 
         for test in benchmark["tests"]:
+            if "files" in test:
+                self._collectOneGroupFiles(test["files"], files, tmp_files)
             if "input_files" in test:
                 self._collectOneGroupFiles(test["input_files"], files)
             if "output_files" in test:
@@ -172,8 +173,9 @@ class BenchmarkCollector(object):
     def _updateOneFile(self, field, model_dir, filename):
         cached_filename = \
             self._getDestFilename(field, model_dir)
-        if not os.path.isfile(cached_filename) or \
-                self._calculateMD5(cached_filename) != field["md5"]:
+        if "md5" in field and \
+                (not os.path.isfile(cached_filename) or
+                 self._calculateMD5(cached_filename) != field["md5"]):
             return self._copyFile(field, cached_filename, filename)
         return False
 
@@ -220,8 +222,29 @@ class BenchmarkCollector(object):
         # framework specific updates
         self.framework.rewriteBenchmarkTests(one_benchmark, source)
 
+        # rewrite test fields for compatibility reasons
+        for test in one_benchmark["tests"]:
+            self._rewriteTestFields(test)
+
         # Update identifiers, the last update
         self._updateNewTestFields(one_benchmark["tests"], one_benchmark)
+
+    def _rewriteTestFields(self, test):
+        if "arguments" in test:
+            assert "commands" not in test, \
+                "Commands and arguments cannot co-exist in test"
+            test["commands"] = [
+                "{program} " + test["arguments"]
+            ]
+            del test["arguments"]
+        if "command" in test:
+            assert "commands" not in test, \
+                "Commands and command cannot co-exist in test"
+            test["commands"] = [
+                test["command"]
+            ]
+            # do not delete for now
+            # del test["command"]
 
     def _updateNewTestFields(self, tests, one_benchmark):
         idx = 0
@@ -229,12 +252,6 @@ class BenchmarkCollector(object):
             identifier = test["identifier"].replace("{ID}", str(idx))
             test["identifier"] = identifier
             idx += 1
-
-        if "commands" in one_benchmark["model"]:
-            for test in tests:
-                if "commands" not in test:
-                    test["commands"] = {}
-                deepMerge(test["commands"], one_benchmark["model"]["commands"])
 
     def _getAbsFilename(self, file, source, cache_dir):
         location = file["location"]

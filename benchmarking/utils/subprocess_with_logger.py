@@ -15,12 +15,17 @@ from __future__ import unicode_literals
 import subprocess
 import sys
 from .custom_logger import getLogger
+from .utilities import setRunFailure
 
 
 def processRun(*args, **kwargs):
     getLogger().info("Running: %s", ' '.join(*args))
     err_output = None
     try:
+        log_output = False
+        if "log_output" in kwargs:
+            log_output = kwargs["log_output"]
+            del kwargs["log_output"]
         output = None
         if "non_blocking" in kwargs and kwargs["non_blocking"]:
             subprocess.Popen(*args)
@@ -31,6 +36,8 @@ def processRun(*args, **kwargs):
                                                  **kwargs)
             # without the decode/encode the string cannot be printed out
             output = output_raw.decode("utf-8", "ignore")
+            if log_output:
+                getLogger().info(output)
         return output, None
     except subprocess.CalledProcessError as e:
         err_output = e.output.decode("utf-8", "ignore")
@@ -38,5 +45,6 @@ def processRun(*args, **kwargs):
     except Exception:
         getLogger().error("Unknown exception {}: {}".format(sys.exc_info()[0],
                                                             ' '.join(*args)))
-        err_output = "{}".format(sys.exc_info()[2].decode("utf-8", "ignore"))
+        err_output = "{}".format(sys.exc_info()[0])
+    setRunFailure()
     return None, err_output

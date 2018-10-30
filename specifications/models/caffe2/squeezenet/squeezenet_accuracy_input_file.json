@@ -1,0 +1,55 @@
+{
+  "model": {
+    "category": "CNN",
+    "description": "Trained SqueezeNet model on Caffe2",
+    "files": {
+      "golden_output": {
+        "filename": "labels.txt",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/benchmark_models/images_tensor.txt",
+        "md5": "6c4c7ba189284368b1956246f7e3dce1"
+      },
+      "init": {
+        "filename": "init_net.pb",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/squeezenet/init_net.pb",
+        "md5": "a589d31d93c44d353ae2cd92af4d5a3f"
+      },
+      "predict": {
+        "filename": "predict_net.pb",
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/squeezenet/predict_net.pb",
+        "md5": "694bfdd02e9ccb57bfc4acb451fbfb2d"
+      }
+    },
+    "format": "caffe2",
+    "kind": "deployment",
+    "name": "squeezenet"
+  },
+  "tests": [
+    {
+      "commands": [
+        "{program} --net {files.predict} --init_net {files.init} --warmup {warmup} --iter {iter} --input \"data\" --input_file {input_files.images_tensor} --input_type float --output softmaxout --text_output true --output_folder '{TGTDIR}'"
+      ],
+      "identifier": "{ID}",
+      "input_files": {
+        "images_tensor": {
+          "filename": "images_tensor.pb",
+          "location": "https://s3.amazonaws.com/download.caffe2.ai/models/benchmark_models/images_tensor.pb",
+          "md5": "2dd998216e13eaa470d6f38fb52e83d7"
+        }
+      },
+      "iter": 1,
+      "metric": "accuracy",
+      "output_files": {
+        "softmaxout": {
+          "filename": "softmaxout.txt",
+          "location": "{TGTDIR}/softmaxout.txt"
+        }
+      },
+      "postprocess": {
+        "commands": [
+          "{FAIPEPROOT}/libraries/python/classification_compare.py --name {name} --benchmark-output {output_files.softmaxout} --labels {files.golden_output} --top 1 --metric-keyword 'Caffe2Observer ' "
+        ]
+      },
+      "warmup": 0
+    }
+  ]
+}

@@ -30,7 +30,7 @@ class HostPlatform(PlatformBase):
             platform_name = platform.platform() + "-" + \
                                self._getProcessorName()
         self.tempdir = os.path.join(tempdir, platform_hash)
-        hdb = HDB(platform_hash)
+        hdb = HDB(platform_hash, tempdir)
         super(HostPlatform, self).__init__(self.tempdir, self.tempdir, hdb)
 
         # reset the platform and platform hash
@@ -45,8 +45,19 @@ class HostPlatform(PlatformBase):
         if not isinstance(cmd, list):
             cmd = shlex.split(cmd)
         host_kwargs = {}
-        if "platform_args" in kwargs and "timeout" in kwargs["platform_args"]:
-            host_kwargs["timeout"] = kwargs["platform_args"]["timeout"]
+        env = os.environ
+        if "platform_args" in kwargs:
+            platform_args = kwargs["platform_args"]
+            if "timeout" in platform_args:
+                host_kwargs["timeout"] = platform_args["timeout"]
+            # used for local or remote log control
+            host_kwargs["log_output"] = platform_args.get("log_output", False)
+            if "env" in platform_args:
+                customized_env = platform_args["env"]
+                for k in customized_env:
+                    env[k] = str(customized_env[k])
+                host_kwargs["env"] = env
+
         output, _ = processRun(cmd, **host_kwargs)
         return output
 

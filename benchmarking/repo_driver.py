@@ -12,6 +12,7 @@ from collections import deque
 import datetime
 import json
 import os
+import sys
 import threading
 import time
 from utils.arg_parse import getParser, getArgs, getUnknowns, parseKnown
@@ -37,6 +38,7 @@ getParser().add_argument("--commit", default="master",
 getParser().add_argument("--commit_file",
     help="The file saves the last commit hash that the regression has finished. " +
     "If this argument is specified and is valid, the --commit has no use.")
+getParser().add_argument("--env", help="environment variables passed to runtime binary")
 getParser().add_argument("--exec_dir", required=True,
     help="The executable is saved in the specified directory. " +
     "If an executable is found for a commit, no re-compilation is performed. " +
@@ -254,11 +256,11 @@ class ExecutablesBuilder (threading.Thread):
         start_of_week = monday.replace(hour=0, minute=0,
                                        second=0, microsecond=0)
 
-        ut_start_of_week = float(start_of_week.strftime("%s"))
-
         if base_commit:
             base_commit_time = self.repo.getCommitTime(base_commit)
-            if base_commit_time >= ut_start_of_week:
+            base_commit_datetime = \
+                datetime.datetime.utcfromtimestamp(base_commit_time)
+            if base_commit_datetime >= start_of_week:
                 return base_commit
 
         # Give more buffer to the date range to avoid the timezone issues
@@ -276,7 +278,8 @@ class ExecutablesBuilder (threading.Thread):
             assert len(items) == 2, "Repo log format is wrong"
             commit_hash = items[0].strip()
             unix_time = int(float(items[1].strip()))
-            if unix_time >= ut_start_of_week:
+            unix_datetime = datetime.datetime.utcfromtimestamp(unix_time)
+            if unix_datetime >= start_of_week:
                 return commit_hash
         assert False, "Cannot find the control commit"
         return None
@@ -291,6 +294,7 @@ class RepoDriver(object):
         self.executables_builder = ExecutablesBuilder(self.repo,
                                                       self.work_queue,
                                                       self.queue_lock)
+        self.ret = 0
 
     def run(self):
         getLogger().info(
@@ -321,7 +325,7 @@ class RepoDriver(object):
             repo_info = self.work_queue.popleft()
             if not same_host:
                 self.queue_lock.release()
-            self._runOneBenchmarkSuite(repo_info)
+            self.ret |= self._runOneBenchmarkSuite(repo_info)
             if same_host:
                 self.queue_lock.release()
 
@@ -333,12 +337,14 @@ class RepoDriver(object):
             # consistent state
             time.sleep(10)
         # cannot use subprocess because it conflicts with requests
-        os.system(cmd)
+        ret = os.system(cmd)
         if getArgs().commit_file and getArgs().regression:
             with open(getArgs().commit_file, 'w') as file:
                 file.write(repo_info['treatment']['commit'])
-        getLogger().info("Done one benchmark run for " +
+        getLogger().info("One benchmark run {} for ".format(
+                         "successful" if ret == 0 else "failed") +
                          repo_info['treatment']['commit'])
+        return ret
 
     def _getCommand(self, repo_info):
         platform = repo_info["platform"]
@@ -360,9 +366,15 @@ class RepoDriver(object):
             " --framework " + getString(getArgs().framework) + \
             " --info " + info + " " + \
             ' '.join([getString(u) for u in unknowns])
+        if getArgs().env:
+            command = command + " --env "
+            env_vars = getArgs().env.split()
+            for env_var in env_vars:
+                command = command + ' ' + env_var + ' '
         return command
 
 
 if __name__ == "__main__":
     app = RepoDriver()
     app.run()
+    sys.exit(app.ret)

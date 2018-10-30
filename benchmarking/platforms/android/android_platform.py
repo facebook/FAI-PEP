@@ -45,7 +45,7 @@ class AndroidPlatform(PlatformBase):
         while (repeat and size > 256):
             repeat = False
             ret = self.util.logcat("-G", str(size) + "K")
-            if ret.find("failed to") >= 0:
+            if ret and ret.find("failed to") >= 0:
                 repeat = True
                 size = int(size / 2)
 
@@ -93,6 +93,8 @@ class AndroidPlatform(PlatformBase):
             if "timeout" in platform_args and platform_args["timeout"]:
                 android_kwargs["timeout"] = platform_args["timeout"]
                 del platform_args["timeout"]
+            android_kwargs["log_output"] = \
+                platform_args.get("log_output", False)
         log_screen = self.util.shell(cmd, **android_kwargs)
         log_logcat = ""
         if not log_to_screen_only:

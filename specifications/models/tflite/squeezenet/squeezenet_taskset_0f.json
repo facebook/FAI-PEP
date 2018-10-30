@@ -15,7 +15,9 @@
   },
   "tests": [
     {
-      "arguments": "--graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=Placeholder --input_layer_shape=\"1,224,224,3\" --num_threads=1",
+      "commands": [
+        "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=Placeholder --input_layer_shape=\"1,224,224,3\" --num_threads=1"
+      ],
       "identifier": "squeezenet-taskset-0f-1-thread",
       "platform_args": {
         "taskset": "0f"
@@ -25,7 +27,9 @@
       "warmup": 1
     },
     {
-      "arguments": "--graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=Placeholder --input_layer_shape=\"1,224,224,3\" --num_threads=2",
+      "commands": [
+        "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=Placeholder --input_layer_shape=\"1,224,224,3\" --num_threads=2"
+      ],
       "identifier": "squeezenet-taskset-0f-2-threads",
       "platform_args": {
         "taskset": "0f"
@@ -35,7 +39,9 @@
       "warmup": 1
     },
     {
-      "arguments": "--graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=Placeholder --input_layer_shape=\"1,224,224,3\" --num_threads=3",
+      "commands": [
+        "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=Placeholder --input_layer_shape=\"1,224,224,3\" --num_threads=3"
+      ],
       "identifier": "squeezenet-taskset-0f-3-threads",
       "platform_args": {
         "taskset": "0f"
@@ -45,7 +51,9 @@
       "warmup": 1
     },
     {
-      "arguments": "--graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=Placeholder --input_layer_shape=\"1,224,224,3\" --num_threads=4",
+      "commands": [
+        "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=Placeholder --input_layer_shape=\"1,224,224,3\" --num_threads=4"
+      ],
       "identifier": "squeezenet-taskset-0f-4-threads",
       "platform_args": {
         "taskset": "0f"

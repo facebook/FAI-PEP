@@ -9,15 +9,21 @@
 ##############################################################################
 
 import os
+import shutil
+import sys
 
 from platforms.platform_util_base import PlatformUtilBase
 from utils.custom_logger import getLogger
 
 
 class IDB(PlatformUtilBase):
-    def __init__(self, device=None):
-        super(IDB, self).__init__(device)
+    def __init__(self, device=None, tempdir=None):
+        super(IDB, self).__init__(device, tempdir)
         self.bundle_id = None
+        if self.tempdir is not None:
+            self.cached_tree = os.path.join(self.tempdir, "tree")
+            if not os.path.isdir(self.cached_tree):
+                os.mkdir(self.cached_tree)
 
     def setBundleId(self, bundle_id):
         self.bundle_id = bundle_id
@@ -38,11 +44,30 @@ class IDB(PlatformUtilBase):
         return self.run("--upload", src, "--to", tgt)
 
     def pull(self, src, tgt):
-        return self.run("--download", src, "--to", tgt)
+        # ios-deploy will dump all files from the app to the directory,
+        # so we only dump it once and save the result.
+        # it is better to remove all uncessary files before we dump the
+        # result
+        assert self.cached_tree is not None, "cached_tree is None."
+        src_filename = self.cached_tree + "/" + src
+        if not os.path.isfile(src_filename):
+            self.run("--download", "--to", self.cached_tree)
+        assert os.path.isfile(src_filename), \
+            "File {} doesn't exist in app".format(src_filename)
+        shutil.copyfile(src_filename, tgt)
 
     def reboot(self):
-        # No reboot functionality
-        pass
+        # use idevicediagnostics to reboot device if exists
+        try:
+            super(IDB, self).run("idevicepair",
+                                 "-u", self.device, "pair")
+            super(IDB, self).run("idevicediagnostics",
+                                 "-u", self.device, "restart")
+            return True
+        except Exception:
+            getLogger().error("Rebooting failure...")
+            getLogger().error("Unknown exception {}".format(sys.exc_info()[0]))
+            return False
 
     def deleteFile(self, file):
         # need to make sure the file exists

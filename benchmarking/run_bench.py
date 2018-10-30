@@ -12,6 +12,7 @@ import copy
 import json
 import os
 import six
+import sys
 from utils.arg_parse import getParser, getArgs, getUnknowns, parseKnown
 from utils.custom_logger import getLogger
 from utils.utilities import getPythonInterpreter, getString
@@ -24,12 +25,13 @@ class RunBench(object):
     def __init__(self):
         self.home_dir = os.path.expanduser('~')
         self.root_dir = os.path.join(self.home_dir, ".aibench", "git")
+        self.ret = 0
         parseKnown()
 
     def run(self):
         cmd = self._getCMD()
         getLogger().info("Running: %s", cmd)
-        os.system(cmd)
+        self.ret = os.system(cmd)
 
     def _getUnknownArgs(self):
         unknowns = getUnknowns()
@@ -144,3 +146,4 @@ class RunBench(object):
 if __name__ == "__main__":
     app = RunBench()
     app.run()
+    sys.exit(app.ret)

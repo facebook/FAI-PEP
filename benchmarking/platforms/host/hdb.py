@@ -15,13 +15,15 @@ from platforms.platform_util_base import PlatformUtilBase
 
 
 class HDB(PlatformUtilBase):
-    def __init__(self, device=None):
-        super(HDB, self).__init__(device)
+    def __init__(self, device=None, tempdir=None):
+        super(HDB, self).__init__(device, tempdir)
 
     def push(self, src, tgt):
         if src != tgt:
             if os.path.isdir(src):
-                shutil.move(src, tgt)
+                if os.path.exists(tgt):
+                    shutil.rmtree(tgt)
+                shutil.copytree(src, tgt)
             else:
                 shutil.copyfile(src, tgt)
                 os.chmod(tgt, 0o777)
@@ -32,4 +34,7 @@ class HDB(PlatformUtilBase):
             os.chmod(tgt, 0o777)
 
     def deleteFile(self, file):
-        os.remove(file)
+        if os.path.isdir(file):
+            shutil.rmtree(file)
+        else:
+            os.remove(file)

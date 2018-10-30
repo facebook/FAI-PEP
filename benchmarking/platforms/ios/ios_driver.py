@@ -48,7 +48,7 @@ class IOSDriver(object):
             device_str = getArgs().device
             assert device_str[0] == '{', "device must be a json string"
             device = json.loads(device_str)
-            idb = IDB(device["hash"])
+            idb = IDB(device["hash"], tempdir)
             platform = IOSPlatform(tempdir, idb)
             platform.setPlatform(device["kind"])
             platforms.append(platform)
@@ -68,7 +68,7 @@ class IOSDriver(object):
 
         for device in self.devices:
             model = self.devices[device]
-            idb = IDB(device)
+            idb = IDB(device, tempdir)
             platform = IOSPlatform(tempdir, idb)
             platform.setPlatform(model)
             platforms.append(platform)

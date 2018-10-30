@@ -15,7 +15,9 @@
   },
   "tests": [
     {
-      "arguments": "--graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=3",
+      "commands": [
+        "{program} --graph={files.graph} --warmup_runs={warmup} --num_runs={iter} --input_layer=input --input_layer_shape=\"1,224,224,3\" --num_threads=3"
+      ],
       "identifier": "mobilenet_v2_1.0_224-3-threads-power",
       "platform_args": {
         "sleep_before_run": 20
