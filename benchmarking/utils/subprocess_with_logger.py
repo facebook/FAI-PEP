@@ -15,7 +15,7 @@ from __future__ import unicode_literals
 import subprocess
 import sys
 from .custom_logger import getLogger
-from .utilities import setRunFailure
+from .utilities import setRunStatus
 
 
 def processRun(*args, **kwargs):
@@ -46,5 +46,5 @@ def processRun(*args, **kwargs):
         getLogger().error("Unknown exception {}: {}".format(sys.exc_info()[0],
                                                             ' '.join(*args)))
         err_output = "{}".format(sys.exc_info()[0])
-    setRunFailure()
+    setRunStatus(False)
     return None, err_output

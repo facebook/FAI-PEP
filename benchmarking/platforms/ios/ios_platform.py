@@ -17,6 +17,7 @@ from platforms.platform_base import PlatformBase
 from utils.arg_parse import getParser, getArgs
 from utils.custom_logger import getLogger
 from utils.subprocess_with_logger import processRun
+from utils.utilities import isRunSuccess, setRunStatus
 
 getParser().add_argument("--ios_dir", default="/tmp",
     help="The directory in the ios device all files are pushed to.")
@@ -58,8 +59,12 @@ class IOSPlatform(PlatformBase):
 
         self.util.setBundleId(bundle_id.strip())
 
+        # We know this command will fail. Avoid propogating this
+        # failure to the upstream
+        success = isRunSuccess()
         self.util.run(["--bundle", self.app,
                       "--uninstall", "--noninteractive"])
+        setRunStatus(success)
 
     def runBenchmark(self, cmd, *args, **kwargs):
         if not isinstance(cmd, list):
