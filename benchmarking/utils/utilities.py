@@ -151,13 +151,17 @@ def parse_kwarg(kwarg_str):
     return key, value
 
 
-run_success = True
+# run_status == 0: success
+# run_status == 1: user error
+# run_status == 2: harness error
+# run_status == 3: both user and harness error
+run_status = 0
 
 
-def isRunSuccess():
-    return run_success
+def getRunStatus():
+    return run_status
 
 
 def setRunStatus(status):
-    global run_success
-    run_success = status
+    global run_status
+    run_status = run_status | status

@@ -23,12 +23,12 @@ def buildProgramPlatform(dst, repo_dir, framework, frameworks_dir, platform):
     os.makedirs(dst_dir)
 
     if os.name == "nt":
-        result = processRun([script, repo_dir, dst])[0]
+        result, _ = processRun([script, repo_dir, dst])
     else:
-        result = processRun(['sh', script, repo_dir, dst])[0]
-    if result is not None:
+        result, _ = processRun(['sh', script, repo_dir, dst])
+    if os.path.isfile(dst):
         os.chmod(dst, 0o777)
-    print(result)
+    getLogger().info(result)
 
     if not os.path.isfile(dst) and \
             (not (os.path.isdir(dst) and platform.startswith("ios"))):

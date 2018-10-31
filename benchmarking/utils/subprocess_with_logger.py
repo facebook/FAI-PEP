@@ -46,5 +46,5 @@ def processRun(*args, **kwargs):
         getLogger().error("Unknown exception {}: {}".format(sys.exc_info()[0],
                                                             ' '.join(*args)))
         err_output = "{}".format(sys.exc_info()[0])
-    setRunStatus(False)
-    return None, err_output
+    setRunStatus(1)
+    return "", err_output

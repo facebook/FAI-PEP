@@ -24,7 +24,7 @@ from platforms.platforms import getPlatforms
 from reporters.reporters import getReporters
 from utils.arg_parse import getParser, getArgs, parseKnown
 from utils.custom_logger import getLogger
-from utils.utilities import parse_kwarg, isRunSuccess
+from utils.utilities import parse_kwarg, getRunStatus
 
 # for backward compatible purpose
 getParser().add_argument("--backend",
@@ -129,7 +129,7 @@ class BenchmarkDriver(object):
     def __init__(self):
         parseKnown()
         self._lock = threading.Lock()
-        self.success = True
+        self.status = 0
 
     def runBenchmark(self, info, platform, benchmarks):
         if getArgs().reboot:
@@ -163,10 +163,10 @@ class BenchmarkDriver(object):
 
             b = copy.deepcopy(benchmark)
             i = copy.deepcopy(info)
-            success = runOneBenchmark(i, b, framework, platform,
-                                      getArgs().platform,
-                                      reporters, self._lock)
-            self.success = self.success and success
+            status = runOneBenchmark(i, b, framework, platform,
+                                     getArgs().platform,
+                                     reporters, self._lock)
+            self.status = self.status | status
             if idx != len(benchmarks) - 1:
                 # cool down period between multiple benchmark runs
                 cooldown = getArgs().cooldown
@@ -223,6 +223,14 @@ class BenchmarkDriver(object):
 if __name__ == "__main__":
     app = BenchmarkDriver()
     app.run()
-    getLogger().info(" ======= Run {}".format(
-        "success" if app.success and isRunSuccess() else "failure"))
-    sys.exit(0 if app.success else 1)
+    status = app.status | getRunStatus()
+    if status == 0:
+        status_str = "success"
+    elif status == 1:
+        status_str = "user error"
+    elif status == 2:
+        status_str = "harness error"
+    else:
+        status_str = "user and harness error"
+    getLogger().info(" ======= {} =======".format(status_str))
+    sys.exit(app.status)

@@ -14,7 +14,7 @@ import sys
 import time
 from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
-from utils.utilities import getCommand, deepMerge, setRunStatus
+from utils.utilities import getCommand, deepMerge, setRunStatus, getRunStatus
 
 
 def runOneBenchmark(info, benchmark, framework, platform,
@@ -22,6 +22,7 @@ def runOneBenchmark(info, benchmark, framework, platform,
     assert "treatment" in info, "Treatment is missing in info"
     getLogger().info("Running {}".format(benchmark["path"]))
 
+    status = 0
     minfo = copy.deepcopy(info["treatment"])
     if "shared_libs" in info:
         minfo["shared_libs"] = info["shared_libs"]
@@ -55,7 +56,8 @@ def runOneBenchmark(info, benchmark, framework, platform,
             "Exception caught when running benchmark")
         getLogger().info(e)
         data = None
-        setRunStatus(False)
+        status = 2
+        setRunStatus(status)
 
     if data is None or len(data) == 0:
         name = platform.getMangledName()
@@ -70,7 +72,7 @@ def runOneBenchmark(info, benchmark, framework, platform,
             "on {}. ".format(name) +
             "The run may be failed for " +
             "{}".format(commit_hash))
-        return False
+        return status
 
     with lock:
         for reporter in reporters:
@@ -82,8 +84,7 @@ def runOneBenchmark(info, benchmark, framework, platform,
         from regression_detectors.regression_detectors import checkRegressions
         checkRegressions(info, platform, framework, benchmark, reporters,
                          result['meta'], getArgs().local_reporter)
-    time.sleep(5)
-    return True
+    return status
 
 
 def _runOnePass(info, benchmark, framework, platform):
