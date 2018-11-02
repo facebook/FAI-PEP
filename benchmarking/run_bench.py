@@ -27,7 +27,7 @@ getParser().add_argument("--reset_options", action="store_true",
 class RunBench(object):
     def __init__(self):
         parseKnown()
-        self.root_dir = getArgs().config_root
+        self.root_dir = getArgs().config_dir
         self.ret = 0
 
     def run(self):
