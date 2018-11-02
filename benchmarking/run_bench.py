@@ -17,7 +17,7 @@ from utils.arg_parse import getParser, getArgs, getUnknowns, parseKnown
 from utils.custom_logger import getLogger
 from utils.utilities import getPythonInterpreter, getString
 
-getParser().add_argument("--config_root",
+getParser().add_argument("--config_dir",
     default=os.path.join(os.path.expanduser('~'), ".aibench", "git"),
     help="Specify the config root directory.")
 getParser().add_argument("--reset_options", action="store_true",
