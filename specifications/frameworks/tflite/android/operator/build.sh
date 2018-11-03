@@ -9,6 +9,6 @@ bazel build -c opt \
   --config=android_arm \
   --cxxopt='--std=c++11' \
   --copt=-DTFLITE_PROFILING_ENABLED \
-  tensorflow/contrib/lite/tools/benchmark:benchmark_model
+  tensorflow/lite/tools/benchmark:benchmark_model
 
-cp "$1/bazel-bin/tensorflow/contrib/lite/tools/benchmark/benchmark_model" "$2"
+cp "$1/bazel-bin/tensorflow/lite/tools/benchmark/benchmark_model" "$2"
