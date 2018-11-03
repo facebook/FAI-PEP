@@ -1,8 +1,9 @@
 #!/bin/bash
 
-DIR=$(dirname $0)
+set -ex
 
 export MAX_JOBS=8
+DIR=$(dirname $0)
 
 # setup sccache wrappers
 if hash sccache 2>/dev/null; then
@@ -24,9 +25,11 @@ PYTHON="$(which python)"
 if [[ "${CIRCLE_JOB}" =~ py((2|3)\\.?[0-9]?\\.?[0-9]?) ]]; then
     PYTHON=$(which "python${BASH_REMATCH[1]}")
 fi
-# $PYTHON -m virtualenv "$VENV_DIR"
-# source "$VENV_DIR/bin/activate"
+$PYTHON -m virtualenv "$VENV_DIR"
+source "$VENV_DIR/bin/activate"
 pip install -U pip setuptools
+
+sudo apt-get update
 
 # clone FAI-PEP
 FAI_PEP_DIR=/tmp/FAI-PEP
@@ -35,23 +38,12 @@ git clone https://github.com/facebook/FAI-PEP.git "$FAI_PEP_DIR"
 
 pip install six requests
 
-mkdir
-
 case ${TEST_NAME} in
   PYTORCH)
-    sudo pip install numpy pyyaml mkl mkl-include setuptools cmake cffi typing
-
-    PYTORCH_DIR=/tmp/pytorch
-    rm -rf ${PYTORCH_DIR}
-    git clone --recursive --quiet https://github.com/pytorch/pytorch.git "$PYTORCH_DIR"
-
-    # install ninja to speedup the build
-    sudo pip install ninja
+    sh ${DIR}/builds/build_pytorch.sh
     ;;
   TFLITE)
-    TFLITE_DIR=/tmp/tensorflow
-    rm -rf ${TFLITE_DIR}
-    git clone --recursive --quiet https://github.com/tensorflow/tensorflow.git "$TFLITE_DIR"
+    sh ${DIR}/builds/build_tflite.sh
     ;;
   *)
     echo "Error, '${TEST_NAME}' not valid mode; Must be one of {PYTORCH, TFLITE}."

@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -ex
+
+source "/tmp/venv/bin/activate"
+
 DIR=$(dirname $0)
 
 CONFIG_DIR=/tmp/config
