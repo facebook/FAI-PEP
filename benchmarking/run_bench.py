@@ -17,16 +17,18 @@ from utils.arg_parse import getParser, getArgs, getUnknowns, parseKnown
 from utils.custom_logger import getLogger
 from utils.utilities import getPythonInterpreter, getString
 
+getParser().add_argument("--config_dir",
+    default=os.path.join(os.path.expanduser('~'), ".aibench", "git"),
+    help="Specify the config root directory.")
 getParser().add_argument("--reset_options", action="store_true",
     help="Reset all the options that is saved by default.")
 
 
 class RunBench(object):
     def __init__(self):
-        self.home_dir = os.path.expanduser('~')
-        self.root_dir = os.path.join(self.home_dir, ".aibench", "git")
-        self.ret = 0
         parseKnown()
+        self.root_dir = getArgs().config_dir
+        self.ret = 0
 
     def run(self):
         cmd = self._getCMD()
