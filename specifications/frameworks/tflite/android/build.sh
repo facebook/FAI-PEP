@@ -1,7 +1,6 @@
 #!/bin/sh
 
 # the configure must be run once beforehand
-pushd `pwd`
 cd "$1"
 
 # build benchmark binary
@@ -10,7 +9,5 @@ bazel build -c opt \
   --config=android_arm \
   --cxxopt='--std=c++11' \
   tensorflow/contrib/lite/tools/benchmark:benchmark_model
-
-popd
 
 cp "$1/bazel-bin/tensorflow/contrib/lite/tools/benchmark/benchmark_model" "$2"
