@@ -10,7 +10,7 @@ if [ ! -z ${BAZEL_DIR} ]; then
   mkdir -p ${BAZEL_DIR}
 fi
 if [ ! -f ${BAZEL_DIR}/${BAZEL} ]; then
-  wget -O ${BAZEL_DIR}/${BAZEL} https://github.com/bazelbuild/bazel/releases/download/0.18.1/${BAZEL}
+  wget -q -O ${BAZEL_DIR}/${BAZEL} https://github.com/bazelbuild/bazel/releases/download/0.18.1/${BAZEL}
 fi
 chmod +x ${BAZEL_DIR}/${BAZEL}
 ${BAZEL_DIR}/${BAZEL} --user
