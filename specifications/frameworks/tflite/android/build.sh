@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -ex
+
 # the configure must be run once beforehand
 cd "$1"
 
