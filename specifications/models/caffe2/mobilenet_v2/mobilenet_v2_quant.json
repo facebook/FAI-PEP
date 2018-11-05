@@ -5,13 +5,13 @@
     "files": {
       "init": {
         "filename": "init_net.pb",
-        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/mobilenet_v2_quant/init_net.pb",
-        "md5": "c503fcfbac53d8a3b4a5b716e898b59e"
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/mobilenet_v2_1.0_224_quant/init_net.pb",
+        "md5": "c1acd3b84dcf56790ee44011da63dfd9"
       },
       "predict": {
         "filename": "predict_net.pb",
-        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/mobilenet_v2_quant/predict_net.pb",
-        "md5": "dc2dba5ef9ed216678558301f4690063"
+        "location": "https://s3.amazonaws.com/download.caffe2.ai/models/mobilenet_v2_1.0_224_quant/predict_net.pb",
+        "md5": "1c834d6e2cdcd481121c73f231f726c0"
       }
     },
     "format": "caffe2",
