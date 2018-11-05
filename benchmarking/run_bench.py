@@ -28,7 +28,7 @@ class RunBench(object):
     def __init__(self):
         parseKnown()
         self.root_dir = getArgs().config_dir
-        self.ret = 0
+        self.ret   = 0
 
     def run(self):
         cmd = self._getCMD()
