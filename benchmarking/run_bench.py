@@ -140,7 +140,7 @@ class RunBench(object):
             ' '.join([getString(u) + ' ' +
                      (getString(args[u])
                       if args[u] is not None else "")
-                      for u in args]) + ' ' + \
+                      for u in args])  + ' ' + \
             ' '.join([getString(u) for u in unknowns])
         return command
 
