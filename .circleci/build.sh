@@ -38,7 +38,7 @@ git clone https://github.com/facebook/FAI-PEP.git "$FAI_PEP_DIR"
 
 pip install six requests
 
-case ${TEST_NAME} in
+case ${CIRCLE_JOB} in
   PYTORCH)
     sh ${DIR}/builds/build_pytorch.sh
     ;;
@@ -46,7 +46,7 @@ case ${TEST_NAME} in
     sh ${DIR}/builds/build_tflite.sh
     ;;
   *)
-    echo "Error, '${TEST_NAME}' not valid mode; Must be one of {PYTORCH, TFLITE}."
+    echo "Error, '${CIRCLE_JOB}' not valid mode; Must be one of {PYTORCH, TFLITE}."
     exit 1
     ;;
 esac
