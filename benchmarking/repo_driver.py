@@ -20,7 +20,7 @@ from repos.repos import getRepo
 from utils.build_program import buildProgramPlatform
 from utils.custom_logger import getLogger
 from utils.utilities import getDirectory, getPythonInterpreter, \
-    deepMerge,   getString
+    deepMerge, getString
 
 getParser().add_argument("--ab_testing", action="store_true",
     help="Enable A/B testing in benchmark.")
