@@ -1,5 +1,7 @@
 # Facebook AI Performance Evaluation Platform
 
+[![CircleCI](https://circleci.com/gh/facebook/FAI-PEP.svg?style=svg)](https://circleci.com/gh/facebook/FAI-PEP)
+
 Facebook AI Performance Evaluation Platform is a framework and backend agnostic benchmarking platform to compare machine learning inferencing runtime metrics on a set of models and a variety of backends. It also provides a means to check performance regressions on each commit. It is licensed under Apache License 2.0. Please refer to the [LICENSE](/LICENSE) file for details.
 
 Currently the following performance metrics are collected:
