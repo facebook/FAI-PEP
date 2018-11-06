@@ -4,8 +4,9 @@ set -ex
 
 BAZEL_DIR=/tmp/bazel
 BAZEL=bazel-0.18.1-installer-linux-x86_64.sh
+REPO_DIR=/tmp/tensorflow
 
-sudo apt-get install wget pkg-config g++ zlib1g-dev python zip unzip -y
+sudo apt-get -y install wget pkg-config g++ zlib1g-dev python zip unzip
 if [ ! -z ${BAZEL_DIR} ]; then
   mkdir -p ${BAZEL_DIR}
 fi
@@ -15,6 +16,6 @@ fi
 chmod +x ${BAZEL_DIR}/${BAZEL}
 ${BAZEL_DIR}/${BAZEL} --user
 export PATH="$PATH:$HOME/bin"
-TFLITE_DIR=/tmp/tensorflow
-rm -rf ${TFLITE_DIR}
-git clone --recursive --quiet https://github.com/tensorflow/tensorflow.git "$TFLITE_DIR"
+
+rm -rf ${REPO_DIR}
+git clone --recursive --quiet https://github.com/tensorflow/tensorflow.git "$REPO_DIR"
