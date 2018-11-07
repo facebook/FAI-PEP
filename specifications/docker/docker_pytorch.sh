@@ -68,7 +68,7 @@ pip install ninja
 python ${FAI_PEP_DIR}/benchmarking/run_bench.py -b "${BENCHMARK_FILE}" --config_dir "${CONFIG_DIR}"
 
 # install opencv for image conversion
-apt-get install python-opencv
+apt-get -y install python-opencv
 
 if [ $# -gt 0 ]; then
   if [ ! -z "$1" ]; then
