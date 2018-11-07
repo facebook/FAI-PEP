@@ -45,7 +45,7 @@ echo "
   \"--framework\": \"caffe2\",
   \"--local_reporter\": \"${CONFIG_DIR}/reporter\",
   \"--model_cache\": \"${CONFIG_DIR}/model_cache\",
-  \"--platforms\": \"host\",
+  \"--platforms\": \"host/incremental\",
   \"--remote_repository\": \"origin\",
   \"--repo\": \"git\",
   \"--repo_dir\": \"${REPO_DIR}\",
@@ -56,8 +56,9 @@ echo "
 # clone/install pytorch
 pip install numpy pyyaml mkl mkl-include setuptools cmake cffi typing
 
-rm -rf ${REPO_DIR}
-git clone --recursive --quiet https://github.com/pytorch/pytorch.git "$REPO_DIR"
+if [ ! -d "${REPO_DIR}" ]; then
+  git clone --recursive --quiet https://github.com/pytorch/pytorch.git "$REPO_DIR"
+fi
 
 # install ninja to speedup the build
 pip install ninja
@@ -66,8 +67,11 @@ pip install ninja
 
 python ${FAI_PEP_DIR}/benchmarking/run_bench.py -b "${BENCHMARK_FILE}" --config_dir "${CONFIG_DIR}"
 
-if [ $# -gt 0 ] then
-  if [ ! -z "$1" ] then
-    python ${FAI_PEP_DIR}/benchmarking/run_bench.py -b ${FAI_PEP_DIR}/specifications/models/caffe2/squeezenet/squeezenet_accuracy_imagenet.json --string_map "{\"imagenet_dir\": \"$1\"}"
+# install opencv for image conversion
+apt-get install python-opencv
+
+if [ $# -gt 0 ]; then
+  if [ ! -z "$1" ]; then
+    python ${FAI_PEP_DIR}/benchmarking/run_bench.py -b ${FAI_PEP_DIR}/specifications/models/caffe2/squeezenet/squeezenet_accuracy_imagenet.json --string_map "{\"imagenet_dir\": \"$1\"}" --config_dir "${CONFIG_DIR}"
   fi
 fi
