@@ -22,6 +22,8 @@ docker exec `echo ${pid}` /tmp/docker_tflite.sh
 The script to benchmark caffe2 can be found [here](https://github.com/facebook/FAI-PEP/blob/master/specifications/docker/docker_pytorch.sh). It is more complicated, as it includes a test that benchmarks the both the accuracy and performance on the imagenet validation dataset.
 
 In order to do that, you need to map the local imagenet directory to a directory in the docker `-v <local imagenet directory>:/tmp/imagenet`. Then the script takes over the rest.
+
+If you want to try out the benchmark on imagenet dataset, when invoking script `/tmp/docker_pytorch.sh`, add argument `/tmp/imagenet`. If you just want to try out the plain benchmarking, run it without the argument.
 ```
 git clone git@github.com:facebook/FAI-PEP.git
 docker pull ubuntu:16.04
