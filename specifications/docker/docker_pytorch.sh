@@ -64,14 +64,29 @@ fi
 pip install ninja
 
 # run benchmark
-
-python ${FAI_PEP_DIR}/benchmarking/run_bench.py -b "${BENCHMARK_FILE}" --config_dir "${CONFIG_DIR}"
-
-# install opencv for image conversion
-apt-get -y install python-opencv
-
+RUN_IMAGENET=0
 if [ $# -gt 0 ]; then
   if [ ! -z "$1" ]; then
-    python ${FAI_PEP_DIR}/benchmarking/run_bench.py -b ${FAI_PEP_DIR}/specifications/models/caffe2/squeezenet/squeezenet_accuracy_imagenet.json --string_map "{\"imagenet_dir\": \"$1\"}" --config_dir "${CONFIG_DIR}"
+    RUN_IMAGENET=1
   fi
+fi
+
+if [ ${RUN_IMAGENET} -gt 0 ]; then
+  # install opencv for image conversion
+  if [ ! -d /tmp/opencv-3.4.3 ]; then
+    apt-get -y install wget unzip
+    wget -O /tmp/opencv.zip https://github.com/opencv/opencv/archive/3.4.3.zip
+    unzip -q /tmp/opencv.zip -d /tmp/
+    cd /tmp/opencv-3.4.3/
+    mkdir build
+    cd build
+    cmake ..
+    make -j 4
+    make install
+  fi
+
+  python ${FAI_PEP_DIR}/benchmarking/run_bench.py -b ${FAI_PEP_DIR}/specifications/models/caffe2/squeezenet/squeezenet_accuracy_imagenet.json --string_map "{\"imagenet_dir\": \"$1\"}" --config_dir "${CONFIG_DIR}"
+
+else
+  python ${FAI_PEP_DIR}/benchmarking/run_bench.py -b "${BENCHMARK_FILE}" --config_dir "${CONFIG_DIR}"
 fi
