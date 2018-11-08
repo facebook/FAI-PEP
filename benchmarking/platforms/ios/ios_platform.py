@@ -65,7 +65,7 @@ class IOSPlatform(PlatformBase):
         success = getRunStatus()
         self.util.run(["--bundle", self.app,
                       "--uninstall", "--noninteractive"])
-        setRunStatus(success)
+        setRunStatus(success, overwrite=True)
 
     def runBenchmark(self, cmd, *args, **kwargs):
         if not isinstance(cmd, list):

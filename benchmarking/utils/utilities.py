@@ -93,6 +93,7 @@ def getFAIPEPROOT():
     root_dir = os.path.join(dir_path, "../../")
     return os.path.abspath(root_dir)
 
+
 def requestsData(url, **kwargs):
     delay = 0
     total_delay = 0
@@ -162,6 +163,9 @@ def getRunStatus():
     return run_status
 
 
-def setRunStatus(status):
+def setRunStatus(status, overwrite=False):
     global run_status
-    run_status = run_status | status
+    if overwrite:
+        run_status = status
+    else:
+        run_status = run_status | status
