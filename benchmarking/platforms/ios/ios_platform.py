@@ -72,24 +72,7 @@ class IOSPlatform(PlatformBase):
             cmd = shlex.split(cmd)
         assert self.util.bundle_id is not None, "Bundle id is not specified"
 
-        arguments = {}
-        i = 0
-        if cmd[i][:2] != '--':
-            # skip the first item which may be program
-            i = 1
-        while i < len(cmd):
-            entry = cmd[i]
-            if entry[:2] == "--":
-                key = entry[2:]
-                value = cmd[i+1]
-                if value[:2] == "--":
-                    value = "true"
-                else:
-                    i = i + 1
-                arguments[key] = value
-            else:
-                assert False, "Only supporting arguments with double dashes"
-            i = i + 1
+        arguments = self.getPariedArguments(cmd)
         argument_filename = os.path.join(self.tempdir, "benchmark.json")
         arguments_json = json.dumps(arguments, indent=2, sort_keys=True)
         with open(argument_filename, "w") as f:

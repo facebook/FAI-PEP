@@ -20,10 +20,12 @@ class ADB(PlatformUtilBase):
         super(ADB, self).__init__(device, tempdir)
 
     def run(self, *args, **kwargs):
-        adb = ["adb"]
-        if self.device:
-            adb.extend(["-s", self.device])
+        adb = self._addADB()
         return super(ADB, self).run(adb, *args, **kwargs)
+
+    def runAsync(self, *args, **kwargs):
+        adb = self._addADB()
+        return super(ADB, self).runAsync(adb, *args, **kwargs)
 
     def push(self, src, tgt):
         # Always remove the old file before pushing the new file
@@ -75,6 +77,12 @@ class ADB(PlatformUtilBase):
             else:
                 assert False, "Unsupported frequency target"
             self._setOneCPUFrequency(cpu, freq_target)
+
+    def _addADB(self):
+        adb = ["adb"]
+        if self.device:
+            adb.extend(["-s", self.device])
+        return adb
 
     def _setOneCPUFrequency(self, cpu, freq_target):
         directory = "/sys/devices/system/cpu/" + cpu + "/"

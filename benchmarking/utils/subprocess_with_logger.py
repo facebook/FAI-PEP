@@ -48,3 +48,21 @@ def processRun(*args, **kwargs):
         err_output = "{}".format(sys.exc_info()[0])
     setRunStatus(1)
     return "", err_output
+
+
+def Popen(cmd):
+    getLogger().info("Running: %s", ' '.join(cmd))
+    ps = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                          stderr=subprocess.STDOUT, universal_newlines=True)
+    lines_iterator = iter(ps.stdout.readline, b"")
+    return ps, lines_iterator
+
+
+def getOutput(lines_iterator, pattern):
+    lines = []
+    for line in lines_iterator:
+        nline = line.rstrip()
+        lines.append(nline)
+        if pattern.match(nline):
+            break
+    return lines

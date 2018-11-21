@@ -10,7 +10,7 @@
 
 import abc
 
-from utils.subprocess_with_logger import processRun
+from utils.subprocess_with_logger import processRun, Popen
 
 
 class PlatformUtilBase(object):
@@ -19,14 +19,12 @@ class PlatformUtilBase(object):
         self.tempdir = tempdir
 
     def run(self, *args, **kwargs):
-        cmd = []
-        for item in args:
-            if isinstance(item, list):
-                cmd.extend(item)
-            else:
-                cmd.append(item)
-
+        cmd = self._prepareCMD(*args)
         return processRun(cmd, **kwargs)[0]
+
+    def runAsync(self, *args, **kwargs):
+        cmd = self._prepareCMD(*args)
+        return Popen(cmd)
 
     @abc.abstractmethod
     def push(self, src, tgt):
@@ -39,3 +37,12 @@ class PlatformUtilBase(object):
     @abc.abstractmethod
     def deleteFile(self, file):
         assert False, "Delete file method must be derived"
+
+    def _prepareCMD(self, *args):
+        cmd = []
+        for item in args:
+            if isinstance(item, list):
+                cmd.extend(item)
+            else:
+                cmd.append(item)
+        return cmd

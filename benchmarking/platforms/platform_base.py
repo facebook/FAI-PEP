@@ -141,3 +141,21 @@ class PlatformBase(object):
     @abc.abstractmethod
     def waitForDevice(self):
         assert False, "wait for device is not implemented"
+
+    def getPairedArguments(self, cmd):
+        arguments = {}
+        i = 0
+        while i < len(cmd):
+            entry = cmd[i]
+            if entry[:2] == "--":
+                key = entry[2:]
+                value = cmd[i+1] if i < len(cmd) else "true"
+                if value[:2] == "--":
+                    value = "true"
+                else:
+                    i = i + 1
+                arguments[key] = value
+            elif entry != "{program}":
+                getLogger.warning("Failed to get argument {}".format(entry[i]))
+            i = i + 1
+        return arguments

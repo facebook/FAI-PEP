@@ -10,7 +10,6 @@
 
 import collections
 import json
-from six import string_types
 
 from data_converters.data_converter_base import DataConverterBase
 from utils.custom_logger import getLogger
@@ -23,15 +22,8 @@ class JsonConverter(DataConverterBase):
     def getName(self):
         return "json_converter"
 
-    def collect(self, data, **kwargs):
-        if data is None:
-            return [], []
-        if isinstance(data, string_types):
-            rows = data.split('\n')
-        else:
-            assert isinstance(data, list), \
-                "Input format must be string or list"
-            rows = data
+    def collect(self, data, args = None):
+        rows = self._prepareData(data)
         results = []
         valid_run_idxs = []
         for row in rows:

@@ -76,10 +76,10 @@ class FrameworkBase(object):
                        for name in model["files"]}
 
         if "converter" in model:
-            converter_name = model["converter"]
-            assert converter_name in self.converters, \
-                "Unknown converter {}".format(converter_name)
-            converter = self.converters[converter_name]
+            converter = model["converter"]
+            assert "name" in converter, "converter field must have a name"
+            assert converter["name"] in self.converters, \
+                "Unknown converter {}".format(converter)
         else:
             converter = None
 
@@ -237,17 +237,19 @@ class FrameworkBase(object):
         if output_files:
             for filename in output_files:
                 file = output_files[filename]
-                converter_name = \
+                converter = \
                     test["output_files"][filename].get("converter")
-                if not converter_name:
+                if not converter:
                     continue
-                assert converter_name in self.converters, \
-                    "Unknown converter {}".format(converter_name)
-                converter = self.converters[converter_name]
+                assert "name" in converter, "converter field must have a name"
+                assert converter["name"] in self.converters, \
+                    "Unknown converter {}".format(converter["name"])
+                converter_class = self.converters[converter["name"]]
+                args = converter.get("args")
                 with open(file, "r") as f:
                     content = f.read()
-                convert = converter()
-                results, _ = convert.collect(content)
+                convert = converter_class()
+                results, _ = convert.collect(content, args)
                 one_output = convert.convert(results)
                 deepMerge(output, one_output)
 
