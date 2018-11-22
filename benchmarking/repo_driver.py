@@ -152,6 +152,14 @@ class ExecutablesBuilder (threading.Thread):
                 return None
             repo_info['control'] = repo_info_control
 
+        # Pass meta file from build to benchmark
+        meta_file = os.path.join(getArgs().frameworks_dir, getArgs().framework,
+                                 platform, "meta.json")
+        if os.path.isfile(meta_file):
+            with open(meta_file, "r") as f:
+                meta = json.load(f)
+                repo_info["meta"] = meta
+
         if getArgs().regression:
             repo_info["regression_commits"] = \
                 self._getCompareCommits(repo_info_treatment['commit'])

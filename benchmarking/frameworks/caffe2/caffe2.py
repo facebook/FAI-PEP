@@ -80,10 +80,10 @@ class Caffe2Framework(FrameworkBase):
                 assert test["metric"] == "generic", "All tests must be generic"
                 continue
 
-            assert "iter" in test, "Iter field is missing in benchmark " + \
-                "{}".format(filename)
-            assert "warmup" in test, "Warmup field is missing in " + \
-                "benchmark {}".format(filename)
+            if "iter" not in test:
+                test["iter"] = -1
+            if "warmup" not in test:
+                test["warmup"] = -1
 
             assert "identifier" in test, "Identifier field is missing in " + \
                 "benchmark {}".format(filename)
@@ -234,17 +234,24 @@ class Caffe2Framework(FrameworkBase):
         return [cmd]
 
     def runOnPlatform(self, total_num, cmd, platform, platform_args,
-                      converter_class):
-        if converter_class is None:
-            converter_class = self.converters["json_with_identifier_converter"]
-        converter = converter_class()
+                      converter):
+        if converter is None:
+            converter = {
+                "name": "json_with_identifier_converter",
+                "args": {
+                    "identifier": self.IDENTIFIER
+                }
+            }
+
+        converter_obj = self.converters[converter["name"]]()
+        args = converter.get("args")
         results = []
         num = 0
         # emulate do...while... loop
         while True:
             output = platform.runBenchmark(cmd, platform_args=platform_args)
             one_result, valid_run_idxs = \
-                converter.collect(output, identifier=self.IDENTIFIER)
+                converter_obj.collect(output, args)
             valid_run_idxs = [num + idx for idx in valid_run_idxs]
             num += len(valid_run_idxs)
             results.extend(one_result)
@@ -268,5 +275,5 @@ class Caffe2Framework(FrameworkBase):
                 # iterations
                 results = results[valid_run_idxs[num - total_num]:]
             break
-        metric = converter.convert(results)
+        metric = converter_obj.convert(results)
         return metric

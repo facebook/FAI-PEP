@@ -19,13 +19,11 @@ class JsonWithIdentifierConverter(DataConverterBase):
     def getName(self):
         return "json_with_identifier_converter"
 
-    def collect(self, data, **kwargs):
-        if data is None:
-            return [], []
+    def collect(self, data, args = None):
+        rows = self._prepareData(data)
         identifier = None
-        if "identifier" in kwargs:
-            identifier = kwargs["identifier"]
-        rows = data.split('\n')
+        if args and "identifier" in args:
+            identifier = args["identifier"]
         useful_rows = [row[(row.find(identifier) + len(identifier)):]
                        for row in rows if row.find(identifier) >= 0] \
             if identifier else rows

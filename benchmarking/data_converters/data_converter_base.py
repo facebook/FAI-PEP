@@ -9,6 +9,7 @@
 ##############################################################################
 
 import abc
+from six import string_types
 
 
 class DataConverterBase(object):
@@ -21,7 +22,7 @@ class DataConverterBase(object):
 
     # collect data from the binary
     @abc.abstractmethod
-    def collect(self, data, **kwargs):
+    def collect(self, data, args):
         assert False, "Need to call one of " + \
             "the implementations of the collector"
 
@@ -30,3 +31,14 @@ class DataConverterBase(object):
     def convert(self, data):
         assert False, "Need to call one of " + \
             "the implementations of the converter"
+
+    def _prepareData(self, data):
+        if data is None:
+            return []
+        if isinstance(data, string_types):
+            rows = data.split('\n')
+        else:
+            assert isinstance(data, list), \
+                "Input format must be string or list"
+            rows = data
+        return rows

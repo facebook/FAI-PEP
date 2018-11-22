@@ -8,6 +8,7 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+import json
 import os
 import re
 import shlex
@@ -16,6 +17,7 @@ import time
 from platforms.platform_base import PlatformBase
 from utils.arg_parse import getParser, getArgs
 from utils.custom_logger import getLogger
+from utils.subprocess_with_logger import getOutput
 
 getParser().add_argument("--android_dir", default="/data/local/tmp/",
     help="The directory in the android device all files are pushed to.")
@@ -36,6 +38,7 @@ class AndroidPlatform(PlatformBase):
         self.setPlatform(platform)
         self.setPlatformHash(adb.device)
         self._setLogCatSize()
+        self.app = None
         if getArgs().set_freq:
             self.util.setFrequency(getArgs().set_freq)
 
@@ -48,6 +51,35 @@ class AndroidPlatform(PlatformBase):
             if ret and ret.find("failed to") >= 0:
                 repeat = True
                 size = int(size / 2)
+
+    def preprocess(self, *args, **kwargs):
+        assert "programs" in kwargs, "Must have programs specified"
+
+        programs = kwargs["programs"]
+
+        if "intent.txt" not in programs:
+            return
+
+        # find the first zipped app file
+        assert "program" in programs, "program is not specified"
+
+        # temporary to rename the program with adb suffix
+        with open(programs["intent.txt"], "r") as f:
+            self.app = json.load(f)
+
+        # Uninstall if exist
+        package = self.util.shell(["pm", "list", "packages",
+                                   self.app["package"]]).strip()
+        if package == "package:" + self.app["package"]:
+            self.util.shell(["pm", "uninstall", self.app["package"]])
+        # temporary fix to allow install apk files
+        if not programs["program"].endswith(".apk"):
+            new_name = programs["program"] + ".apk"
+            os.rename(programs["program"], new_name)
+            programs["program"] = new_name
+        self.util.run(["install", programs["program"]])
+
+        del programs["program"]
 
     def rebootDevice(self):
         self.util.reboot()
@@ -67,6 +99,34 @@ class AndroidPlatform(PlatformBase):
         if not isinstance(cmd, list):
             cmd = shlex.split(cmd)
         self.util.logcat('-b', 'all', '-c')
+        if self.app:
+            log = self.runAppBenchmark(cmd, *args, **kwargs)
+        else:
+            log = self.runBinaryBenchmark(cmd, *args, **kwargs)
+        return log
+
+    def runAppBenchmark(self, cmd, *args, **kwargs):
+        arguments = self.getPairedArguments(cmd)
+        argument_filename = os.path.join(self.tempdir, "benchmark.json")
+        arguments_json = json.dumps(arguments, indent=2, sort_keys=True)
+        with open(argument_filename, "w") as f:
+            f.write(arguments_json)
+        tgt_argument_filename = os.path.join(self.tgt_dir, "benchmark.json")
+        self.util.push(argument_filename, tgt_argument_filename)
+
+        pattern = re.compile(
+            r".*ActivityManager: Killing .*{}".format(self.app["package"]))
+
+        activity = self.app["package"] + "/" + self.app["activity"]
+        ps, iterator = self.util.runAsync(["logcat"])
+        self.util.shell(["am", "start", "-S", "-W", activity])
+        log_logcat = getOutput(iterator, pattern)
+        ps.stdout.close()
+        ps.terminate()
+        return log_logcat
+
+
+    def runBinaryBenchmark(self, cmd, *args, **kwargs):
         log_to_screen_only = 'log_to_screen_only' in kwargs and \
             kwargs['log_to_screen_only']
         android_kwargs = {}
@@ -87,7 +147,6 @@ class AndroidPlatform(PlatformBase):
                 time.sleep(1)
                 cmd = ["nohup"] + ["sh", "-c", "'" + " ".join(cmd) + "'"] + \
                     [">", "/dev/null", "2>&1"]
-                log_to_screen_only = True
                 android_kwargs["non_blocking"] = True
                 del platform_args["power"]
             if "timeout" in platform_args and platform_args["timeout"]:
