@@ -114,17 +114,23 @@ class AndroidPlatform(PlatformBase):
         tgt_argument_filename = os.path.join(self.tgt_dir, "benchmark.json")
         self.util.push(argument_filename, tgt_argument_filename)
 
+        patterns = []
+        pattern = re.compile(
+            r".*{}.*{}.*BENCHMARK_DONE".format(self.app["package"],
+                                               self.app["activity"]))
+        patterns.append(pattern)
         pattern = re.compile(
             r".*ActivityManager: Killing .*{}".format(self.app["package"]))
+        patterns.append(pattern)
 
         activity = self.app["package"] + "/" + self.app["activity"]
         ps, iterator = self.util.runAsync(["logcat"])
         self.util.shell(["am", "start", "-S", "-W", activity])
-        log_logcat = getOutput(iterator, pattern)
+        log_logcat = getOutput(iterator, patterns)
         ps.stdout.close()
         ps.terminate()
+        self.util.shell(["am", "force-stop", self.app["package"]])
         return log_logcat
-
 
     def runBinaryBenchmark(self, cmd, *args, **kwargs):
         log_to_screen_only = 'log_to_screen_only' in kwargs and \
