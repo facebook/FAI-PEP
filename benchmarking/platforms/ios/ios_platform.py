@@ -72,7 +72,7 @@ class IOSPlatform(PlatformBase):
             cmd = shlex.split(cmd)
         assert self.util.bundle_id is not None, "Bundle id is not specified"
 
-        arguments = self.getPariedArguments(cmd)
+        arguments = self.getPairedArguments(cmd)
         argument_filename = os.path.join(self.tempdir, "benchmark.json")
         arguments_json = json.dumps(arguments, indent=2, sort_keys=True)
         with open(argument_filename, "w") as f:
