@@ -56,16 +56,23 @@ class AndroidPlatform(PlatformBase):
         assert "programs" in kwargs, "Must have programs specified"
 
         programs = kwargs["programs"]
-
-        if "intent.txt" not in programs:
-            return
+        benchmark = kwargs["benchmark"]
 
         # find the first zipped app file
         assert "program" in programs, "program is not specified"
 
-        # temporary to rename the program with adb suffix
-        with open(programs["intent.txt"], "r") as f:
-            self.app = json.load(f)
+        if "platform" in benchmark["model"] and \
+                benchmark["model"]["platform"].startswith("android"):
+            if "app" in benchmark["model"]:
+                self.app = benchmark["model"]["app"]
+
+        if not self.app:
+            if "intent.txt" in programs:
+                # temporary to rename the program with adb suffix
+                with open(programs["intent.txt"], "r") as f:
+                    self.app = json.load(f)
+            else:
+                return
 
         # Uninstall if exist
         package = self.util.shell(["pm", "list", "packages",
