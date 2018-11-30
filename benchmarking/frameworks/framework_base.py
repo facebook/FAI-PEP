@@ -58,7 +58,7 @@ class FrameworkBase(object):
 
         # better to be before target program files separation.
         # this way, in ios, the platform may not be copied to the target.
-        platform.preprocess(programs=program_files)
+        platform.preprocess(programs=program_files, benchmark=benchmark)
 
         tgt_program_files, host_program_files = \
             self._separatePrograms(program_files, test.get("commands"))
