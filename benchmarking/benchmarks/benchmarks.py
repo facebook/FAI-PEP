@@ -18,7 +18,7 @@ import tempfile
 import shutil
 from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
-from utils.utilities import deepMerge
+from utils.utilities import deepMerge, deepReplace
 
 
 class BenchmarkCollector(object):
@@ -63,6 +63,12 @@ class BenchmarkCollector(object):
             "Benchmark {} does not exist".format(source)
         with open(source, 'r') as b:
             one_benchmark = json.load(b)
+
+        string_map = json.loads(getArgs().string_map) \
+            if getArgs().string_map else {}
+        for name in string_map:
+            value = string_map[name]
+            deepReplace(one_benchmark, "{"+name+"}", value)
 
         self._verifyBenchmark(one_benchmark, source, False)
 
