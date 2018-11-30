@@ -233,4 +233,4 @@ if __name__ == "__main__":
     else:
         status_str = "user and harness error"
     getLogger().info(" ======= {} =======".format(status_str))
-    sys.exit(app.status)
+    sys.exit(status)
