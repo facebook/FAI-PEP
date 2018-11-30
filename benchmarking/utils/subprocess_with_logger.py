@@ -58,11 +58,18 @@ def Popen(cmd):
     return ps, lines_iterator
 
 
-def getOutput(lines_iterator, pattern):
+def getOutput(lines_iterator, patterns):
+    if not isinstance(patterns, list):
+        patterns = [patterns]
     lines = []
     for line in lines_iterator:
         nline = line.rstrip()
         lines.append(nline)
-        if pattern.match(nline):
+        match = False
+        for pattern in patterns:
+            if pattern.match(nline):
+                match = True
+                break
+        if match:
             break
     return lines
