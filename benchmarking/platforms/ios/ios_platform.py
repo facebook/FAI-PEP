@@ -63,8 +63,7 @@ class IOSPlatform(PlatformBase):
         # We know this command will fail. Avoid propogating this
         # failure to the upstream
         success = getRunStatus()
-        self.util.run(["--bundle", self.app,
-                      "--uninstall", "--noninteractive"])
+        self.util.run(["--bundle", self.app, "--uninstall"])
         setRunStatus(success, overwrite=True)
 
     def runBenchmark(self, cmd, *args, **kwargs):
