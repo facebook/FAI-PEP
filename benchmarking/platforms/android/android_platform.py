@@ -12,6 +12,7 @@ import json
 import os
 import re
 import shlex
+import shutil
 import time
 
 from platforms.platform_base import PlatformBase
@@ -82,7 +83,7 @@ class AndroidPlatform(PlatformBase):
         # temporary fix to allow install apk files
         if not programs["program"].endswith(".apk"):
             new_name = programs["program"] + ".apk"
-            os.rename(programs["program"], new_name)
+            shutil.copyfile(programs["program"], new_name)
             programs["program"] = new_name
         self.util.run(["install", programs["program"]])
 
