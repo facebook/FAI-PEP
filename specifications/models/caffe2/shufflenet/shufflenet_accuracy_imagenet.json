@@ -64,7 +64,7 @@
           "{convert_image_to_tensor} --input_image_file {HOSTDIR}/inputs/labels_{INDEX}.txt --output_tensor {input_files.images_tensor} --scale 224 --text_output true --preprocess normalize,mean,std --report_time \"json|Caffe2Observer \""
         ]
       },
-      "warmup": 0
+      "warmup": 1
     }
   ]
 }
