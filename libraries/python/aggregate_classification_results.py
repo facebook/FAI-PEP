@@ -87,6 +87,8 @@ class AggregateOutputs(object):
                     "p90": data,
                     "p100": data,
                     "mean": data,
+                    "std": 0,
+                    "MAD": 0,
                 }
             elif match.group(1) == "percent":
                 data = sum(values) * 100. / len(values)
@@ -98,6 +100,8 @@ class AggregateOutputs(object):
                     "p90": data,
                     "p100": data,
                     "mean": data,
+                    "std": 0,
+                    "MAD": 0,
                 }
             one_result["metric"] = "total_" + one_result["metric"]
             # there may be too many values, only keep the summary

@@ -63,11 +63,9 @@ class FrameworkBase(object):
         tgt_program_files, host_program_files = \
             self._separatePrograms(program_files, test.get("commands"))
 
-        # we need to copy programs in all iterations, because this is
-        # how we get the absolute path of the programs in the target platform
-        # may consider optimize this later that only copying for the first
-        # iteration
-        tgt_program_files = platform.copyFilesToPlatform(tgt_program_files)
+        tgt_program_files = \
+            platform.copyFilesToPlatform(tgt_program_files,
+                                         copy_files = first_iteration)
         programs = {}
         deepMerge(programs, host_program_files)
         deepMerge(programs, tgt_program_files)
@@ -130,12 +128,13 @@ class FrameworkBase(object):
             if input_files else None
         shared_libs = None
         if "shared_libs" in info:
-            shared_libs = platform.copyFilesToPlatform(info["shared_libs"])
+            shared_libs = \
+                platform.copyFilesToPlatform(info["shared_libs"],
+                                             copy_files = first_iteration)
 
-        # We need to copy the model files in every iteration, because this
-        # is how we get the absolute path in the target platform,
-        # will optimize that later.
-        tgt_model_files = platform.copyFilesToPlatform(model_files)
+        tgt_model_files = \
+            platform.copyFilesToPlatform(model_files,
+                                         copy_files = first_iteration)
 
         tgt_result_files = None
         if "output_files" in test:
@@ -189,12 +188,13 @@ class FrameworkBase(object):
         # this will save some time in ios platform, since in ios
         # all files are copied back to the host system
         if len(output) > 0:
-            platform.delFilesFromPlatform(tgt_model_files)
-            platform.delFilesFromPlatform(tgt_program_files)
-            if shared_libs is not None:
-                platform.delFilesFromPlatform(shared_libs)
             if input_files is not None:
                 platform.delFilesFromPlatform(input_files)
+            if last_iteration:
+                platform.delFilesFromPlatform(tgt_model_files)
+                platform.delFilesFromPlatform(tgt_program_files)
+                if shared_libs is not None:
+                    platform.delFilesFromPlatform(shared_libs)
 
         output_files = None
         if "output_files" in test:
@@ -252,7 +252,6 @@ class FrameworkBase(object):
                 results, _ = convert.collect(content, args)
                 one_output = convert.convert(results)
                 deepMerge(output, one_output)
-
         return output, output_files
 
     @abc.abstractmethod
