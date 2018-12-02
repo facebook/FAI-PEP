@@ -75,21 +75,24 @@ class PlatformBase(object):
     def preprocess(self, *args, **kwargs):
         pass
 
-    def copyFilesToPlatform(self, files, target_dir=None):
+    def copyFilesToPlatform(self, files, target_dir=None, copy_files=True):
         target_dir = (self.tgt_dir if target_dir is None else target_dir)
         if isinstance(files, string_types):
             target_file = os.path.join(target_dir, os.path.basename(files))
-            self.util.push(files, target_file)
+            if copy_files:
+                self.util.push(files, target_file)
             return target_file
         elif isinstance(files, list):
             target_files = []
             for f in files:
-                target_files.append(self.copyFilesToPlatform(f, target_dir))
+                target_files.append(self.copyFilesToPlatform(f, target_dir,
+                                                             copy_files))
             return target_files
         elif isinstance(files, dict):
             d = {}
             for f in files:
-                d[f] = self.copyFilesToPlatform(files[f], target_dir)
+                d[f] = self.copyFilesToPlatform(files[f], target_dir,
+                                                copy_files)
             return d
         else:
             assert False, "Cannot reach here"
