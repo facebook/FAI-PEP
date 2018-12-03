@@ -110,8 +110,7 @@ getParser().add_argument("--string_map",
 getParser().add_argument("--timeout", default=300, type=float,
     help="Specify a timeout running the test on the platforms. "
     "The timeout value needs to be large enough so that the low end devices "
-    "can safely finish the execution in normal conditions. Note, in A/B "
-    "testing mode, the test runs twice. ")
+    "can safely finish the execution in normal conditions. ")
 getParser().add_argument("--user_identifier",
     help="User can specify an identifier and that will be passed to the "
     "output so that the result can be easily identified.")

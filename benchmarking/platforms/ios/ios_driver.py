@@ -27,10 +27,9 @@ class IOSDriver(object):
 
     def getDevices(self):
         idb = IDB()
-        devices_str = idb.run("--detect")
-        if devices_str is None:
+        rows = idb.run("--detect")
+        if len(rows) == 0:
             return {}
-        rows = devices_str.split('\n')
         rows.pop(0)
         pattern = re.compile(".* Found ([\d|a-f]+) \((\w+), .+\) a\.k\.a\. .*")
         devices = {}

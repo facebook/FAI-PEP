@@ -14,6 +14,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import subprocess
 import sys
+from threading import Timer
+
 from .custom_logger import getLogger
 from .utilities import setRunStatus
 
@@ -26,19 +28,43 @@ def processRun(*args, **kwargs):
         if "log_output" in kwargs:
             log_output = kwargs["log_output"]
             del kwargs["log_output"]
+        non_blocking = False
         output = None
         if "non_blocking" in kwargs and kwargs["non_blocking"]:
-            subprocess.Popen(*args)
-            return "", None
+            non_blocking = True
+            del kwargs["non_blocking"]
+        ps, iter = _Popen(*args)
+        if non_blocking:
+            return [], None
         else:
-            output_raw = subprocess.check_output(*args,
-                                                 stderr=subprocess.STDOUT,
-                                                 **kwargs)
-            # without the decode/encode the string cannot be printed out
-            output = output_raw.decode("utf-8", "ignore")
+            patterns = []
+            if "patterns" in kwargs:
+                patterns = kwargs["patterns"]
+            t = None
+            if "timeout" in kwargs:
+                timeout = kwargs["timeout"]
+                t = Timer(timeout, _kill, [ps, ' '.join(*args)])
+                t.start()
+            output, match = _getOutput(iter, patterns)
+            ps.stdout.close()
+            if match:
+                # if the process is terminated by mathing output,
+                # assume the process is executed successfully
+                ps.terminate()
+                status = 0
+            else:
+                # wait for the process to terminate
+                status = ps.wait()
+            if t is not None:
+                t.cancel()
             if log_output:
-                getLogger().info(output)
-        return output, None
+                getLogger().info('\n'.join(output))
+            if status == 0:
+                return output, None
+            else:
+                setRunStatus(1)
+                return [], '\n'.join(output)
+
     except subprocess.CalledProcessError as e:
         err_output = e.output.decode("utf-8", "ignore")
         getLogger().error("Command failed: {}".format(err_output))
@@ -47,29 +73,37 @@ def processRun(*args, **kwargs):
                                                             ' '.join(*args)))
         err_output = "{}".format(sys.exc_info()[0])
     setRunStatus(1)
-    return "", err_output
+    return [], err_output
 
 
-def Popen(cmd):
-    getLogger().info("Running: %s", ' '.join(cmd))
-    ps = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+def _Popen(*args):
+    ps = subprocess.Popen(*args, stdout=subprocess.PIPE,
                           stderr=subprocess.STDOUT, universal_newlines=True)
     lines_iterator = iter(ps.stdout.readline, b"")
     return ps, lines_iterator
 
 
-def getOutput(lines_iterator, patterns):
+def _getOutput(lines_iterator, patterns):
     if not isinstance(patterns, list):
         patterns = [patterns]
     lines = []
+    match = False
     for line in lines_iterator:
-        nline = line.rstrip()
+        nline = line.rstrip().decode("utf-8", "ignore")
         lines.append(nline)
-        match = False
         for pattern in patterns:
             if pattern.match(nline):
                 match = True
                 break
         if match:
             break
-    return lines
+    return lines, match
+
+
+def _kill(p, cmd):
+    try:
+        p.kill()
+    except OSError:
+        pass  # ignore
+    getLogger().error("Process timed out: {}".format(cmd))
+    setRunStatus(1)

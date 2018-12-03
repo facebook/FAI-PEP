@@ -23,7 +23,7 @@ class HGRepo(RepoBase):
             hg.append(self.dir)
         hg.append(cmd)
         hg.extend(args)
-        return processRun(hg)[0]
+        return '\n'.join(processRun(hg)[0])
 
     def pull(self, *args):
         return self._run('update', args[0])

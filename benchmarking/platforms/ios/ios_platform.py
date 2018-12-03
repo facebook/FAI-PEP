@@ -30,9 +30,6 @@ class IOSPlatform(PlatformBase):
         self.type = "ios"
         self.app = None
 
-    def runCommand(self, cmd):
-        return self.util.run(cmd)
-
     def preprocess(self, *args, **kwargs):
         assert "programs" in kwargs, "Must have programs specified"
 
@@ -56,9 +53,8 @@ class IOSPlatform(PlatformBase):
 
         bundle_id, _ = processRun(["osascript", "-e",
                                    "id of app \"" + self.app + "\""])
-
-        assert bundle_id, "bundle id cannot be found"
-        self.util.setBundleId(bundle_id.strip())
+        assert len(bundle_id) > 0, "bundle id cannot be found"
+        self.util.setBundleId(bundle_id[0].strip())
 
         # We know this command will fail. Avoid propogating this
         # failure to the upstream
@@ -79,17 +75,13 @@ class IOSPlatform(PlatformBase):
         tgt_argument_filename = os.path.join(self.tgt_dir, "benchmark.json")
         self.util.push(argument_filename, tgt_argument_filename)
 
-        ios_kwargs = {}
+        platform_args = {}
         if "platform_args" in kwargs:
             platform_args = kwargs["platform_args"]
-            if "timeout" in platform_args and platform_args["timeout"]:
-                ios_kwargs["timeout"] = platform_args["timeout"]
-                del platform_args["timeout"]
-            ios_kwargs["log_output"] = platform_args.get("log_output", False)
 
         run_cmd = ["--bundle", self.app, "--noninteractive", "--noinstall"]
         # the command may fail, but the err_output is what we need
-        log_screen = self.util.run(run_cmd, **ios_kwargs)
+        log_screen = self.util.run(run_cmd, **platform_args)
         return log_screen
 
     def rebootDevice(self):
