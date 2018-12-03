@@ -10,7 +10,7 @@
 
 import abc
 
-from utils.subprocess_with_logger import processRun, Popen
+from utils.subprocess_with_logger import processRun
 
 
 class PlatformUtilBase(object):
@@ -21,10 +21,6 @@ class PlatformUtilBase(object):
     def run(self, *args, **kwargs):
         cmd = self._prepareCMD(*args)
         return processRun(cmd, **kwargs)[0]
-
-    def runAsync(self, *args, **kwargs):
-        cmd = self._prepareCMD(*args)
-        return Popen(cmd)
 
     @abc.abstractmethod
     def push(self, src, tgt):

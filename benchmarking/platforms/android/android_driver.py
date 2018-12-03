@@ -26,8 +26,7 @@ class AndroidDriver:
 
     def getDevices(self):
         adb = ADB()
-        devices_str = adb.run("devices", "-l")
-        rows = devices_str.split('\n')
+        rows = adb.run("devices", "-l")
         rows.pop(0)
         devices = set()
         for row in rows:

@@ -64,10 +64,6 @@ class PlatformBase(object):
         pass
 
     @abc.abstractmethod
-    def runCommand(self, cmd):
-        pass
-
-    @abc.abstractmethod
     def runBenchmark(self, cmd, *args, **kwargs):
         return None
 

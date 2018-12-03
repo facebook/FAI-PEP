@@ -44,21 +44,17 @@ class HostPlatform(PlatformBase):
     def runBenchmark(self, cmd, *args, **kwargs):
         if not isinstance(cmd, list):
             cmd = shlex.split(cmd)
-        host_kwargs = {}
+        platform_args = {}
         env = os.environ
         if "platform_args" in kwargs:
             platform_args = kwargs["platform_args"]
-            if "timeout" in platform_args:
-                host_kwargs["timeout"] = platform_args["timeout"]
-            # used for local or remote log control
-            host_kwargs["log_output"] = platform_args.get("log_output", False)
             if "env" in platform_args:
                 customized_env = platform_args["env"]
                 for k in customized_env:
                     env[k] = str(customized_env[k])
-                host_kwargs["env"] = env
+                platform_args["env"] = env
 
-        output, _ = processRun(cmd, **host_kwargs)
+        output, _ = processRun(cmd, **platform_args)
         return output
 
     def _getProcessorName(self):
@@ -67,12 +63,12 @@ class HostPlatform(PlatformBase):
         elif platform.system() == "Darwin":
             processor_info, _ = processRun(
                 ["sysctl", "-n", "machdep.cpu.brand_string"])
-            if processor_info:
-                return processor_info.rstrip()
+            if len(processor_info) > 0:
+                return processor_info[0].rstrip()
         elif platform.system() == "Linux":
             processor_info, _ = processRun(["cat", "/proc/cpuinfo"])
             if processor_info:
-                for line in processor_info.split("\n"):
+                for line in processor_info:
                     if "model name" in line:
                         return re.sub(".*model name.*:", "", line, 1)
         return ""

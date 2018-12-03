@@ -81,14 +81,13 @@ class FrameworkBase(object):
         else:
             converter = None
 
-        log_output = {"log_output": True}
         output = {}
         # overall preprocess
         if "preprocess" in model and first_iteration:
             commands = model["preprocess"]["commands"]
             self._runCommands(output, commands, self.host_platform, programs,
                               model, None, model_files, None, None, None,
-                              None, -1, log_output, converter)
+                              None, -1, converter)
 
         input_files = {name: test["input_files"][name]["location"]
                        for name in test["input_files"]} \
@@ -122,7 +121,7 @@ class FrameworkBase(object):
             self._runCommands(output, commands, self.host_platform, programs,
                               model,
                               test, model_files, input_files, None, None,
-                              test_files, -1, log_output, converter)
+                              test_files, -1, converter)
 
         tgt_input_files = platform.copyFilesToPlatform(input_files) \
             if input_files else None
@@ -150,11 +149,10 @@ class FrameworkBase(object):
         else:
             platform_args = {}
 
-        if sys.version_info > (3, 0):
-            if 'timeout' in model:
-                platform_args['timeout'] = model['timeout']
-            if 'timeout' in test:
-                platform_args['timeout'] = test['timeout']
+        if 'timeout' in model:
+            platform_args['timeout'] = model['timeout']
+        if 'timeout' in test:
+            platform_args['timeout'] = test['timeout']
 
         program = programs["program"] if "program" in programs else ""
         if test["metric"] == "power":
@@ -163,15 +161,13 @@ class FrameworkBase(object):
             total_num = 0
             platform.killProgram(program)
 
-        if test.get("log_output", False):
-            platform_args["log_output"] = True
         if test.get("env", False):
             platform_args["env"] = test["env"]
 
         self._runCommands(output, test["commands"], platform, programs, model,
                           test, tgt_model_files, tgt_input_files,
                           tgt_result_files, shared_libs, test_files,
-                          total_num, platform_args, converter)
+                          total_num, converter, platform_args=platform_args)
 
         if test["metric"] == "power":
             collection_time = test["collection_time"] \
@@ -221,14 +217,13 @@ class FrameworkBase(object):
             commands = test["postprocess"]["commands"]
             self._runCommands(output, commands, self.host_platform, programs,
                               model, test, model_files, input_files,
-                              output_files, None, test_files, -1, log_output,
-                              converter)
+                              output_files, None, test_files, -1, converter)
 
         if "postprocess" in model and last_iteration:
             commands = model["postprocess"]["commands"]
             self._runCommands(output, commands, self.host_platform, programs,
                               model, test, model_files, None, None, None, None,
-                              -1, log_output, converter)
+                              -1, converter)
 
         # after everything is done, some of the output files may
         # contain metrics that can be processed. Those files have
@@ -337,7 +332,13 @@ class FrameworkBase(object):
 
     def _runCommands(self, output, commands, platform, programs, model, test,
                      model_files, input_files, output_files, shared_libs,
-                     test_files, total_num, platform_args, converter):
+                     test_files, total_num, converter, platform_args=None):
+        if platform_args is None:
+            platform_args = {}
+        if test and test.get("log_output", False):
+            platform_args["log_output"] = True
+        if getArgs().timeout > 0:
+            platform_args["timeout"] = getArgs().timeout
         cmds = self.composeRunCommand(commands, platform,
                                       programs, model, test,
                                       model_files,

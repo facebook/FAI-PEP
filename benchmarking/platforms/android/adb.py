@@ -23,10 +23,6 @@ class ADB(PlatformUtilBase):
         adb = self._addADB()
         return super(ADB, self).run(adb, *args, **kwargs)
 
-    def runAsync(self, *args, **kwargs):
-        adb = self._addADB()
-        return super(ADB, self).runAsync(adb, *args, **kwargs)
-
     def push(self, src, tgt):
         # Always remove the old file before pushing the new file
         self.deleteFile(tgt)

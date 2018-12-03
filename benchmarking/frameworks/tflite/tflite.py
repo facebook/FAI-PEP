@@ -10,6 +10,7 @@
 
 import os
 import re
+from six import string_types
 
 from frameworks.framework_base import FrameworkBase
 
@@ -88,7 +89,8 @@ class TFLiteFramework(FrameworkBase):
         if output is None:
             return False
         results = {}
-        rows = output.split('\n')
+        if isinstance(output, string_types):
+            rows = output.split('\n')
         # only collect one data point for statistics
         # the actual run data should override the warmup data
         i = 0

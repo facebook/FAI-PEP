@@ -28,7 +28,7 @@ def buildProgramPlatform(dst, repo_dir, framework, frameworks_dir, platform):
         result, _ = processRun(['sh', script, repo_dir, dst])
     if os.path.isfile(dst):
         os.chmod(dst, 0o777)
-    getLogger().info(result)
+    getLogger().info('\n'.join(result))
 
     if not os.path.isfile(dst) and \
             (not (os.path.isdir(dst) and platform.startswith("ios"))):

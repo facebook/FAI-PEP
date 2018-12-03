@@ -18,7 +18,6 @@ import time
 from platforms.platform_base import PlatformBase
 from utils.arg_parse import getParser, getArgs
 from utils.custom_logger import getLogger
-from utils.subprocess_with_logger import getOutput
 
 getParser().add_argument("--android_dir", default="/data/local/tmp/",
     help="The directory in the android device all files are pushed to.")
@@ -29,12 +28,12 @@ class AndroidPlatform(PlatformBase):
         super(AndroidPlatform, self).__init__(
             tempdir, getArgs().android_dir, adb)
         platform = adb.shell(
-            ['getprop', 'ro.product.model'], default="").strip() + \
+            ['getprop', 'ro.product.model'], default="")[0].strip() + \
             '-' + \
             adb.shell(
-            ['getprop', 'ro.build.version.release'], default="").strip() + \
+            ['getprop', 'ro.build.version.release'], default="")[0].strip() + \
             '-' + \
-            adb.shell(['getprop', 'ro.build.version.sdk'], default="").strip()
+            adb.shell(['getprop', 'ro.build.version.sdk'], default="")[0].strip()
         self.type = "android"
         self.setPlatform(platform)
         self.setPlatformHash(adb.device)
@@ -49,7 +48,7 @@ class AndroidPlatform(PlatformBase):
         while (repeat and size > 256):
             repeat = False
             ret = self.util.logcat("-G", str(size) + "K")
-            if ret and ret.find("failed to") >= 0:
+            if len(ret) > 0 and ret[0].find("failed to") >= 0:
                 repeat = True
                 size = int(size / 2)
 
@@ -77,8 +76,9 @@ class AndroidPlatform(PlatformBase):
 
         # Uninstall if exist
         package = self.util.shell(["pm", "list", "packages",
-                                   self.app["package"]]).strip()
-        if package == "package:" + self.app["package"]:
+                                   self.app["package"]])
+        if len(package) > 0 and \
+                package[0].strip() == "package:" + self.app["package"]:
             self.util.shell(["pm", "uninstall", self.app["package"]])
         # temporary fix to allow install apk files
         if not programs["program"].endswith(".apk"):
@@ -100,9 +100,6 @@ class AndroidPlatform(PlatformBase):
         if getArgs().set_freq:
             self.util.setFrequency(getArgs().set_freq)
 
-    def runCommand(self, cmd):
-        return self.util.shell(cmd)
-
     def runBenchmark(self, cmd, *args, **kwargs):
         if not isinstance(cmd, list):
             cmd = shlex.split(cmd)
@@ -121,6 +118,9 @@ class AndroidPlatform(PlatformBase):
             f.write(arguments_json)
         tgt_argument_filename = os.path.join(self.tgt_dir, "benchmark.json")
         self.util.push(argument_filename, tgt_argument_filename)
+        platform_args = {}
+        if "platform_args" in kwargs:
+            platform_args = kwargs["platform_args"]
 
         patterns = []
         pattern = re.compile(
@@ -130,20 +130,17 @@ class AndroidPlatform(PlatformBase):
         pattern = re.compile(
             r".*ActivityManager: Killing .*{}".format(self.app["package"]))
         patterns.append(pattern)
-
+        platform_args["patterns"] = patterns
         activity = self.app["package"] + "/" + self.app["activity"]
-        ps, iterator = self.util.runAsync(["logcat"])
         self.util.shell(["am", "start", "-S", "-W", activity])
-        log_logcat = getOutput(iterator, patterns)
-        ps.stdout.close()
-        ps.terminate()
+        log_logcat = self.util.run(["logcat"], **platform_args)
         self.util.shell(["am", "force-stop", self.app["package"]])
         return log_logcat
 
     def runBinaryBenchmark(self, cmd, *args, **kwargs):
         log_to_screen_only = 'log_to_screen_only' in kwargs and \
             kwargs['log_to_screen_only']
-        android_kwargs = {}
+        platform_args = {}
         if "platform_args" in kwargs:
             platform_args = kwargs["platform_args"]
             if "taskset" in platform_args:
@@ -153,6 +150,7 @@ class AndroidPlatform(PlatformBase):
             if "sleep_before_run" in platform_args:
                 sleep_before_run = str(platform_args["sleep_before_run"])
                 cmd = ["sleep", sleep_before_run, "&&"] + cmd
+                del platform_args["sleep_before_run"]
             if "power" in platform_args and platform_args["power"]:
                 # launch settings page to prevent the phone
                 # to go into sleep mode
@@ -161,15 +159,10 @@ class AndroidPlatform(PlatformBase):
                 time.sleep(1)
                 cmd = ["nohup"] + ["sh", "-c", "'" + " ".join(cmd) + "'"] + \
                     [">", "/dev/null", "2>&1"]
-                android_kwargs["non_blocking"] = True
+                platform_args["non_blocking"] = True
                 del platform_args["power"]
-            if "timeout" in platform_args and platform_args["timeout"]:
-                android_kwargs["timeout"] = platform_args["timeout"]
-                del platform_args["timeout"]
-            android_kwargs["log_output"] = \
-                platform_args.get("log_output", False)
-        log_screen = self.util.shell(cmd, **android_kwargs)
-        log_logcat = ""
+        log_screen = self.util.shell(cmd, **platform_args)
+        log_logcat = []
         if not log_to_screen_only:
             log_logcat = self.util.logcat('-d')
         return log_screen + log_logcat
@@ -182,9 +175,9 @@ class AndroidPlatform(PlatformBase):
     def killProgram(self, program):
         basename = os.path.basename(program)
         res = self.util.shell(["ps", "|", "grep", basename])
-        if res is None:
+        if len(res) == 0:
             return
-        results = res.split("\n")
+        results = res[0].split("\n")
         pattern = re.compile(r"^shell\s+(\d+)\s+")
         for result in results:
             match = pattern.match(result)
@@ -196,11 +189,11 @@ class AndroidPlatform(PlatformBase):
         period = int(timeout / 20) + 1
         num = int(timeout / period)
         count = 0
-        ls = None
-        while ls is None and count < num:
+        ls = []
+        while len(ls) == 0 and count < num:
             ls = self.util.shell(['ls', self.tgt_dir])
             time.sleep(period)
-        if ls is None:
+        if len(ls) == 0:
             getLogger().error("Cannot reach device {} ({}) after {}.".
                               format(self.platform, self.platform_hash,
                                      timeout))

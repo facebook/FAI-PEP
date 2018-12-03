@@ -97,6 +97,9 @@ def _runOnePass(info, benchmark, framework, platform):
         one_output, output_files = \
             framework.runBenchmark(info, benchmark, platform)
         deepMerge(output, one_output)
+        if getRunStatus() != 0:
+            # early exit if there is an error
+            break
     data = _processDelayData(output)
     return data
 
