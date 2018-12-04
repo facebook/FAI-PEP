@@ -83,6 +83,9 @@ class JsonConverter(DataConverterBase):
                 # for backward compatibility purpose
                 # will remove after some time
                 for k, v in d.items():
+                    if not isinstance(v, dict):
+                        # prevent some data corruption
+                        continue
                     for kk, vv in v.items():
                         key = k + " " + kk
                         if "info_string" in vv:

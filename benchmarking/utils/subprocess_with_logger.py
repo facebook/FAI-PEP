@@ -33,16 +33,21 @@ def processRun(*args, **kwargs):
         if "non_blocking" in kwargs and kwargs["non_blocking"]:
             non_blocking = True
             del kwargs["non_blocking"]
-        ps, iter = _Popen(*args)
         if non_blocking:
+            _Popen(*args, **kwargs)
             return [], None
         else:
             patterns = []
             if "patterns" in kwargs:
                 patterns = kwargs["patterns"]
-            t = None
+                del kwargs["patterns"]
+            timeout = None
             if "timeout" in kwargs:
                 timeout = kwargs["timeout"]
+                del kwargs["timeout"]
+            ps, iter = _Popen(*args, **kwargs)
+            t = None
+            if timeout:
                 t = Timer(timeout, _kill, [ps, ' '.join(*args)])
                 t.start()
             output, match = _getOutput(iter, patterns)
@@ -76,9 +81,14 @@ def processRun(*args, **kwargs):
     return [], err_output
 
 
-def _Popen(*args):
-    ps = subprocess.Popen(*args, stdout=subprocess.PIPE,
-                          stderr=subprocess.STDOUT, universal_newlines=True)
+def _Popen(*args, **kwargs):
+    ps = subprocess.Popen(*args, bufsize=-1, stdout=subprocess.PIPE,
+                          stderr=subprocess.STDOUT, **kwargs)
+    # this is not really recommended. However, we need to stream the
+    # output as they are available. So we do this. But, if the data
+    # comes in too fast and there is no time to consume them, the output
+    # may be truncated. Now, add a buffer to reduce the problem.
+    # will see whether this is indeed an issue later on.
     lines_iterator = iter(ps.stdout.readline, b"")
     return ps, lines_iterator
 
