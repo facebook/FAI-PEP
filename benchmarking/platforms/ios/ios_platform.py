@@ -79,7 +79,8 @@ class IOSPlatform(PlatformBase):
         if "platform_args" in kwargs:
             platform_args = kwargs["platform_args"]
 
-        run_cmd = ["--bundle", self.app, "--noninteractive", "--noinstall"]
+        run_cmd = ["--bundle", self.app,
+                   "--noninteractive", "--noinstall", "--unbuffered"]
         # the command may fail, but the err_output is what we need
         log_screen = self.util.run(run_cmd, **platform_args)
         return log_screen
