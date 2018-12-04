@@ -83,7 +83,8 @@ def processRun(*args, **kwargs):
 
 def _Popen(*args, **kwargs):
     ps = subprocess.Popen(*args, bufsize=-1, stdout=subprocess.PIPE,
-                          stderr=subprocess.STDOUT, **kwargs)
+                          stderr=subprocess.STDOUT,
+                          universal_newlines=True, **kwargs)
     # this is not really recommended. However, we need to stream the
     # output as they are available. So we do this. But, if the data
     # comes in too fast and there is no time to consume them, the output
