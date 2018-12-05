@@ -45,6 +45,9 @@ sudo apt-get update
 # confirm python version
 python --version
 
+pwd
+ls
+
 # clone FAI-PEP
 FAI_PEP_DIR=/tmp/FAI-PEP
 rm -rf ${FAI_PEP_DIR}
