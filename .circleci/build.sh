@@ -27,6 +27,9 @@ if [[ "${CIRCLE_JOB}" =~ (.*)-py((2|3)\.?[0-9]?\.?[0-9]?) ]]; then
     PYTHON=$(which "python${BASH_REMATCH[2]}")
     FRAMEWORK=${BASH_REMATCH[1]}
 fi
+if [ ! -f ${PYTHON} ]; then
+    apt-get install python3.6
+fi
 $PYTHON -m virtualenv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 pip install -U pip setuptools
