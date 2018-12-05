@@ -30,9 +30,11 @@ if [[ "${CIRCLE_JOB}" =~ (.*)-py((2|3)\.?[0-9]?\.?[0-9]?) ]]; then
     FRAMEWORK=${BASH_REMATCH[1]}
 fi
 
-sudo apt-get update
-sudo apt-get -y install "python${PYTHON_SUFFIX}-pip"
-pip${PYTHON_SUFFIX} install virtualenv
+if ${PYTHON_SUFFIX} != "2":
+    sudo apt-get update
+    sudo apt-get -y install "python${PYTHON_SUFFIX}-pip"
+    pip${PYTHON_SUFFIX} install virtualenv
+fi
 
 $PYTHON -m virtualenv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
