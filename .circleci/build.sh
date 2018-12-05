@@ -30,7 +30,6 @@ if [[ "${CIRCLE_JOB}" =~ (.*)-py((2|3)\.?[0-9]?\.?[0-9]?) ]]; then
     FRAMEWORK=${BASH_REMATCH[1]}
 fi
 
-apt-get install ${PYTHON}-pip
 pip${PYTHON_SUFFIX} install virtualenv
 
 $PYTHON -m virtualenv "$VENV_DIR"
