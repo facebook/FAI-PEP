@@ -23,7 +23,7 @@ fi
 VENV_DIR=/tmp/venv
 PYTHON="$(which python)"
 FRAMEWORK="${CIRCLE_JOB}"
-if [[ "${CIRCLE_JOB}" =~ (.*)-py((2|3)\\.?[0-9]?\\.?[0-9]?) ]]; then
+if [[ "${CIRCLE_JOB}" =~ (.*)-py((2|3)\.?[0-9]?\.?[0-9]?) ]]; then
     PYTHON=$(which "python${BASH_REMATCH[2]}")
     FRAMEWORK=${BASH_REMATCH[1]}
 fi

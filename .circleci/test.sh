@@ -7,7 +7,7 @@ source "/tmp/venv/bin/activate"
 DIR=$(dirname $0)
 
 FRAMEWORK="${CIRCLE_JOB}"
-if [[ "${CIRCLE_JOB}" =~ (.*)-py((2|3)\\.?[0-9]?\\.?[0-9]?) ]]; then
+if [[ "${CIRCLE_JOB}" =~ (.*)-py((2|3)\.?[0-9]?\.?[0-9]?) ]]; then
     FRAMEWORK=${BASH_REMATCH[1]}
 fi
 case ${FRAMEWORK} in
