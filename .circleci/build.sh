@@ -22,8 +22,10 @@ fi
 # setup virtualenv
 VENV_DIR=/tmp/venv
 PYTHON="$(which python)"
-if [[ "${CIRCLE_JOB}" =~ py((2|3)\\.?[0-9]?\\.?[0-9]?) ]]; then
-    PYTHON=$(which "python${BASH_REMATCH[1]}")
+FRAMEWORK="${CIRCLE_JOB}"
+if [[ "${CIRCLE_JOB}" =~ (.*)-py((2|3)\\.?[0-9]?\\.?[0-9]?) ]]; then
+    PYTHON=$(which "python${BASH_REMATCH[2]}")
+    FRAMEWORK=${BASH_REMATCH[1]}
 fi
 $PYTHON -m virtualenv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
@@ -38,7 +40,7 @@ git clone https://github.com/facebook/FAI-PEP.git "$FAI_PEP_DIR"
 
 pip install six requests
 
-case ${CIRCLE_JOB} in
+case ${FRAMEWORK} in
   PYTORCH)
     sh ${DIR}/builds/build_pytorch.sh
     ;;
@@ -46,7 +48,7 @@ case ${CIRCLE_JOB} in
     sh ${DIR}/builds/build_tflite.sh
     ;;
   *)
-    echo "Error, '${CIRCLE_JOB}' not valid mode; Must be one of {PYTORCH, TFLITE}."
+    echo "Error, '${FRAMEWORK}' not valid mode; Must be one of {PYTORCH, TFLITE}."
     exit 1
     ;;
 esac

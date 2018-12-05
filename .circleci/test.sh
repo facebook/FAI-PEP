@@ -6,7 +6,11 @@ source "/tmp/venv/bin/activate"
 
 DIR=$(dirname $0)
 
-case ${CIRCLE_JOB} in
+FRAMEWORK="${CIRCLE_JOB}"
+if [[ "${CIRCLE_JOB}" =~ (.*)-py((2|3)\\.?[0-9]?\\.?[0-9]?) ]]; then
+    FRAMEWORK=${BASH_REMATCH[1]}
+fi
+case ${FRAMEWORK} in
   PYTORCH)
     sh ${DIR}/tests/test_pytorch.sh
     ;;
@@ -14,7 +18,7 @@ case ${CIRCLE_JOB} in
     sh ${DIR}/tests/test_tflite.sh
     ;;
   *)
-    echo "Error, '${CIRCLE_JOB}' not valid mode; Must be one of {PYTORCH, TFLITE}."
+    echo "Error, '${FRAMEWORK}' not valid mode; Must be one of {PYTORCH, TFLITE}."
     exit 1
     ;;
 esac
