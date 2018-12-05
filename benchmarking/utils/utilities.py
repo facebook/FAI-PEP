@@ -171,5 +171,5 @@ def setRunStatus(status, overwrite=False):
         run_status = status
     else:
         run_status = run_status | status
-    print(set status)
+    print("set status")
     print(run_status)
