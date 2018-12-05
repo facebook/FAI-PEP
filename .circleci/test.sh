@@ -6,6 +6,9 @@ source "/tmp/venv/bin/activate"
 
 DIR=$(dirname $0)
 
+# confirm python version
+python --version
+
 FRAMEWORK="${CIRCLE_JOB}"
 if [[ "${CIRCLE_JOB}" =~ (.*)-py((2|3)\.?[0-9]?\.?[0-9]?) ]]; then
     FRAMEWORK=${BASH_REMATCH[1]}

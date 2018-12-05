@@ -40,6 +40,9 @@ pip install -U pip setuptools
 
 sudo apt-get update
 
+# confirm python version
+python --version
+
 # clone FAI-PEP
 FAI_PEP_DIR=/tmp/FAI-PEP
 rm -rf ${FAI_PEP_DIR}
