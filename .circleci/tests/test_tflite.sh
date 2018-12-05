@@ -29,3 +29,4 @@ echo "
 " > ${CONFIG_DIR}/config.txt
 
 python ${FAI_PEP_DIR}/benchmarking/run_bench.py -b ${FAI_PEP_DIR}/specifications/models/tflite/mobilenet_v2/mobilenet_v2_0.35_96.json --config_dir "${CONFIG_DIR}"
+echo $?
