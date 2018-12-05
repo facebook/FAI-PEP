@@ -2,7 +2,6 @@
 
 set -ex
 
-FAI_PEP_DIR=/tmp/FAI-PEP
 CONFIG_DIR=/tmp/config
 LOCAL_REPORTER_DIR=/tmp/reporter
 REPO_DIR=/tmp/pytorch
@@ -26,4 +25,4 @@ echo "
 }
 " > ${CONFIG_DIR}/config.txt
 
-python ${FAI_PEP_DIR}/benchmarking/run_bench.py -b ${FAI_PEP_DIR}/specifications/models/caffe2/squeezenet/squeezenet.json --config_dir "${CONFIG_DIR}"
+python benchmarking/run_bench.py -b specifications/models/caffe2/squeezenet/squeezenet.json --config_dir "${CONFIG_DIR}"

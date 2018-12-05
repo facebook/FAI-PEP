@@ -4,7 +4,6 @@ set -ex
 
 export PATH="$PATH:$HOME/bin"
 
-FAI_PEP_DIR=/tmp/FAI-PEP
 CONFIG_DIR=/tmp/config
 LOCAL_REPORTER_DIR=/tmp/reporter
 REPO_DIR=/tmp/tensorflow
@@ -28,4 +27,5 @@ echo "
 }
 " > ${CONFIG_DIR}/config.txt
 
-python ${FAI_PEP_DIR}/benchmarking/run_bench.py -b ${FAI_PEP_DIR}/specifications/models/tflite/mobilenet_v2/mobilenet_v2_0.35_96.json --config_dir "${CONFIG_DIR}"
+python benchmarking/run_bench.py -b specifications/models/tflite/mobilenet_v2/mobilenet_v2_0.35_96.json --config_dir "${CONFIG_DIR}"
+echo $?

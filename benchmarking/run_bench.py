@@ -15,7 +15,8 @@ import six
 import sys
 from utils.arg_parse import getParser, getArgs, getUnknowns, parseKnown
 from utils.custom_logger import getLogger
-from utils.utilities import getPythonInterpreter, getString
+from utils.utilities import getPythonInterpreter, getString, \
+    getRunStatus, setRunStatus
 
 getParser().add_argument("--config_dir",
     default=os.path.join(os.path.expanduser('~'), ".aibench", "git"),
@@ -28,12 +29,12 @@ class RunBench(object):
     def __init__(self):
         parseKnown()
         self.root_dir = getArgs().config_dir
-        self.ret = 0
 
     def run(self):
         cmd = self._getCMD()
         getLogger().info("Running: %s", cmd)
-        self.ret = os.system(cmd)
+        ret = os.system(cmd)
+        setRunStatus(ret >> 8)
 
     def _getUnknownArgs(self):
         unknowns = getUnknowns()
@@ -148,4 +149,4 @@ class RunBench(object):
 if __name__ == "__main__":
     app = RunBench()
     app.run()
-    sys.exit(app.ret)
+    sys.exit(getRunStatus())

@@ -22,23 +22,32 @@ fi
 # setup virtualenv
 VENV_DIR=/tmp/venv
 PYTHON="$(which python)"
-if [[ "${CIRCLE_JOB}" =~ py((2|3)\\.?[0-9]?\\.?[0-9]?) ]]; then
-    PYTHON=$(which "python${BASH_REMATCH[1]}")
+PYTHON_SUFFIX="2"
+FRAMEWORK="${CIRCLE_JOB}"
+if [[ "${CIRCLE_JOB}" =~ (.*)-py((2|3)\.?[0-9]?\.?[0-9]?) ]]; then
+    PYTHON=$(which "python${BASH_REMATCH[2]}")
+    PYTHON_SUFFIX=${BASH_REMATCH[2]}
+    FRAMEWORK=${BASH_REMATCH[1]}
 fi
+
+if [ ${PYTHON_SUFFIX} != "2" ]; then
+    sudo apt-get update
+    sudo apt-get -y install "python${PYTHON_SUFFIX}-pip"
+    pip${PYTHON_SUFFIX} install virtualenv
+fi
+
 $PYTHON -m virtualenv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 pip install -U pip setuptools
 
 sudo apt-get update
 
-# clone FAI-PEP
-FAI_PEP_DIR=/tmp/FAI-PEP
-rm -rf ${FAI_PEP_DIR}
-git clone https://github.com/facebook/FAI-PEP.git "$FAI_PEP_DIR"
+# confirm python version
+python --version
 
 pip install six requests
 
-case ${CIRCLE_JOB} in
+case ${FRAMEWORK} in
   PYTORCH)
     sh ${DIR}/builds/build_pytorch.sh
     ;;
@@ -46,7 +55,7 @@ case ${CIRCLE_JOB} in
     sh ${DIR}/builds/build_tflite.sh
     ;;
   *)
-    echo "Error, '${CIRCLE_JOB}' not valid mode; Must be one of {PYTORCH, TFLITE}."
+    echo "Error, '${FRAMEWORK}' not valid mode; Must be one of {PYTORCH, TFLITE}."
     exit 1
     ;;
 esac
