@@ -89,6 +89,7 @@ class TFLiteFramework(FrameworkBase):
         if output is None:
             return False
         results = {}
+        rows = output
         if isinstance(output, string_types):
             rows = output.split('\n')
         # only collect one data point for statistics
