@@ -15,12 +15,14 @@ import os
 import sys
 import threading
 import time
+import traceback
+
 from utils.arg_parse import getParser, getArgs, getUnknowns, parseKnown
 from repos.repos import getRepo
 from utils.build_program import buildProgramPlatform
 from utils.custom_logger import getLogger
 from utils.utilities import getDirectory, getPythonInterpreter, \
-    deepMerge, getString
+    deepMerge, getString, getRunStatus, setRunStatus
 
 getParser().add_argument("--ab_testing", action="store_true",
     help="Enable A/B testing in benchmark.")
@@ -101,13 +103,17 @@ class ExecutablesBuilder (threading.Thread):
         self.current_commit_hash = None
 
     def run(self):
-        if getArgs().interval:
-            while not stopRun():
+        try:
+            if getArgs().interval:
+                while not stopRun():
+                    self._buildExecutables()
+                    time.sleep(getArgs().interval)
+            else:
+                # single run
                 self._buildExecutables()
-                time.sleep(getArgs().interval)
-        else:
-            # single run
-            self._buildExecutables()
+        except Exception:
+            setRunStatus(2)
+            getLogger().error(traceback.format_exc())
 
     def _buildExecutables(self):
         platforms = getArgs().platforms.split(",")
@@ -302,7 +308,6 @@ class RepoDriver(object):
         self.executables_builder = ExecutablesBuilder(self.repo,
                                                       self.work_queue,
                                                       self.queue_lock)
-        self.ret = 0
 
     def run(self):
         getLogger().info(
@@ -333,7 +338,7 @@ class RepoDriver(object):
             repo_info = self.work_queue.popleft()
             if not same_host:
                 self.queue_lock.release()
-            self.ret |= self._runOneBenchmarkSuite(repo_info)
+            setRunStatus(self._runOneBenchmarkSuite(repo_info))
             if same_host:
                 self.queue_lock.release()
 
@@ -385,4 +390,4 @@ class RepoDriver(object):
 if __name__ == "__main__":
     app = RepoDriver()
     app.run()
-    sys.exit(app.ret)
+    sys.exit(getRunStatus())

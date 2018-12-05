@@ -12,6 +12,8 @@ import copy
 import os
 import sys
 import time
+import traceback
+
 from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
 from utils.utilities import getCommand, deepMerge, setRunStatus, getRunStatus
@@ -58,6 +60,7 @@ def runOneBenchmark(info, benchmark, framework, platform,
         data = None
         status = 2
         setRunStatus(status)
+        getLogger().error(traceback.format_exc())
 
     if data is None or len(data) == 0:
         name = platform.getMangledName()
