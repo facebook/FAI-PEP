@@ -50,7 +50,7 @@ def processRun(*args, **kwargs):
             if timeout:
                 t = Timer(timeout, _kill, [ps, ' '.join(*args)])
                 t.start()
-            output, match = _getOutput(iter, patterns)
+            output, match = _getOutput(ps, iter, patterns)
             ps.stdout.close()
             if match:
                 # if the process is terminated by mathing output,
@@ -94,19 +94,21 @@ def _Popen(*args, **kwargs):
     return ps, lines_iterator
 
 
-def _getOutput(lines_iterator, patterns):
+def _getOutput(ps, lines_iterator, patterns):
     if not isinstance(patterns, list):
         patterns = [patterns]
     lines = []
     match = False
     for line in lines_iterator:
-        nline = line.rstrip().decode("utf-8", "ignore")
+        nline = line.rstrip()
         lines.append(nline)
         for pattern in patterns:
             if pattern.match(nline):
                 match = True
                 break
         if match:
+            break
+        if ps.poll() is not None:
             break
     return lines, match
 
