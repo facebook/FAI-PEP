@@ -338,7 +338,7 @@ class RepoDriver(object):
             repo_info = self.work_queue.popleft()
             if not same_host:
                 self.queue_lock.release()
-            setRunStatus(self._runOneBenchmarkSuite(repo_info))
+            self._runOneBenchmarkSuite(repo_info)
             if same_host:
                 self.queue_lock.release()
 
@@ -351,13 +351,13 @@ class RepoDriver(object):
             time.sleep(10)
         # cannot use subprocess because it conflicts with requests
         ret = os.system(cmd)
+        setRunStatus(ret >> 8)
         if getArgs().commit_file and getArgs().regression:
             with open(getArgs().commit_file, 'w') as file:
                 file.write(repo_info['treatment']['commit'])
         getLogger().info("One benchmark run {} for ".format(
                          "successful" if ret == 0 else "failed") +
                          repo_info['treatment']['commit'])
-        return ret
 
     def _getCommand(self, repo_info):
         platform = repo_info["platform"]
