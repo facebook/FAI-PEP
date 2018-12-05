@@ -33,7 +33,9 @@ class RunBench(object):
     def run(self):
         cmd = self._getCMD()
         getLogger().info("Running: %s", cmd)
-        setRunStatus(os.system(cmd))
+        ret = os.system(cmd)
+
+        setRunStatus(ret >> 8)
 
     def _getUnknownArgs(self):
         unknowns = getUnknowns()
@@ -148,5 +150,4 @@ class RunBench(object):
 if __name__ == "__main__":
     app = RunBench()
     app.run()
-    print(getRunStatus())
     sys.exit(getRunStatus())
