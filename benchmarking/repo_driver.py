@@ -390,4 +390,5 @@ class RepoDriver(object):
 if __name__ == "__main__":
     app = RepoDriver()
     app.run()
+    print(getRunStatus())
     sys.exit(getRunStatus())
