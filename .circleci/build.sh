@@ -30,7 +30,7 @@ if [[ "${CIRCLE_JOB}" =~ (.*)-py((2|3)\.?[0-9]?\.?[0-9]?) ]]; then
     FRAMEWORK=${BASH_REMATCH[1]}
 fi
 
-if ${PYTHON_SUFFIX} != "2":
+if [ ${PYTHON_SUFFIX} != "2" ]; then
     sudo apt-get update
     sudo apt-get -y install "python${PYTHON_SUFFIX}-pip"
     pip${PYTHON_SUFFIX} install virtualenv
