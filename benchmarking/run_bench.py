@@ -146,7 +146,7 @@ class RunBench(object):
 
 
 if __name__ == "__main__":
-    f
     app = RunBench()
     app.run()
+    print(app.ret)
     sys.exit(app.ret)
