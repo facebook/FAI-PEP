@@ -22,16 +22,17 @@ fi
 # setup virtualenv
 VENV_DIR=/tmp/venv
 PYTHON="$(which python)"
+PYTHON_SUFFIX="2"
 FRAMEWORK="${CIRCLE_JOB}"
 if [[ "${CIRCLE_JOB}" =~ (.*)-py((2|3)\.?[0-9]?\.?[0-9]?) ]]; then
     PYTHON=$(which "python${BASH_REMATCH[2]}")
+    PYTHON_SUFFIX=${BASH_REMATCH[2]}
     FRAMEWORK=${BASH_REMATCH[1]}
 fi
-if [ -f ${PYTHON} ]; then
-    echo "${PYTHON} exist"
-else
-    apt-get install python3.6
-fi
+
+apt-get install ${PYTHON}-pip
+pip${PYTHON_SUFFIX} install virtualenv
+
 $PYTHON -m virtualenv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 pip install -U pip setuptools
