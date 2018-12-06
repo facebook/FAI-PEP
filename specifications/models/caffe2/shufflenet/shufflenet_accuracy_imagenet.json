@@ -1,7 +1,7 @@
 {
   "model": {
     "category": "CNN",
-    "description": "Trained SqueezeNet model on Caffe2",
+    "description": "Trained Shufflenet model on Caffe2, running on imagenet dataset",
     "files": {
       "init": {
         "filename": "model_init.pb",
