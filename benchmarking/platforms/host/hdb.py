@@ -12,6 +12,7 @@ import os
 import shutil
 
 from platforms.platform_util_base import PlatformUtilBase
+from utils.custom_logger import getLogger
 
 
 class HDB(PlatformUtilBase):
@@ -19,6 +20,7 @@ class HDB(PlatformUtilBase):
         super(HDB, self).__init__(device, tempdir)
 
     def push(self, src, tgt):
+        getLogger().info("push {} to {}".format(src, tgt))
         if src != tgt:
             if os.path.isdir(src):
                 if os.path.exists(tgt):
@@ -29,11 +31,13 @@ class HDB(PlatformUtilBase):
                 os.chmod(tgt, 0o777)
 
     def pull(self, src, tgt):
+        getLogger().info("pull {} to {}".format(src, tgt))
         if src != tgt:
             shutil.copyfile(src, tgt)
             os.chmod(tgt, 0o777)
 
     def deleteFile(self, file):
+        getLogger().info("delete {}".format(file))
         if os.path.isdir(file):
             shutil.rmtree(file)
         else:
