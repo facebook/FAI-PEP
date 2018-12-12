@@ -101,6 +101,12 @@ def _getOutput(ps, lines_iterator, patterns):
     match = False
     for line in lines_iterator:
         nline = line.rstrip()
+        try:
+            # decode the string if decode exists
+            decoded_line = nline.decode('utf-8')
+            nline = decoded_line
+        except Exception:
+            pass
         lines.append(nline)
         for pattern in patterns:
             if pattern.match(nline):
