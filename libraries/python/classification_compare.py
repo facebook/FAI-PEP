@@ -15,6 +15,7 @@
 
 import argparse
 import json
+import numpy as np
 import os
 
 
@@ -46,11 +47,14 @@ class OutputCompare(object):
 
     def getData(self, filename):
         with open(filename, "r") as f:
-            content = f.read()
-            batches = content.strip().split('\n')
-        data = [[float(item) for item in batch.strip().split(',')]
-                for batch in batches]
-        return data
+            line = f.readline().strip()
+            dims_list = [int(dim.strip()) for dim in line.split(',')]
+            line = f.readline().strip()
+            content_list = [float(entry.strip()) for entry in line.split(',')]
+        dims = np.asarray(dims_list)
+        content = np.asarray(content_list)
+        data = np.reshape(content, dims)
+        return data.tolist()
 
     def writeOneResult(self, values, data, metric, unit):
         entry = {
