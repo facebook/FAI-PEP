@@ -54,7 +54,8 @@ class FrameworkBase(object):
                          for name in info["programs"]}
         program_path = os.path.dirname(program_files["program"]) \
             if "program" in program_files else None
-        self._replaceStringMap(benchmark, platform, program_path)
+        stringmap_from_info = info["string_map"] if "string_map" in info else None
+        self._replaceStringMap(benchmark, platform, program_path, stringmap_from_info)
 
         # better to be before target program files separation.
         # this way, in ios, the platform may not be copied to the target.
@@ -214,7 +215,12 @@ class FrameworkBase(object):
                      for name in test["postprocess"]["files"]}
                 deepMerge(test_files, postprocess_files)
 
-            commands = test["postprocess"]["commands"]
+            commands = None
+            if "commands" in test["postprocess"]:
+                commands = test["postprocess"]["commands"]
+            elif "command" in test["postprocess"]:
+                commands = [test["postprocess"]["command"]]
+
             self._runCommands(output, commands, self.host_platform, programs,
                               model, test, model_files, input_files,
                               output_files, None, test_files, -1, converter)
@@ -379,9 +385,14 @@ class FrameworkBase(object):
         os.makedirs(hostdir, 0o777)
         return hostdir
 
-    def _replaceStringMap(self, root, platform, program_path):
+    def _replaceStringMap(self, root, platform, program_path, stringmap_from_info):
         string_map = json.loads(getArgs().string_map) \
             if getArgs().string_map else {}
+
+        info_string_map = json.loads(stringmap_from_info) \
+            if stringmap_from_info else {}
+
+        deepMerge(string_map, info_string_map)
 
         string_map["TGTDIR"] = platform.getOutputDir()
         string_map["HOSTDIR"] = self._createHostDir()
