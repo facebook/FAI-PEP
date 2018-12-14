@@ -172,7 +172,8 @@ class BenchmarkDriver(object):
                 if "model" in benchmark and "cooldown" in benchmark["model"]:
                     cooldown = float(benchmark["model"]["cooldown"])
                 time.sleep(cooldown)
-            shutil.rmtree(tempdir, True)
+            if not getArgs().debug:
+                shutil.rmtree(tempdir, True)
 
     def run(self):
         tempdir = tempfile.mkdtemp()
