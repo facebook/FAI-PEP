@@ -142,6 +142,7 @@ class PlatformBase(object):
         assert False, "wait for device is not implemented"
 
     def getPairedArguments(self, cmd):
+        # do not support position arguments
         arguments = {}
         i = 0
         while i < len(cmd):
