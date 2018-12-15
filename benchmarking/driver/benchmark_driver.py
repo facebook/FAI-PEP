@@ -94,12 +94,15 @@ def _runOnePass(info, benchmark, framework, platform):
     assert len(benchmark["tests"]) == 1, \
         "At this moment, only one test exists in the benchmark"
     to = benchmark["model"]["repeat"] if "repeat" in benchmark["model"] else 1
-    output = {}
+    output = None
     for idx in range(to):
         benchmark["tests"][0]["INDEX"] = idx
         one_output, output_files = \
             framework.runBenchmark(info, benchmark, platform)
-        deepMerge(output, one_output)
+        if output:
+            deepMerge(output, one_output)
+        else:
+            output = copy.deepcopy(one_output)
         if getRunStatus() != 0:
             # early exit if there is an error
             break
