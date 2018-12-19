@@ -30,6 +30,7 @@ class GitRepo(RepoBase):
 
     def checkout(self, *args):
         self._run('checkout', *args)
+        self._run("submodule", "sync")
         self._run('submodule', 'update', '--init', '--recursive')
 
     def getCurrentCommitHash(self):
