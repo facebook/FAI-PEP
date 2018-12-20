@@ -46,9 +46,7 @@ class ImInfo(object):
 
     def run(self):
         with open(self.args.dataset_file, "r") as f:
-            imgs = json.load(f)
-        if not isinstance(imgs, list):
-            imgs = [imgs]
+            imgs = [json.loads(s) for s in f.readlines()]
         batch_size = self.args.batch_size \
             if self.args.batch_size > 0 else len(imgs)
 

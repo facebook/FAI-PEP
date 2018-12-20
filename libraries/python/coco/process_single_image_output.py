@@ -36,18 +36,23 @@ class ProcessSingleImageOutput(object):
         self.args = args
 
     def getData(self, filename):
-        content_list = []
+        result = []
         with open(filename, "r") as f:
-            line = f.readline().strip()
-            dims_list = [int(dim.strip()) for dim in line.split(',')]
-            line = f.readline().strip()
-            if len(line) > 0:
-                content_list = \
-                    [float(entry.strip()) for entry in line.split(',')]
-        dims = np.asarray(dims_list)
-        content = np.asarray(content_list)
-        data = np.reshape(content, dims)
-        return data
+            line = f.readline()
+            while line != "":
+                content_list = []
+                dims_list = [int(dim.strip())
+                             for dim in line.strip().split(',')]
+                line = f.readline().strip()
+                if len(line) > 0:
+                    content_list = \
+                        [float(entry.strip()) for entry in line.split(',')]
+                line = f.readline()
+                dims = np.asarray(dims_list)
+                content = np.asarray(content_list)
+                data = np.reshape(content, dims)
+                result.append(data)
+        return result
 
     def getBlobs(self):
         blob_names = self.args.blob_names.split(",")
@@ -56,7 +61,18 @@ class ProcessSingleImageOutput(object):
         assert(len(blob_names) == len(blob_files))
         for i in range(len(blob_names)):
             blobs[blob_names[i]] = self.getData(blob_files[i])
-        return blobs
+        # restructure the blobs.
+        # All blobs should have the same number of entries
+        num = len(blobs[blob_names[0]])
+        blob_array = []
+        for i in range(num):
+            one_entry = {}
+            for name in blob_names:
+                assert len(blobs[name]) == num, \
+                    "Different entries have different numbers"
+                one_entry[name] = blobs[name][i]
+            blob_array.append(one_entry)
+        return blob_array
 
     def expand_boxes(self, boxes, scale):
         """Expand an array of boxes by a given scale."""
@@ -95,7 +111,6 @@ class ProcessSingleImageOutput(object):
         assert masks.shape[0] == ref_boxes.shape[0]
         assert ref_boxes.shape[1] == 4
         assert len(classids) == masks.shape[0]
-
         all_segms = []
         # To work around an issue with cv2.resize (it seems to automatically pad
         # with repeated border values), we manually zero-pad the masks by 1 pixel
@@ -126,7 +141,6 @@ class ProcessSingleImageOutput(object):
             x_1 = min(ref_box[2] + 1, im_w)
             y_0 = max(ref_box[1], 0)
             y_1 = min(ref_box[3] + 1, im_h)
-
             im_mask[y_0:y_1, x_0:x_1] = mask[
                 (y_0 - ref_box[1]):(y_1 - ref_box[1]),
                 (x_0 - ref_box[0]):(x_1 - ref_box[0])]
@@ -143,33 +157,44 @@ class ProcessSingleImageOutput(object):
         return all_segms
 
     def process(self):
+        im_infos = []
         with open(self.args.im_info, "r") as f:
-            im_info = json.load(f)
-        width = im_info["width"]
-        height = im_info["height"]
+            lines = f.readlines()
+        for line in lines:
+            im_info = json.loads(line)
+            im_infos.append(im_info)
+
         blobs = self.getBlobs()
-        classids = blobs["class_nms"]
-        scores = blobs["score_nms"]  # bbox scores, (R, )
-        boxes = blobs["bbox_nms"]  # i.e., boxes, (R, 4*1)
-        masks = blobs["mask_fcn_probs"]  # (R, cls, mask_dim, mask_dim)
-        R = boxes.shape[0]
-        im_masks = []
-        if R > 0:
-            im_masks = self.compute_segm_results(
-                masks, boxes, classids, height, width,
-                rle_encode=self.args.rle_encode
-            )
+        assert len(im_infos) == len(blobs), \
+            "The number for im_infos and blobs do not match"
+        results = []
+        for i in range(len(blobs)):
+            one_blob = blobs[i]
+            im_info = im_infos[i]
+            classids = one_blob["class_nms"]
+            scores = one_blob["score_nms"]  # bbox scores, (R, )
+            boxes = one_blob["bbox_nms"]  # i.e., boxes, (R, 4*1)
+            masks = one_blob["mask_fcn_probs"]  # (R, cls, mask_dim, mask_dim)
+            R = boxes.shape[0]
+            im_masks = []
+            if R > 0:
+                im_masks = self.compute_segm_results(
+                    masks, boxes, classids,
+                    im_info["height"], im_info["width"],
+                    rle_encode=self.args.rle_encode
+                )
 
-        boxes = np.column_stack((boxes, scores))
+            boxes = np.column_stack((boxes, scores))
 
-        ret = {
-            "classids": classids,
-            "boxes": boxes,
-            "masks": masks,
-            "im_masks": im_masks
-        }
+            ret = {
+                "classids": classids,
+                "boxes": boxes,
+                "masks": masks,
+                "im_masks": im_masks
+            }
+            results.append(ret)
         with open(self.args.output_file, "w") as f:
-            pickle.dump(ret, f, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(results, f, pickle.HIGHEST_PROTOCOL)
 
 
 if __name__ == "__main__":

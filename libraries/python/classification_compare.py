@@ -46,15 +46,29 @@ class OutputCompare(object):
                 self.args.labels)
 
     def getData(self, filename):
+        num_entries = 0
+        content_list = []
         with open(filename, "r") as f:
-            line = f.readline().strip()
-            dims_list = [int(dim.strip()) for dim in line.split(',')]
-            line = f.readline().strip()
-            content_list = [float(entry.strip()) for entry in line.split(',')]
+            line = f.readline()
+            dim_str = line
+            while (line != ""):
+                assert dim_str == line, \
+                    "The dimensions do not match"
+                num_entries = num_entries + 1
+                dims_list = [int(dim.strip())
+                             for dim in line.strip().split(',')]
+                line = f.readline().strip()
+                content_list.extend([float(entry.strip())
+                                     for entry in line.split(',')])
+                line = f.readline()
+
+        dims_list.insert(0, num_entries)
         dims = np.asarray(dims_list)
         content = np.asarray(content_list)
         data = np.reshape(content, dims)
-        return data.tolist()
+        # reshape to two dimension array
+        benchmark_data = data.reshape((-1, data.shape[-1]))
+        return benchmark_data.tolist()
 
     def writeOneResult(self, values, data, metric, unit):
         entry = {
