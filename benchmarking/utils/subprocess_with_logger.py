@@ -62,7 +62,7 @@ def processRun(*args, **kwargs):
                 status = ps.wait()
             if t is not None:
                 t.cancel()
-            if log_output:
+            if log_output or status != 0:
                 getLogger().info('\n'.join(output))
             if status == 0:
                 return output, None
