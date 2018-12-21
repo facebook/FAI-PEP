@@ -43,8 +43,6 @@ parser.add_argument("--dataset_dir", type=str, required=True,
     help="Dataet image path")
 parser.add_argument("--dataset_ann", type=str, required=True,
     help="Dataet annotation file")
-parser.add_argument("--limit-files", type=int,
-    help="Limit the total number of files to the test set.")
 parser.add_argument("--output-file", type=str, required=True,
     help="The file containing the loaded coco database.")
 parser.add_argument("--output-image-file", type=str,
@@ -98,8 +96,6 @@ class JsonDataset(object):
         image_ids.sort()
 
         roidb = copy.deepcopy(coco.loadImgs(image_ids))
-        if self.args.limit_files:
-            roidb = roidb[:self.args.limit_files]
         for entry in roidb:
             self._prep_roidb_entry(entry)
         with open(self.args.output_file, "w") as f:

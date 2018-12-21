@@ -39,6 +39,8 @@ parser.add_argument("--output-dir", type=str, required=True,
     help="The output directory to write the final result.")
 parser.add_argument("--result-prefix", type=str, required=True,
     help="The prefix of the result file")
+parser.add_argument("--total-num", type=int, required=True,
+    help="The total number of images")
 
 
 class TestEngine(object):
@@ -47,9 +49,10 @@ class TestEngine(object):
         self.ds = JsonDataset(args)
         self.all_results = self.emptyResults(
             self.ds.num_classes,
-            args.limit_files)
+            args.total_num)
         self.all_boxes = self.all_results["all_boxes"]
         self.all_segms = self.all_results["all_segms"]
+        self.index = 0
 
     def emptyResults(self, num_classes, num_images):
         # all detections are collected into:
@@ -93,16 +96,17 @@ class TestEngine(object):
                                     self.args.result_prefix +
                                     "_" + str(i) + ".pkl")
             with open (filename, "r") as f:
-                ret = pickle.load(f)
-
-            self.extendResultsWithClasses(
-                i,
-                self.all_boxes,
-                (ret["boxes"], ret["classids"]))
-            self.extendSegResultsWithClasses(
-                i,
-                self.all_segms,
-                (ret["im_masks"], ret["classids"]))
+                results = pickle.load(f)
+            for ret in results:
+                self.extendResultsWithClasses(
+                    self.index,
+                    self.all_boxes,
+                    (ret["boxes"], ret["classids"]))
+                self.extendSegResultsWithClasses(
+                    self.index,
+                    self.all_segms,
+                    (ret["im_masks"], ret["classids"]))
+                self.index = self.index + 1
 
     def aggregateResults(self):
         if not os.path.exists(self.args.output_dir):
