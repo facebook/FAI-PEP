@@ -114,8 +114,6 @@ def _getOutput(ps, lines_iterator, patterns):
                 break
         if match:
             break
-        if ps.poll() is not None:
-            break
     return lines, match
 
 
