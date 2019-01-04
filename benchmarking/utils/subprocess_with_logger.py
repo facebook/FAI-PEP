@@ -43,7 +43,7 @@ def processRun(*args, **kwargs):
                 del kwargs["patterns"]
             timeout = None
             if "timeout" in kwargs:
-                timeout = kwargs["timeout"]
+                # timeout = kwargs["timeout"]
                 del kwargs["timeout"]
             ps, iter = _Popen(*args, **kwargs)
             t = None
