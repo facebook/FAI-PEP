@@ -186,7 +186,7 @@ class FrameworkBase(object):
         # all files are copied back to the host system
         if len(output) > 0:
             if input_files is not None:
-                platform.delFilesFromPlatform(tgt_input_files)
+                platform.delFilesFromPlatform(input_files)
             if last_iteration:
                 platform.delFilesFromPlatform(tgt_model_files)
                 platform.delFilesFromPlatform(tgt_program_files)
