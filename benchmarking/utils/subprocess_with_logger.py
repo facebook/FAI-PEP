@@ -45,12 +45,12 @@ def processRun(*args, **kwargs):
             if "timeout" in kwargs:
                 timeout = kwargs["timeout"]
                 del kwargs["timeout"]
-            ps, iter = _Popen(*args, **kwargs)
+            ps = _Popen(*args, **kwargs)
             t = None
             if timeout:
                 t = Timer(timeout, _kill, [ps, ' '.join(*args)])
                 t.start()
-            output, match = _getOutput(ps, iter, patterns)
+            output, match = _getOutput(ps, patterns)
             ps.stdout.close()
             if match:
                 # if the process is terminated by mathing output,
@@ -85,21 +85,24 @@ def _Popen(*args, **kwargs):
     ps = subprocess.Popen(*args, bufsize=-1, stdout=subprocess.PIPE,
                           stderr=subprocess.STDOUT,
                           universal_newlines=True, **kwargs)
+    # We set the buffer size to system default.
     # this is not really recommended. However, we need to stream the
     # output as they are available. So we do this. But, if the data
     # comes in too fast and there is no time to consume them, the output
     # may be truncated. Now, add a buffer to reduce the problem.
     # will see whether this is indeed an issue later on.
-    lines_iterator = iter(ps.stdout.readline, b"")
-    return ps, lines_iterator
+    return ps
 
 
-def _getOutput(ps, lines_iterator, patterns):
+def _getOutput(ps, patterns):
     if not isinstance(patterns, list):
         patterns = [patterns]
     lines = []
     match = False
-    for line in lines_iterator:
+    while True:
+        line = ps.stdout.readline()
+        if not line:
+            break
         nline = line.rstrip()
         try:
             # decode the string if decode exists
