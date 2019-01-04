@@ -18,6 +18,7 @@ import time
 from platforms.platform_base import PlatformBase
 from utils.arg_parse import getParser, getArgs
 from utils.custom_logger import getLogger
+from utils.utilities import getRunStatus, setRunStatus
 
 getParser().add_argument("--android_dir", default="/data/local/tmp/",
     help="The directory in the android device all files are pushed to.")
@@ -174,7 +175,11 @@ class AndroidPlatform(PlatformBase):
 
     def killProgram(self, program):
         basename = os.path.basename(program)
+        # if the program doesn't exist, the grep may fail
+        # do not update status code
+        success = getRunStatus()
         res = self.util.shell(["ps", "|", "grep", basename])
+        setRunStatus(success, overwrite=True)
         if len(res) == 0:
             return
         results = res[0].split("\n")
