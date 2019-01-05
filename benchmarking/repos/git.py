@@ -43,10 +43,12 @@ class GitRepo(RepoBase):
         return int(self._run('show', '-s', '--format=%at', commit).strip())
 
     def getNextCommitHash(self, commit, step):
-        commits = self._run('rev-list', '--reverse',
+        commits = self._run('rev-list', '--reverse', '--ancestry-path',
                             commit+"..HEAD").strip().split('\n')
-        next_commit = commits[0].strip()
-        return next_commit if len(next_commit) > 0 else commit
+        if len(commits) <= step:
+            return commit
+        next_commit = commits[step-1].strip()
+        return next_commit
 
     def getCommitsInRange(self, start_date, end_date):
         return self._run('log',
