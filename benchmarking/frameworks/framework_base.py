@@ -186,7 +186,7 @@ class FrameworkBase(object):
         # all files are copied back to the host system
         if len(output) > 0:
             if input_files is not None:
-                platform.delFilesFromPlatform(input_files)
+                platform.delFilesFromPlatform(tgt_input_files)
             if last_iteration:
                 platform.delFilesFromPlatform(tgt_model_files)
                 platform.delFilesFromPlatform(tgt_program_files)
@@ -343,7 +343,7 @@ class FrameworkBase(object):
             platform_args = {}
         if test and test.get("log_output", False):
             platform_args["log_output"] = True
-        if getArgs().timeout > 0:
+        if getArgs().timeout > 0 and "timeout" not in platform_args:
             platform_args["timeout"] = getArgs().timeout
         cmds = self.composeRunCommand(commands, platform,
                                       programs, model, test,
