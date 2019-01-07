@@ -34,6 +34,9 @@ def processRun(*args, **kwargs):
             non_blocking = True
             del kwargs["non_blocking"]
         if non_blocking:
+            # timeout is not useful
+            if "timeout" in kwargs:
+                del kwargs["timeout"]
             _Popen(*args, **kwargs)
             return [], None
         else:
