@@ -157,6 +157,7 @@ class FrameworkBase(object):
 
         program = programs["program"] if "program" in programs else ""
         if test["metric"] == "power":
+            from utils.monsoon_power import collectPowerData
             platform_args["power"] = True
             # in power metric, the output is ignored
             total_num = 0
@@ -174,7 +175,6 @@ class FrameworkBase(object):
             collection_time = test["collection_time"] \
                 if "collection_time" in test else 180
             voltage = float(test["voltage"]) if "voltage" in test else 4.0
-            from utils.monsoon_power import collectPowerData
             output = collectPowerData(platform.platform_hash,
                                       collection_time, voltage, test["iter"])
             platform.waitForDevice(20)
