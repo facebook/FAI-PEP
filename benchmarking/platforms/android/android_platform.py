@@ -118,10 +118,15 @@ class AndroidPlatform(PlatformBase):
         with open(argument_filename, "w") as f:
             f.write(arguments_json)
         tgt_argument_filename = os.path.join(self.tgt_dir, "benchmark.json")
+        activity = self.app["package"] + "/" + self.app["activity"]
         self.util.push(argument_filename, tgt_argument_filename)
         platform_args = {}
         if "platform_args" in kwargs:
             platform_args = kwargs["platform_args"]
+            if "power" in platform_args and platform_args["power"]:
+                platform_args["non_blocking"] = True
+                self.util.shell(["am", "start", "-S", activity])
+                return []
 
         patterns = []
         pattern = re.compile(
@@ -132,7 +137,6 @@ class AndroidPlatform(PlatformBase):
             r".*ActivityManager: Killing .*{}".format(self.app["package"]))
         patterns.append(pattern)
         platform_args["patterns"] = patterns
-        activity = self.app["package"] + "/" + self.app["activity"]
         self.util.shell(["am", "start", "-S", "-W", activity])
         log_logcat = self.util.run(["logcat"], **platform_args)
         self.util.shell(["am", "force-stop", self.app["package"]])

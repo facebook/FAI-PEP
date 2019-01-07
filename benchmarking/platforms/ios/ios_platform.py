@@ -75,12 +75,15 @@ class IOSPlatform(PlatformBase):
         tgt_argument_filename = os.path.join(self.tgt_dir, "benchmark.json")
         self.util.push(argument_filename, tgt_argument_filename)
 
+        run_cmd = ["--bundle", self.app,
+                   "--noninteractive", "--noinstall", "--unbuffered"]
         platform_args = {}
         if "platform_args" in kwargs:
             platform_args = kwargs["platform_args"]
+            if "power" in platform_args and platform_args["power"]:
+                platform_args["non_blocking"] = True
+                run_cmd += ["--justlaunch"]
 
-        run_cmd = ["--bundle", self.app,
-                   "--noninteractive", "--noinstall", "--unbuffered"]
         if arguments:
             run_cmd += ["--args",
                         ' '.join(["--" + x + " " + arguments[x]
