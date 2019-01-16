@@ -59,4 +59,8 @@
 # OSX dir files
 .DS_Store
 
+# Pytest Coverage
+*.coverage
+
 models/status
+
