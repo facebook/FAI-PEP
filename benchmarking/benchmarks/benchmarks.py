@@ -64,6 +64,14 @@ class BenchmarkCollector(object):
         with open(source, 'r') as b:
             one_benchmark = json.load(b)
 
+        string_map = json.loads(getArgs().string_map) \
+            if getArgs().string_map else {}
+        for name in string_map:
+            value = string_map[name]
+            # only replace model as the model may be downloaded or copied.
+            # the tests are replaced in framework_base
+            deepReplace(one_benchmark["model"], "{"+name+"}", value)
+
         self._verifyBenchmark(one_benchmark, source, False)
 
         self._updateFiles(one_benchmark, source)
