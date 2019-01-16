@@ -1,8 +1,9 @@
 #!/bin/bash
 
 set -ex
+sudo apt-get -y install wget zip unzip
 
-pip install numpy pyyaml mkl mkl-include setuptools cmake cffi typing wget
+pip install numpy pyyaml mkl mkl-include setuptools cmake cffi typing
 
 REPO_DIR=/tmp/pytorch
 
