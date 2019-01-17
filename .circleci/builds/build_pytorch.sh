@@ -20,4 +20,4 @@ mkdir build
 cd build
 cmake ..
 make -j 1
-make install
+sudo make install
