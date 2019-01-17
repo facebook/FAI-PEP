@@ -68,9 +68,7 @@ class BenchmarkCollector(object):
             if getArgs().string_map else {}
         for name in string_map:
             value = string_map[name]
-            # only replace model as the model may be downloaded or copied.
-            # the tests are replaced in framework_base
-            deepReplace(one_benchmark["model"], "{"+name+"}", value)
+            deepReplace(one_benchmark, "{" + name + "}", value)
 
         self._verifyBenchmark(one_benchmark, source, False)
 
