@@ -11,7 +11,6 @@ REPO=caffe2
 
 mkdir -p "$CONFIG_DIR"
 mkdir -p "$LOCAL_REPORTER_DIR"
-mkdir -p "$MODEL_ROOT"
 
 echo "
 {
