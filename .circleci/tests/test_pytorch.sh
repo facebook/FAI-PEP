@@ -32,9 +32,9 @@ python benchmarking/run_bench.py -b specifications/models/caffe2/squeezenet/sque
 
 # test shufflenet on imagenet
 wget -O /tmp/shufflenet.tar.gz https://s3.amazonaws.com/download.caffe2.ai/models/shufflenet/new_shufflenet/shufflenet.tar.gz
-tar -xzvf /tmp/shufflenet.tar.gz
+tar -xzvf /tmp/shufflenet.tar.gz -C /tmp
 
 wget -O /tmp/imagenet.tar.gz https://s3.amazonaws.com/download.caffe2.ai/models/imagenet/imagenet.tar.gz
-tar -xzvf /tmp/imagenet.tar.gz
+tar -xzvf /tmp/imagenet.tar.gz -C /tmp
 
 python benchmarking/run_bench.py -b specifications/models/caffe2/shufflenet/shufflenet_accuracy_imagenet.json --string_map "{\"IMAGENET_DIR\": \"${IMAGENET_DIR}\", \"MODEL_DIR\": \"${MODEL_DIR}\"}" --config_dir "${CONFIG_DIR}"
