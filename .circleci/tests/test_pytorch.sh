@@ -3,7 +3,9 @@
 set -ex
 
 CONFIG_DIR=/tmp/config
+IMAGENET_DIR=/tmp/imagenet
 LOCAL_REPORTER_DIR=/tmp/reporter
+MODEL_DIR=/tmp/model/group4
 REPO_DIR=/tmp/pytorch
 REPO=caffe2
 
@@ -25,4 +27,14 @@ echo "
 }
 " > ${CONFIG_DIR}/config.txt
 
+# test squeezenet
 python benchmarking/run_bench.py -b specifications/models/caffe2/squeezenet/squeezenet.json --config_dir "${CONFIG_DIR}"
+
+# test shufflenet on imagenet
+wget -O /tmp/shufflenet.tar.gz https://s3.amazonaws.com/download.caffe2.ai/models/shufflenet/new_shufflenet/shufflenet.tar.gz
+tar -xzvf /tmp/shufflenet.tar.gz -C /tmp
+
+wget -O /tmp/imagenet.tar.gz https://s3.amazonaws.com/download.caffe2.ai/models/imagenet/imagenet.tar.gz
+tar -xzvf /tmp/imagenet.tar.gz -C /tmp
+
+python benchmarking/run_bench.py -b specifications/models/caffe2/shufflenet/shufflenet_accuracy_imagenet_simple.json --string_map "{\"IMAGENET_DIR\": \"${IMAGENET_DIR}\", \"MODEL_DIR\": \"${MODEL_DIR}\"}" --config_dir "${CONFIG_DIR}"
