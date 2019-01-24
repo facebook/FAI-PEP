@@ -140,12 +140,17 @@ def _mergeDelayData(treatment_data, control_data, bname):
         if "info_string" in treatment_value:
             assert "info_string" in control_value, \
                 "Control value missing info_string field"
-            assert treatment_value["info_string"] == \
-                control_value["info_string"], \
-                "The field info_string in control " + \
-                "({})".format(control_value["info_string"]) + \
-                "is different from the info_string in treatment " + \
-                "({})".format(treatment_value["info_string"])
+            # If the treatment and control are not the same,
+            # treatment value is used, the control value is lost.
+            treatment_string = treatment_value["info_string"]
+            control_string = control_value["info_string"]
+            if treatment_string != control_string:
+                getLogger().warning(
+                    "Treatment value is used, and the control value is lost. " +
+                    "The field info_string in control " +
+                    "({})".format(control_string) +
+                    "is different from the info_string in treatment " +
+                    "({})".format(treatment_string))
 
         if "values" in control_value:
             data[k]["control_values"] = control_value["values"]
