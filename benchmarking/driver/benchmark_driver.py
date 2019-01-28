@@ -32,7 +32,7 @@ def runOneBenchmark(info, benchmark, framework, platform,
     try:
         data = _runOnePass(minfo, mbenchmark, framework, platform)
         meta = None
-        if "control" in info and benchmark["tests"][0]["metric"] == "delay":
+        if "control" in info:
             cinfo = copy.deepcopy(info["control"])
             if "shared_libs" in info:
                 cinfo["shared_libs"] = info["shared_libs"]
