@@ -13,43 +13,44 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import argparse
 import json
 import logging
 
 from platforms.platforms import getPlatforms
-from utils.arg_parse import getParser, parse
 from utils.custom_logger import getLogger
 
-
-getParser().add_argument("-d", "--devices",
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--devices",
     help="Specify the devices to run the benchmark, in a comma separated "
     "list. The value is the device or device_hash field of the meta info.")
-getParser().add_argument("--device",
+parser.add_argument("--device",
     help="The single device to run this benchmark on")
-getParser().add_argument("--excluded_devices",
+parser.add_argument("--excluded_devices",
     help="Specify the devices that skip the benchmark, in a comma separated "
     "list. The value is the device or device_hash field of the meta info.")
-getParser().add_argument("--set_freq",
+parser.add_argument("--set_freq",
     help="On rooted android phones, set the frequency of the cores. "
     "The supported values are: "
     "max: set all cores to the maximum frquency. "
     "min: set all cores to the minimum frequency. "
     "mid: set all cores to the median frequency. ")
-getParser().add_argument("--platform", default="android",
+parser.add_argument("--platform", default="android",
     help="Specify the platforms to benchmark on. ")
-getParser().add_argument("--platform_sig",
+parser.add_argument("--platform_sig",
     help="Specify the platforms signature which clusters the same type machine. ")
-getParser().add_argument("--hash_platform_mapping",
+parser.add_argument("--hash_platform_mapping",
     help="Specify the devices hash platform mapping json file.")
 
 
 class GetConnectedDevices(object):
-    def __init__(self):
+    def __init__(self, **kwargs):
         getLogger().setLevel(logging.FATAL)
-        parse()
+        raw_args = kwargs.get("raw_args", None)
+        self.args, self.unknowns = parser.parse_known_args(raw_args)
 
     def run(self):
-        platforms = getPlatforms("/tmp")
+        platforms = getPlatforms("/tmp", self.args)
         devices = []
         for p in platforms:
             devices.append({
