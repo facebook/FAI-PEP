@@ -8,36 +8,39 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+import argparse
 import copy
 import json
 import os
 import six
 import sys
-from utils.arg_parse import getParser, getArgs, getUnknowns, parseKnown
+from repo_driver import RepoDriver
 from utils.custom_logger import getLogger
 from utils.utilities import getPythonInterpreter, getString, \
     getRunStatus, setRunStatus
 
-getParser().add_argument("--config_dir",
+parser = argparse.ArgumentParser(description="Perform one benchmark run")
+parser.add_argument("--config_dir",
     default=os.path.join(os.path.expanduser('~'), ".aibench", "git"),
     help="Specify the config root directory.")
-getParser().add_argument("--reset_options", action="store_true",
+parser.add_argument("--reset_options", action="store_true",
     help="Reset all the options that is saved by default.")
 
 
 class RunBench(object):
     def __init__(self):
-        parseKnown()
-        self.root_dir = getArgs().config_dir
+        self.args, self.unknowns = parser.parse_known_args()
+        self.root_dir = self.args.config_dir
 
     def run(self):
-        cmd = self._getCMD()
-        getLogger().info("Running: %s", cmd)
-        ret = os.system(cmd)
+        raw_args = self._getRawArgs()
+        app = RepoDriver(raw_args=raw_args)
+        ret = app.run()
         setRunStatus(ret >> 8)
+        sys.exit(getRunStatus())
 
     def _getUnknownArgs(self):
-        unknowns = getUnknowns()
+        unknowns = self.unknowns
         args = {}
         i = 0
         while i < len(unknowns):
@@ -120,7 +123,7 @@ class RunBench(object):
 
     def _getSavedArgs(self):
         new_args = self._getUnknownArgs()
-        if getArgs().reset_options or \
+        if self.args.reset_options or \
                 not os.path.isdir(self.root_dir) or \
                 not os.path.isfile(os.path.join(self.root_dir, "config.txt")):
             args = self._saveDefaultArgs(new_args)
@@ -132,21 +135,16 @@ class RunBench(object):
                 del args[v]
         return args
 
-    def _getCMD(self):
+    def _getRawArgs(self):
         args = self._getSavedArgs()
-        unknowns = getUnknowns()
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        command = getPythonInterpreter() + " " + \
-            os.path.join(dir_path, "repo_driver.py") + " " + \
-            ' '.join([getString(u) + ' ' +
-                     (getString(args[u])
-                      if args[u] is not None else "")
-                      for u in args]) + ' ' + \
-            ' '.join([getString(u) for u in unknowns])
-        return command
+        raw_args = []
+        for u in args:
+            raw_args.extend([getString(u),
+                getString(args[u]) if args[u] is not None else ""])
+        raw_args.extend([getString(u) for u in self.unknowns])
+        return raw_args
 
 
 if __name__ == "__main__":
     app = RunBench()
     app.run()
-    sys.exit(getRunStatus())

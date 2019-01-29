@@ -9,7 +9,6 @@
 ##############################################################################
 
 from reporters.reporter_base import ReporterBase
-from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
 from utils.utilities import requestsJson
 
@@ -17,13 +16,15 @@ import json
 
 
 class RemoteReporter(ReporterBase):
-    def __init__(self):
+    def __init__(self, **kwargs):
+        self.remote_reporter = kwargs.get("remote_reporter", None)
+        self.remote_access_token = kwargs.get("remote_access_token")
         super(RemoteReporter, self).__init__()
 
     def report(self, content):
-        if not getArgs().remote_reporter:
+        if not self.remote_reporter:
             return
-        access_token = getArgs().remote_access_token
+        access_token = self.remote_access_token
         remote = self._getRemoteInfo()
         logs = self._composeMessages(content, remote['category'])
 
@@ -40,7 +41,7 @@ class RemoteReporter(ReporterBase):
         return result
 
     def _getRemoteInfo(self):
-        endpoint = getArgs().remote_reporter.strip().split("|")
+        endpoint = self.remote_reporter.strip().split("|")
         assert len(endpoint) == 2, "Category not speied in remote endpoint"
         res = {}
         res['url'] = endpoint[0].strip()

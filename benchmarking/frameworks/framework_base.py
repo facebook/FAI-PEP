@@ -18,17 +18,17 @@ import sys
 
 from data_converters.data_converters import getConverters
 from platforms.platforms import getHostPlatform
-from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
 from utils.utilities import deepMerge, deepReplace, \
                             getFAIPEPROOT, getString
 
 
 class FrameworkBase(object):
-    def __init__(self):
+    def __init__(self, args):
         self.converters = getConverters()
         self.tmpdir = None
         self.host_platform = None
+        self.args = args
 
     @abc.abstractmethod
     def getName(self):
@@ -48,7 +48,7 @@ class FrameworkBase(object):
                           ("repeat" in model and index == model["repeat"] - 1))
 
         if self.host_platform is None:
-            self.host_platform = getHostPlatform(self.tempdir)
+            self.host_platform = getHostPlatform(self.tempdir, self.args)
 
         program_files = {name: info["programs"][name]["location"]
                          for name in info["programs"]}
@@ -176,7 +176,8 @@ class FrameworkBase(object):
                 if "collection_time" in test else 180
             voltage = float(test["voltage"]) if "voltage" in test else 4.0
             output = collectPowerData(platform.platform_hash,
-                                      collection_time, voltage, test["iter"])
+                                      collection_time, voltage, test["iter"],
+                                      self.args.monsoon_map)
             platform.waitForDevice(20)
             # kill the process if exists
             platform.killProgram(program)
@@ -343,8 +344,8 @@ class FrameworkBase(object):
             platform_args = {}
         if test and test.get("log_output", False):
             platform_args["log_output"] = True
-        if getArgs().timeout > 0 and "timeout" not in platform_args:
-            platform_args["timeout"] = getArgs().timeout
+        if self.args.timeout > 0 and "timeout" not in platform_args:
+            platform_args["timeout"] = self.args.timeout
         cmds = self.composeRunCommand(commands, platform,
                                       programs, model, test,
                                       model_files,
@@ -386,8 +387,8 @@ class FrameworkBase(object):
         return hostdir
 
     def _replaceStringMap(self, root, platform, program_path, stringmap_from_info):
-        string_map = json.loads(getArgs().string_map) \
-            if getArgs().string_map else {}
+        string_map = json.loads(self.args.string_map) \
+            if self.args.string_map else {}
 
         info_string_map = json.loads(stringmap_from_info) \
             if stringmap_from_info else {}

@@ -19,8 +19,8 @@ class Caffe2Framework(FrameworkBase):
     IDENTIFIER = 'Caffe2Observer '
     NET = 'NET'
 
-    def __init__(self, tempdir):
-        super(Caffe2Framework, self).__init__()
+    def __init__(self, tempdir, args):
+        super(Caffe2Framework, self).__init__(args)
         self.tempdir = os.path.join(tempdir, self.getName())
         os.makedirs(self.tempdir, 0o777)
         # cannot have any variable pass among methods

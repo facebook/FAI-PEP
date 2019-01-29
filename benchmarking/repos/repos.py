@@ -10,12 +10,9 @@
 
 from .git import GitRepo
 from .hg import HGRepo
-from utils.arg_parse import getArgs
 
 
-def getRepo():
-    repo = getArgs().repo
-    repo_dir = getArgs().repo_dir
+def getRepo(repo, repo_dir):
     if repo == 'git':
         return GitRepo(repo_dir)
     elif repo == 'hg':

@@ -85,7 +85,7 @@ def getString(s):
         # escape " with \"
         return '"' + s.replace('"', '\\"') + '"'
     else:
-        return "'" + s + "'"
+        return s
 
 
 def getFAIPEPROOT():

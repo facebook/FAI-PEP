@@ -16,18 +16,15 @@ import shutil
 import time
 
 from platforms.platform_base import PlatformBase
-from utils.arg_parse import getParser, getArgs
 from utils.custom_logger import getLogger
 from utils.utilities import getRunStatus, setRunStatus
 
-getParser().add_argument("--android_dir", default="/data/local/tmp/",
-    help="The directory in the android device all files are pushed to.")
-
 
 class AndroidPlatform(PlatformBase):
-    def __init__(self, tempdir, adb):
+    def __init__(self, tempdir, adb, args):
         super(AndroidPlatform, self).__init__(
-            tempdir, getArgs().android_dir, adb)
+            tempdir, args.android_dir, adb, args)
+        self.args = args
         platform = adb.shell(
             ['getprop', 'ro.product.model'], default="")[0].strip() + \
             '-' + \
@@ -40,8 +37,8 @@ class AndroidPlatform(PlatformBase):
         self.setPlatformHash(adb.device)
         self._setLogCatSize()
         self.app = None
-        if getArgs().set_freq:
-            self.util.setFrequency(getArgs().set_freq)
+        if self.args.set_freq:
+            self.util.setFrequency(self.args.set_freq)
 
     def _setLogCatSize(self):
         repeat = True
@@ -98,8 +95,8 @@ class AndroidPlatform(PlatformBase):
         time.sleep(20)
         # may need to set log size again after reboot
         self._setLogCatSize()
-        if getArgs().set_freq:
-            self.util.setFrequency(getArgs().set_freq)
+        if self.args.set_freq:
+            self.util.setFrequency(self.args.set_freq)
 
     def runBenchmark(self, cmd, *args, **kwargs):
         if not isinstance(cmd, list):
@@ -161,7 +158,7 @@ class AndroidPlatform(PlatformBase):
                 # to go into sleep mode
                 self.util.shell(["am", "start", "-a",
                                 "android.settings.SETTINGS"])
-                time.sleep(1)
+                time.sleep(10)
                 cmd = ["nohup"] + ["sh", "-c", "'" + " ".join(cmd) + "'"] + \
                     [">", "/dev/null", "2>&1"]
                 platform_args["non_blocking"] = True

@@ -9,7 +9,6 @@
 ##############################################################################
 
 from reporters.reporter_base import ReporterBase
-from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
 from utils.utilities import getDirectory, getFilename
 
@@ -18,7 +17,8 @@ import os
 
 
 class LocalReporter(ReporterBase):
-    def __init__(self):
+    def __init__(self, **kwargs):
+        self.local_reporter = kwargs.get("local_reporter")
         super(LocalReporter, self).__init__()
 
     def report(self, content):
@@ -39,7 +39,7 @@ class LocalReporter(ReporterBase):
         ts = float(meta['commit_time'])
         commit = meta['commit']
         datedir = getDirectory(commit, ts)
-        dirname = os.path.join(getArgs().local_reporter, platformdir,
+        dirname = os.path.join(self.local_reporter, platformdir,
                                frameworkdir, netdir, metric_dir,
                                id_dir, datedir)
         i = 0

@@ -14,18 +14,14 @@ import shlex
 import time
 
 from platforms.platform_base import PlatformBase
-from utils.arg_parse import getParser, getArgs
 from utils.custom_logger import getLogger
 from utils.subprocess_with_logger import processRun
 from utils.utilities import getRunStatus, setRunStatus
 
-getParser().add_argument("--ios_dir", default="/tmp",
-    help="The directory in the ios device all files are pushed to.")
-
 
 class IOSPlatform(PlatformBase):
-    def __init__(self, tempdir, idb):
-        super(IOSPlatform, self).__init__(tempdir, getArgs().ios_dir, idb)
+    def __init__(self, tempdir, idb, args):
+        super(IOSPlatform, self).__init__(tempdir, args.ios_dir, idb, args)
         self.setPlatformHash(idb.device)
         self.type = "ios"
         self.app = None

@@ -13,11 +13,11 @@ from six import string_types
 
 from platforms.android.adb import ADB
 from platforms.android.android_platform import AndroidPlatform
-from utils.arg_parse import getArgs
 
 
 class AndroidDriver:
-    def __init__(self, devices=None):
+    def __init__(self, args, devices=None):
+        self.args = args
         if devices:
             if isinstance(devices, string_types):
                 devices = [devices]
@@ -38,16 +38,16 @@ class AndroidDriver:
 
     def getAndroidPlatforms(self, tempdir):
         platforms = []
-        if getArgs().device:
+        if self.args.device:
             device = None
-            device_str = getArgs().device
+            device_str = self.args.device
             if device_str[0] == '{':
                 device = json.loads(device_str)
                 hash = device["hash"]
             else:
-                hash = getArgs().device
+                hash = self.args.device
             adb = ADB(hash, tempdir)
-            platform = AndroidPlatform(tempdir, adb)
+            platform = AndroidPlatform(tempdir, adb, self.args)
             platforms.append(platform)
             if device:
                 platform.setPlatform(device["kind"])
@@ -55,17 +55,17 @@ class AndroidDriver:
 
         if self.devices is None:
             self.devices = self.getDevices()
-        if getArgs().excluded_devices:
+        if self.args.excluded_devices:
             excluded_devices = \
-                set(getArgs().excluded_devices.strip().split(','))
+                set(self.args.excluded_devices.strip().split(','))
             self.devices = self.devices.difference(excluded_devices)
 
-        if getArgs().devices:
-            supported_devices = set(getArgs().devices.strip().split(','))
+        if self.args.devices:
+            supported_devices = set(self.args.devices.strip().split(','))
             if supported_devices.issubset(self.devices):
                 self.devices = supported_devices
 
         for device in self.devices:
             adb = ADB(device, tempdir)
-            platforms.append(AndroidPlatform(tempdir, adb))
+            platforms.append(AndroidPlatform(tempdir, adb, self.args))
         return platforms

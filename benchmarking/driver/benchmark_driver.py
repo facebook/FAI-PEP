@@ -14,13 +14,14 @@ import sys
 import time
 import traceback
 
-from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
 from utils.utilities import getCommand, deepMerge, setRunStatus, getRunStatus
 
 
 def runOneBenchmark(info, benchmark, framework, platform,
-                    backend, reporters, lock):
+                    backend, reporters, lock,
+                    cooldown=None, user_identifier=None,
+                    local_reporter=None):
     assert "treatment" in info, "Treatment is missing in info"
     getLogger().info("Running {}".format(benchmark["path"]))
 
@@ -37,7 +38,6 @@ def runOneBenchmark(info, benchmark, framework, platform,
             if "shared_libs" in info:
                 cinfo["shared_libs"] = info["shared_libs"]
             # cool down between treatment and control
-            cooldown = getArgs().cooldown
             if "model" in benchmark and "cooldown" in benchmark["model"]:
                 cooldown = float(benchmark["model"]["cooldown"])
             time.sleep(cooldown)
@@ -46,7 +46,7 @@ def runOneBenchmark(info, benchmark, framework, platform,
             data = _mergeDelayData(data, control, bname)
         if benchmark["tests"][0]["metric"] != "generic":
             data = _adjustData(info, data)
-        meta = _retrieveMeta(info, benchmark, platform, framework, backend)
+        meta = _retrieveMeta(info, benchmark, platform, framework, backend, user_identifier)
 
         result = {
             "meta": meta,
@@ -83,11 +83,10 @@ def runOneBenchmark(info, benchmark, framework, platform,
             reporter.report(result)
 
     if "regression_commits" in info and \
-            info["run_type"] == "benchmark" and \
-            getArgs().local_reporter:
+            info["run_type"] == "benchmark" and local_reporter:
         from regression_detectors.regression_detectors import checkRegressions
         checkRegressions(info, platform, framework, benchmark, reporters,
-                         result['meta'], getArgs().local_reporter)
+                         result['meta'], local_reporter)
     return status
 
 
@@ -264,7 +263,7 @@ def _adjustData(info, data):
     return data
 
 
-def _retrieveMeta(info, benchmark, platform, framework, backend):
+def _retrieveMeta(info, benchmark, platform, framework, backend, user_identifier):
     assert "treatment" in info, "Treatment is missing in info"
     meta = {}
     # common
@@ -276,8 +275,8 @@ def _retrieveMeta(info, benchmark, platform, framework, backend):
         meta["platform_hash"] = platform.platform_hash
     meta["command"] = sys.argv
     meta["command_str"] = getCommand(sys.argv)
-    if getArgs().user_identifier:
-        meta["user_identifier"] = getArgs().user_identifier
+    if user_identifier:
+        meta["user_identifier"] = user_identifier
 
     # model specific
     if "model" in benchmark:
