@@ -373,7 +373,6 @@ class RepoDriver(object):
         platform = repo_info["platform"]
         # Remove it from repo_info to avoid polution, should clean up later
         del repo_info["platform"]
-        dir_path = os.path.dirname(os.path.realpath(__file__))
         unknowns = self.unknowns
         # a not so elegant way of merging info construct
         if '--info' in unknowns:

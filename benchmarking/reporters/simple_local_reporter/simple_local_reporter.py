@@ -20,6 +20,7 @@ import tempfile
 
 class SimpleLocalReporter(ReporterBase):
     def __init__(self, simple_local_reporter):
+        self.simple_local_reporter = simple_local_reporter
         super(SimpleLocalReporter, self).__init__()
 
     def report(self, content):
@@ -32,9 +33,9 @@ class SimpleLocalReporter(ReporterBase):
         dirname = None
         if "identifier" in meta:
             id_dir = getFilename(meta["identifier"])
-            dirname = os.path.join(simple_local_reporter, id_dir)
+            dirname = os.path.join(self.simple_local_reporter, id_dir)
         else:
-            dirname = tempfile.mkdtemp(dir=simple_local_reporter)
+            dirname = tempfile.mkdtemp(dir=self.simple_local_reporter)
 
         if os.path.exists(dirname):
             shutil.rmtree(dirname, True)

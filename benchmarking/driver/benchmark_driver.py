@@ -46,7 +46,8 @@ def runOneBenchmark(info, benchmark, framework, platform,
             data = _mergeDelayData(data, control, bname)
         if benchmark["tests"][0]["metric"] != "generic":
             data = _adjustData(info, data)
-        meta = _retrieveMeta(info, benchmark, platform, framework, backend, user_identifier)
+        meta = _retrieveMeta(info, benchmark, platform, framework,
+                             backend, user_identifier)
 
         result = {
             "meta": meta,
