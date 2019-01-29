@@ -17,7 +17,7 @@ from frameworks.framework_base import FrameworkBase
 
 class TFLiteFramework(FrameworkBase):
     def __init__(self, tempdir, args):
-        super(TFLiteFramework, self).__init__()
+        super(TFLiteFramework, self).__init__(args)
         self.tempdir = os.path.join(tempdir, self.getName())
         os.makedirs(self.tempdir, 0o777)
 
