@@ -79,9 +79,7 @@ def deepReplace(root, pattern, replacement):
 
 def getString(s):
     s = str(s)
-    if re.match("^[A-Za-z0-9_/.~-]+$", s):
-        return s
-    elif os.name == "nt":
+    if os.name == "nt":
         # escape " with \"
         return '"' + s.replace('"', '\\"') + '"'
     else:

@@ -213,6 +213,18 @@ class BenchmarkDriver(object):
         if not self.args.debug:
             shutil.rmtree(tempdir, True)
 
+        status = self.status | getRunStatus()
+        if status == 0:
+            status_str = "success"
+        elif status == 1:
+            status_str = "user error"
+        elif status == 2:
+            status_str = "harness error"
+        else:
+            status_str = "user and harness error"
+        getLogger().info(" ======= {} =======".format(status_str))
+        sys.exit(status)
+
     def _getInfo(self):
         info = json.loads(self.args.info)
         info["run_type"] = "benchmark"
@@ -237,14 +249,3 @@ class BenchmarkDriver(object):
 if __name__ == "__main__":
     app = BenchmarkDriver()
     app.run()
-    status = app.status | getRunStatus()
-    if status == 0:
-        status_str = "success"
-    elif status == 1:
-        status_str = "user error"
-    elif status == 2:
-        status_str = "harness error"
-    else:
-        status_str = "user and harness error"
-    getLogger().info(" ======= {} =======".format(status_str))
-    sys.exit(status)
