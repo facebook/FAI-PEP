@@ -22,7 +22,7 @@ from utils.utilities import getFilename
 
 
 class PlatformBase(object):
-    def __init__(self, tempdir, tgt_dir, platform_util, args):
+    def __init__(self, tempdir, tgt_dir, platform_util, hash_platform_mapping):
         self.tempdir = tempdir
         self.platform = None
         self.platform_hash = platform_util.device
@@ -30,9 +30,9 @@ class PlatformBase(object):
         self.util = platform_util
         self.tgt_dir = tgt_dir
         self.hash_platform_mapping = None
-        if args.hash_platform_mapping:
+        if hash_platform_mapping:
             try:
-                with open(args.hash_platform_mapping) as f:
+                with open(hash_platform_mapping) as f:
                     self.hash_platform_mapping = json.load(f)
             except OSError as e:
                 getLogger().info("OSError: {}".format(e))

@@ -312,7 +312,7 @@ class RepoDriver(object):
     def __init__(self, **kwargs):
         raw_args = kwargs.get('raw_args', None)
         self.args, self.unknowns = parser.parse_known_args(raw_args)
-        self.repo = getRepo(repo=self.args.repo, repo_dir=self.args.repo_dir)
+        self.repo = getRepo(self.args.repo, self.args.repo_dir)
         self.queue_lock = threading.Lock()
         self.work_queue = deque()
         self.executables_builder = ExecutablesBuilder(self.repo,

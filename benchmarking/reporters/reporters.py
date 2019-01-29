@@ -23,12 +23,12 @@ from .simple_screen_reporter.simple_screen_reporter import SimpleScreenReporter
 def getReporters(args):
     reporters = []
     if args.local_reporter:
-        reporters.append(LocalReporter(local_reporter=args.local_reporter))
+        reporters.append(LocalReporter(args.local_reporter))
     if args.simple_local_reporter:
         reporters.append(SimpleLocalReporter(args.simple_local_reporter))
     if args.remote_reporter:
-        reporters.append(RemoteReporter(remote_reporter=args.remote_reporter,
-                                        remote_access_token=args.remote_access_token))
+        reporters.append(RemoteReporter(args.remote_reporter,
+                                        args.remote_access_token))
     if args.screen_reporter:
         reporters.append(ScreenReporter())
     if args.simple_screen_reporter:

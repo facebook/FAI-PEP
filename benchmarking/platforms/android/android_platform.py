@@ -27,7 +27,7 @@ from utils.utilities import getRunStatus, setRunStatus
 class AndroidPlatform(PlatformBase):
     def __init__(self, tempdir, adb, args):
         super(AndroidPlatform, self).__init__(
-            tempdir, args.android_dir, adb, args)
+            tempdir, args.android_dir, adb, args.hash_platform_mapping)
         self.args = args
         platform = adb.shell(
             ['getprop', 'ro.product.model'], default="")[0].strip() + \

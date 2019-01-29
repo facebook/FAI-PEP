@@ -20,9 +20,9 @@ from utils.utilities import requestsJson
 
 
 class RemoteReporter(ReporterBase):
-    def __init__(self, **kwargs):
-        self.remote_reporter = kwargs.get("remote_reporter", None)
-        self.remote_access_token = kwargs.get("remote_access_token")
+    def __init__(self, remote_reporter, remote_access_token):
+        self.remote_reporter = remote_reporter
+        self.remote_access_token = remote_access_token
         super(RemoteReporter, self).__init__()
 
     def report(self, content):

@@ -21,8 +21,8 @@ from utils.utilities import getDirectory, getFilename
 
 
 class LocalReporter(ReporterBase):
-    def __init__(self, **kwargs):
-        self.local_reporter = kwargs.get("local_reporter")
+    def __init__(self, local_reporter):
+        self.local_reporter = local_reporter
         super(LocalReporter, self).__init__()
 
     def report(self, content):
