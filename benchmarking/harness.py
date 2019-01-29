@@ -114,7 +114,7 @@ parser.add_argument("--shared_libs",
     "in a comma separated list.")
 parser.add_argument("--string_map",
     help="A json string mapping tokens to replacement strings. "
-    "The tokens, surrended by \{\}, when appearing in the test fields of "
+    "The tokens, surrended by {}, when appearing in the test fields of "
     "the json file, are to be replaced with the mapped values.")
 parser.add_argument("--timeout", default=300, type=float,
     help="Specify a timeout running the test on the platforms. "
@@ -154,8 +154,7 @@ class BenchmarkDriver(object):
             benchmark = benchmarks[idx]
             # check the framework matches
             if "model" in benchmark and "framework" in benchmark["model"]:
-                assert(benchmark["model"]["framework"] ==
-                       self.args.framework), \
+                assert(benchmark["model"]["framework"] == self.args.framework), \
                     "Framework specified in the json file " \
                     "{} ".format(benchmark["model"]["framework"]) + \
                     "does not match the command line argument " \

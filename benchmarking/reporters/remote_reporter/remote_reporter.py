@@ -138,9 +138,7 @@ class RemoteReporter(ReporterBase):
             result[count_key] == num_logs
         if not is_good:
             getLogger().error("Submit data to remote server failed")
-            if not request.ok:
-                getLogger().error("Request is not okay")
-            elif count_key not in result:
+            if count_key not in result:
                 getLogger().error(
                     "%s is not in request return value", count_key)
             else:
