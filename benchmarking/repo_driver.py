@@ -323,7 +323,7 @@ class RepoDriver(object):
     def run(self):
         getLogger().info(
             "Start benchmark run @ %s" %
-            datetime.datetime.now().isoformat(' '))
+            datetime.datetime.now().strftime("%Y_%m_%d_%H_%M"))
         self.executables_builder.start()
         self._runBenchmarkSuites()
         sys.exit(getRunStatus())
