@@ -27,7 +27,7 @@ from platforms.ios.ios_driver import IOSDriver
 
 
 class IOSDriverTest(unittest.TestCase):
-    def setup(self):
+    def setUp(self):
         pass
 
     def _idb_run_for_get_device(self, *args):

@@ -26,7 +26,7 @@ from platforms.ios.idb import IDB
 
 
 class IDBTest(unittest.TestCase):
-    def setup(self):
+    def setUp(self):
         pass
 
     def test_set_bundle_id(self):
