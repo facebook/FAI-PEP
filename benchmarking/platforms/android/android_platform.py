@@ -158,7 +158,7 @@ class AndroidPlatform(PlatformBase):
                 # to go into sleep mode
                 self.util.shell(["am", "start", "-a",
                                 "android.settings.SETTINGS"])
-                time.sleep(10)
+                time.sleep(1)
                 cmd = ["nohup"] + ["sh", "-c", "'" + " ".join(cmd) + "'"] + \
                     [">", "/dev/null", "2>&1"]
                 platform_args["non_blocking"] = True

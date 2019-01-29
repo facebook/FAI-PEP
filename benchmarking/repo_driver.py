@@ -356,7 +356,7 @@ class RepoDriver(object):
                 self.args.ab_testing):
             # always sleep 10 seconds to make the phone in a more
             # consistent state
-            time.sleep(1)
+            time.sleep(10)
         # cannot use subprocess because it conflicts with requests
         app = BenchmarkDriver(raw_args=raw_args)
         app.run()
