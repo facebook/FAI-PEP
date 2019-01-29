@@ -17,8 +17,6 @@ import argparse
 import onnx
 from caffe2.python.onnx.backend import Caffe2Backend
 
-import argparse
-
 
 parser = argparse.ArgumentParser(description="Convert ONNX models "
     "to Caffe2 models")
