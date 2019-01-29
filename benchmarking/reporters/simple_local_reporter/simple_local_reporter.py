@@ -8,14 +8,18 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from reporters.reporter_base import ReporterBase
-from utils.custom_logger import getLogger
-from utils.utilities import getFilename
-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 import json
 import os
 import shutil
 import tempfile
+
+from reporters.reporter_base import ReporterBase
+from utils.custom_logger import getLogger
+from utils.utilities import getFilename
 
 
 class SimpleLocalReporter(ReporterBase):

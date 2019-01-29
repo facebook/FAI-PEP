@@ -8,6 +8,10 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 from .json_converter.json_converter import JsonConverter
 from .json_with_identifier_converter.json_with_identifier_converter \
