@@ -16,7 +16,7 @@ from utils.custom_logger import getLogger
 
 
 class OculusFramework(FrameworkBase):
-    def __init__(self, tempdir):
+    def __init__(self, tempdir, args):
         self.tempdir = os.path.join(tempdir, self.getName())
         os.makedirs(self.tempdir, 0o777)
 
