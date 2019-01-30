@@ -8,19 +8,23 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from reporters.reporter_base import ReporterBase
-from utils.arg_parse import getArgs
-from utils.custom_logger import getLogger
-from utils.utilities import getFilename
-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 import json
 import os
 import shutil
 import tempfile
 
+from reporters.reporter_base import ReporterBase
+from utils.custom_logger import getLogger
+from utils.utilities import getFilename
+
 
 class SimpleLocalReporter(ReporterBase):
-    def __init__(self):
+    def __init__(self, simple_local_reporter):
+        self.simple_local_reporter = simple_local_reporter
         super(SimpleLocalReporter, self).__init__()
 
     def report(self, content):
@@ -33,9 +37,9 @@ class SimpleLocalReporter(ReporterBase):
         dirname = None
         if "identifier" in meta:
             id_dir = getFilename(meta["identifier"])
-            dirname = os.path.join(getArgs().simple_local_reporter, id_dir)
+            dirname = os.path.join(self.simple_local_reporter, id_dir)
         else:
-            dirname = tempfile.mkdtemp(dir=getArgs().simple_local_reporter)
+            dirname = tempfile.mkdtemp(dir=self.simple_local_reporter)
 
         if os.path.exists(dirname):
             shutil.rmtree(dirname, True)

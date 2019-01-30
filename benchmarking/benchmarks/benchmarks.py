@@ -8,7 +8,10 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 import copy
 import hashlib
 import json
@@ -16,14 +19,14 @@ import os
 import requests
 import tempfile
 import shutil
-from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
 from utils.utilities import deepMerge, deepReplace
 
 
 class BenchmarkCollector(object):
-    def __init__(self, framework, model_cache):
+    def __init__(self, framework, model_cache, **kwargs):
 
+        self.args = kwargs.get('args', None)
         if not os.path.isdir(model_cache):
             os.makedirs(model_cache)
         self.model_cache = model_cache
@@ -37,8 +40,8 @@ class BenchmarkCollector(object):
         meta = content["meta"] if "meta" in content else {}
         if "meta" in info:
             deepMerge(meta, info["meta"])
-        if hasattr(getArgs(), "timeout"):
-            meta["timeout"] = getArgs().timeout
+        if hasattr(self.args, "timeout"):
+            meta["timeout"] = self.args.timeout
         benchmarks = []
 
         if "benchmarks" in content:
@@ -64,8 +67,8 @@ class BenchmarkCollector(object):
         with open(source, 'r') as b:
             one_benchmark = json.load(b)
 
-        string_map = json.loads(getArgs().string_map) \
-            if getArgs().string_map else {}
+        string_map = json.loads(self.args.string_map) \
+            if self.args.string_map else {}
         for name in string_map:
             value = string_map[name]
             deepReplace(one_benchmark, "{" + name + "}", value)
@@ -266,10 +269,10 @@ class BenchmarkCollector(object):
             # Need to download, return the destination filename
             return cache_dir + "/" + filename
         elif location[0:2] == "//":
-            assert getArgs().root_model_dir is not None, \
+            assert self.args.root_model_dir is not None, \
                 "When specifying relative directory, the " \
                 "--root_model_dir must be specified."
-            return getArgs().root_model_dir + location[1:]
+            return self.args.root_model_dir + location[1:]
         elif location[0] != "/":
             abs_dir = os.path.dirname(os.path.abspath(source))
             return os.path.join(abs_dir, location)

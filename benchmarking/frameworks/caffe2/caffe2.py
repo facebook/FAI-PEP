@@ -8,6 +8,10 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 import copy
 import os
 
@@ -19,8 +23,8 @@ class Caffe2Framework(FrameworkBase):
     IDENTIFIER = 'Caffe2Observer '
     NET = 'NET'
 
-    def __init__(self, tempdir):
-        super(Caffe2Framework, self).__init__()
+    def __init__(self, tempdir, args):
+        super(Caffe2Framework, self).__init__(args)
         self.tempdir = os.path.join(tempdir, self.getName())
         os.makedirs(self.tempdir, 0o777)
         # cannot have any variable pass among methods

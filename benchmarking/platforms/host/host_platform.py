@@ -8,6 +8,10 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 import platform
 import os
 import re
@@ -17,21 +21,21 @@ import socket
 
 from platforms.host.hdb import HDB
 from platforms.platform_base import PlatformBase
-from utils.arg_parse import getArgs
 from utils.subprocess_with_logger import processRun
 
 
 class HostPlatform(PlatformBase):
-    def __init__(self, tempdir):
+    def __init__(self, tempdir, args):
         platform_hash = str(socket.gethostname())
-        if getArgs().platform_sig is not None:
-            platform_name = str(getArgs().platform_sig)
+        if args.platform_sig is not None:
+            platform_name = str(args.platform_sig)
         else:
             platform_name = platform.platform() + "-" + \
                                self._getProcessorName()
         self.tempdir = os.path.join(tempdir, platform_hash)
         hdb = HDB(platform_hash, tempdir)
-        super(HostPlatform, self).__init__(self.tempdir, self.tempdir, hdb)
+        super(HostPlatform, self).__init__(self.tempdir, self.tempdir, hdb,
+                                           args.hash_platform_mapping)
 
         # reset the platform and platform hash
         self.setPlatform(platform_name)

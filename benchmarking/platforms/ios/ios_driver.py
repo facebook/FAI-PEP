@@ -8,17 +8,21 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 import json
 import re
 from six import string_types
 
 from platforms.ios.idb import IDB
 from platforms.ios.ios_platform import IOSPlatform
-from utils.arg_parse import getArgs
 
 
 class IOSDriver(object):
-    def __init__(self, devices=None):
+    def __init__(self, args, devices=None):
+        self.args = args
         if devices:
             if isinstance(devices, string_types):
                 devices = [devices]
@@ -43,25 +47,25 @@ class IOSDriver(object):
 
     def getIOSPlatforms(self, tempdir):
         platforms = []
-        if getArgs().device:
-            device_str = getArgs().device
+        if self.args.device:
+            device_str = self.args.device
             assert device_str[0] == '{', "device must be a json string"
             device = json.loads(device_str)
             idb = IDB(device["hash"], tempdir)
-            platform = IOSPlatform(tempdir, idb)
+            platform = IOSPlatform(tempdir, idb, self.args)
             platform.setPlatform(device["kind"])
             platforms.append(platform)
             return platforms
 
         if self.devices is None:
             self.devices = self.getDevices()
-        if getArgs().excluded_devices:
+        if self.args.excluded_devices:
             excluded_devices = \
-                set(getArgs().excluded_devices.strip().split(','))
+                set(self.args.excluded_devices.strip().split(','))
             self.devices = self.devices.difference(excluded_devices)
 
-        if getArgs().devices:
-            supported_devices = set(getArgs().devices.strip().split(','))
+        if self.args.devices:
+            supported_devices = set(self.args.devices.strip().split(','))
             if supported_devices.issubset(self.devices):
                 self.devices = supported_devices
 

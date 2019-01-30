@@ -8,6 +8,10 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 import json
 import os
 import re
@@ -16,18 +20,15 @@ import shutil
 import time
 
 from platforms.platform_base import PlatformBase
-from utils.arg_parse import getParser, getArgs
 from utils.custom_logger import getLogger
 from utils.utilities import getRunStatus, setRunStatus
 
-getParser().add_argument("--android_dir", default="/data/local/tmp/",
-    help="The directory in the android device all files are pushed to.")
-
 
 class AndroidPlatform(PlatformBase):
-    def __init__(self, tempdir, adb):
+    def __init__(self, tempdir, adb, args):
         super(AndroidPlatform, self).__init__(
-            tempdir, getArgs().android_dir, adb)
+            tempdir, args.android_dir, adb, args.hash_platform_mapping)
+        self.args = args
         platform = adb.shell(
             ['getprop', 'ro.product.model'], default="")[0].strip() + \
             '-' + \
@@ -40,8 +41,8 @@ class AndroidPlatform(PlatformBase):
         self.setPlatformHash(adb.device)
         self._setLogCatSize()
         self.app = None
-        if getArgs().set_freq:
-            self.util.setFrequency(getArgs().set_freq)
+        if self.args.set_freq:
+            self.util.setFrequency(self.args.set_freq)
 
     def _setLogCatSize(self):
         repeat = True
@@ -98,8 +99,8 @@ class AndroidPlatform(PlatformBase):
         time.sleep(20)
         # may need to set log size again after reboot
         self._setLogCatSize()
-        if getArgs().set_freq:
-            self.util.setFrequency(getArgs().set_freq)
+        if self.args.set_freq:
+            self.util.setFrequency(self.args.set_freq)
 
     def runBenchmark(self, cmd, *args, **kwargs):
         if not isinstance(cmd, list):

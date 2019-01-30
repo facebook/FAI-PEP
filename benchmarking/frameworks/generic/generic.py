@@ -8,12 +8,16 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 import os
 from frameworks.framework_base import FrameworkBase
 
 
 class GenericFramework(FrameworkBase):
-    def __init__(self, tempdir):
+    def __init__(self, tempdir, args):
         self.tempdir = os.path.join(tempdir, self.getName())
         os.makedirs(self.tempdir, 0o777)
 

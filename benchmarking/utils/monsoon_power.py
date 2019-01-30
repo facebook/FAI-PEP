@@ -16,11 +16,10 @@ from time import sleep
 import Monsoon.HVPM as HVPM
 import Monsoon.sampleEngine as sampleEngine
 from utils.custom_logger import getLogger
-from utils.arg_parse import getArgs
 
 
-def collectPowerData(hash, sample_time, voltage, num_iters):
-    serialno = _getSerialno(hash)
+def collectPowerData(hash, sample_time, voltage, num_iters, monsoon_map=None):
+    serialno = _getSerialno(hash, monsoon_map)
     if serialno is not None:
         getLogger().info("Collecting current from "
                          "monsoon {} for {}".format(str(serialno), hash))
@@ -226,10 +225,10 @@ def _composeStructuredData(data, metric, unit):
     }
 
 
-def _getSerialno(hash):
+def _getSerialno(hash, monsoon_map=None):
     serialno = None
-    if getArgs().monsoon_map:
-        map = json.loads(getArgs().monsoon_map)
+    if monsoon_map:
+        map = json.loads(monsoon_map)
         if hash in map:
             serialno = map[hash]
     return serialno

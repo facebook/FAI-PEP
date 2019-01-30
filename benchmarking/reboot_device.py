@@ -8,24 +8,28 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+import argparse
+
 from platforms.android.adb import ADB
 from platforms.ios.idb import IDB
 
-
-from utils.arg_parse import getParser, getArgs, parse
-
-getParser().add_argument("--device", required=True,
+parser = argparse.ArgumentParser()
+parser.add_argument("--device", required=True,
     help="Specify the device hash to reboot")
-
-getParser().add_argument("-p", "--platform", required=True,
+parser.add_argument("-p", "--platform", required=True,
     help="Specify the platform to benchmark on. "
         "Must starts with ios or android")
 
 
-def reboot():
-    parse()
-    device = getArgs().device
-    platform = getArgs().platform
+def reboot(**kwargs):
+    raw_args = kwargs.get("raw_args", None)
+    args, _ = parser.parse_known_args(raw_args)
+    device = args.device
+    platform = args.platform
     if platform.startswith("ios"):
         util = IDB(device)
     elif platform.startswith("android"):

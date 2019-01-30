@@ -8,17 +8,21 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from reporters.reporter_base import ReporterBase
-from utils.arg_parse import getArgs
-from utils.custom_logger import getLogger
-from utils.utilities import getDirectory, getFilename
-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 import json
 import os
 
+from reporters.reporter_base import ReporterBase
+from utils.custom_logger import getLogger
+from utils.utilities import getDirectory, getFilename
+
 
 class LocalReporter(ReporterBase):
-    def __init__(self):
+    def __init__(self, local_reporter):
+        self.local_reporter = local_reporter
         super(LocalReporter, self).__init__()
 
     def report(self, content):
@@ -39,7 +43,7 @@ class LocalReporter(ReporterBase):
         ts = float(meta['commit_time'])
         commit = meta['commit']
         datedir = getDirectory(commit, ts)
-        dirname = os.path.join(getArgs().local_reporter, platformdir,
+        dirname = os.path.join(self.local_reporter, platformdir,
                                frameworkdir, netdir, metric_dir,
                                id_dir, datedir)
         i = 0

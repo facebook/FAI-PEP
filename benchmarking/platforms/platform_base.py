@@ -8,18 +8,21 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 import abc
 import json
 import os
 from six import string_types
 
-from utils.arg_parse import getArgs
 from utils.custom_logger import getLogger
 from utils.utilities import getFilename
 
 
 class PlatformBase(object):
-    def __init__(self, tempdir, tgt_dir, platform_util):
+    def __init__(self, tempdir, tgt_dir, platform_util, hash_platform_mapping):
         self.tempdir = tempdir
         self.platform = None
         self.platform_hash = platform_util.device
@@ -27,9 +30,9 @@ class PlatformBase(object):
         self.util = platform_util
         self.tgt_dir = tgt_dir
         self.hash_platform_mapping = None
-        if getArgs().hash_platform_mapping:
+        if hash_platform_mapping:
             try:
-                with open(getArgs().hash_platform_mapping) as f:
+                with open(hash_platform_mapping) as f:
                     self.hash_platform_mapping = json.load(f)
             except OSError as e:
                 getLogger().info("OSError: {}".format(e))
