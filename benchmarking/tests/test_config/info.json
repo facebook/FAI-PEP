@@ -1,0 +1,15 @@
+{
+  "treatment":
+    {
+      "commit": "eeb14675f12a19822d3a13f3d203c6396ee6cfdd",
+      "commit_time": 1546417087,
+      "program": "/Users/huaminli/.aibench/git/exec/caffe2/host/2019/1/2/eeb14675f12a19822d3a13f3d203c6396ee6cfdd/caffe2_benchmark",
+      "programs":
+        {
+          "program":
+            {
+              "location": "/Users/huaminli/.aibench/git/exec/caffe2/host/2019/1/2/eeb14675f12a19822d3a13f3d203c6396ee6cfdd/caffe2_benchmark"
+            }
+        }
+    }
+}
