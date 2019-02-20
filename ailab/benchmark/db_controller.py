@@ -1,3 +1,4 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
 from benchmark.models import BenchmarkInfo, Device
 from django.utils import timezone
 
@@ -152,7 +153,9 @@ def get_payload(req):
             data = {
                 'device': d[0],
                 'hash': d[1],
-                'status': "OCCUPIED" if d[2] == "0" else "AVAILABLE" if d[2] == "1" else "OFFLINE",
+                'status': "OCCUPIED" if d[2] == "0"
+                          else "AVAILABLE" if d[2] == "1"
+                          else "OFFLINE",
                 'claimer': claimer,
                 'job_queue': job_queue,
             }

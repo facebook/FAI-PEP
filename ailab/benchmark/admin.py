@@ -2,5 +2,8 @@
 from __future__ import unicode_literals
 
 from django.contrib import admin
+from benchmark.models import BenchmarkInfo, Device
 
-# Register your models here.
+
+admin.site.register(BenchmarkInfo)
+admin.site.register(Device)

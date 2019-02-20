@@ -60,8 +60,8 @@ class Device(models.Model):
 
     class Meta:
         indexes = [
-         models.Index(fields=['device']),
-         models.Index(fields=['status']),
-         models.Index(fields=['claimer']),
-         models.Index(fields=['job_queue']),
+            models.Index(fields=['device']),
+            models.Index(fields=['status']),
+            models.Index(fields=['claimer']),
+            models.Index(fields=['job_queue']),
         ]
