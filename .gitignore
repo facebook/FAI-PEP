@@ -64,3 +64,7 @@
 
 models/status
 
+# Django migrations files
+ailab/*/migrations/*.pyc
+ailab/*/migrations/*.py
+!ailab/*/migrations/__init__.py

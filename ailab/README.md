@@ -4,6 +4,11 @@ You can set up a server and and launch the benchmark run remotely.
 
 ## Server Setup
 
+#### Install DJango
+```
+pip install Django
+```
+
 #### Config MySQL Database
 - Install MySQL on the server
 - Create a MySQL database
