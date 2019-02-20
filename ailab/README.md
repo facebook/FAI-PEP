@@ -10,11 +10,19 @@ pip install Django
 ```
 
 #### Config MySQL Database
-- Install MySQL on the server
+- Install MySQL on the server (https://dev.mysql.com/doc/refman/5.7/en/installing.html)
 - Create a MySQL database
-- In the current directory (ailab), run
+  - Start MySQL:
+  ```
+  mysql --user=<username> --password=<password>
+  ```
+  - In MySQL prompt:
+  ```
+  CREATE DATABSE <databse_name>
+  ```
 - In `ailab/settings.py`, speficy `NAME`, `USER` and `PASSWORD` with the name
 of the database, username and password of MySQL.
+- In the current directory (ailab), run the following commands:
 ```
 python manage.py makemigrations
 python manage.py migrate

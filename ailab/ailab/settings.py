@@ -20,10 +20,18 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'eo+li9#pw2im0xeq3@bv0h0ir^o36w&do%&3nm!!+!bxz5q9my'
+try:
+    from .secret_key import SECRET_KEY
+except ImportError:
+    SETTINGS_DIR = os.path.abspath(os.path.dirname(__file__))
+    from django.core.management.utils import get_random_secret_key
+    secret_key = get_random_secret_key()
+    with open(SETTINGS_DIR + os.path.sep + 'secret_key.py', 'w') as f:
+        f.write("SECRET_KEY = \"{}\"".format(secret_key))
+    from .secret_key import SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = []
 
