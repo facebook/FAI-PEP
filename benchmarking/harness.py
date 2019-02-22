@@ -222,7 +222,7 @@ class BenchmarkDriver(object):
         else:
             status_str = "user and harness error"
         getLogger().info(" ======= {} =======".format(status_str))
-        sys.exit(status)
+        return status
 
     def _getInfo(self):
         info = json.loads(self.args.info)
@@ -247,4 +247,5 @@ class BenchmarkDriver(object):
 
 if __name__ == "__main__":
     app = BenchmarkDriver()
-    app.run()
+    status = app.run()
+    sys.exit(status)

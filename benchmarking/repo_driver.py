@@ -26,8 +26,8 @@ from harness import BenchmarkDriver
 from repos.repos import getRepo
 from utils.build_program import buildProgramPlatform
 from utils.custom_logger import getLogger
-from utils.utilities import getDirectory, getPythonInterpreter, \
-    deepMerge, getString, getRunStatus, setRunStatus
+from utils.utilities import getDirectory, \
+    deepMerge, getString, getRunStatus, setRunStatus, getMeta
 
 parser = argparse.ArgumentParser(description="Perform one benchmark run")
 parser.add_argument("--ab_testing", action="store_true",
@@ -55,8 +55,7 @@ parser.add_argument("--framework", required=True,
     choices=["caffe2", "oculus", "generic", "tflite"],
     help="Specify the framework to benchmark on.")
 parser.add_argument("--frameworks_dir",
-    default=os.path.join(str(os.path.dirname(os.path.realpath(__file__))),
-        "..", "specifications", "frameworks"),
+    default=None,
     help="Required. The root directory that all frameworks resides. "
     "Usually it is the " + os.path.join("specifications", "frameworks") +
     "directory.")
@@ -166,12 +165,11 @@ class ExecutablesBuilder (threading.Thread):
             repo_info['control'] = repo_info_control
 
         # Pass meta file from build to benchmark
-        meta_file = os.path.join(self.args.frameworks_dir, self.args.framework,
-                                 platform, "meta.json")
-        if os.path.isfile(meta_file):
-            with open(meta_file, "r") as f:
-                meta = json.load(f)
-                repo_info["meta"] = meta
+        meta = getMeta(self.args, platform)
+        if meta:
+            assert "meta" not in self.info, \
+                "info field already has a meta field"
+            self.info["meta"] = meta
 
         if self.args.regression:
             repo_info["regression_commits"] = \
@@ -379,11 +377,11 @@ class RepoDriver(object):
         del repo_info["platform"]
         unknowns = self.unknowns
         # a not so elegant way of merging info construct
-        if '--info' in unknowns:
-            info_idx = unknowns.index('--info')
+        if "--info" in unknowns:
+            info_idx = unknowns.index("--info")
             info = json.loads(unknowns[info_idx + 1])
             deepMerge(repo_info, info)
-            del unknowns[info_idx+1]
+            del unknowns[info_idx + 1]
             del unknowns[info_idx]
         info = json.dumps(repo_info)
         raw_args = []
