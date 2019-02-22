@@ -20,6 +20,8 @@ from platforms.platforms import getPlatforms
 from utils.custom_logger import getLogger
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--android_dir", default="/data/local/tmp/",
+    help="The directory in the android device all files are pushed to.")
 parser.add_argument("-d", "--devices",
     help="Specify the devices to run the benchmark, in a comma separated "
     "list. The value is the device or device_hash field of the meta info.")
@@ -28,6 +30,8 @@ parser.add_argument("--device",
 parser.add_argument("--excluded_devices",
     help="Specify the devices that skip the benchmark, in a comma separated "
     "list. The value is the device or device_hash field of the meta info.")
+parser.add_argument("--ios_dir", default="/tmp",
+    help="The directory in the ios device all files are pushed to.")
 parser.add_argument("--set_freq",
     help="On rooted android phones, set the frequency of the cores. "
     "The supported values are: "
@@ -55,7 +59,8 @@ class GetConnectedDevices(object):
             devices.append({
                 "kind": p.platform,
                 "hash": p.platform_hash,
-	        })
+            }
+            )
         json_str = json.dumps(devices)
         print(json_str)
         return json_str

@@ -30,7 +30,8 @@ class PlatformBase(object):
         self.util = platform_util
         self.tgt_dir = tgt_dir
         self.hash_platform_mapping = None
-        if hash_platform_mapping:
+        if isinstance(hash_platform_mapping, string_types):
+            # if the user provides filename, we will load it.
             try:
                 with open(hash_platform_mapping) as f:
                     self.hash_platform_mapping = json.load(f)
@@ -38,6 +39,13 @@ class PlatformBase(object):
                 getLogger().info("OSError: {}".format(e))
             except ValueError as e:
                 getLogger().info('Invalid json: {}'.format(e))
+        else:
+            # otherwise read from internal
+            try:
+                from specifications.hash_platform_mapping import hash_platform_mapping
+                self.hash_platform_mapping = hash_platform_mapping
+            except BaseException:
+                pass
 
     def getType(self):
         return self.type

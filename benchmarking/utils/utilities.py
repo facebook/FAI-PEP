@@ -8,11 +8,14 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import ast
 import copy
 import datetime
+import json
 import os
-import re
+import pkg_resources
 import requests
 from six import string_types
 import sys
@@ -101,7 +104,11 @@ def requestsData(url, **kwargs):
     result = None
     while True:
         try:
-            result = requests.post(url, **kwargs)
+            session = requests.Session()
+            # set to False here otherwise it will get stuck when use multiprocessing
+            session.trust_env = False
+            result = session.post(url, **kwargs)
+            result.raise_for_status()
             if result.status_code != 200:
                 getLogger().error("Post request failed, receiving code {}".
                                   format(result.status_code))
@@ -167,3 +174,27 @@ def setRunStatus(status, overwrite=False):
         run_status = status
     else:
         run_status = run_status | status
+
+
+def getMeta(args, platform):
+    meta = None
+    if not args.frameworks_dir:
+        meta_file = os.path.join("specifications/frameworks",
+                                 args.framework, platform,
+                                 "meta.json")
+        if pkg_resources.resource_exists("__main__", meta_file):
+            meta = json.loads(pkg_resources.resource_string("__main__", meta_file))
+            return meta
+        else:
+            # look for files in the old default place
+            old_default = str(os.path.dirname(os.path.realpath(__file__))
+                + "/../../specifications/frameworks")
+            meta_file = os.path.join(old_default, args.framework,
+                             platform, "meta.json")
+    else:
+        meta_file = os.path.join(args.frameworks_dir, args.framework,
+                                 platform, "meta.json")
+    if os.path.isfile(meta_file):
+        with open(meta_file, "r") as f:
+            meta = json.load(f)
+    return meta
