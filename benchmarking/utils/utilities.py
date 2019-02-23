@@ -104,8 +104,14 @@ def requestsData(url, **kwargs):
     result = None
     while True:
         try:
+            """
+            When we use multiprocessing to call harness from internal,
+            requests.Post(url, **kwargs) will get stuck and neither proceeding
+            ahead nor throwing an error. Instead, we use Session and set
+            trust_env to False to solve the problem.
+            Reference: https://stackoverflow.com/a/39822223
+            """
             session = requests.Session()
-            # set to False here otherwise it will get stuck when use multiprocessing
             session.trust_env = False
             result = session.post(url, **kwargs)
             result.raise_for_status()
