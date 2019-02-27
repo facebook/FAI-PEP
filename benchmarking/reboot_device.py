@@ -18,6 +18,8 @@ from platforms.android.adb import ADB
 from platforms.ios.idb import IDB
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--android_dir", default="/data/local/tmp/",
+    help="The directory in the android device all files are pushed to.")
 parser.add_argument("--device", required=True,
     help="Specify the device hash to reboot")
 parser.add_argument("-p", "--platform", required=True,
@@ -33,7 +35,7 @@ def reboot(**kwargs):
     if platform.startswith("ios"):
         util = IDB(device)
     elif platform.startswith("android"):
-        util = ADB(device)
+        util = ADB(device, args.android_dir)
     else:
         assert False, "Platform {} not recognized".format(platform)
     util.reboot()

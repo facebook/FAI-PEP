@@ -20,7 +20,8 @@ from .custom_logger import getLogger
 from .subprocess_with_logger import processRun
 
 
-def buildProgramPlatform(dst, repo_dir, framework, frameworks_dir, platform):
+def buildProgramPlatform(dst, repo_dir, framework, frameworks_dir,
+                         platform, *args):
     script = getBuildScript(framework, frameworks_dir, platform, dst)
     dst_dir = os.path.dirname(dst)
     if os.path.isfile(dst):
@@ -31,10 +32,15 @@ def buildProgramPlatform(dst, repo_dir, framework, frameworks_dir, platform):
     if os.name == "nt":
         result, _ = processRun([script, repo_dir, dst])
     else:
-        result, _ = processRun(['sh', script, repo_dir, dst])
+        cmds = ['sh', script, repo_dir, dst]
+        if args:
+            cmds.extend(list(args))
+        result, _ = processRun(cmds)
     if os.path.isfile(dst):
         os.chmod(dst, 0o777)
     getLogger().info('\n'.join(result))
+    for r in result:
+        getLogger().info("{}".format(r))
 
     if not os.path.isfile(dst) and \
             (not (os.path.isdir(dst) and platform.startswith("ios"))):

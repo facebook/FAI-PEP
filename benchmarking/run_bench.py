@@ -21,8 +21,7 @@ import sys
 
 from repo_driver import RepoDriver
 from utils.custom_logger import getLogger
-from utils.utilities import getPythonInterpreter, getString, \
-    getRunStatus, setRunStatus
+from utils.utilities import getString, getRunStatus, setRunStatus
 
 parser = argparse.ArgumentParser(description="Perform one benchmark run")
 parser.add_argument("--config_dir",
