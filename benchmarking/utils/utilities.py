@@ -24,6 +24,33 @@ from time import sleep
 from .custom_logger import getLogger
 
 
+def getBenchmarks(bfile, framework=None):
+    assert os.path.isfile(bfile), \
+        "Specified benchmark file doesn't exist: {}".format(bfile)
+
+    with open(bfile, 'r') as f:
+        content = json.load(f)
+    benchmarks = []
+    if "benchmarks" in content:
+        path = os.path.abspath(os.path.dirname(bfile))
+        for benchmark_file in content["benchmarks"]:
+            filename = path + "/" + benchmark_file
+            assert os.path.isfile(filename), \
+                "Benchmark {} doesn't exist".format(filename)
+            with open(filename, 'r') as f:
+                cnt = json.load(f)
+                if framework and "model" in cnt and \
+                        "framework" not in cnt["model"]:
+                    # do not override the framework specified in the json
+                    cnt["model"]["framework"] = framework
+                benchmarks.append({"filename": filename, "content": cnt})
+    else:
+        if framework and "model" in content:
+            content["model"]["framework"] = framework
+        benchmarks.append({"filename": bfile, "content": content})
+    return benchmarks
+
+
 def getDirectory(commit_hash, commit_time):
     dt = datetime.datetime.utcfromtimestamp(commit_time)
     directory = os.path.join(str(dt.year), str(dt.month), str(dt.day),
@@ -41,8 +68,8 @@ def getCommand(command):
 def getFilename(name):
     filename = name.replace(' ', '-').replace('/', '-').replace('\\', '-')
     return "".join([c for c in filename
-                    if c.isalpha() or c.isdigit() or
-                    c == '_' or c == '.' or c == '-']).rstrip()
+                    if c.isalpha() or c.isdigit()
+                    or c == '_' or c == '.' or c == '-']).rstrip()
 
 
 def getPythonInterpreter():

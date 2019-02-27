@@ -14,6 +14,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import re
 from six import string_types
+import time
 
 from platforms.platform_util_base import PlatformUtilBase
 from utils.custom_logger import getLogger
@@ -39,7 +40,22 @@ class ADB(PlatformUtilBase):
         return self.run("logcat", *args)
 
     def reboot(self):
-        return self.run("reboot")
+        self.run("reboot")
+        getLogger().info("Rebooting: {}".format(self.device))
+        t = 0
+        ls = None
+        while ls is None and t < 6:
+            t = t + 1
+            time.sleep(20)
+            ls = self.shell(['ls', self.tempdir])
+        # Need to wait a bit more after the device is rebooted
+        time.sleep(300)
+        if ls is None:
+            getLogger().error("Cannot reach device {} after reboot.".
+                              format(self.device))
+            return False
+        getLogger().info("Device {} rebooted".format(self.device))
+        return True
 
     def deleteFile(self, file):
         return self.shell(['rm', '-f', file])
