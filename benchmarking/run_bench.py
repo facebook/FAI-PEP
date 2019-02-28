@@ -20,27 +20,35 @@ import six
 import sys
 
 from repo_driver import RepoDriver
-from utils.custom_logger import getLogger
+from utils.custom_logger import setLoggerLevel
 from utils.utilities import getString, getRunStatus, setRunStatus
 
+
+HOME_DIR = os.path.expanduser('~')
 parser = argparse.ArgumentParser(description="Perform one benchmark run")
 parser.add_argument("--config_dir",
-    default=os.path.join(os.path.expanduser('~'), ".aibench", "git"),
+    default=os.path.join(HOME_DIR, ".aibench", "git"),
     help="Specify the config root directory.")
+parser.add_argument("--logger_level", default="warning",
+    choices=["info", "warning", "error"],
+    help="Specify the logger level")
 parser.add_argument("--reset_options", action="store_true",
     help="Reset all the options that is saved by default.")
 
 
 class RunBench(object):
-    def __init__(self):
-        self.args, self.unknowns = parser.parse_known_args()
+    def __init__(self, raw_args=None):
+        self.args, self.unknowns = parser.parse_known_args(raw_args)
         self.root_dir = self.args.config_dir
+        self.repoCls = RepoDriver
+        setLoggerLevel(self.args.logger_level)
 
     def run(self):
         raw_args = self._getRawArgs()
-        app = RepoDriver(raw_args=raw_args)
+        app = self.repoCls(raw_args=raw_args)
         ret = app.run()
-        setRunStatus(ret >> 8)
+        if ret is not None:
+            setRunStatus(ret >> 8)
         sys.exit(getRunStatus())
 
     def _getUnknownArgs(self):
@@ -63,6 +71,56 @@ class RunBench(object):
     def _saveDefaultArgs(self, new_args):
         if not os.path.isdir(self.root_dir):
             os.makedirs(self.root_dir)
+
+        print("Setting the default arguments...")
+        print("The default arguments are saved under {}".
+              format(self.root_dir + "/config.txt"))
+        print("Alternatively, you can edit the config.txt file directly\n")
+        args = self._loadDefaultArgs()
+
+        config_file = os.path.join(self.root_dir, "config.txt")
+        if os.path.isfile(config_file):
+            with open(config_file, "r") as f:
+                load_args = json.load(f)
+                args.update(load_args)
+
+        args.update(new_args)
+        args = self._askArgsFromUser(args)
+
+        if not os.path.isfile(args["--status_file"]):
+            with open(args["--status_file"], "w") as f:
+                f.write("1")
+        if "--screen_reporter" in args:
+            args["--screen_reporter"] = None
+        all_args = copy.deepcopy(args)
+        if "--benchmark_file" in args:
+            del args["--benchmark_file"]
+        if "-b" in args:
+            del args["-b"]
+        if "--devices" in args:
+            del args["--devices"]
+        with open(os.path.join(self.root_dir, "config.txt"), "w") as f:
+            json_args = json.dumps(args,
+                                   indent=2, sort_keys=True)
+            f.write(json_args)
+        print(all_args)
+        return all_args
+
+    def _askArgsFromUser(self, args):
+        self._inputOneRequiredArg(
+            "Please enter the directory the framework repo resides",
+            "--repo_dir", args)
+        self._inputOneArg("Please enter the remote reporter",
+                          "--remote_reporter", args)
+        self._inputOneArg("Please enter the remote access token",
+                          "--remote_access_token", args)
+        self._inputOneArg("Please enter the root model dir if needed",
+                          "--root_model_dir", args)
+        self._inputOneArg("Do you want to print report to screen?",
+                          "--screen_reporter", args)
+        return args
+
+    def _loadDefaultArgs(self):
         args = {
             '--remote_repository': 'origin',
             '--commit': 'master',
@@ -76,39 +134,7 @@ class RunBench(object):
             '--platforms': 'android',
             '--timeout': 300,
         }
-        config_file = os.path.join(self.root_dir, "config.txt")
-        if os.path.isfile(config_file):
-            with open(config_file, "r") as f:
-                load_args = json.load(f)
-                args.update(load_args)
-        args.update(new_args)
-        self._inputOneRequiredArg(
-            "Please enter the directory the framework repo resides",
-            "--repo_dir", args)
-        self._inputOneArg('Please enter the remote reporter',
-                          "--remote_reporter", args)
-        self._inputOneArg("Please enter the remote access token",
-                          "--remote_access_token", args)
-        self._inputOneArg("Please enter the root model dir if needed",
-                          "--root_model_dir", args)
-        self._inputOneArg("Do you want to print report to screen?",
-                          "--screen_reporter", args)
-
-        if not os.path.isfile(args['--status_file']):
-            with open(args['--status_file'], 'w') as f:
-                f.write("1")
-        if "--screen_reporter" in args:
-            args["--screen_reporter"] = None
-        all_args = copy.deepcopy(args)
-        if "--benchmark_file" in args:
-            del args["--benchmark_file"]
-        if "-b" in args:
-            del args["-b"]
-        with open(os.path.join(self.root_dir, "config.txt"), "w") as f:
-            json_args = json.dumps(args,
-                                   indent=2, sort_keys=True)
-            f.write(json_args)
-        return all_args
+        return args
 
     def _inputOneArg(self, text, key, args):
         arg = args[key] if key in args else None
@@ -137,6 +163,9 @@ class RunBench(object):
         for v in new_args:
             if v in args:
                 del args[v]
+        if "--lab" in new_args:
+            if "--remote" in args:
+                del args["--remote"]
         return args
 
     def _getRawArgs(self):
@@ -146,9 +175,11 @@ class RunBench(object):
             raw_args.extend([getString(u),
                 getString(args[u]) if args[u] is not None else ""])
         raw_args.extend([getString(u) for u in self.unknowns])
+        raw_args.extend(["--logger_level", self.args.logger_level])
         return raw_args
 
 
 if __name__ == "__main__":
-    app = RunBench()
+    raw_args = None
+    app = RunBench(raw_args=raw_args)
     app.run()
