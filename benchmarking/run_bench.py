@@ -84,8 +84,7 @@ class RunBench(object):
                 load_args = json.load(f)
                 args.update(load_args)
 
-        args.update(new_args)
-        args = self._askArgsFromUser(args)
+        args = self._askArgsFromUser(args, new_args)
 
         if not os.path.isfile(args["--status_file"]):
             with open(args["--status_file"], "w") as f:
@@ -103,10 +102,11 @@ class RunBench(object):
             json_args = json.dumps(args,
                                    indent=2, sort_keys=True)
             f.write(json_args)
-        print(all_args)
+
         return all_args
 
-    def _askArgsFromUser(self, args):
+    def _askArgsFromUser(self, args, new_args):
+        args.update(new_args)
         self._inputOneRequiredArg(
             "Please enter the directory the framework repo resides",
             "--repo_dir", args)
