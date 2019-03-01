@@ -49,7 +49,11 @@ class AndroidPlatform(PlatformBase):
         size = 131072
         while (repeat and size > 256):
             repeat = False
+            # We know this command may fail. Avoid propogating this
+            # failure to the upstream
+            success = getRunStatus()
             ret = self.util.logcat("-G", str(size) + "K")
+            setRunStatus(success, overwrite=True)
             if len(ret) > 0 and ret[0].find("failed to") >= 0:
                 repeat = True
                 size = int(size / 2)
@@ -105,7 +109,11 @@ class AndroidPlatform(PlatformBase):
     def runBenchmark(self, cmd, *args, **kwargs):
         if not isinstance(cmd, list):
             cmd = shlex.split(cmd)
+        # We know this command may fail. Avoid propogating this
+        # failure to the upstream
+        success = getRunStatus()
         self.util.logcat('-b', 'all', '-c')
+        setRunStatus(success, overwrite=True)
         if self.app:
             log = self.runAppBenchmark(cmd, *args, **kwargs)
         else:
