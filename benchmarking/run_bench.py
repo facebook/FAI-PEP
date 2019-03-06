@@ -19,8 +19,8 @@ import os
 import six
 import sys
 
-from repo_driver import RepoDriver
-from utils.custom_logger import setLoggerLevel
+from lab_driver import LabDriver
+from utils.custom_logger import getLogger, setLoggerLevel
 from utils.utilities import getString, getRunStatus, setRunStatus
 
 
@@ -40,7 +40,7 @@ class RunBench(object):
     def __init__(self, raw_args=None):
         self.args, self.unknowns = parser.parse_known_args(raw_args)
         self.root_dir = self.args.config_dir
-        self.repoCls = RepoDriver
+        self.repoCls = LabDriver
         setLoggerLevel(self.args.logger_level)
 
     def run(self):
@@ -132,7 +132,10 @@ class RunBench(object):
             '--status_file': os.path.join(self.root_dir, "status"),
             '--model_cache': os.path.join(self.root_dir, "model_cache"),
             '--platforms': 'android',
+            '--storage': 'dummy',
             '--timeout': 300,
+            '--logger_level': 'warning',
+            "--db_entry": "http://127.0.0.1:8000/benchmark/",
         }
         return args
 
