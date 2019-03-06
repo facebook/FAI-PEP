@@ -182,7 +182,7 @@ class BenchmarkCollector(object):
     def _updateOneFile(self, field, model_dir, filename):
         cached_filename = \
             self._getDestFilename(field, model_dir)
-        if "md5" in field and \
+        if "md5" in field and field["md5"] is not None and\
                 (not os.path.isfile(cached_filename) or
                  self._calculateMD5(cached_filename) != field["md5"]):
             return self._copyFile(field, cached_filename, filename)
