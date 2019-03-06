@@ -39,8 +39,6 @@ def buildProgramPlatform(dst, repo_dir, framework, frameworks_dir,
     if os.path.isfile(dst):
         os.chmod(dst, 0o777)
     getLogger().info('\n'.join(result))
-    for r in result:
-        getLogger().info("{}".format(r))
 
     if not os.path.isfile(dst) and \
             (not (os.path.isdir(dst) and platform.startswith("ios"))):

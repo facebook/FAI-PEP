@@ -14,6 +14,7 @@ import json
 import os
 
 from download_benchmarks.download_benchmarks import DownloadBenchmarks
+from run_remote import RunRemote
 from run_lab import RunLab
 from harness import BenchmarkDriver
 from repo_driver import RepoDriver as OSS_RepoDriver
@@ -55,7 +56,7 @@ class LabDriver(object):
             assert self.args.benchmark_file, \
                 "--benchmark_file (-b) must be specified"
 
-        if self.args.benchmark_file and (self.args.lab or self.args.remote):
+        if self.args.benchmark_file:
             getLogger().info("Checking benchmark files to download")
             dbench = DownloadBenchmarks(self.args,
                                         getLogger())
@@ -87,7 +88,7 @@ class LabDriver(object):
                 new_unknowns = self.unknowns[:index]
                 new_unknowns.extend(self.unknowns[index + 2:])
                 self.unknowns = new_unknowns
-            # app_class = RunRemote
+            app_class = RunRemote
         elif self.args.lab:
             unique_args = [
                 "--app_id", self.args.app_id,

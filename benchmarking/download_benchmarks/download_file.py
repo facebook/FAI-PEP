@@ -2,6 +2,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from download_benchmarks.file_downloader_base import getDownloadHandles
 
+import download_benchmarks.dummy_file_downloader
+
 
 class DownloadFile(object):
     def __init__(self, dirs, logger, args):
