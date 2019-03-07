@@ -16,8 +16,11 @@ Including another URLconf
 from __future__ import absolute_import, division, print_function, unicode_literals
 from django.conf.urls import url, include
 from django.contrib import admin
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^benchmark/', include('benchmark.urls')),
-]
+    url(r'^upload/', include('file_storage.urls')),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

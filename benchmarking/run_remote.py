@@ -107,6 +107,9 @@ parser.add_argument("--storage",
     help="The storage engine for uploading and downloading files")
 parser.add_argument("--db_entry",
     help="The entry point of server's database")
+parser.add_argument("--server_addr",
+    help="The lab's server address")
+
 
 class BuildProgram(threading.Thread):
     def __init__(self, args, file_handler, tempdir, filenames, prebuilt_binary=None):
@@ -163,6 +166,8 @@ class RunRemote(object):
         self.args, self.unknowns = parser.parse_known_args(raw_args)
         table = "aibench_interactive"
         setLoggerLevel(self.args.logger_level)
+        if not self.args.db_entry:
+            self.args.db_entry = self.args.server_addr + "benchmark/"
         self.xdb = DBDriver(table,
                             self.args.job_queue,
                             self.args.test,

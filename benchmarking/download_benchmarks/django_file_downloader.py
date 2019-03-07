@@ -1,28 +1,29 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import requests
+import os
+
 from download_benchmarks.file_downloader_base import registerFileDownloader
 from download_benchmarks.file_downloader_base import FileDownloaderBase
 
 from utils.custom_logger import getLogger
 
 
-class DummyFileDownloader(FileDownloaderBase):
+class DjangoFileDownloader(FileDownloaderBase):
     def __init__(self, **kwargs):
-        super(DummyFileDownloader, self).__init__()
-        self.logger = kwargs['logger']
+        super(DjangoFileDownloader, self).__init__()
         self.root_model_dir = kwargs['args'].root_model_dir
-        self.everstore = None
 
     def download_file(self, location, path):
-        path = self.root_model_dir + location
-        self.logger.info("Copying {} to {}".format(location, path))
-
-        from shutil import copyfile
-        import os
+        getLogger().info("Downloading from {} to {}".format(location, path))
         basedir = os.path.dirname(path)
         if not os.path.exists(basedir):
             os.makedirs(basedir)
-        copyfile(location, path)
+
+        r = requests.get(location)
+        if r.status_code == 200:
+            with open(path, 'wb') as f:
+                f.write(r.content)
 
 
-registerFileDownloader("dummy", DummyFileDownloader)
+registerFileDownloader("http", DjangoFileDownloader)

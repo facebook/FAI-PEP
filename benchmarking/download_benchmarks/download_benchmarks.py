@@ -81,16 +81,6 @@ class DownloadBenchmarks(object):
             }
             path = self.root_model_dir + '/' +\
                    getFilename(location, replace_pattern=replace_pattern)
-        # TODO: Remove this when storage engine is finished
-        # DUMMY
-        elif location[0] == "/":
-            dirs = ['dummy'] + location.split("/")
-            path = self.root_model_dir + location
-            downloader_controller = DownloadFile(dirs=dirs,
-                                                 logger=self.logger,
-                                                 args=self.args)
-            downloader_controller.download_file(location, path)
-        # END DUMMY
         elif location[0:2] != "//":
             return
         else:

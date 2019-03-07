@@ -77,9 +77,10 @@ def getFilename(name, **kwargs):
     filename = name
     for orig_pattern, repl_pattern in replace_pattern.items():
         filename = filename.replace(orig_pattern, repl_pattern)
-    return "".join([c for c in filename
+    res = "".join([c for c in filename
                     if c.isalpha() or c.isdigit()
-                    or c == '_' or c == '.' or c == '-']).rstrip()
+                    or c == '_' or c == '.' or c == '-' or c == '/']).rstrip()
+    return res
 
 
 def getPythonInterpreter():

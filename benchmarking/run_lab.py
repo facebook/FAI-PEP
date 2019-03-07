@@ -103,6 +103,8 @@ parser.add_argument("--storage",
     help="The storage engine for uploading and downloading files")
 parser.add_argument("--db_entry",
     help="The entry point of server's database")
+parser.add_argument("--server_addr",
+    help="The lab's server address")
 
 REBOOT_INTERVAL = datetime.timedelta(hours=8)
 LOCK = threading.RLock()
@@ -296,6 +298,8 @@ class RunLab(object):
         devices = self._getDevices()
         setLoggerLevel(self.args.logger_level)
         table = "benchmark_benchmarkinfo"
+        if not self.args.db_entry:
+            self.args.db_entry = self.args.server_addr + "benchmark/"
         self.xdb = DBDriver(table,
                             self.args.job_queue,
                             self.args.test,
@@ -443,10 +447,10 @@ class RunLab(object):
                 replace_pattern = {
                     " ": '-',
                     "\\": '-',
-                    ":": '-',
+                    ":": '/',
                 }
-                program_location = self.root_model_dir +\
-                                   getFilename(self.args.root_model_dir,
+                program_location = self.args.root_model_dir + '/' +\
+                                   getFilename(program_location,
                                                replace_pattern=replace_pattern)
             elif program_location.startswith("/"):
                 program_location = self.args.root_model_dir + program_location

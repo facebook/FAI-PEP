@@ -135,7 +135,7 @@ class RunBench(object):
             '--storage': 'dummy',
             '--timeout': 300,
             '--logger_level': 'warning',
-            "--db_entry": "http://127.0.0.1:8000/benchmark/",
+            '--server_addr': "http://127.0.0.1:8000",
         }
         return args
 

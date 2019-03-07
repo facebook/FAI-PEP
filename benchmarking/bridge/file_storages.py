@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from bridge.upload_download_files_base import getFileHandles
 
-import bridge.upload_download_dummy
+import bridge.upload_download_files_django
 
 
 class UploadDownloadFiles(object):
