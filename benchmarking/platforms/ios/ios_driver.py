@@ -72,7 +72,7 @@ class IOSDriver(object):
         for device in self.devices:
             model = self.devices[device]
             idb = IDB(device, tempdir)
-            platform = IOSPlatform(tempdir, idb)
+            platform = IOSPlatform(tempdir, idb, self.args)
             platform.setPlatform(model)
             platforms.append(platform)
 
