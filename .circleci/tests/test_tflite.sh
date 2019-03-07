@@ -23,9 +23,10 @@ echo "
   \"--remote_repository\": \"origin\",
   \"--repo\": \"git\",
   \"--repo_dir\": \"${REPO_DIR}\",
+  \"--root_model_dir\": \"${CONFIG_DIR}/root_model_dir\",
   \"--screen_reporter\": null
 }
 " > ${CONFIG_DIR}/config.txt
 
-python benchmarking/run_bench.py -b specifications/models/tflite/mobilenet_v2/mobilenet_v2_0.35_96.json --config_dir "${CONFIG_DIR}"
+python benchmarking/run_bench.py -b specifications/models/tflite/mobilenet_v2/mobilenet_v2_0.35_96.json --user_string "CI Test" --config_dir "${CONFIG_DIR}"
 echo $?
