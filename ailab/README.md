@@ -1,6 +1,6 @@
-# Launch Benchmark Remotely
+# Setup Lab and Launch Benchmark Remotely
 
-You can set up a server and and launch the benchmark run remotely.
+By setting up a lab, you can set up a server with benchmarking devices connected, and submit benchmarking jobs remote from another machine. We rely on Django, uWSGI and nginx for setting up the lab. In the README, we'll walk through how to setup the lab server, start the lab, and submit jobs to the lab remotely from another machine.
 
 ## Server Setup
 
