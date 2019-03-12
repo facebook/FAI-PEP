@@ -152,7 +152,6 @@ def requestsData(url, **kwargs):
             session = requests.Session()
             session.trust_env = False
             result = session.post(url, **kwargs)
-            result.raise_for_status()
             if result.status_code != 200:
                 getLogger().error("Post request failed, receiving code {}".
                                   format(result.status_code))
