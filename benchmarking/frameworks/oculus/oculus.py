@@ -61,7 +61,9 @@ class OculusFramework(FrameworkBase):
         outputs = [os.path.join(platform.getOutputDir(), t["filename"])
                    for t in test["output_files"]]
         # Always copy binary to /system/bin/ directory
-        program = platform.copyFilesToPlatform(info["programs"]["program"]["location"], "/system/bin/")
+        program = platform.copyFilesToPlatform(
+                info["programs"]["program"]["location"],
+                info["programs"]["program"]["dest_path"])
         commands = self._composeRunCommand(program, platform, test,
                                            inputs, outputs)
         platform.runBenchmark(commands, log_to_screen_only=True)
