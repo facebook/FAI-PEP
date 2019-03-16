@@ -194,7 +194,7 @@ def requestsJson(url, **kwargs):
 def parse_kwarg(kwarg_str):
     key, value = kwarg_str.split('=')
     try:
-        value = ast.literal_eval(value)
+        value = ast.literal_eval("'" + value + "'")
     except ValueError:
         getLogger().error("Failed to parse kwarg str: {}".format(kwarg_str))
     return key, value
