@@ -71,7 +71,7 @@ class OutputCompare(object):
         data = np.reshape(content, dims)
         # reshape to two dimension array
         benchmark_data = data.reshape((-1, data.shape[-1]))
-        return benchmark_data.tolist()
+        return benchmark_data.tolist(), dims_list
 
     def writeOneResult(self, values, data, metric, unit):
         entry = {
@@ -115,7 +115,7 @@ class OutputCompare(object):
                 f.write(s)
 
     def compare(self):
-        benchmark_data = self.getData(self.args.benchmark_output)
+        benchmark_data, dims_list = self.getData(self.args.benchmark_output)
         with open(self.args.labels, "r") as f:
             content = f.read()
             golden_lines = [item.strip().split(',')
@@ -123,6 +123,10 @@ class OutputCompare(object):
         golden_data = [{"index": int(item[0]),
                         "label": item[1],
                         "path": item[2]} for item in golden_lines]
+        if len(benchmark_data) != len(golden_data):
+            idx = dims_list.index(len(golden_data))
+            benchmark_data = np.reshape(benchmark_data,
+                (dims_list[idx], dims_list[idx + 1]))
         assert len(benchmark_data) == len(golden_data), \
             "Benchmark data has {} entries, ".format(len(benchmark_data)) + \
             "but golden data has {} entries".format(len(golden_data))
