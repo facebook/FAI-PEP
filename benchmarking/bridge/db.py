@@ -14,19 +14,23 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import json
 
+from bridge.auth import Auth
+from utils.custom_logger import getLogger
 from utils.utilities import requestsJson
 
 NETWORK_TIMEOUT = 150
 
 
 class DBDriver(object):
-    def __init__(self, table, job_queue, is_test, db_entry):
+    def __init__(self, db, app_id, token, table, job_queue, is_test, benchmark_db_entry):
         self.table = table
         self.job_queue = job_queue
+        auth = Auth(db, app_id, token, is_test)
+        self.auth_params = auth.get_auth_params()
 
-        assert db_entry != "", "Database entry cannot be empty"
+        assert benchmark_db_entry != "", "Database entry cannot be empty"
 
-        self.db_entry = db_entry
+        self.benchmark_db_entry = benchmark_db_entry
 
     def submitBenchmarks(self, data, devices, identifier, user):
         json_data = json.dumps(data)
@@ -126,9 +130,12 @@ class DBDriver(object):
         return result_json["values"]
 
     def _requestData(self, params):
-        result_json = requestsJson(self.db_entry,
+        params.update(self.auth_params)
+        result_json = requestsJson(self.benchmark_db_entry,
                                    data=params, timeout=NETWORK_TIMEOUT)
         if "status" not in result_json or result_json['status'] != "success":
+            getLogger().error(
+                "DB post failed, params {}".format(json.dumps(params)))
             return {
                 "status": "fail",
                 "values": [],

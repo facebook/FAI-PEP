@@ -26,7 +26,7 @@ class FileHandler(object):
     def __init__(self, args):
         self.config_filename = args.cache_config
         self.root_dir = args.root_model_dir
-        self.storage = UploadDownloadFiles(args)
+        self.file_storage = UploadDownloadFiles(args)
         self.config = None
         if not os.path.isfile(self.config_filename):
             self.config = {}
@@ -54,7 +54,7 @@ class FileHandler(object):
         upload_path, cached_md5 = self._getCachedFile(path)
         filename = os.path.basename(f)
         if upload_path is None or not cache_file or md5 is not cached_md5:
-            upload_path = self.storage.upload(file=path, permanent=False)
+            upload_path = self.file_storage.upload(file=path, permanent=False)
             if cache_file or md5 is not cached_md5:
                 md5 = self._saveCachedFile(path, upload_path)
         else:

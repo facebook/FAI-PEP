@@ -10,10 +10,10 @@ class UploadDownloadFiles(object):
         self.args = args
         self.file_handles = getFileHandles()
 
-        storage = self.args.storage
+        file_storage = self.args.file_storage
         self.obj = None
-        if storage in self.file_handles:
-            self.obj = self.file_handles[storage](self.args)
+        if file_storage in self.file_handles:
+            self.obj = self.file_handles[file_storage](self.args)
 
     def upload(self, **kwargs):
         res = ''
