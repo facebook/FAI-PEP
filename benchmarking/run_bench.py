@@ -132,7 +132,7 @@ class RunBench(object):
             '--status_file': os.path.join(self.root_dir, "status"),
             '--model_cache': os.path.join(self.root_dir, "model_cache"),
             '--platforms': 'android',
-            '--storage': 'dummy',
+            '--file_storage': 'django',
             '--timeout': 300,
             '--logger_level': 'warning',
             '--server_addr': "http://127.0.0.1:8000",

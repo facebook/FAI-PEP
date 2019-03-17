@@ -55,7 +55,7 @@ parser.add_argument("-d", "--devices",
     "list. The value is the device or device_hash field of the meta info.")
 parser.add_argument("--job_queue",
     default="aibench_interactive",
-    help="Specify the xdb job queue that the benchmark is sent to")
+    help="Specify the db job queue that the benchmark is sent to")
 parser.add_argument("--logger_level", default="info",
     choices=["info", "warning", "error"],
     help="Specify the logger level")
@@ -99,12 +99,16 @@ parser.add_argument("--token",
 parser.add_argument("--hash_platform_mapping",
     default=None,
     help="Specify the devices hash platform mapping json file.")
-parser.add_argument("--storage",
+parser.add_argument("--file_storage",
     help="The storage engine for uploading and downloading files")
-parser.add_argument("--db_entry",
+parser.add_argument("--benchmark_db_entry",
     help="The entry point of server's database")
 parser.add_argument("--server_addr",
     help="The lab's server address")
+parser.add_argument("--benchmark_db",
+    help="The database that will store benchmark infos")
+parser.add_argument("--benchmark_table",
+    help="The table that will store benchmark infos")
 
 REBOOT_INTERVAL = datetime.timedelta(hours=8)
 LOCK = threading.RLock()
@@ -130,10 +134,10 @@ def getDevicesString(devices):
 
 
 class runAsync(object):
-    def __init__(self, args, devices, xdb, job, tempdir):
+    def __init__(self, args, devices, db, job, tempdir):
         self.args = args
         self.devices = devices
-        self.xdb = xdb
+        self.db = db
         self.job = job
         self.tempdir = tempdir
 
@@ -174,7 +178,7 @@ class runAsync(object):
 
     def _coolDown(self, device):
         force_reboot = self.job["status"] != "DONE"
-        t = CoolDownDevice(device, self.args, self.xdb, force_reboot)
+        t = CoolDownDevice(device, self.args, self.db, force_reboot)
         t.start()
 
     def _updateDevices(self, result_dict):
@@ -204,7 +208,7 @@ class runAsync(object):
     def _submitDone(self, device):
         data = self._collectBenchmarkData(device["output_dir"])
         log = self._collectLogData(self.job)
-        self.xdb.doneBenchmarks(str(self.job["id"]),
+        self.db.doneBenchmarks(str(self.job["id"]),
                                 self.job["status"],
                                 data,
                                 log)
@@ -249,11 +253,11 @@ class runAsync(object):
 
 
 class CoolDownDevice(threading.Thread):
-    def __init__(self, device, args, xdb, force_reboot):
+    def __init__(self, device, args, db, force_reboot):
         threading.Thread.__init__(self)
         self.device = device
         self.args = args
-        self.xdb = xdb
+        self.db = db
         self.force_reboot = force_reboot
 
     def run(self):
@@ -284,7 +288,7 @@ class CoolDownDevice(threading.Thread):
             else:
                 self.device["live"] = False
             device_str = getDevicesString([self.device])
-            self.xdb.updateDevices(self.args.claimer_id, device_str, False)
+            self.db.updateDevices(self.args.claimer_id, device_str, False)
         getLogger().debug("CoolDownDevice lock released")
         getLogger().info("Device {}({}) available".format(
             self.device["kind"], self.device["hash"]))
@@ -297,13 +301,15 @@ class RunLab(object):
         self.adb = ADB(None, self.args.android_dir)
         devices = self._getDevices()
         setLoggerLevel(self.args.logger_level)
-        table = "benchmark_benchmarkinfo"
-        if not self.args.db_entry:
-            self.args.db_entry = self.args.server_addr + "benchmark/"
-        self.xdb = DBDriver(table,
-                            self.args.job_queue,
-                            self.args.test,
-                            self.args.db_entry)
+        if not self.args.benchmark_db_entry:
+            self.args.benchmark_db_entry = self.args.server_addr + "benchmark/"
+        self.db = DBDriver(self.args.benchmark_db,
+                           self.args.app_id,
+                           self.args.token,
+                           self.args.benchmark_table,
+                           self.args.job_queue,
+                           self.args.test,
+                           self.args.benchmark_db_entry)
         self.devices = {}
         for k in devices:
             kind = k["kind"]
@@ -327,7 +333,7 @@ class RunLab(object):
             self.devices[kind][hash] = entry
 
         dvs = [self.devices[k][h] for k in self.devices for h in self.devices[k]]
-        self.xdb.updateDevices(self.args.claimer_id,
+        self.db.updateDevices(self.args.claimer_id,
                                getDevicesString(dvs), True)
         self.pool = multiprocessing.Pool(
             processes=multiprocessing.cpu_count() - 1 or 1)
@@ -337,7 +343,7 @@ class RunLab(object):
             with LOCK:
                 self._runOnce()
             time.sleep(1)
-        self.xdb.updateDevices(self.args.claimer_id, "", True)
+        self.db.updateDevices(self.args.claimer_id, "", True)
 
     def _runOnce(self):
         jobs = self._claimBenchmarks()
@@ -356,7 +362,7 @@ class RunLab(object):
                             for hash in self.devices[k])])
         jobs = []
         if len(devices) > 0:
-            jobs = self.xdb.claimBenchmarks(claimer_id, devices)
+            jobs = self.db.claimBenchmarks(claimer_id, devices)
         return jobs
 
     def _selectBenchmarks(self, jobs):
@@ -383,15 +389,15 @@ class RunLab(object):
     def _releaseBenchmarks(self, remaining_jobs):
         # releasing unmatched jobs
         releasing_ids = ",".join([str(job["id"]) for job in remaining_jobs])
-        self.xdb.releaseBenchmarks(self.args.claimer_id, releasing_ids)
+        self.db.releaseBenchmarks(self.args.claimer_id, releasing_ids)
 
     def _runBenchmarks(self, jobs_queue):
         # run the jobs in job queue
         run_ids = ",".join([str(job["id"]) for job in jobs_queue])
-        self.xdb.runBenchmarks(self.args.claimer_id, run_ids)
+        self.db.runBenchmarks(self.args.claimer_id, run_ids)
         run_devices = [self.devices[job["device"]][job["hash"]]
                        for job in jobs_queue]
-        self.xdb.updateDevices(self.args.claimer_id,
+        self.db.updateDevices(self.args.claimer_id,
                                getDevicesString(run_devices), False)
         self._downloadFiles(jobs_queue)
 
@@ -400,7 +406,7 @@ class RunLab(object):
             tempdir = tempfile.mkdtemp()
             raw_args = self._getRawArgs(job, tempdir)
             self.devices[job["device"]][job["hash"]]["start_time"] = time.ctime()
-            app = runAsync(self.args, self.devices, self.xdb, job, tempdir)
+            app = runAsync(self.args, self.devices, self.db, job, tempdir)
 
             """
             Python's multiprocessing need to pickle things to sling them

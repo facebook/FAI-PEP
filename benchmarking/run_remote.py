@@ -28,6 +28,7 @@ from bridge.db import DBDriver
 from remote.devices import Devices
 from remote.file_handler import FileHandler
 from remote.screen_reporter import ScreenReporter
+from remote.print_result_url import PrintResultURL
 from utils.build_program import buildProgramPlatform
 from utils.custom_logger import getLogger, setLoggerLevel
 from utils.utilities import getBenchmarks, getMeta, parse_kwarg
@@ -70,7 +71,7 @@ parser.add_argument("--info",
     help="The json serialized options describing the control and treatment.")
 parser.add_argument("--job_queue",
     default="aibench_interactive",
-    help="Specify the xdb job queue that the benchmark is sent to")
+    help="Specify the db job queue that the benchmark is sent to")
 parser.add_argument("--list_devices", action="store_true",
     help="List the devices associated to the job queue")
 parser.add_argument("--list_job_queues", action="store_true",
@@ -103,12 +104,18 @@ parser.add_argument("--user_identifier",
     help="The identifier user pass in to differentiate different benchmark runs.")
 parser.add_argument("--user_string",
     help="The user_string pass in to differentiate different regression benchmark runs.")
-parser.add_argument("--storage",
+parser.add_argument("--file_storage",
     help="The storage engine for uploading and downloading files")
-parser.add_argument("--db_entry",
+parser.add_argument("--benchmark_db_entry",
     help="The entry point of server's database")
 parser.add_argument("--server_addr",
     help="The lab's server address")
+parser.add_argument("--result_db",
+    help="The database that will store benchmark results")
+parser.add_argument("--benchmark_db",
+    help="The database that will store benchmark infos")
+parser.add_argument("--benchmark_table",
+    help="The table that will store benchmark infos")
 
 
 class BuildProgram(threading.Thread):
@@ -164,14 +171,17 @@ class BuildProgram(threading.Thread):
 class RunRemote(object):
     def __init__(self, raw_args=None):
         self.args, self.unknowns = parser.parse_known_args(raw_args)
-        table = "aibench_interactive"
         setLoggerLevel(self.args.logger_level)
-        if not self.args.db_entry:
-            self.args.db_entry = self.args.server_addr + "benchmark/"
-        self.xdb = DBDriver(table,
-                            self.args.job_queue,
-                            self.args.test,
-                            self.args.db_entry)
+        if not self.args.benchmark_db_entry:
+            self.args.benchmark_db_entry = self.args.server_addr + "benchmark/"
+        self.db = DBDriver(self.args.benchmark_db,
+                           self.args.app_id,
+                           self.args.token,
+                           self.args.benchmark_table,
+                           self.args.job_queue,
+                           self.args.test,
+                           self.args.benchmark_db_entry)
+        self.url_printer = PrintResultURL(self.args)
         self.file_handler = FileHandler(self.args)
         self.devices = Devices(self.args.devices_config)
         # Hard code scuba table
@@ -277,7 +287,10 @@ class RunRemote(object):
                 "benchmark": benchmark,
                 "info": self.info,
             }
-            self.xdb.submitBenchmarks(data, new_devices, user_identifier, user)
+            self.db.submitBenchmarks(data, new_devices, user_identifier, user)
+        self.url_printer.printURL(self.scuba_dataset,
+                                  user_identifier,
+                                  benchmarks)
 
         if not self.args.debug:
             shutil.rmtree(self.tempdir, True)
@@ -396,7 +409,7 @@ class RunRemote(object):
         tgt.pop(ref_path[-1])
 
     def _listDevices(self):
-        devices = self.xdb.listDevices(self.args.job_queue)
+        devices = self.db.listDevices(self.args.job_queue)
         for device in devices:
             abbrs = self.devices.getAbbrs(device["device"])
             print(device["status"] + "\t" +
@@ -405,7 +418,7 @@ class RunRemote(object):
 
     def _checkDevices(self, specified_devices):
         devices = set()
-        for device in self.xdb.listDevices(self.args.job_queue):
+        for device in self.db.listDevices(self.args.job_queue):
             abbrs = self.devices.getAbbrs(device["device"])
             devices.add(device["device"])
             devices.update(set(abbrs if abbrs else ""))
@@ -416,7 +429,7 @@ class RunRemote(object):
                 " is not available in the job_queue {}".format(self.args.job_queue))
 
     def _listJobQueues(self):
-        devices = self.xdb.listDevices(job_queue="*")
+        devices = self.db.listDevices(job_queue="*")
         list_job_queues = sorted({device['job_queue'] for device in devices})
         return list_job_queues
 
@@ -426,19 +439,19 @@ class RunRemote(object):
             print(jobQueue)
 
     def _screenReporter(self, user_identifier):
-        reporter = ScreenReporter(self.xdb, self.devices, self.args.debug)
+        reporter = ScreenReporter(self.db, self.devices, self.args.debug)
         reporter.run(user_identifier)
 
     def _fetchResult(self):
         user_identifier = self.args.user_identifier
         assert user_identifier, "User identifier must be specified for " \
             "fetching the status and/or result of the previously run benchmarks"
-        statuses = self.xdb.statusBenchmarks(user_identifier)
+        statuses = self.db.statusBenchmarks(user_identifier)
         if self.args.fetch_status:
             print(json.dumps(statuses))
         elif self.args.fetch_result:
             ids = ",".join([str(status["id"]) for status in statuses])
-            output = self.xdb.getBenchmarks(ids)
+            output = self.db.getBenchmarks(ids)
             self._mobilelabResult(output)
             print(json.dumps(output))
 
