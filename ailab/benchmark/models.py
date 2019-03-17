@@ -65,3 +65,68 @@ class Device(models.Model):
             models.Index(fields=['claimer']),
             models.Index(fields=['job_queue']),
         ]
+
+
+class BenchmarkResult(models.Model):
+    # Count
+    num_runs = models.BigIntegerField(null=True)
+    time = models.BigIntegerField(null=True)
+
+    control_commit_time = models.BigIntegerField(null=True)
+    commit_time = models.BigIntegerField(null=True)
+
+    control_stdev = models.BigIntegerField(null=True)
+    stdev = models.BigIntegerField(null=True)
+
+    control_mean = models.BigIntegerField(null=True)
+    mean = models.BigIntegerField(null=True)
+    diff_mean = models.BigIntegerField(null=True)
+
+    control_p0 = models.BigIntegerField(null=True)
+    p0 = models.BigIntegerField(null=True)
+    diff_p0 = models.BigIntegerField(null=True)
+
+    control_p10 = models.BigIntegerField(null=True)
+    p10 = models.BigIntegerField(null=True)
+    diff_p10 = models.BigIntegerField(null=True)
+
+    control_p50 = models.BigIntegerField(null=True)
+    p50 = models.BigIntegerField(null=True)
+    diff_p50 = models.BigIntegerField(null=True)
+
+    control_p90 = models.BigIntegerField(null=True)
+    p90 = models.BigIntegerField(null=True)
+    diff_p90 = models.BigIntegerField(null=True)
+
+    control_p100 = models.BigIntegerField(null=True)
+    p100 = models.BigIntegerField(null=True)
+    diff_p100 = models.BigIntegerField(null=True)
+
+    control_p95 = models.BigIntegerField(null=True)
+    p95 = models.BigIntegerField(null=True)
+
+    control_p99 = models.BigIntegerField(null=True)
+    p99 = models.BigIntegerField(null=True)
+
+    # Normals
+    control_commit = models.TextField(null=True)
+    commit = models.TextField(null=True)
+
+    backend = models.TextField(null=True)
+    command = models.TextField(null=True)
+    framework = models.TextField(null=True)
+    group = models.TextField(null=True)
+    identifier = models.TextField(null=True)
+    info_string = models.TextField(null=True)
+    metric = models.TextField(null=True)
+    model = models.TextField(null=True)
+    platform = models.TextField(null=True)
+    platform_hash = models.TextField(null=True)
+    type = models.TextField(null=True)
+    unit = models.TextField(null=True)
+    user = models.TextField(null=True)
+    user_identifier = models.TextField(null=True)
+
+    # Normal Vectors
+    control_values = models.TextField(null=True)  # JSON-serialized list
+    values = models.TextField(null=True)  # JSON-serialized list
