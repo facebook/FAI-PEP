@@ -40,6 +40,10 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 # Application definition
 
 INSTALLED_APPS = [
+    'django_tables2',
+    'django_filters',
+    'widget_tweaks',
+    'bootstrap3',
     'benchmark',
     'file_storage',
     'django.contrib.admin',
@@ -74,6 +78,9 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'libraries': {
+                'nvd3_tags': 'benchmark.templatetags.nvd3_tags',
+            }
         },
     },
 ]
@@ -133,4 +140,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static_files")]
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATIC_URL = '/static/'
+
+# DJANGO_TABLES2_TEMPLATE = 'django_tables2/bootstrap.html'
