@@ -28,7 +28,7 @@ from frameworks.frameworks import getFrameworks
 from platforms.platforms import getPlatforms
 from reporters.reporters import getReporters
 from utils.custom_logger import getLogger
-from utils.utilities import parse_kwarg, getRunStatus
+from utils.utilities import parse_kwarg, getRunStatus, setRunStatus
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--android_dir", default="/data/local/tmp/",
@@ -135,10 +135,11 @@ parser.add_argument("--user_string",
 
 class BenchmarkDriver(object):
     def __init__(self, **kwargs):
+        setRunStatus(0, overwrite=True)
+        self.status = 0
         raw_args = kwargs.get("raw_args", None)
         self.args, self.unknowns = parser.parse_known_args(raw_args)
         self._lock = threading.Lock()
-        self.status = 0
 
     def runBenchmark(self, info, platform, benchmarks):
         if self.args.reboot:
