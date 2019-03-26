@@ -28,6 +28,10 @@ def processRun(*args, **kwargs):
         if "log_output" in kwargs:
             log_output = kwargs["log_output"]
             del kwargs["log_output"]
+        ignore_status = False
+        if "ignore_status" in kwargs:
+            ignore_status = kwargs["ignore_status"]
+            del kwargs["ignore_status"]
         non_blocking = False
         output = None
         if "non_blocking" in kwargs and kwargs["non_blocking"]:
@@ -67,7 +71,7 @@ def processRun(*args, **kwargs):
                 t.cancel()
             if log_output or status != 0:
                 getLogger().info('\n'.join(output))
-            if status == 0:
+            if status == 0 or ignore_status:
                 return output, None
             else:
                 setRunStatus(1)
