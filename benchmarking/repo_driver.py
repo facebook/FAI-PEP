@@ -52,7 +52,7 @@ parser.add_argument("--exec_dir", required=True,
     "If an executable is found for a commit, no re-compilation is performed. " +
     "Instead, the previous compiled executable is reused.")
 parser.add_argument("--framework", required=True,
-    choices=["caffe2", "oculus", "generic", "tflite"],
+    choices=["caffe2", "oculus", "generic", "pytorch", "tflite"],
     help="Specify the framework to benchmark on.")
 parser.add_argument("--frameworks_dir",
     default=None,
