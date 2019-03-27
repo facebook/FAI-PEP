@@ -76,7 +76,7 @@ parser.add_argument("--list_devices", action="store_true",
     help="List the devices associated to the job queue")
 parser.add_argument("--list_job_queues", action="store_true",
     help="List the job queues that have available devices")
-parser.add_argument("--logger_level", default="warning",
+parser.add_argument("--logger_level", default="info",
     choices=["info", "warning", "error"],
     help="Specify the logger level")
 parser.add_argument("--string_map",

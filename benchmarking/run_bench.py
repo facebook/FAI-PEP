@@ -29,7 +29,7 @@ parser = argparse.ArgumentParser(description="Perform one benchmark run")
 parser.add_argument("--config_dir",
     default=os.path.join(HOME_DIR, ".aibench", "git"),
     help="Specify the config root directory.")
-parser.add_argument("--logger_level", default="warning",
+parser.add_argument("--logger_level", default="info",
     choices=["info", "warning", "error"],
     help="Specify the logger level")
 parser.add_argument("--reset_options", action="store_true",

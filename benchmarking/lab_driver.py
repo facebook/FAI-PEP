@@ -28,7 +28,7 @@ parser.add_argument("-b", "--benchmark_file",
     help="Specify the json file for the benchmark or a number of benchmarks")
 parser.add_argument("--lab", action="store_true",
     help="Indicate whether the run is lab run.")
-parser.add_argument("--logger_level", default="warning",
+parser.add_argument("--logger_level", default="info",
     choices=["info", "warning", "error"],
     help="Specify the logger level")
 parser.add_argument("--remote", action="store_true",
