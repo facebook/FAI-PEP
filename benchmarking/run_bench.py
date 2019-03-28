@@ -47,6 +47,8 @@ class RunBench(object):
         raw_args = self._getRawArgs()
         app = self.repoCls(raw_args=raw_args)
         ret = app.run()
+        if ret and json.loads(ret):
+            return ret
         if ret is not None:
             setRunStatus(ret >> 8)
         sys.exit(getRunStatus())
