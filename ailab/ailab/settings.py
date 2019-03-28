@@ -143,4 +143,5 @@ USE_TZ = True
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATIC_URL = '/static/'
 
-# DJANGO_TABLES2_TEMPLATE = 'django_tables2/bootstrap.html'
+# Change permissions for files uploaded
+FILE_UPLOAD_PERMISSIONS = 0o644
