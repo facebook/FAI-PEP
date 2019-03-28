@@ -2,7 +2,7 @@
 
 By setting up a lab, you can set up a server with benchmarking devices connected, and submit benchmarking jobs remotely from another machine. We rely on Django, uWSGI and nginx for setting up the lab. In the README, we'll walk through how to setup the lab server, start the lab, and submit jobs to the lab remotely from another machine.
 
-## Server Setup
+## Server One-Time Setup
 
 #### Install DJango
 ```
@@ -28,7 +28,7 @@ python manage.py makemigrations
 python manage.py migrate
 ```
 
-#### Start server
+#### Setup nginx and uWSGI
 We will rely on `nginx` and `uWSGI` to serve model files as media files.
 Note: the following commands are intended for OS X and are translated from https://uwsgi-docs.readthedocs.io/en/latest/tutorials/Django_and_nginx.html. If you are running another operating system or want to take a more comprehensive look at the structure, please reference to the link.
 
@@ -55,7 +55,13 @@ ln -s /usr/local/etc/nginx/sites-available/ailab_nginx.conf /usr/local/etc/nginx
 nginx -s stop
 nginx
 ```
-7. Start uWSGI from this directory in production setting
+
+## Start the server
+1. Collect static files that Django visualization would use
+```
+python manage.py collectstatic --clear
+```
+2. Start uWSGI from this directory in production setting
 ```
 uwsgi --socket :8001 --module ailab.wsgi
 ```
