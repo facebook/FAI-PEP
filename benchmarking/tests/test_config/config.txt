@@ -21,5 +21,6 @@
   "--screen_reporter" : null,
   "--status_file" : "/test/.aibench/git/status",
   "--timeout": "300",
-  "--token": "ABC"
+  "--token": "ABC",
+  "--logger_level": info
 }
