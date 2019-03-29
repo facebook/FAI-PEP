@@ -31,7 +31,7 @@ apt-get install python-dev libmysqlclient-dev
 - Install components for ailab:
 ```
 pip install MySQL-python
-pip install django-tables2 "django<2" django-filter==1.1 django-nvd3 django-widget-tweaks django-bootstrap3
+pip install django-tables2 "django<2" django-nvd3 django-widget-tweaks django-bootstrap3
 ```
 - In the current directory (ailab), run the following commands:
 ```
