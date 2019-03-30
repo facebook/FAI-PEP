@@ -61,7 +61,7 @@ parser.add_argument("--fetch_result", action="store_true",
     help="Fetch the result of already submitted jobs, use together with "
     "--user_identifier")
 parser.add_argument("--framework",
-    choices=["caffe2", "generic", "oculus", "tflite"],
+    choices=["caffe2", "generic", "oculus", "pytorch", "tflite"],
     help="Specify the framework to benchmark on.")
 parser.add_argument("--frameworks_dir", default=None,
     help="The root directory that all frameworks resides. "
