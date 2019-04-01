@@ -335,8 +335,11 @@ class RunLab(object):
         dvs = [self.devices[k][h] for k in self.devices for h in self.devices[k]]
         self.db.updateDevices(self.args.claimer_id,
                                getDevicesString(dvs), True)
-        self.pool = multiprocessing.Pool(
-            processes=multiprocessing.cpu_count() - 1 or 1)
+        if self.args.platform.startswith("host"):
+            numProcesses = 2
+        else:
+            numProcesses = multiprocessing.cpu_count() - 1
+        self.pool = multiprocessing.Pool(processes=numProcesses)
 
     def run(self):
         while(not stopRun(self.args)):
