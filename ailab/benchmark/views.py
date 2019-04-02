@@ -87,6 +87,8 @@ def visualize(request):
 
     RequestConfig(request, paginate={'per_page': 25}).configure(table)
 
+    data = {}
+
     # Build graph to display
     if graph_type == 'bar-graph':
         labels = [str(i) for i in range(10)]

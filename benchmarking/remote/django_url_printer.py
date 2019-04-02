@@ -1,9 +1,26 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import json
+import urllib
+
 from remote.url_printer_base import URLPrinterBase
 from remote.url_printer_base import registerResultURL
 
+
 DJANGO_SUB_URL = "benchmark/visualize"
+
+DISPLAY_COLUMNS = [
+    "identifier",
+    "metric",
+    "net_name",
+    "p10",
+    "p50",
+    "p90",
+    "platform",
+    "time",
+    "type",
+    "user_identifier",
+]
 
 
 class DjangoURLPrinter(URLPrinterBase):
@@ -11,33 +28,66 @@ class DjangoURLPrinter(URLPrinterBase):
         self.args = args
         self.db_url = self.args.server_addr + DJANGO_SUB_URL
 
-    def getDjangoParams(self, user_identifier):
-        params = {
-            'columns': [
-                "identifier",
-                "metric",
-                "net_name",
-                "p10",
-                "p50",
-                "p90",
-                "platform",
-                "time",
-                "type",
-                "user_identifier",
+    def getColumnSelParams(self):
+        col_sel_params = []
+        for display_column in DISPLAY_COLUMNS:
+            col_param = {
+                'name': 'columns',
+                'value': display_column,
+            }
+            col_sel_params.append(col_param)
+        return col_sel_params
+
+    def getGraphConfParams(self):
+        graph_conf_params = [
+            {
+                'name': 'graph-type-dropdown',
+                'value': 'bar-graph',
+            },
+            {
+                'name': 'rank-column-dropdown',
+                'value': 'p10',
+            }
+        ]
+        return graph_conf_params
+
+    def getFilterParams(self, user_identifier):
+        if user_identifier is None:
+            return {}
+
+        filter_params = {
+            "condition": "AND",
+            "rules": [
+                {
+                    "id": "user_identifier",
+                    "field": "user_identifier",
+                    "type": "string",
+                    "input": "text",
+                    "operator": "equal",
+                    "value": str(user_identifier)
+                }
             ],
+            "valid": True
         }
-        if user_identifier is not None:
-            params['user_identifier'] = [str(user_identifier)]
+        return filter_params
+
+    def getDjangoParams(self, user_identifier):
+        col_sel_params = self.getColumnSelParams()
+        graph_conf_params = self.getGraphConfParams()
+        filter_params = self.getFilterParams(user_identifier)
+
+        params = {
+            'sort': '-p10',
+            'selection_form': json.dumps(col_sel_params + graph_conf_params),
+            'filters': json.dumps(filter_params),
+        }
+
         return params
 
     def printURL(self, dataset, user_identifier, benchmarks):
         params = self.getDjangoParams(user_identifier)
 
-        res = []
-        for k, v in params.items():
-            for item in v:
-                res.append(k + '=' + item)
-        param_string = "&".join(res)
+        param_string = urllib.urlencode(params)
 
         url = (
             self.db_url + "?{}"
