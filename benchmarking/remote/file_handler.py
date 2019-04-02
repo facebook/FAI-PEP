@@ -39,11 +39,13 @@ class FileHandler(object):
         self._updateConfig()
 
     def uploadFile(self, f, md5, basefilename, cache_file):
-        if f[:2] == "//":
+        if f.startswith("https://") or f.startswith("http://"):
+            return f, md5
+        if f.startswith("//"):
             assert self.root_dir, \
                 "root_dir must be specified for relative path"
             path = self.root_dir + f[1:]
-        elif f[0] == "/":
+        elif f.startswith("/"):
             path = f
         else:
             path = os.path.dirname(os.path.realpath(basefilename)) + "/" + f
@@ -54,7 +56,9 @@ class FileHandler(object):
         upload_path, cached_md5 = self._getCachedFile(path)
         filename = os.path.basename(f)
         if upload_path is None or not cache_file or md5 is not cached_md5:
-            upload_path = self.file_storage.upload(file=path, permanent=False)
+            upload_path = self.file_storage.upload(orig_path=f,
+                                                   file=path,
+                                                   permanent=False)
             if cache_file or md5 is not cached_md5:
                 md5 = self._saveCachedFile(path, upload_path)
         else:
