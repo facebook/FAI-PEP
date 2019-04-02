@@ -13,10 +13,11 @@
   }
 </script>
 
+
 <div class="container-fluid">
   <div class="row">
     <div class="col-md-2">
-      <form action="" method="get" class="form-group">
+      <form id='selection-form' action="#" method="get" class="form-group">
 
         <div class="panel panel-default">
           <div class="panel-body">
@@ -27,7 +28,7 @@
                 <button type="button" class="btn btn-primary btn-sm" onClick="toggle(false)"> De-select All</button><br />
               </div>
             </div>
-            {% for col_list in available_columns%}
+            {% for col_list in available_columns %}
             <div class='row'>
               {% for col in col_list %}
               <div class='col-sm-12'>
@@ -44,13 +45,38 @@
           <div class="panel-body">
             <h4 style="margin-top: 0">Filter</h4>
             <div class="row">
-              {% for c in filter.form %}
-              <div class="form-group col-sm-12">
-                {{ c.label_tag }}
-                {% render_field c class="form-control" %}
-              </div>
-              {% endfor %}
+              <div id="builder"></div>
             </div>
+          </div>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <h4 style="margin-top: 0">Graph configuration</h4>
+            <div class='row'>
+              <div class='col-sm-12'>
+                <label for="graph-type-dropdown">Graph Type:</label>
+                <select class="form-control" name="graph-type-dropdown" id="graph-type-dropdown">
+                  <option value="line-graph">Line Graph</option>
+                  <option value="bar-graph">Bar Graph</option>
+                </select>
+              </div>
+            </div>
+
+
+              <div class='row' id='rank-column-select'>
+                <div class='col-sm-12'>
+                  <label for="graph-type-dropdown">Rank Column:</label>
+                  <select class="form-control" name="rank-column-dropdown" id="rank-column-dropdown">
+                    {% for col_list in available_columns%}
+                      {% for col in col_list %}
+                      <option value='{{col}}'>{{col}}</option>
+                      {% endfor %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+
           </div>
         </div>
 
@@ -59,28 +85,23 @@
         </button>
 
       </form>
+      <div id="builder"></div>
     </div>
 
     <div class="col-md-8">
-
-      <div class="panel panel-default">
-        <div class="panel-body">
-          <div class='col-lg-12'>
-            {% include_container chartcontainer width="100%" %}
-          </div>
-        </div>
+      <div id='graph-view' class="panel panel-default">
+        {% include 'graph_view.html' %}
       </div>
-
-      <div class="panel panel-default">
-        <div class="panel-body">
-          <div class='col-lg-12'>
-            {% load django_tables2 %}
-            {% render_table table %}
-          </div>
-        </div>
+      <div id='table-view' class="panel panel-default">
+        {% include 'table_view.html' %}
       </div>
-
     </div>
   </div>
 </div>
+
+{% load static %}
+<script src="{% static "js/filters.js" %}"></script>
+<script src="{% static "js/form_submission.js" %}"></script>
+<script src="{% static "js/graph_configuration.js" %}"></script>
+
 {% endblock %}
