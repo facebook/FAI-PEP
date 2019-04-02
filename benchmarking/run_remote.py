@@ -17,6 +17,7 @@ import argparse
 from getpass import getuser
 import json
 import os
+import pkg_resources
 from random import randint
 import re
 import shutil
@@ -365,7 +366,9 @@ class RunRemote(object):
                 supported for {}".format(location)
             for side in self.info:
                 value = self.info[side]
-                commit_hash = value["commit"] or "master"
+                commit_hash = "master"
+                if "commit" in value:
+                    commit_hash = value["commit"] or "master"
                 tgt_file = self._downloadRepoFile(location, self.tempdir, commit_hash)
                 f["location"], f["md5"] = self.file_handler.uploadFile(tgt_file, md5,
                                                                         basefilename,
@@ -387,10 +390,14 @@ class RunRemote(object):
         """
         location: //repo/fbsource/fbcode/aibench/...../a.py
         """
+        raw_scm_query = pkg_resources.resource_string("__main__",
+            "benchmarking/bin/scm_query.par")
+        query_exe = os.path.join(tgt_dir, "scm_query.par")
+        with open(query_exe, "wb") as f:
+            f.write(raw_scm_query)
+        cmd = ['chmod', '+x', os.path.join(tgt_dir, "scm_query.par")]
+        subprocess.check_output(cmd)
         dirs = location[2:].split("/")
-        BENCHMARK_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-
-        query_exe = os.path.join(BENCHMARK_DIR, "bin/scm_query.par")
         tgt_file = os.path.join(tgt_dir, dirs[-1])
         cmd = [
             query_exe, '--repo', dirs[1],
@@ -400,6 +407,7 @@ class RunRemote(object):
         ]
         getLogger().info("Downloading {}".format(location))
         subprocess.check_output(cmd)
+        os.remove(query_exe)
         return tgt_file
 
     def _del_from_benchmark(self, benchmark, ref_path):
