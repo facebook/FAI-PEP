@@ -51,7 +51,7 @@ class RunBench(object):
             return ret
         if ret is not None:
             setRunStatus(ret >> 8)
-        sys.exit(getRunStatus())
+        return getRunStatus()
 
     def _getUnknownArgs(self):
         unknowns = self.unknowns
