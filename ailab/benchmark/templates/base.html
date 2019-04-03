@@ -4,10 +4,13 @@
         <title>Data Visualization</title>
         {% load static %}
         <link href="{% static "bootstrap-3.3.7/css/bootstrap.min.css" %}" rel="stylesheet" />
-        <script href="{% static "bootstrap-3.3.7/js/bootstrap.min.js" %}"></script>
-        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="{% static "jquery/jquery-3.3.1.min.js" %}"></script>
+        <script src="{% static "bootstrap-3.3.7/js/bootstrap.min.js" %}"></script>
+
         {% include_chart_jscss %}
-        {% load_chart charttype chartdata chartcontainer extra %}
+
+        <link href="{% static "query-builder/dist/css/query-builder.default.min.css" %}" rel="stylesheet" />
+        <script src="{% static "query-builder/dist/js/query-builder.standalone.min.js" %}"></script>
     </head>
 
     <body>
