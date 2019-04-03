@@ -69,7 +69,7 @@ class FileHandler(object):
             return filename, md5
 
         upload_path, cached_md5 = self._getCachedFile(path)
-        filename = os.path.basename(filename)
+        base_filename = os.path.basename(filename)
         if upload_path is None or not cache_file or md5 is not cached_md5:
             upload_path = self.file_storage.upload(orig_path=filename,
                                                    file=path,
@@ -77,7 +77,7 @@ class FileHandler(object):
             if cache_file or md5 is not cached_md5:
                 md5 = self._saveCachedFile(path, upload_path)
         else:
-            getLogger().info("File {} cached, skip uploading".format(filename))
+            getLogger().info("File {} cached, skip uploading".format(base_filename))
         return upload_path, md5
 
     def _getCachedFile(self, path):
