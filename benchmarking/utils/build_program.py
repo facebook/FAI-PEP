@@ -49,13 +49,7 @@ def buildProgramPlatform(dst, repo_dir, framework, frameworks_dir,
 
 
 def getBuildScript(framework, frameworks_dir, platform, dst):
-    if frameworks_dir:
-        try:
-            build_script = _readFromPath(framework, frameworks_dir, platform, dst)
-        except BaseException as e:
-            getLogger().info("We will load from binary due to {}.".format(e))
-            build_script = _readFromBinary(framework, frameworks_dir, platform, dst)
-    else:
+    if not frameworks_dir:
         try:
             build_script = _readFromBinary(framework, frameworks_dir, platform, dst)
         except BaseException as e:
@@ -63,6 +57,12 @@ def getBuildScript(framework, frameworks_dir, platform, dst):
             frameworks_dir = str(os.path.dirname(os.path.realpath(__file__))
                 + "/../../specifications/frameworks")
             build_script = _readFromPath(framework, frameworks_dir, platform, dst)
+    else:
+        try:
+            build_script = _readFromPath(framework, frameworks_dir, platform, dst)
+        except BaseException as e:
+            getLogger().info("We will load from binary due to {}.".format(e))
+            build_script = _readFromBinary(framework, frameworks_dir, platform, dst)
 
     return build_script
 
@@ -96,10 +96,10 @@ def _readFromPath(framework, frameworks_dir, platform, dst):
 def _readFromBinary(framework, frameworks_dir, platform, dst):
     script_path = os.path.join("specifications/frameworks",
         framework, platform, "build.sh")
-    if not pkg_resources.resource_exists("__main__", script_path):
+    if not pkg_resources.resource_exists("aibench", script_path):
         raise Exception(
             "cannot find the build script in the binary under {}.".format(script_path))
-    raw_build_script = pkg_resources.resource_string("__main__", script_path)
+    raw_build_script = pkg_resources.resource_string("aibench", script_path)
     if not os.path.exists(os.path.dirname(dst)):
         os.makedirs(os.path.dirname(dst))
     with open(os.path.join(os.path.dirname(dst), "build.sh"), "w") as f:

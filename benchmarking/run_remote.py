@@ -390,7 +390,7 @@ class RunRemote(object):
         """
         location: //repo/fbsource/fbcode/aibench/...../a.py
         """
-        raw_scm_query = pkg_resources.resource_string("__main__",
+        raw_scm_query = pkg_resources.resource_string("aibench",
             "benchmarking/bin/scm_query.par")
         query_exe = os.path.join(tgt_dir, "scm_query.par")
         with open(query_exe, "wb") as f:
