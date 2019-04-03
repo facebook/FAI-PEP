@@ -13,10 +13,12 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import datetime
 import hashlib
 import json
 import os
-import datetime
+import pkg_resources
+import tempfile
 
 from bridge.file_storages import UploadDownloadFiles
 from utils.custom_logger import getLogger
@@ -38,25 +40,38 @@ class FileHandler(object):
                     self.config = {}
         self._updateConfig()
 
-    def uploadFile(self, f, md5, basefilename, cache_file):
-        if f.startswith("https://") or f.startswith("http://"):
-            return f, md5
-        if f.startswith("//"):
+    def uploadFile(self, filename, md5, basefilename, cache_file):
+        if filename.startswith("https://") or filename.startswith("http://"):
+            return filename, md5
+        if filename.startswith("specifications"):
+            """ We will handle the spcical case here that the file is from
+            internal binary. We will first load it, save it as a temp file, and
+            then return the temp path. In general, we don't encourage this case.
+            """
+            if not pkg_resources.resource_exists("__main__", filename):
+                getLogger().error("Cannot find {}".format(filename))
+            raw_context = pkg_resources.resource_string("__main__", filename)
+            temp_name = filename.split("/")[-1]
+            temp_dir = tempfile.mkdtemp()
+            path = os.path.join(temp_dir, temp_name)
+            with open(path, "w") as f:
+                f.write(raw_context.decode("utf-8"))
+        elif filename.startswith("//"):
             assert self.root_dir, \
                 "root_dir must be specified for relative path"
-            path = self.root_dir + f[1:]
-        elif f.startswith("/"):
-            path = f
+            path = self.root_dir + filename[1:]
+        elif filename.startswith("/"):
+            path = filename
         else:
-            path = os.path.dirname(os.path.realpath(basefilename)) + "/" + f
+            path = os.path.dirname(os.path.realpath(basefilename)) + "/" + filename
 
         if not os.path.isfile(path):
-            return f, md5
+            return filename, md5
 
         upload_path, cached_md5 = self._getCachedFile(path)
-        filename = os.path.basename(f)
+        filename = os.path.basename(filename)
         if upload_path is None or not cache_file or md5 is not cached_md5:
-            upload_path = self.file_storage.upload(orig_path=f,
+            upload_path = self.file_storage.upload(orig_path=filename,
                                                    file=path,
                                                    permanent=False)
             if cache_file or md5 is not cached_md5:
