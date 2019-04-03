@@ -128,7 +128,9 @@ class LabDriver(object):
         raw_args.extend(self.unknowns)
         getLogger().info("Running {} with raw_args {}".format(app_class, raw_args))
         app = app_class(raw_args=raw_args)
-        app.run()
+        res = app.run()
+        if res:
+            return res
 
 
 if __name__ == "__main__":
