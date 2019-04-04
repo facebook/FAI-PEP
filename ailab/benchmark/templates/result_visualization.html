@@ -17,72 +17,91 @@
 <div class="container-fluid">
   <div class="row">
     <div class="col-md-2">
+      <ul class="nav nav-tabs" id="configTab" role="tablist">
+        <li class="nav-item active">
+          <a class="nav-link" id="column-tab" data-toggle="tab" href="#column" role="tab" aria-controls="column" aria-selected="true">Columns</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="filter-tab" data-toggle="tab" href="#filter" role="tab" aria-controls="filter" aria-selected="false">Filters</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="graph-tab" data-toggle="tab" href="#graph" role="tab" aria-controls="graph" aria-selected="false">Graph</a>
+        </li>
+      </ul>
       <form id='selection-form' action="#" method="get" class="form-group">
 
-        <div class="panel panel-default">
-          <div class="panel-body">
-            <h4 style="margin-top: 0">Column Selection</h4>
-            <div class='row'>
-              <div class='col-sm-12'>
-                <button type="button" class="btn btn-primary btn-sm" onClick="toggle(true)"> Select All</button>
-                <button type="button" class="btn btn-primary btn-sm" onClick="toggle(false)"> De-select All</button><br />
-              </div>
-            </div>
-            {% for col_list in available_columns %}
-            <div class='row'>
-              {% for col in col_list %}
-              <div class='col-sm-12'>
-                <input type='checkbox' name='columns' value='{{col}}' id='{{col}}' {% if col in selected_columns %}checked{% endif %}/>
-                <label class='list' for='{{col}}'>{{col}}</label>
-              </div>
-              {% endfor %}
-            </div>
-            {% endfor %}
-          </div>
-        </div>
+        <div class="tab-content" id="configTabContent">
+          <div class="tab-pane active" id="column" role="tabpanel" aria-labelledby="column-tab">
 
-        <div class="panel panel-default">
-          <div class="panel-body">
-            <h4 style="margin-top: 0">Filter</h4>
-            <div class="row">
-              <div id="builder"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="panel panel-default">
-          <div class="panel-body">
-            <h4 style="margin-top: 0">Graph configuration</h4>
-            <div class='row'>
-              <div class='col-sm-12'>
-                <label for="graph-type-dropdown">Graph Type:</label>
-                <select class="form-control" name="graph-type-dropdown" id="graph-type-dropdown">
-                  <option value="line-graph" {% if graph_type == "line-graph" %}selected{% endif %}>Line Graph</option>
-                  <option value="bar-graph" {% if graph_type == "bar-graph" %}selected{% endif %}>Bar Graph</option>
-                </select>
-              </div>
-            </div>
-
-            <div class='row' id='rank-column-select'>
-              <div class='col-sm-12'>
-                <label for="graph-type-dropdown">Rank Column:</label>
-                <select class="form-control" name="rank-column-dropdown" id="rank-column-dropdown">
-                  {% for col_list in available_columns%}
-                    {% for col in col_list %}
-                    <option value='{{col}}' {% if rank_column == col %}selected{% endif %}>{{col}}</option>
-                    {% endfor %}
+            <div class="panel panel-default">
+              <div class="panel-body">
+                <h4 style="margin-top: 0">Column Selection</h4>
+                <div class='row'>
+                  <div class='col-sm-12'>
+                    <button type="button" class="btn btn-primary btn-sm" onClick="toggle(true)"> Select All</button>
+                    <button type="button" class="btn btn-primary btn-sm" onClick="toggle(false)"> De-select All</button><br />
+                  </div>
+                </div>
+                {% for col_list in available_columns %}
+                <div class='row'>
+                  {% for col in col_list %}
+                  <div class='col-sm-12'>
+                    <input type='checkbox' name='columns' value='{{col}}' id='{{col}}' {% if col in selected_columns %}checked{% endif %} />
+                    <label class='list' for='{{col}}'>{{col}}</label>
+                  </div>
                   {% endfor %}
-                </select>
+                </div>
+                {% endfor %}
               </div>
             </div>
-
           </div>
+
+          <div class="tab-pane fade" id="filter" role="tabpanel" aria-labelledby="filter-tab">
+            <div class="panel panel-default">
+              <div class="panel-body">
+                <h4 style="margin-top: 0">Filter</h4>
+                <div class="row">
+                  <div id="builder"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-pane fade" id="graph" role="tabpanel" aria-labelledby="graph-tab">
+            <div class="panel panel-default">
+              <div class="panel-body">
+                <h4 style="margin-top: 0">Graph Configuration</h4>
+                <div class='row'>
+                  <div class='col-sm-12'>
+                    <label for="graph-type-dropdown">Graph Type:</label>
+                    <select class="form-control" name="graph-type-dropdown" id="graph-type-dropdown">
+                      <option value="line-graph" {% if graph_type == "line-graph" %}selected{% endif %}>Line Graph</option>
+                      <option value="bar-graph" {% if graph_type == "bar-graph" %}selected{% endif %}>Bar Graph</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class='row' id='rank-column-select'>
+                  <div class='col-sm-12'>
+                    <label for="graph-type-dropdown">Rank Column:</label>
+                    <select class="form-control" name="rank-column-dropdown" id="rank-column-dropdown">
+                      {% for col_list in available_columns%}
+                        {% for col in col_list %}
+                        <option value='{{col}}' {% if rank_column == col %}selected{% endif %}>{{col}}</option>
+                        {% endfor %}
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            <span>Submit</span>
+          </button>
         </div>
-
-        <button type="submit" class="btn btn-primary">
-          <span>Submit</span>
-        </button>
-
       </form>
       <div id="builder"></div>
     </div>
@@ -95,12 +114,13 @@
         {% include 'table_view.html' %}
       </div>
     </div>
+
   </div>
 </div>
 
 {% load static %}
 <script type="text/javascript">
-   var filter_rules = JSON.parse($.parseHTML("{{filter_rules}}")[0].textContent)
+  var filter_rules = JSON.parse($.parseHTML("{{filter_rules}}")[0].textContent)
 </script>
 <script src="{% static "js/filters.js" %}"></script>
 <script src="{% static "js/form_submission.js" %}"></script>
