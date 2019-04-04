@@ -32,7 +32,7 @@
             <div class='row'>
               {% for col in col_list %}
               <div class='col-sm-12'>
-                <input type='checkbox' name='columns' value='{{col}}' id='{{col}}' />
+                <input type='checkbox' name='columns' value='{{col}}' id='{{col}}' {% if col in selected_columns %}checked{% endif %}/>
                 <label class='list' for='{{col}}'>{{col}}</label>
               </div>
               {% endfor %}
@@ -57,25 +57,24 @@
               <div class='col-sm-12'>
                 <label for="graph-type-dropdown">Graph Type:</label>
                 <select class="form-control" name="graph-type-dropdown" id="graph-type-dropdown">
-                  <option value="line-graph">Line Graph</option>
-                  <option value="bar-graph">Bar Graph</option>
+                  <option value="line-graph" {% if graph_type == "line-graph" %}selected{% endif %}>Line Graph</option>
+                  <option value="bar-graph" {% if graph_type == "bar-graph" %}selected{% endif %}>Bar Graph</option>
                 </select>
               </div>
             </div>
 
-
-              <div class='row' id='rank-column-select'>
-                <div class='col-sm-12'>
-                  <label for="graph-type-dropdown">Rank Column:</label>
-                  <select class="form-control" name="rank-column-dropdown" id="rank-column-dropdown">
-                    {% for col_list in available_columns%}
-                      {% for col in col_list %}
-                      <option value='{{col}}'>{{col}}</option>
-                      {% endfor %}
+            <div class='row' id='rank-column-select'>
+              <div class='col-sm-12'>
+                <label for="graph-type-dropdown">Rank Column:</label>
+                <select class="form-control" name="rank-column-dropdown" id="rank-column-dropdown">
+                  {% for col_list in available_columns%}
+                    {% for col in col_list %}
+                    <option value='{{col}}' {% if rank_column == col %}selected{% endif %}>{{col}}</option>
                     {% endfor %}
-                  </select>
-                </div>
+                  {% endfor %}
+                </select>
               </div>
+            </div>
 
           </div>
         </div>
@@ -100,6 +99,9 @@
 </div>
 
 {% load static %}
+<script type="text/javascript">
+   var filter_rules = JSON.parse($.parseHTML("{{filter_rules}}")[0].textContent)
+</script>
 <script src="{% static "js/filters.js" %}"></script>
 <script src="{% static "js/form_submission.js" %}"></script>
 <script src="{% static "js/graph_configuration.js" %}"></script>

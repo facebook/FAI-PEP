@@ -97,6 +97,10 @@ def visualize(request):
         sort_attr = request.GET.get('sort')
         if sort_attr is None:
             sort_attr = '-' + rank_column
+        else:
+            rank_column = sort_attr
+            if rank_column.startswith('-'):
+                rank_column = rank_column[1:]
         column = sort_attr[1:] if sort_attr.startswith('-') else sort_attr
 
         sorted_qs = qs.order_by(sort_attr)[:10]
@@ -153,6 +157,13 @@ def visualize(request):
 
     data['table'] = table
     data['available_columns'] = zip(*[iter(available_columns)] * COL_PER_ROW)
+
+    # Pass selection states to display
+    data['filter_rules'] = json.dumps(filters)
+    data['graph_type'] = graph_type
+    data['rank_column'] = rank_column
+    data['selected_columns'] = include_column_set
+
     if request.is_ajax():
         rendered_graph = render_to_string('graph_view.html', data, request)
         rendered_table = render_to_string('table_view.html', data, request)

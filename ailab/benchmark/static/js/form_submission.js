@@ -2,6 +2,7 @@ $('#builder').queryBuilder({
   plugins: ['bt-tooltip-errors'],
 
   filters: filters,
+  rules: filter_rules,
 });
 
 var frm = $('#selection-form');
