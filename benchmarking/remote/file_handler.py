@@ -48,9 +48,9 @@ class FileHandler(object):
             internal binary. We will first load it, save it as a temp file, and
             then return the temp path. In general, we don't encourage this case.
             """
-            if not pkg_resources.resource_exists("__main__", filename):
+            if not pkg_resources.resource_exists("aibench", filename):
                 getLogger().error("Cannot find {}".format(filename))
-            raw_context = pkg_resources.resource_string("__main__", filename)
+            raw_context = pkg_resources.resource_string("aibench", filename)
             temp_name = filename.split("/")[-1]
             temp_dir = tempfile.mkdtemp()
             path = os.path.join(temp_dir, temp_name)

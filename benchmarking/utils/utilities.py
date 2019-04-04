@@ -225,8 +225,10 @@ def getMeta(args, platform):
         meta_file = os.path.join("specifications/frameworks",
                                  args.framework, platform,
                                  "meta.json")
-        if pkg_resources.resource_exists("__main__", meta_file):
-            meta = json.loads(pkg_resources.resource_string("__main__", meta_file))
+        if "aibench" in sys.modules and \
+                pkg_resources.resource_exists("aibench", meta_file):
+            meta = json.loads(
+                pkg_resources.resource_string("aibench", meta_file))
             return meta
         else:
             # look for files in the old default place
