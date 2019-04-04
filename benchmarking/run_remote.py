@@ -198,8 +198,8 @@ class RunRemote(object):
             self._printJobQueues()
             return
         if self.args.fetch_status or self.args.fetch_result:
-            self._fetchResult()
-            return
+            result = self._fetchResult()
+            return result
 
         assert self.args.benchmark_file, \
             "--benchmark_file (-b) must be specified"
@@ -455,13 +455,16 @@ class RunRemote(object):
         assert user_identifier, "User identifier must be specified for " \
             "fetching the status and/or result of the previously run benchmarks"
         statuses = self.db.statusBenchmarks(user_identifier)
+        result = None
         if self.args.fetch_status:
-            print(json.dumps(statuses))
+            result = json.dumps(statuses)
         elif self.args.fetch_result:
             ids = ",".join([str(status["id"]) for status in statuses])
             output = self.db.getBenchmarks(ids)
             self._mobilelabResult(output)
-            print(json.dumps(output))
+            result = json.dumps(output)
+        print(result)
+        return result
 
     def _mobilelabResult(self, output):
         # always get the last result
