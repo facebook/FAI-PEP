@@ -35,6 +35,9 @@ from utils.custom_logger import getLogger, setLoggerLevel
 from utils.utilities import getBenchmarks, getMeta, parse_kwarg
 
 parser = argparse.ArgumentParser(description="Run the benchmark remotely")
+parser.add_argument("--async_submit", action="store_true",
+    help="Return once the job has been submitted to db. No need to wait till "
+    "finish so that you can submit mutiple jobs in async way.")
 parser.add_argument("--app_id",
     help="The app id you use to upload/download your file for everstore "
     "and access the job queue")
@@ -53,7 +56,6 @@ parser.add_argument("--devices",
     help="Specify the devices to benchmark on, in comma separated list.")
 parser.add_argument("--devices_config", default=None,
     help="The config file in absolute path to map abbreviations to full names")
-
 parser.add_argument("--env", help="environment variables passed to runtime binary")
 parser.add_argument("--fetch_status", action="store_true",
     help="Fetch the status of already submitted jobs, use together with "
@@ -289,6 +291,8 @@ class RunRemote(object):
                 "info": self.info,
             }
             self.db.submitBenchmarks(data, new_devices, user_identifier, user)
+        if self.args.async_submit:
+            return
         self.url_printer.printURL(self.scuba_dataset,
                                   user_identifier,
                                   benchmarks)
