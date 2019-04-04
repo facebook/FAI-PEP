@@ -13,6 +13,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import copy
 import json
 import os
 
@@ -29,7 +30,7 @@ class Devices(object):
                 self.devices = json.load(f)
         else:
             # otherwise read from internal
-            self.devices = devices_dict
+            self.devices = copy.deepcopy(devices_dict)
         self._elaborateDevices()
 
     def getFullNames(self, devices):
