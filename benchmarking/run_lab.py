@@ -302,6 +302,8 @@ class RunLab(object):
         devices = self._getDevices()
         setLoggerLevel(self.args.logger_level)
         if not self.args.benchmark_db_entry:
+            assert self.args.server_addr is not None, \
+                "Either server_addr or benchmark_db_entry must be specified"
             self.args.benchmark_db_entry = self.args.server_addr + "benchmark/"
         self.db = DBDriver(self.args.benchmark_db,
                            self.args.app_id,
