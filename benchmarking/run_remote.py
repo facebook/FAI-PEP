@@ -35,21 +35,25 @@ from utils.custom_logger import getLogger, setLoggerLevel
 from utils.utilities import getBenchmarks, getMeta, parse_kwarg
 
 parser = argparse.ArgumentParser(description="Run the benchmark remotely")
-parser.add_argument("--async_submit", action="store_true",
-    help="Return once the job has been submitted to db. No need to wait till "
-    "finish so that you can submit mutiple jobs in async way.")
 parser.add_argument("--app_id",
     help="The app id you use to upload/download your file for everstore "
     "and access the job queue")
+parser.add_argument("--async_submit", action="store_true",
+    help="Return once the job has been submitted to db. No need to wait till "
+    "finish so that you can submit mutiple jobs in async way.")
 parser.add_argument("-b", "--benchmark_file",
     help="Specify the json file for the benchmark or a number of benchmarks")
+parser.add_argument("--benchmark_db",
+    help="The database that will store benchmark infos")
+parser.add_argument("--benchmark_db_entry",
+    help="The entry point of server's database")
+parser.add_argument("--benchmark_table",
+    help="The table that will store benchmark infos")
+parser.add_argument("-c", "--custom_binary",
+    help="Specify the custom binary that you want to run.")
 parser.add_argument("--cache_config", required=True,
     help="The config file to specify the cached uploaded files. If the files "
     "are already uploaded in the recent past, do not upload again.")
-parser.add_argument("-c", "--custom_binary",
-    help="Specify the custom binary that you want to run.")
-parser.add_argument("--pre_built_binary",
-    help="Specify the pre_built_binary to bypass the building process.")
 parser.add_argument("--debug", action="store_true",
             help="Debug mode to retain all the running binaries and models.")
 parser.add_argument("--devices",
@@ -57,12 +61,16 @@ parser.add_argument("--devices",
 parser.add_argument("--devices_config", default=None,
     help="The config file in absolute path to map abbreviations to full names")
 parser.add_argument("--env", help="environment variables passed to runtime binary")
-parser.add_argument("--fetch_status", action="store_true",
-    help="Fetch the status of already submitted jobs, use together with "
-    "--user_identifier")
 parser.add_argument("--fetch_result", action="store_true",
     help="Fetch the result of already submitted jobs, use together with "
     "--user_identifier")
+parser.add_argument("--fetch_status", action="store_true",
+    help="Fetch the status of already submitted jobs, use together with "
+    "--user_identifier")
+parser.add_argument("--file_storage",
+    help="The storage engine for uploading and downloading files")
+parser.add_argument("--force_submit", action="store_true",
+    help="Force to submit the run.")
 parser.add_argument("--framework",
     choices=["caffe2", "generic", "oculus", "pytorch", "tflite"],
     help="Specify the framework to benchmark on.")
@@ -82,22 +90,26 @@ parser.add_argument("--list_job_queues", action="store_true",
 parser.add_argument("--logger_level", default="info",
     choices=["info", "warning", "error"],
     help="Specify the logger level")
-parser.add_argument("--string_map",
-    help="The json serialized arguments passed into treatment for remote run.")
 parser.add_argument("--platform",
     help="Specify the platform to benchmark on."
     "Use this flag if the framework"
     " needs special compilation scripts. The scripts are called build.sh "
     "saved in specifications/frameworks/<framework>/<platforms> directory")
-parser.add_argument("--force_submit", action="store_true",
-    help="Force to submit the run.")
+parser.add_argument("--pre_built_binary",
+    help="Specify the pre_built_binary to bypass the building process.")
 parser.add_argument("--repo_dir",
     help="Required. The base framework repo directory used for benchmark.")
+parser.add_argument("--result_db",
+    help="The database that will store benchmark results")
 parser.add_argument("--root_model_dir",
     help="The root model directory if the meta data of the model uses "
     "relative directory, i.e. the location field starts with //")
 parser.add_argument("--screen_reporter", action="store_true",
     help="Display the summary of the benchmark result on screen.")
+parser.add_argument("--server_addr",
+    help="The lab's server address")
+parser.add_argument("--string_map",
+    help="The json serialized arguments passed into treatment for remote run.")
 parser.add_argument("--test", action="store_true",
     help="Indicate whether this is a test run. Test runs use a different database.")
 parser.add_argument("--token",
@@ -107,18 +119,6 @@ parser.add_argument("--user_identifier",
     help="The identifier user pass in to differentiate different benchmark runs.")
 parser.add_argument("--user_string",
     help="The user_string pass in to differentiate different regression benchmark runs.")
-parser.add_argument("--file_storage",
-    help="The storage engine for uploading and downloading files")
-parser.add_argument("--benchmark_db_entry",
-    help="The entry point of server's database")
-parser.add_argument("--server_addr",
-    help="The lab's server address")
-parser.add_argument("--result_db",
-    help="The database that will store benchmark results")
-parser.add_argument("--benchmark_db",
-    help="The database that will store benchmark infos")
-parser.add_argument("--benchmark_table",
-    help="The table that will store benchmark infos")
 
 
 class BuildProgram(threading.Thread):
