@@ -14,6 +14,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import argparse
+from collections import defaultdict
 from getpass import getuser
 import json
 import os
@@ -97,6 +98,8 @@ parser.add_argument("--platform",
     "saved in specifications/frameworks/<framework>/<platforms> directory")
 parser.add_argument("--pre_built_binary",
     help="Specify the pre_built_binary to bypass the building process.")
+parser.add_argument("--query_num_devices",
+    help="Return the counter of user specified device name under different condition")
 parser.add_argument("--repo_dir",
     help="Required. The base framework repo directory used for benchmark.")
 parser.add_argument("--result_db",
@@ -204,6 +207,8 @@ class RunRemote(object):
         if self.args.fetch_status or self.args.fetch_result:
             result = self._fetchResult()
             return result
+        if self.args.query_num_devices:
+            return self._queryNumDevices(self.args.query_num_devices)
 
         assert self.args.benchmark_file, \
             "--benchmark_file (-b) must be specified"
@@ -441,6 +446,15 @@ class RunRemote(object):
         if deivesNotIn:
             raise Exception("Devices {}".format(deivesNotIn) +
                 " is not available in the job_queue {}".format(self.args.job_queue))
+
+    def _queryNumDevices(self, device_name):
+        deviceCounter = defaultdict(int)
+        for device in self.db.listDevices(self.args.job_queue):
+            abbrs = self.devices.getAbbrs(device["device"])
+            if device["device"] == device_name or device_name in (abbrs or []):
+                deviceCounter[device["status"]] += 1
+
+        return deviceCounter
 
     def _listJobQueues(self):
         devices = self.db.listDevices(job_queue="*")

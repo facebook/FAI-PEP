@@ -47,7 +47,9 @@ class RunBench(object):
         raw_args = self._getRawArgs()
         app = self.repoCls(raw_args=raw_args)
         ret = app.run()
-        if ret and json.loads(ret):
+        if "--query_num_devices" in self.unknowns:
+            return ret
+        if "--fetch_status" in self.unknowns or "--fetch_result" in self.unknowns:
             return ret
         if ret is not None:
             setRunStatus(ret >> 8)
