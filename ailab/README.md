@@ -71,7 +71,13 @@ mkdir -p /usr/local/etc/nginx/sites-{enabled,available}
 cp ailab_nginx.conf /usr/local/etc/nginx/sites-available
 ln -s /usr/local/etc/nginx/sites-available/ailab_nginx.conf /usr/local/etc/nginx/sites-enabled/
 ```
-7. Restart nginx service in production setting
+7. Update nginx.conf to add the following line in the http section if
+it doesn't exit
+```
+include       /usr/local/etc/nginx/sites-enabled/*.conf;
+```
+
+8. Restart nginx service in production setting
 ```
 nginx -s stop
 nginx
