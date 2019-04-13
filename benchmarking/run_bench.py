@@ -45,10 +45,11 @@ class RunBench(object):
 
     def run(self):
         raw_args = self._getRawArgs()
-        # server address must start with http
-        assert "--server_addr" in raw_args
-        idx = raw_args.index("--server_addr")
-        assert raw_args[idx+1].startswith("http")
+        if "--remote" in raw_args:
+            # server address must start with http
+            assert "--server_addr" in raw_args
+            idx = raw_args.index("--server_addr")
+            assert raw_args[idx+1].startswith("http")
         app = self.repoCls(raw_args=raw_args)
         ret = app.run()
         if "--query_num_devices" in self.unknowns:
