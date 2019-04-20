@@ -76,7 +76,7 @@ parser.add_argument("--reboot", action="store_true",
 parser.add_argument("--remote_reporter", required=True,
     help="Save the result to a remote server. "
     "The style is <domain_name>/<endpoint>|<category>")
-parser.add_argument("--remote_access_token", required=True,
+parser.add_argument("--remote_access_token", default="",
     help="The access token to access the remote server")
 parser.add_argument("--root_model_dir",
     help="The root model directory if the meta data of the model uses "
@@ -304,7 +304,7 @@ class RunLab(object):
         if not self.args.benchmark_db_entry:
             assert self.args.server_addr is not None, \
                 "Either server_addr or benchmark_db_entry must be specified"
-            self.args.benchmark_db_entry = self.args.server_addr + "benchmark/"
+            self.args.benchmark_db_entry = self.args.server_addr + "/benchmark/"
         self.db = DBDriver(self.args.benchmark_db,
                            self.args.app_id,
                            self.args.token,

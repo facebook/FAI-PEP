@@ -45,6 +45,11 @@ class RunBench(object):
 
     def run(self):
         raw_args = self._getRawArgs()
+        if "--remote" in raw_args:
+            # server address must start with http
+            assert "--server_addr" in raw_args
+            idx = raw_args.index("--server_addr")
+            assert raw_args[idx+1].startswith("http")
         app = self.repoCls(raw_args=raw_args)
         ret = app.run()
         if "--query_num_devices" in self.unknowns:
@@ -126,6 +131,8 @@ class RunBench(object):
 
     def _loadDefaultArgs(self):
         args = {
+            '--benchmark_table': 'benchmark_benchmarkinfo',
+            '--cache_config': os.path.join(self.root_dir, "cache_config.txt"),
             '--remote_repository': 'origin',
             '--commit': 'master',
             '--commit_file': os.path.join(self.root_dir, "processed_commit"),
@@ -133,9 +140,10 @@ class RunBench(object):
             '--framework': 'caffe2',
             '--local_reporter': os.path.join(self.root_dir, "reporter"),
             '--repo': 'git',
+            '--root_model_dir': os.path.join(self.root_dir, "root_model_dir"),
             '--status_file': os.path.join(self.root_dir, "status"),
             '--model_cache': os.path.join(self.root_dir, "model_cache"),
-            '--platforms': 'android',
+            '--platform': 'android',
             '--file_storage': 'django',
             '--timeout': 300,
             '--logger_level': 'warning',
