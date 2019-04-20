@@ -22,6 +22,7 @@ import logging
 import multiprocessing
 import os
 import stat
+import shutil
 import tempfile
 import threading
 import time
@@ -215,6 +216,10 @@ class runAsync(object):
 
     def _removeBenchmarkFiles(self):
         benchmark_file = self.job["benchmarks"]["benchmark"]["content"]
+        try:
+            shutil.rmtree(self.args.root_model_dir + "/everstore")
+        except BaseException:
+            pass
         os.remove(benchmark_file)
 
     def _collectBenchmarkData(self, output_dir):
@@ -409,7 +414,7 @@ class RunLab(object):
         # run the benchmarks
         for job in jobs_queue:
             tempdir = tempfile.mkdtemp()
-            raw_args = self._getRawArgs(job, tempdir)
+            raw_args = self._getRawArgs(job)
             self.devices[job["device"]][job["hash"]]["start_time"] = time.ctime()
             app = runAsync(self.args, self.devices, self.db, job, tempdir)
 
@@ -524,7 +529,7 @@ class RunLab(object):
         devices = json.loads(devices_json.strip())
         return devices
 
-    def _getRawArgs(self, job, tempdir):
+    def _getRawArgs(self, job):
         if "info" in job["benchmarks"]:
             info = job["benchmarks"]["info"]
         elif "program" in job["benchmarks"]:
@@ -553,7 +558,6 @@ class RunLab(object):
             "--platform", self.args.platform,
             "--remote_access_token", self.args.remote_access_token,
             "--root_model_dir", self.args.root_model_dir,
-            "--simple_local_reporter", tempdir,
             "--user_identifier", str(job["identifier"]),
         ])
         if job["framework"] != "generic":
