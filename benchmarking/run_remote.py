@@ -118,6 +118,8 @@ parser.add_argument("--test", action="store_true",
 parser.add_argument("--token",
     help="The token you use to upload/download your file for everstore "
     "and access the job queue")
+parser.add_argument("--urlPrefix",
+    help="URL Prefix if you want to find your result from the URL.")
 parser.add_argument("--user_identifier",
     help="The identifier user pass in to differentiate different benchmark runs.")
 parser.add_argument("--user_string",
@@ -468,7 +470,7 @@ class RunRemote(object):
 
     def _screenReporter(self, user_identifier):
         reporter = ScreenReporter(self.db, self.devices, self.args.debug)
-        reporter.run(user_identifier)
+        reporter.run(user_identifier, self.args.urlPrefix)
 
     def _fetchResult(self):
         user_identifier = self.args.user_identifier
