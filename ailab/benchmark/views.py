@@ -77,7 +77,6 @@ def visualize(request):
             'condition': 'AND',
             'rules': [{}],
         }
-        print(filters)
 
     # Build table with specified columns
     table = ResultTable(qs)
