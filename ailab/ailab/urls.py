@@ -19,8 +19,11 @@ from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 
+from .views import redirect_to_viz
+
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    url(r'^$', redirect_to_viz),
     url(r'^benchmark/', include('benchmark.urls')),
     url(r'^upload/', include('file_storage.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) +\
