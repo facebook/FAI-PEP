@@ -32,7 +32,7 @@ except ImportError:
     from .secret_key import SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
@@ -94,8 +94,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'ailab',
-        'USER': 'admin',
-        'PASSWORD': '',
+        'USER': 'fsun',
+        'PASSWORD': 'FSun!234',
         'HOST': 'localhost',
     }
 }
