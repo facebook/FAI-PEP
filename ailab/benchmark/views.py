@@ -73,6 +73,11 @@ def visualize(request):
         qs = BenchmarkResult.objects.filter(result_q)
     else:
         qs = BenchmarkResult.objects.all()
+        filters = {
+            'condition': 'AND',
+            'rules': [{}],
+        }
+        print(filters)
 
     # Build table with specified columns
     table = ResultTable(qs)
