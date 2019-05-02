@@ -72,7 +72,16 @@ class DownloadBenchmarks(object):
                 self._downloadTestFiles(test["postprocess"]["files"])
 
     def downloadFile(self, location, md5):
-        if location[0:2] != "//":
+        if location.startswith("http"):
+            dirs = location.split(":/")
+            replace_pattern = {
+                    ' ': '-',
+                    '\\': '-',
+                    ':': '/',
+            }
+            path = self.root_model_dir + '/' +\
+                    getFilename(location, replace_pattern=replace_pattern)
+        elif not location.startswith("//"):
             return
         else:
             dirs = location[2:].split("/")

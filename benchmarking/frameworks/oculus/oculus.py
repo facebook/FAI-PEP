@@ -64,7 +64,8 @@ class OculusFramework(FrameworkBase):
         program = platform.copyFilesToPlatform(
                 info["programs"]["program"]["location"],
                 info["programs"]["program"]["dest_path"])
-        commands = self._composeRunCommand(program, platform, test,
+        env_vars = info["programs"]["program"].get("env_variables", "")
+        commands = self._composeRunCommand(env_vars, program, platform, test,
                                            inputs, outputs)
         platform.runBenchmark(commands, log_to_screen_only=True)
 
@@ -139,9 +140,9 @@ class OculusFramework(FrameworkBase):
             assert "metric" in test, \
                 "metric must exist in test in benchmark {}".format(filename)
 
-    def _composeRunCommand(self, program, platform,
+    def _composeRunCommand(self, env_vars, program, platform,
                            test, inputs, outputs):
-        cmd = [program,
+        cmd = [env_vars, program,
                "--json", platform.getOutputDir() + "report.json",
                "--input", ' ' .join(inputs),
                "--output", ' '.join(outputs)]
