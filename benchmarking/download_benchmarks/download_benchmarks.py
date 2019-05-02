@@ -73,16 +73,15 @@ class DownloadBenchmarks(object):
 
     def downloadFile(self, location, md5):
         if location.startswith("http"):
-            if location[0:2] != "//":
-                dirs = location.split(":/")
-                replace_pattern = {
-                        ' ': '-',
-                        '\\': '-',
-                        ':': '/',
-                }
-                path = self.root_model_dir + '/' +\
-                       getFilename(location, replace_pattern=replace_pattern)
-        elif location[0:2] != "//":
+            dirs = location.split(":/")
+            replace_pattern = {
+                    ' ': '-',
+                    '\\': '-',
+                    ':': '/',
+            }
+            path = self.root_model_dir + '/' +\
+                    getFilename(location, replace_pattern=replace_pattern)
+        elif not location.startswith("//"):
             return
         else:
             dirs = location[2:].split("/")
