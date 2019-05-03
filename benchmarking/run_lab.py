@@ -22,6 +22,7 @@ import logging
 import multiprocessing
 import os
 import stat
+import sys
 import tempfile
 import threading
 import time
@@ -502,6 +503,7 @@ class RunLab(object):
                         control_info = job["benchmarks"]["info"]["control"]
                         self._downloadBinaries(control_info)
             except Exception:
+                getLogger().error("Unknown exception {}".format(sys.exc_info()[0]))
                 getLogger().error("File download failure")
         return benchmark_files
 

@@ -165,7 +165,6 @@ class BuildProgram(threading.Thread):
                 allfiles = [program]
             else:
                 allfiles = [os.path.join(filedir, f) for f in os.listdir(filedir)]
-
             for fn in allfiles:
                 filename, _ = self.file_handler.uploadFile(fn, None, None, False)
                 getLogger().info("program: {}".format(filename))
@@ -183,7 +182,7 @@ class RunRemote(object):
         if not self.args.benchmark_db_entry:
             assert self.args.server_addr is not None, \
                 "Either server_addr or benchmark_db_entry must be specified"
-            self.args.benchmark_db_entry = self.args.server_addr + "benchmark/"
+            self.args.benchmark_db_entry = self.args.server_addr + "/benchmark/"
         self.db = DBDriver(self.args.benchmark_db,
                            self.args.app_id,
                            self.args.token,
@@ -302,6 +301,7 @@ class RunRemote(object):
             self.db.submitBenchmarks(data, new_devices, user_identifier, user)
         if self.args.async_submit:
             return
+
         self.url_printer.printURL(self.scuba_dataset,
                                   user_identifier,
                                   benchmarks)

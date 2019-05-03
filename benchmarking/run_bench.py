@@ -117,6 +117,8 @@ class RunBench(object):
 
     def _askArgsFromUser(self, args, new_args):
         args.update(new_args)
+        if "--server_addr" in args and "--remote_reporter" not in args:
+            args["--remote_reporter"] = args["--server_addr"] + "/benchmark/store-result|oss"
         self._inputOneRequiredArg(
             "Please enter the directory the framework repo resides",
             "--repo_dir", args)
@@ -149,6 +151,7 @@ class RunBench(object):
             '--timeout': 300,
             '--logger_level': 'warning',
             '--server_addr': "http://127.0.0.1:8000",
+            '--result_db': "django",
         }
         return args
 

@@ -11,7 +11,7 @@ def store_result(data):
     for log in logs:
         store_single_entry(log)
 
-    return {"status": "success"}
+    return {"status": "success", "count": len(logs)}
 
 
 def store_single_entry(log):

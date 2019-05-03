@@ -94,19 +94,21 @@ nginx
 ```
 python manage.py collectstatic --clear
 ```
-2. Start uWSGI from this directory in production setting
+2. Start uWSGI from this directory in production setting.
+Need to increase the buffer size since the URL may be quite long.
 ```
-uwsgi --socket :8001 --module ailab.wsgi
+uwsgi --socket :8001 --module ailab.wsgi -b 32768
 ```
 
 Now, the server should be up and running, ready to receive requests.
 
 
 ## Start Lab
-On server, inside `benchmarking` directory, run:
+On server, inside `benchmarking` directory, run the following command to start an android lab:
 ```
-python run_bench.py --lab --claimer_id <claimer_id> --server_addr <server_name> --remote_reporter "<server_name>/benchmark/store-result|oss"
+python run_bench.py --lab --claimer_id <claimer_id> --server_addr <server_name> --remote_reporter "<server_name>/benchmark/store-result|oss" --platform android
 ```
+The lab needs to be able to build android binary.
 
 ## Run Benchmark Remotely
 On another machine, inside `benchmarking` directory, invoke the lab by running:
