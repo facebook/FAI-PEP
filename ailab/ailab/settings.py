@@ -94,8 +94,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'ailab',
-        'USER': 'fsun',
-        'PASSWORD': 'FSun!234',
+        'USER': 'admin',
+        'PASSWORD': '',
         'HOST': 'localhost',
     }
 }
