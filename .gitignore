@@ -72,5 +72,8 @@ ailab/*/migrations/*.py
 # Django secret key
 ailab/ailab/secret_key.py
 
+# Django settings
+ailab/ailab/settings.py
+
 ailab/static/
 ailab/media/
