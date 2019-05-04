@@ -6,7 +6,7 @@ cd "$1"
 
 # build benchmark binary
 # assuming the configure has set up the NDK and SDK correctly
-bazel build -c opt \
+bazel build -c opt --linkopt -latomic\
   tensorflow/lite/tools/benchmark:benchmark_model
 
 cd ${DIR}
