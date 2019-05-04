@@ -7,10 +7,12 @@ DIR=${PWD}
 cd "$1"
 unamestr=`uname`
 echo "OS is $unamestr"
+
 LINKER_OPTS=""
-if [[ "$unamestr" == 'Linux' ]]; then
+if [ "$unamestr" = 'Linux' ]; then
   LINKER_OPTS="--linkopt -latomic"
 fi
+echo "OPTS: ${LINKER_OPTS}"
 # build benchmark binary
 # assuming the configure has set up the NDK and SDK correctly
 bazel build -c opt ${LINKER_OPTS} \
