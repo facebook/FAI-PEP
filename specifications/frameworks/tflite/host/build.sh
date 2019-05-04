@@ -6,10 +6,10 @@ DIR=${PWD}
 # the configure must be run once beforehand
 cd "$1"
 
-echo "OS is ${uname}"
+echo "OS is $(uname)"
 
 LINKER_OPTS=""
-if [ "${uname}" = 'Linux' ]; then
+if [ "$(uname)" = 'Linux' ]; then
   LINKER_OPTS="--linkopt -latomic"
 fi
 echo "OPTS: ${LINKER_OPTS}"
