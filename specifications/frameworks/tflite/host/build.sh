@@ -1,9 +1,12 @@
 #!/bin/sh
 
+set -ex
+
 DIR=${PWD}
 # the configure must be run once beforehand
 cd "$1"
 unamestr=`uname`
+echo "OS is $unamestr"
 LINKER_OPTS=""
 if [[ "$unamestr" == "Linux" ]]; then
   LINKER_OPTS="--linkopt -latomic"
