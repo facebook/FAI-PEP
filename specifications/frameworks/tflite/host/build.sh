@@ -15,7 +15,7 @@ fi
 echo "OPTS: ${LINKER_OPTS}"
 # build benchmark binary
 # assuming the configure has set up the NDK and SDK correctly
-bazel build -c opt "${LINKER_OPTS}" \
+bazel build -c opt ${LINKER_OPTS} \
   tensorflow/lite/tools/benchmark:benchmark_model
 
 cd ${DIR}
