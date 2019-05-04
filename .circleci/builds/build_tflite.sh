@@ -20,3 +20,5 @@ export PATH="$PATH:$HOME/bin"
 
 rm -rf ${REPO_DIR}
 git clone --recursive --quiet https://github.com/tensorflow/tensorflow.git "$REPO_DIR"
+
+echo "$OSTYPE"
