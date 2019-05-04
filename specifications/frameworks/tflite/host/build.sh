@@ -3,9 +3,9 @@
 DIR=${PWD}
 # the configure must be run once beforehand
 cd "$1"
-
+unamestr=`uname`
 LINKER_OPTS=""
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
+if [[ "$unamestr" == "Linux" ]]; then
   LINKER_OPTS="--linkopt -latomic"
 fi
 # build benchmark binary
