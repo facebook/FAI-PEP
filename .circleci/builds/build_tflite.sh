@@ -2,7 +2,7 @@
 
 set -ex
 
-BAZEL_VER=0.23.1
+BAZEL_VER=0.25.0
 BAZEL_DIR=/tmp/bazel
 BAZEL=bazel-${BAZEL_VER}-installer-linux-x86_64.sh
 REPO_DIR=/tmp/tensorflow
