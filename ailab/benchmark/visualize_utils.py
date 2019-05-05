@@ -43,7 +43,7 @@ def construct_q(filters):
     if 'condition' not in filters:
         return construct_single_q(filters)
 
-    q_list = [construct_single_q(rule) for rule in filters['rules']]
+    q_list = [construct_q(rule) for rule in filters['rules']]
 
     if filters['condition'] == 'AND':
         q_obj = reduce(operator.and_, q_list)
