@@ -20,6 +20,7 @@ pip install Django
   ```
   CREATE DATABSE <databse_name>
   ```
+- Copy `ailab/settings_base.py` to `ailab/settings.py`
 - In `ailab/settings.py`, speficy `NAME`, `USER` and `PASSWORD` with the name
 of the database, username and password of MySQL.
 - If using Ubuntu, install `python-dev` and `libmysqlclient-dev` for `MySQL-python` (ref: https://codeinthehole.com/tips/how-to-set-up-mysql-for-python-on-ubuntu/)
