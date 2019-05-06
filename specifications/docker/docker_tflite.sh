@@ -27,7 +27,7 @@ REPO_DIR=/tmp/tensorflow
 LOCAL_REPORTER_DIR=/tmp/reporter
 
 BAZEL_DIR=/tmp/bazel
-BAZEL=bazel-0.18.1-installer-linux-x86_64.sh
+BAZEL=bazel-0.25.0-installer-linux-x86_64.sh
 
 BENCHMARK_FILE=${FAI_PEP_DIR}/specifications/models/tflite/mobilenet_v2/mobilenet_v2_0.35_96.json
 
@@ -62,7 +62,7 @@ if [ ! -z ${BAZEL_DIR} ]; then
   mkdir -p ${BAZEL_DIR}
 fi
 if [ ! -f ${BAZEL_DIR}/${BAZEL} ]; then
-  wget -q -O ${BAZEL_DIR}/${BAZEL} https://github.com/bazelbuild/bazel/releases/download/0.18.1/${BAZEL}
+  wget -q -O ${BAZEL_DIR}/${BAZEL} https://github.com/bazelbuild/bazel/releases/download/0.25.0/${BAZEL}
 fi
 chmod +x ${BAZEL_DIR}/${BAZEL}
 ${BAZEL_DIR}/${BAZEL} --user
