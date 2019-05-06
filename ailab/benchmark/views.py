@@ -9,12 +9,12 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django_tables2 import RequestConfig
 
-import db_controller
-import benchmark_result_controller
-from result_table import ResultTable
+from .db_controller import get_payload
+from .benchmark_result_controller import store_result
+from .result_table import ResultTable
 from .models import BenchmarkResult
 
-import visualize_utils as utils
+from .visualize_utils import construct_q
 
 
 PLOTABLE_COL_SET = {
@@ -37,7 +37,7 @@ COL_PER_ROW = 1
 @csrf_exempt
 def handle_request(request):
     data = request.POST.copy()
-    results = db_controller.get_payload(data)
+    results = get_payload(data)
 
     return JsonResponse(results)
 
@@ -45,7 +45,7 @@ def handle_request(request):
 @csrf_exempt
 def store_benchmark_result(request):
     data = json.loads(request.body)
-    results = benchmark_result_controller.store_result(data)
+    results = store_result(data)
 
     return JsonResponse(results)
 
@@ -69,7 +69,7 @@ def visualize(request):
     filters = {} if request.GET.get('filters') is None \
         else json.loads(request.GET.get('filters'))
     if len(filters) != 0 and filters['valid']:
-        result_q = utils.construct_q(filters)
+        result_q = construct_q(filters)
         qs = BenchmarkResult.objects.filter(result_q)
     else:
         qs = BenchmarkResult.objects.all()

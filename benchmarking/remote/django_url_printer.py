@@ -26,7 +26,7 @@ DISPLAY_COLUMNS = [
 class DjangoURLPrinter(URLPrinterBase):
     def __init__(self, args):
         self.args = args
-        self.db_url = self.args.server_addr + DJANGO_SUB_URL
+        self.db_url = self.args.server_addr + "/" + DJANGO_SUB_URL
 
     def getColumnSelParams(self):
         col_sel_params = []
@@ -87,7 +87,12 @@ class DjangoURLPrinter(URLPrinterBase):
     def printURL(self, dataset, user_identifier, benchmarks):
         params = self.getDjangoParams(user_identifier)
 
-        param_string = urllib.urlencode(params)
+        try:
+            # pytyon 2
+            param_string = urllib.urlencode(params)
+        except Exception:
+            # python 3
+            param_string = urllib.parse.urlencode(params)
 
         url = (
             self.db_url + "?{}"
