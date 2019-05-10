@@ -42,7 +42,7 @@ class PlatformBase(object):
         else:
             # otherwise read from internal
             try:
-                from specifications.hash_platform_mapping import hash_platform_mapping
+                from aibench.specifications.hash_platform_mapping import hash_platform_mapping
                 self.hash_platform_mapping = hash_platform_mapping
             except BaseException:
                 pass
