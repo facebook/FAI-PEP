@@ -56,7 +56,7 @@ class LabDriver(object):
             assert self.args.benchmark_file, \
                 "--benchmark_file (-b) must be specified"
 
-        if self.args.benchmark_file:
+        if self.args.benchmark_file and not self.args.remote:
             getLogger().info("Checking benchmark files to download")
             dbench = DownloadBenchmarks(self.args,
                                         getLogger())
