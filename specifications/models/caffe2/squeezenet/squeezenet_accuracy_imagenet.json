@@ -21,7 +21,7 @@
       "commands": [
         "mkdir -p {HOSTDIR}/inputs",
         "mkdir -p {HOSTDIR}/outputs",
-        "{FAIPEPROOT}/libraries/python/imagenet_test_map.py --limit-files {total_images} --limit-per-category 1 --image-dir {IMAGENET_DIR}/val/ --label-file {IMAGENET_DIR}/labels.txt --output-image-file {HOSTDIR}/images.txt --output-label-file {HOSTDIR}/labels.txt --shuffle"
+        "{FAIPEPROOT}/libraries/python/imagenet_test_map.py --limit-files {total_images} --limit-per-category 1 --image-dir {IMAGENET_DIR}/val/ --label-file {FAIPEPROOT}/libraries/python/labels.txt --output-image-file {HOSTDIR}/images.txt --output-label-file {HOSTDIR}/labels.txt --shuffle"
       ]
     },
     "postprocess": {
