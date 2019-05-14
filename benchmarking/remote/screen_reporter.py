@@ -70,7 +70,7 @@ class ScreenReporter(object):
         output = self.xdb.getBenchmarks(str(s["id"]))
         for r in output:
             if s["status"] == "DONE":
-                res = json.loads(r["result"])
+                res = json.loads(r["result"]) if r["result"] else []
                 benchmarks = json.loads(r["benchmarks"])
                 metric = benchmarks["benchmark"]["content"]["tests"][0]["metric"]
                 for identifier in res:
