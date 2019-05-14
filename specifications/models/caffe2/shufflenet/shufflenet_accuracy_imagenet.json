@@ -1,5 +1,6 @@
 {
   "model": {
+    "batch_size": "1",
     "category": "CNN",
     "description": "Trained Shufflenet model on Caffe2, running on imagenet dataset",
     "files": {
@@ -16,7 +17,6 @@
     },
     "format": "caffe2",
     "images_per_iter": "{total_images}/{repeat}",
-    "batch_size": "1",
     "kind": "deployment",
     "name": "shufflenet",
     "postprocess": {
@@ -28,7 +28,7 @@
       "commands": [
         "mkdir -p {HOSTDIR}/inputs",
         "mkdir -p {HOSTDIR}/outputs",
-        "{FAIPEPROOT}/libraries/python/imagenet_test_map.py --image-dir {IMAGENET_DIR}/val/ --label-file {IMAGENET_DIR}/labels.txt --output-image-file {HOSTDIR}/images.txt --output-label-file {HOSTDIR}/labels.txt --shuffle"
+        "{FAIPEPROOT}/libraries/python/imagenet_test_map.py --image-dir {IMAGENET_DIR}/val/ --label-file {FAIPEPROOT}/libraries/python/labels.txt --output-image-file {HOSTDIR}/images.txt --output-label-file {HOSTDIR}/labels.txt --shuffle"
       ]
     },
     "repeat": 1000,
