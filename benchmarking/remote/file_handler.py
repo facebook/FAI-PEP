@@ -66,6 +66,7 @@ class FileHandler(object):
             path = os.path.dirname(os.path.realpath(basefilename)) + "/" + filename
 
         if not os.path.isfile(path):
+            getLogger().info("Skip uploading {}".format(filename))
             return filename, md5
 
         upload_path, cached_md5 = self._getCachedFile(path)
