@@ -45,12 +45,15 @@ class RunBench(object):
 
     def run(self):
         raw_args = self._getRawArgs()
-        if "--remote" in raw_args:
+        if "--remote" in raw_args or "--lab" in raw_args:
 
             # server address must start with http
             assert "--server_addr" in raw_args
             idx = raw_args.index("--server_addr")
-            assert raw_args[idx+1].startswith("http") or len(raw_args[idx+1]) == 0
+            assert raw_args[idx + 1].startswith("http") or len(raw_args[idx + 1]) == 0
+        if "--lab" in raw_args and "--remote_reporter" not in raw_args:
+            raw_args.extend(["--remote_reporter",
+                raw_args["--server_addr"] + "/benchmark/store-result|oss"])
         app = self.repoCls(raw_args=raw_args)
         ret = app.run()
         if "--query_num_devices" in self.unknowns:
@@ -117,8 +120,6 @@ class RunBench(object):
 
     def _askArgsFromUser(self, args, new_args):
         args.update(new_args)
-        if "--server_addr" in args and "--remote_reporter" not in args:
-            args["--remote_reporter"] = args["--server_addr"] + "/benchmark/store-result|oss"
         self._inputOneRequiredArg(
             "Please enter the directory the framework repo resides",
             "--repo_dir", args)
