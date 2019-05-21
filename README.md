@@ -2,14 +2,14 @@
 
 [![CircleCI](https://circleci.com/gh/facebook/FAI-PEP.svg?style=svg)](https://circleci.com/gh/facebook/FAI-PEP)
 
-Facebook AI Performance Evaluation Platform is a framework and backend agnostic benchmarking platform to compare machine learning inferencing runtime metrics on a set of models and a variety of backends. It also provides a means to check performance regressions on each commit. It is licensed under Apache License 2.0. Please refer to the [LICENSE](/LICENSE) file for details.
+Facebook AI Performance Evaluation Platform is a framework and backend agnostic benchmarking platform to compare machine learning inferencing runtime metrics on a set of models and on variety of backends. It also provides a means to check performance regressions on each commit. It is licensed under Apache License 2.0. Please refer to the [LICENSE](/LICENSE) file for details.
 
-Currently the following performance metrics are collected:
+Currently, the following performance metrics are collected:
 
-* delay : the latency of running the entire network and/or the delay of running each individual operator.
-* error : the error between the values of the outputs running a model and the golden outputs.
-* energy/power : the energy per inference and average power of running the the ML model on a phone without battery.
-* any metric user provides : the harness can accept any metric that the user binary generates.
+* Delay : the latency of running the entire network and/or the delay of running each individual operator.
+* Error : the error between the values of the outputs running a model and the golden outputs.
+* Energy/Power : the energy per inference and average power of running the ML model on a phone without battery.
+* Other User Provided Metrics : the harness can accept any metric that the user binary generates.
 
 ## Framework and backend agnostic benchmarking platforms
 
@@ -20,10 +20,10 @@ Machine learning is a rapidly evolving area with many moving parts: new and exis
 * the selection of the hardware solutions
 * the iteration of the machine learning models
 
-This project tries to achieve the following two goals:
+This project aims to achieve the two following goals:
 
-* When a new model is added to be benchmarked, get the runtime performance of this model on all existing backends easily.
-* When a new backend is added to be benchmarked, get the runtime performance of all existing models on this backend easily.
+* Easily evaluate the runtime performance of a model selected to be benchmarked on all existing backends.
+* Easily evaluate the runtime performance of a backend selected to be benchmarked on all existing models. 
 
 The flow of benchmarking is illustrated in the following figure:
 
@@ -43,17 +43,17 @@ The currently supported frameworks are: Caffe2, TFLite
 
 The currently supported model formats are: Caffe2, TFLite
 
-The currently supported backends: CPU, GPU, DSP, Android, iOS, linux based systems
+The currently supported backends: CPU, GPU, DSP, Android, iOS, Linux based systems
 
 The currently supported libraries: Eigen, MKL, NNPACK, OpenGL, CUDA
 
 ## Performance regression detection
 
-The benchmark platform also provides a means to compare performance between commits and detect regressions. It uses an A/B testing methodology that compares the runtime difference between a newer commit (treatment) and an older commit (control). What matters is the relative performance difference between the commits, as the backend platform's condition may be different at different times. Running the same tests on two different commit points at the same time removes most of the variations of the backend. This method has shown to improve the precision of detecting performance regressions.
+The benchmark platform also provides a means to compare performance between commits and detect regressions. It uses an A/B testing methodology that compares the runtime difference between a newer commit (treatment) and an older commit (control). The metric of interest is the relative performance difference between the commits, as the backend platform's condition may be different at different times. Running the same tests on two different commit points at the same time removes most of the variations of the backend. This method has been shown to improve the precision of detecting performance regressions.
 
 ## Directory structure
 
-The benchmarking codebase resides in `benchmarking` directory. Inside, the `frameworks` directory contains all supported ML frameworks. Add a new framework by creating a new directory, deriving from `framework_base.py` and implementing all its methods. The `platforms` directory contains all supported ML backend platforms. Add a new backend by creating a new directory, deriving from `platform_base.py` and implementing all its methods.
+The benchmarking codebase resides in `benchmarking` directory. Inside, the `frameworks` directory contains all supported ML frameworks. A new framework can be added by creating a new directory, deriving from `framework_base.py`, and implementing all its methods. The `platforms` directory contains all supported ML backend platforms. A new backend can be added by creating a new directory, deriving from `platform_base.py`, and implementing all its methods.
 
 The model specifications resides in `specifications` directory. Inside, the `models` directory contains all model and benchmarking specifications organized in model format. The `benchmarks` directory contains a sequence of benchmarks organized in model format. The `frameworks` directory contains custom build scripts for each framework.
 
@@ -290,4 +290,4 @@ optional arguments:
                         benchmark once under continuous mode.
 ```
 
-The `repo_driver.py` can also take the arguments that are recognized by `harness.py`. It just passes those arguments over.
+The `repo_driver.py` can also take the arguments that are recognized by `harness.py`. The arguments are passed over.
