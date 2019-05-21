@@ -49,7 +49,7 @@ class TFLiteFramework(FrameworkBase):
     def composeRunCommand(self, commands, platform, programs,
                           model, test, model_files,
                           input_files, output_files, shared_libs,
-                          preprocess_files=None):
+                          preprocess_files=None, main_command=False):
         cmds = super(TFLiteFramework, self).composeRunCommand(commands,
                                                               platform,
                                                               programs,
@@ -59,7 +59,8 @@ class TFLiteFramework(FrameworkBase):
                                                               input_files,
                                                               output_files,
                                                               shared_libs,
-                                                              preprocess_files)
+                                                              preprocess_files,
+                                                              main_command)
         if cmds:
             return cmds
 

@@ -173,7 +173,8 @@ class FrameworkBase(object):
         self._runCommands(output, test["commands"], platform, programs, model,
                           test, tgt_model_files, tgt_input_files,
                           tgt_result_files, shared_libs, test_files,
-                          total_num, converter, platform_args=platform_args)
+                          total_num, converter, platform_args=platform_args,
+                          main_command=True)
 
         if test["metric"] == "power":
             collection_time = test["collection_time"] \
@@ -264,7 +265,7 @@ class FrameworkBase(object):
     def composeRunCommand(self, commands, platform,
                           programs, model, test, model_files,
                           input_files, output_files, shared_libs,
-                          test_files=None):
+                          test_files=None, main_command=False):
         if commands is None or not isinstance(commands, list):
             return None
         files = input_files.copy() if input_files is not None else {}
@@ -272,12 +273,19 @@ class FrameworkBase(object):
         files.update(test_files if test_files is not None else {})
         extra_arguments = " " + model["command_args"] \
             if "command_args" in model else ""
+        string_map = json.loads(self.args.string_map) \
+            if self.args.string_map else {}
         composed_commands = []
+
         for command in commands:
             more_args = extra_arguments if "{program}" in command else ""
             command = self._getReplacedCommand(command, files, model, test,
                                                programs, model_files)
             command += more_args
+            # extra args only applied for main_command
+            if main_command and len(commands) == 1 and "pep_extra_args" in string_map:
+                command += " " + string_map["pep_extra_args"]
+
             composed_commands.append(command)
         return composed_commands
 
@@ -343,7 +351,8 @@ class FrameworkBase(object):
 
     def _runCommands(self, output, commands, platform, programs, model, test,
                      model_files, input_files, output_files, shared_libs,
-                     test_files, total_num, converter, platform_args=None):
+                     test_files, total_num, converter, platform_args=None,
+                     main_command=False):
         if platform_args is None:
             platform_args = {}
         if test and test.get("log_output", False):
@@ -354,7 +363,7 @@ class FrameworkBase(object):
                                       programs, model, test,
                                       model_files,
                                       input_files, output_files,
-                                      shared_libs, test_files)
+                                      shared_libs, test_files, main_command)
         for cmd in cmds:
             one_output = self.runOnPlatform(total_num, cmd, platform,
                                             platform_args,
