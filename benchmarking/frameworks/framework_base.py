@@ -199,6 +199,8 @@ class FrameworkBase(object):
                 if shared_libs is not None:
                     platform.delFilesFromPlatform(shared_libs)
 
+        platform.postprocess()
+
         output_files = None
         if "output_files" in test:
             target_dir = os.path.join(self.tempdir, "output")

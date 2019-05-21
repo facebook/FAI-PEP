@@ -63,6 +63,11 @@ class IOSPlatform(PlatformBase):
         self.util.run(["--bundle", self.app, "--uninstall"])
         setRunStatus(success, overwrite=True)
 
+    def postprocess(self, *args, **kwargs):
+        success = getRunStatus()
+        self.util.run(["--bundle", self.app, "--uninstall_only"])
+        setRunStatus(success, overwrite=True)
+
     def runBenchmark(self, cmd, *args, **kwargs):
         if not isinstance(cmd, list):
             cmd = shlex.split(cmd)

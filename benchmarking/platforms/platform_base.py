@@ -82,6 +82,10 @@ class PlatformBase(object):
     def preprocess(self, *args, **kwargs):
         pass
 
+    @abc.abstractmethod
+    def postprocess(self, *args, **kwargs):
+        pass
+
     def copyFilesToPlatform(self, files, target_dir=None, copy_files=True):
         target_dir = (self.tgt_dir if target_dir is None else target_dir)
         if isinstance(files, string_types):
