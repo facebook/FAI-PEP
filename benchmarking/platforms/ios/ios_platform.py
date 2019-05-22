@@ -60,7 +60,7 @@ class IOSPlatform(PlatformBase):
         # We know this command will fail. Avoid propogating this
         # failure to the upstream
         success = getRunStatus()
-        self.util.run(["--bundle", self.app, "--uninstall"])
+        self.util.run(["--bundle", self.app, "--uninstall", "--justlaunch"])
         setRunStatus(success, overwrite=True)
 
     def postprocess(self, *args, **kwargs):
