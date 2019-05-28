@@ -32,15 +32,13 @@ def runOneBenchmark(info, benchmark, framework, platform,
     status = 0
     minfo = copy.deepcopy(info["treatment"])
     mbenchmark = copy.deepcopy(benchmark)
-    if "shared_libs" in info:
-        minfo["shared_libs"] = info["shared_libs"]
+    minfo["shared_libs"] = info.get("shared_libs")
     try:
         data = _runOnePass(minfo, mbenchmark, framework, platform)
         meta = None
         if "control" in info:
             cinfo = copy.deepcopy(info["control"])
-            if "shared_libs" in info:
-                cinfo["shared_libs"] = info["shared_libs"]
+            cinfo["shared_libs"] = info.get("shared_libs")
             # cool down between treatment and control
             if "model" in benchmark and "cooldown" in benchmark["model"]:
                 cooldown = float(benchmark["model"]["cooldown"])
