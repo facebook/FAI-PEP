@@ -51,9 +51,11 @@ class RunBench(object):
             assert "--server_addr" in raw_args
             idx = raw_args.index("--server_addr")
             assert raw_args[idx + 1].startswith("http") or len(raw_args[idx + 1]) == 0
-        if "--lab" in raw_args and "--remote_reporter" not in raw_args:
-            raw_args.extend(["--remote_reporter",
-                raw_args["--server_addr"] + "/benchmark/store-result|oss"])
+            if "--lab" in raw_args and "--remote_reporter" not in raw_args:
+                raw_args.extend(["--remote_reporter",
+                    raw_args[idx+1]+
+                    ("" if raw_args[idx+1][-1] == '/' else "/") +
+                    "benchmark/store-result|oss"])
         app = self.repoCls(raw_args=raw_args)
         ret = app.run()
         if "--query_num_devices" in self.unknowns:
