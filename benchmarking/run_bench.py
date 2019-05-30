@@ -54,7 +54,7 @@ class RunBench(object):
             if "--lab" in raw_args and "--remote_reporter" not in raw_args:
                 raw_args.extend(["--remote_reporter",
                     raw_args[idx+1]
-                    + "" if raw_args[idx+1][-1] == '/' else "/")
+                    + ("" if raw_args[idx+1][-1] == '/' else "/")
                     + "benchmark/store-result|oss"])
         app = self.repoCls(raw_args=raw_args)
         ret = app.run()
