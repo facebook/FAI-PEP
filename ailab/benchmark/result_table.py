@@ -15,7 +15,7 @@ class ResultTable(tables.Table):
         utc = datetime.fromtimestamp(value)
         utc = utc.replace(tzinfo=from_zone)
 
-        return utc.astimezone(to_zone).strftime('%Y-%m-%d %H:%M:%S')
+        return str(value) + " (" + utc.astimezone(to_zone).strftime('%Y-%m-%d %H:%M:%S') + ")"
 
     class Meta:
         model = BenchmarkResult

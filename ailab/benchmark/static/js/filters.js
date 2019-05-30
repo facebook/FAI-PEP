@@ -239,28 +239,4 @@ var filters = [
     type: 'integer',
     operators: integer_operators,
   },
-  {
-    id: 'control_p95',
-    label: 'Control P95',
-    type: 'integer',
-    operators: integer_operators,
-  },
-  {
-    id: 'p95',
-    label: 'P95',
-    type: 'integer',
-    operators: integer_operators,
-  },
-  {
-    id: 'control_p99',
-    label: 'Control P99',
-    type: 'integer',
-    operators: integer_operators,
-  },
-  {
-    id: 'p99',
-    label: 'P99',
-    type: 'integer',
-    operators: integer_operators,
-  },
 ]

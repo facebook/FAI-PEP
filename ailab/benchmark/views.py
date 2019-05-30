@@ -64,20 +64,19 @@ def visualize(request):
             graph_type = column['value']
         if column['name'] == 'rank-column-dropdown':
             rank_column = column['value']
-
+    if len(include_column_set) == 0:
+        include_column_set.add("p50")
+        include_column_set.add("type")
     # Filter data base on request
     filters = {} if request.GET.get('filters') is None \
         else json.loads(request.GET.get('filters'))
-    if len(filters) != 0 and filters['valid']:
-        result_q = construct_q(filters)
-        qs = BenchmarkResult.objects.filter(result_q)
-    else:
-        qs = BenchmarkResult.objects.all()
+    if len(filters) == 0 or "valid" not in filters or not filters['valid']:
         filters = {
             'condition': 'AND',
-            'rules': [{}],
+            'rules': [{"id": "type", "operator": "equal", "value": "NET"}],
         }
-
+    result_q = construct_q(filters)
+    qs = BenchmarkResult.objects.filter(result_q)
     # Build table with specified columns
     table = ResultTable(qs)
     available_columns = []
@@ -100,13 +99,15 @@ def visualize(request):
         # Construct data to display
         sort_attr = request.GET.get('sort')
         if sort_attr is None:
-            sort_attr = '-' + rank_column
+            if rank_column != '':
+                sort_attr = '-' + rank_column
+            else:
+                sort_attr = "p50"
         else:
             rank_column = sort_attr
             if rank_column.startswith('-'):
                 rank_column = rank_column[1:]
         column = sort_attr[1:] if sort_attr.startswith('-') else sort_attr
-
         sorted_qs = qs.order_by(sort_attr)[:10]
         labels = [o.type for o in sorted_qs]
         chartdata = {'x': labels}
