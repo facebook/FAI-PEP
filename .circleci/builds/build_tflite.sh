@@ -8,7 +8,7 @@ BAZEL=bazel-${BAZEL_VER}-installer-linux-x86_64.sh
 REPO_DIR=/tmp/tensorflow
 
 sudo apt-get -y install wget pkg-config g++ zlib1g-dev python zip unzip
-pip install builtins
+pip install future
 
 if [ ! -z ${BAZEL_DIR} ]; then
   mkdir -p ${BAZEL_DIR}
