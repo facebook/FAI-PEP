@@ -305,6 +305,8 @@ class RunLab(object):
         if not self.args.benchmark_db_entry:
             assert self.args.server_addr is not None, \
                 "Either server_addr or benchmark_db_entry must be specified"
+            while self.args.server_addr[-1] == '/':
+                self.args.server_addr = self.args.server_addr[:-1]
             self.args.benchmark_db_entry = self.args.server_addr + "/benchmark/"
         self.db = DBDriver(self.args.benchmark_db,
                            self.args.app_id,
