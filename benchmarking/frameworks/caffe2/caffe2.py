@@ -17,6 +17,7 @@ import os
 
 from frameworks.framework_base import FrameworkBase
 from utils.custom_logger import getLogger
+from utils.utilities import getRunStatus
 
 
 class Caffe2Framework(FrameworkBase):
@@ -260,6 +261,9 @@ class Caffe2Framework(FrameworkBase):
             valid_run_idxs = [num + idx for idx in valid_run_idxs]
             num += len(valid_run_idxs)
             results.extend(one_result)
+            if getRunStatus() != 0:
+                getLogger().info("Execution failed, terminating")
+                break
             if num < total_num:
                 num_items = len(valid_run_idxs)
                 if num_items > 0:
