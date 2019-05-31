@@ -42,7 +42,7 @@ def get_payload(req):
             )
             r.save()
 
-            return {"status": "success"}
+        return {"status": "success"}
 
     elif action == "claim":
         for device in devices:
