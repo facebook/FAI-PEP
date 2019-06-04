@@ -113,6 +113,7 @@ parser.add_argument("--benchmark_table",
 
 REBOOT_INTERVAL = datetime.timedelta(hours=8)
 LOCK = threading.RLock()
+LOG_LIMIT = 16 * (10**6)
 
 
 def stopRun(args):
@@ -198,6 +199,9 @@ class runAsync(object):
             outputs = output.split("\n")
             for o in outputs:
                 getLogger().info(o)
+            if sys.getsizeof(output) > LOG_LIMIT:
+                getLogger().error("Error, output are too large")
+                output = output[-LOG_LIMIT:]
             self.job["log"] = output
 
         device = self.devices[self.job["device"]][self.job["hash"]]
