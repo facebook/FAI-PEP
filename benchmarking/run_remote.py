@@ -369,7 +369,9 @@ class RunRemote(object):
         if "location" not in f:
             return
         location = f["location"]
-        md5 = f["md5"] if "md5" in f else None
+        if "md5" not in f:
+            raise Exception("No md5sum provided for {}".format(f["filename"]))
+        md5 = f["md5"]
         """
         For the file from repo, there is special handling
         we need to fetch both control and treatment
