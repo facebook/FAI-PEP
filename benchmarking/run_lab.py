@@ -21,6 +21,7 @@ import json
 import logging
 import multiprocessing
 import os
+import shutil
 import stat
 import sys
 import tempfile
@@ -77,6 +78,8 @@ parser.add_argument("--reboot", action="store_true",
 parser.add_argument("--remote_reporter", required=True,
     help="Save the result to a remote server. "
     "The style is <domain_name>/<endpoint>|<category>")
+parser.add_argument("--simple_local_reporter", action="store_true",
+    help="Save the result to a tmp directory.")
 parser.add_argument("--remote_access_token", default="",
     help="The access token to access the remote server")
 parser.add_argument("--root_model_dir",
@@ -220,7 +223,13 @@ class runAsync(object):
 
     def _removeBenchmarkFiles(self):
         benchmark_file = self.job["benchmarks"]["benchmark"]["content"]
+        models_location = self.job["models_location"]
+        programs_location = self.job["programs_location"]
         os.remove(benchmark_file)
+        for model_location in models_location:
+            shutil.rmtree(os.path.dirname(model_location))
+        for program_location in programs_location:
+            shutil.rmtree(os.path.dirname(program_location))
 
     def _collectBenchmarkData(self, output_dir):
         data = {}
@@ -431,31 +440,29 @@ class RunLab(object):
             self.pool.apply_async(app, args=[raw_args],
                 callback=app.callback)
 
-    def _saveBenchmarks(self, jobs_queue):
-        benchmark_files = []
+    def _saveBenchmarks(self, job):
         # save benchmarks to files
-        for job in jobs_queue:
-            benchmarks = job["benchmarks"]
-            benchmark = benchmarks["benchmark"]
-            content = benchmark["content"]
-            benchmark_str = json.dumps(content)
-            outfd, path = tempfile.mkstemp()
-            with os.fdopen(outfd, "w") as f:
-                f.write(benchmark_str)
-            job["benchmarks"]["benchmark"]["content"] = path
-            if content["tests"][0]["metric"] == "generic":
-                job["framework"] = "generic"
-            elif "model" in content and "framework" in content["model"]:
-                job["framework"] = content["model"]["framework"]
-            else:
-                getLogger().error("Framework is not specified, "
-                    "use Caffe2 as default")
-                job["framework"] = "caffe2"
-            benchmark_files.append(path)
-        return benchmark_files
+        benchmarks = job["benchmarks"]
+        benchmark = benchmarks["benchmark"]
+        content = benchmark["content"]
+        benchmark_str = json.dumps(content)
+        outfd, path = tempfile.mkstemp()
+        with os.fdopen(outfd, "w") as f:
+            f.write(benchmark_str)
+        job["benchmarks"]["benchmark"]["content"] = path
+        if content["tests"][0]["metric"] == "generic":
+            job["framework"] = "generic"
+        elif "model" in content and "framework" in content["model"]:
+            job["framework"] = content["model"]["framework"]
+        else:
+            getLogger().error("Framework is not specified, "
+                "use Caffe2 as default")
+            job["framework"] = "caffe2"
+        return path
 
     def _downloadBinaries(self, info_dict):
         programs = info_dict["programs"]
+        program_locations = []
         for bin_name in programs:
             program_location = programs[bin_name]["location"]
             self.benchmark_downloader.downloadFile(program_location, None)
@@ -480,14 +487,17 @@ class RunLab(object):
                 program_location = new_location
             os.chmod(program_location, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
             programs[bin_name]["location"] = program_location
+            program_locations.append(program_location)
+        return program_locations
 
     def _downloadFiles(self, jobs_queue):
-        benchmark_files = self._saveBenchmarks(jobs_queue)
-        # download the models
-        for bf in benchmark_files:
-            self.benchmark_downloader.run(bf)
-        # download the programs
         for job in jobs_queue:
+            job["models_location"] = []
+            # download the models
+            path = self._saveBenchmarks(job)
+            location = self.benchmark_downloader.run(path)
+            job["models_location"].extend(location)
+            # download the programs
             if "info" not in job["benchmarks"]:
                 continue
             try:
@@ -499,7 +509,8 @@ class RunLab(object):
                         "job[\"benchmarks\"][\"info\"][\"treatment\"]")
                 else:
                     treatment_info = job["benchmarks"]["info"]["treatment"]
-                    self._downloadBinaries(treatment_info)
+                    treatment_locations = self._downloadBinaries(treatment_info)
+                    job["programs_location"] = treatment_locations
 
                 if "control" in job["benchmarks"]["info"]:
                     if "programs" not in job["benchmarks"]["info"]["control"]:
@@ -507,11 +518,12 @@ class RunLab(object):
                             "job[\"benchmarks\"][\"info\"][\"control\"]")
                     else:
                         control_info = job["benchmarks"]["info"]["control"]
-                        self._downloadBinaries(control_info)
+                        control_locations = self._downloadBinaries(control_info)
+                        job["programs_location"].append(control_locations)
+
             except Exception:
                 getLogger().error("Unknown exception {}".format(sys.exc_info()[0]))
                 getLogger().error("File download failure")
-        return benchmark_files
 
     def _getDevices(self):
         raw_args = []
@@ -561,7 +573,6 @@ class RunLab(object):
             "--platform", self.args.platform,
             "--remote_access_token", self.args.remote_access_token,
             "--root_model_dir", self.args.root_model_dir,
-            "--simple_local_reporter", tempdir,
             "--user_identifier", str(job["identifier"]),
         ])
         if job["framework"] != "generic":
@@ -579,6 +590,9 @@ class RunLab(object):
             # if the user provides filename, we will load it.
             raw_args.append("--hash_platform_mapping")
             raw_args.append(self.args.hash_platform_mapping)
+        if self.args.simple_local_reporter:
+            raw_args.append("--simple_local_reporter")
+            raw_args.append(tempdir)
 
         return raw_args
 
