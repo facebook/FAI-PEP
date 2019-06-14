@@ -28,16 +28,20 @@ class DownloadBenchmarks(object):
     def run(self, benchmark_file):
         assert benchmark_file, "benchmark_file is not set"
         benchmarks = getBenchmarks(benchmark_file)
+        locations = []
         if not os.path.isdir(self.root_model_dir):
             os.makedirs(self.root_model_dir)
 
         for benchmark in benchmarks:
-            self._processOneBenchmark(benchmark)
+            location = self._processOneBenchmark(benchmark)
+            locations.extend(location)
+
+        return locations
 
     def _processOneBenchmark(self, benchmark):
         filename = benchmark["filename"]
         one_benchmark = benchmark["content"]
-
+        locations = []
         # TODO refactor the code to collect files
         if "model" in one_benchmark:
             if "files" in one_benchmark["model"]:
@@ -48,7 +52,8 @@ class DownloadBenchmarks(object):
                         "{}".format(filename)
                     location = value["location"]
                     md5 = value.get("md5")
-                    self.downloadFile(location, md5)
+                    path = self.downloadFile(location, md5)
+                    locations.append(path)
             if "libraries" in one_benchmark["model"]:
                 for value in one_benchmark["model"]["libraries"]:
                     assert "location" in value, \
@@ -56,20 +61,28 @@ class DownloadBenchmarks(object):
                         "{}".format(filename)
                     location = value["location"]
                     md5 = value["md5"]
-                    self.downloadFile(location, md5)
+                    path = self.downloadFile(location, md5)
+                    locations.append(path)
+
 
         assert "tests" in one_benchmark, \
             "tests field is missing in benchmark {}".format(filename)
         tests = one_benchmark["tests"]
         for test in tests:
             if "input_files" in test:
-                self._downloadTestFiles(test["input_files"])
+                path = self._downloadTestFiles(test["input_files"])
+                locations.extend(path)
             if "output_files" in test:
-                self._downloadTestFiles(test["output_files"])
+                path = self._downloadTestFiles(test["output_files"])
+                locations.extend(path)
             if "preprocess" in test and "files" in test["preprocess"]:
-                self._downloadTestFiles(test["preprocess"]["files"])
+                path = self._downloadTestFiles(test["preprocess"]["files"])
+                locations.extend(path)
             if "postprocess" in test and "files" in test["postprocess"]:
-                self._downloadTestFiles(test["postprocess"]["files"])
+                path = self._downloadTestFiles(test["postprocess"]["files"])
+                locations.extend(path)
+
+        return locations
 
     def downloadFile(self, location, md5):
         if location.startswith("http"):
@@ -104,19 +117,25 @@ class DownloadBenchmarks(object):
                                              logger=self.logger,
                                              args=self.args)
         downloader_controller.download_file(location, path)
+        return path
 
     def _downloadTestFiles(self, files):
+        locations = []
         if isinstance(files, list):
             for f in files:
                 if "location" in f:
-                    self.downloadFile(f["location"], None)
+                    path = self.downloadFile(f["location"], None)
+                    locations.append(path)
         elif isinstance(files, dict):
             for f in files:
                 value = files[f]
                 if isinstance(value, list):
                     for v in value:
                         if "location" in v:
-                            self.downloadFile(v["location"], None)
+                            path = self.downloadFile(v["location"], None)
+                            locations.append(path)
                 else:
                     if "location" in value:
-                        self.downloadFile(value["location"], None)
+                        path = self.downloadFile(value["location"], None)
+                        locations.append(path)
+        return locations
