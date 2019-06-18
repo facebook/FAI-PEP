@@ -35,7 +35,7 @@ class DownloadBenchmarks(object):
         for benchmark in benchmarks:
             location = self._processOneBenchmark(benchmark)
             locations.extend(location)
-
+        locations = [l for l in locations if l]
         return locations
 
     def _processOneBenchmark(self, benchmark):
@@ -109,10 +109,10 @@ class DownloadBenchmarks(object):
                 if md5 == new_md5:
                     getLogger().info("File {}".format(os.path.basename(path)) +
                         " is cached, skip downloading")
-                    return
+                    return path
             else:
                 # assume the file is the same
-                return
+                return path
         downloader_controller = DownloadFile(dirs=dirs,
                                              logger=self.logger,
                                              args=self.args)

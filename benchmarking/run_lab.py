@@ -519,7 +519,7 @@ class RunLab(object):
                     else:
                         control_info = job["benchmarks"]["info"]["control"]
                         control_locations = self._downloadBinaries(control_info)
-                        job["programs_location"].append(control_locations)
+                        job["programs_location"].extend(control_locations)
 
             except Exception:
                 getLogger().error("Unknown exception {}".format(sys.exc_info()[0]))
