@@ -382,6 +382,8 @@ class RunRemote(object):
             assert ref_path is not None, "repo is not yet \
                 supported for {}".format(location)
             for side in self.info:
+                if side == "extra":
+                    continue
                 value = self.info[side]
                 commit_hash = "master"
                 if "commit" in value:
