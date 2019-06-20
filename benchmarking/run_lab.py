@@ -78,8 +78,6 @@ parser.add_argument("--reboot", action="store_true",
 parser.add_argument("--remote_reporter", required=True,
     help="Save the result to a remote server. "
     "The style is <domain_name>/<endpoint>|<category>")
-parser.add_argument("--simple_local_reporter", action="store_true",
-    help="Save the result to a tmp directory.")
 parser.add_argument("--remote_access_token", default="",
     help="The access token to access the remote server")
 parser.add_argument("--root_model_dir",
@@ -173,7 +171,7 @@ class runAsync(object):
         with LOCK:
             device = self._updateDevices(result_dict)
             self._submitDone(device)
-            self._removeBenchmarkFiles()
+            self._removeBenchmarkFiles(device)
             self._coolDown(device)
         time.sleep(1)
 
@@ -221,15 +219,18 @@ class runAsync(object):
                                 data,
                                 log)
 
-    def _removeBenchmarkFiles(self):
+    def _removeBenchmarkFiles(self, device):
         benchmark_file = self.job["benchmarks"]["benchmark"]["content"]
         models_location = self.job["models_location"]
         programs_location = self.job["programs_location"]
+        output_dir = device["output_dir"]
+
         os.remove(benchmark_file)
         for model_location in models_location:
             shutil.rmtree(os.path.dirname(model_location))
         for program_location in programs_location:
             shutil.rmtree(os.path.dirname(program_location))
+        shutil.rmtree(output_dir)
 
     def _collectBenchmarkData(self, output_dir):
         data = {}
@@ -573,6 +574,7 @@ class RunLab(object):
             "--platform", self.args.platform,
             "--remote_access_token", self.args.remote_access_token,
             "--root_model_dir", self.args.root_model_dir,
+            "--simple_local_reporter", tempdir,
             "--user_identifier", str(job["identifier"]),
         ])
         if job["framework"] != "generic":
@@ -590,9 +592,6 @@ class RunLab(object):
             # if the user provides filename, we will load it.
             raw_args.append("--hash_platform_mapping")
             raw_args.append(self.args.hash_platform_mapping)
-        if self.args.simple_local_reporter:
-            raw_args.append("--simple_local_reporter")
-            raw_args.append(tempdir)
 
         return raw_args
 
