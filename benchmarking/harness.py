@@ -187,6 +187,10 @@ class BenchmarkDriver(object):
                 time.sleep(cooldown)
             if not self.args.debug:
                 shutil.rmtree(tempdir, True)
+                for test in benchmark["tests"]:
+                    if "preprocess" in test and "files" in test["preprocess"]:
+                        for f in test["preprocess"]["files"].values():
+                            shutil.rmtree(f["location"], True)
 
     def run(self):
         tempdir = tempfile.mkdtemp()
