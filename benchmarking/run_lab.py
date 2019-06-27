@@ -227,10 +227,10 @@ class runAsync(object):
 
         os.remove(benchmark_file)
         for model_location in models_location:
-            shutil.rmtree(os.path.dirname(model_location))
+            shutil.rmtree(os.path.dirname(model_location), True)
         for program_location in programs_location:
-            shutil.rmtree(os.path.dirname(program_location))
-        shutil.rmtree(output_dir)
+            shutil.rmtree(os.path.dirname(program_location), True)
+        shutil.rmtree(output_dir, True)
 
     def _collectBenchmarkData(self, output_dir):
         data = {}
