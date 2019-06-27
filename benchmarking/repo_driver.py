@@ -324,7 +324,7 @@ class RepoDriver(object):
             datetime.datetime.now().strftime("%Y_%m_%d_%H_%M"))
         self.executables_builder.start()
         self._runBenchmarkSuites()
-        sys.exit(getRunStatus())
+        return getRunStatus()
 
     def _runBenchmarkSuites(self):
         # initially sleep 10 seconds in case no need to build the binary
