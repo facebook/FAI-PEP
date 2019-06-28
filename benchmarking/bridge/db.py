@@ -42,8 +42,9 @@ class DBDriver(object):
             'devices': devices,
             'benchmarks': json_data,
             'user': user,
-            'claimer': claimer,
         }
+        if claimer:
+            params['claimer'] = claimer
         self._requestData(params)
 
     def claimBenchmarks(self, server_id, devices):
