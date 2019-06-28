@@ -45,7 +45,7 @@ sudo apt-get update
 # confirm python version
 python --version
 
-pip install six requests
+pip install six requests tabulate
 
 case ${FRAMEWORK} in
   PYTORCH)
