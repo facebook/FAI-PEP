@@ -22,6 +22,7 @@ import pkg_resources
 from random import randint
 import re
 import shutil
+from tabulate import tabulate
 import tempfile
 import threading
 import subprocess
@@ -437,11 +438,22 @@ class RunRemote(object):
 
     def _listDevices(self):
         devices = self.db.listDevices(self.args.job_queue)
+        headers = ["Device", "Status", "Abbrs", "Claimer"]
+        rows = []
         for device in devices:
             abbrs = self.devices.getAbbrs(device["device"])
-            print(device["status"] + "\t" +
-                  device["device"] +
-                  (" (" + ",".join(abbrs) + ")" if abbrs else ""))
+            abbrs = ",".join(abbrs) if abbrs else ""
+            if self.args.job_queue in ["android", "ios"]:
+                claimer = device["hash"]
+            else:
+                claimer = device["claimer"]
+            row = [device["device"], device["status"], abbrs, claimer]
+            rows.append(row)
+        rows.sort()
+        print()
+        print(tabulate(rows, headers=headers, tablefmt='orgtbl'))
+        print()
+        return rows
 
     def _checkDevices(self, specified_devices):
         devices = set()
