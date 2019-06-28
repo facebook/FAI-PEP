@@ -56,6 +56,9 @@ parser.add_argument("-c", "--custom_binary",
 parser.add_argument("--cache_config", required=True,
     help="The config file to specify the cached uploaded files. If the files "
     "are already uploaded in the recent past, do not upload again.")
+parser.add_argument("--claimer", default=None,
+    help="Specify the exact device (only one) to run remotely. Have to use "
+    "together with --remote and --devices")
 parser.add_argument("--debug", action="store_true",
             help="Debug mode to retain all the running binaries and models.")
 parser.add_argument("--devices",
@@ -227,7 +230,7 @@ class RunRemote(object):
 
         list_job_queues = self._listJobQueues()
         if not self.args.force_submit:
-            self._checkDevices(self.args.devices)
+            self._checkDevices(self.args.devices, self.args.claimer)
             assert self.args.job_queue != "*" and \
                 self.args.job_queue in list_job_queues, \
                 "--job_queue must be choosen from " + " ".join(list_job_queues)
@@ -296,12 +299,13 @@ class RunRemote(object):
         user_identifier = int(self.args.user_identifier) \
             if self.args.user_identifier else randint(1, 1000000000000000)
         user = getuser() if not self.args.user_string else self.args.user_string
+        claimer = self.args.claimer
         for benchmark in benchmarks:
             data = {
                 "benchmark": benchmark,
                 "info": self.info,
             }
-            self.db.submitBenchmarks(data, new_devices, user_identifier, user)
+            self.db.submitBenchmarks(data, new_devices, user_identifier, user, claimer)
         if self.args.async_submit:
             return
 
@@ -436,7 +440,7 @@ class RunRemote(object):
             tgt = tgt[item]
         tgt.pop(ref_path[-1])
 
-    def _listDevices(self):
+    def _listDevices(self, flag=True):
         devices = self.db.listDevices(self.args.job_queue)
         headers = ["Device", "Status", "Abbrs", "Claimer"]
         rows = []
@@ -450,22 +454,34 @@ class RunRemote(object):
             row = [device["device"], device["status"], abbrs, claimer]
             rows.append(row)
         rows.sort()
-        print()
-        print(tabulate(rows, headers=headers, tablefmt='orgtbl'))
-        print()
+        if flag:
+            table = tabulate(rows, headers=headers, tablefmt='orgtbl')
+            print("\n{}\n".format(table))
         return rows
 
-    def _checkDevices(self, specified_devices):
-        devices = set()
-        for device in self.db.listDevices(self.args.job_queue):
-            abbrs = self.devices.getAbbrs(device["device"])
-            devices.add(device["device"])
-            devices.update(set(abbrs if abbrs else ""))
-        specifiedDevices = set(specified_devices.split(","))
-        deivesNotIn = specifiedDevices.difference(devices)
-        if deivesNotIn:
-            raise Exception("Devices {}".format(deivesNotIn) +
-                " is not available in the job_queue {}".format(self.args.job_queue))
+    def _checkDevices(self, specified_devices, claimer=None):
+        rows = self._listDevices(flag=False)
+        if claimer:
+            specifiedDevices = specified_devices
+        else:
+            specifiedDevices = set(specified_devices.split(","))
+        devices = {}
+        deivesIn = False
+        for row in rows:
+            abbrs = row[-2].split(",") if row[-2] else []
+            devices[row[-1]] = {row[0]}.union(set(abbrs))
+        if claimer:
+            if claimer in devices and devices[claimer] == {specified_devices}:
+                deivesIn = True
+        else:
+            all = set()
+            for v in devices.values():
+                all = all.union(v)
+            deivesIn = not specifiedDevices.difference(all)
+        if not deivesIn:
+            raise Exception(
+                "Devices {} is not available in the job_queue {}".format(
+                    specified_devices, self.args.job_queue))
 
     def _queryNumDevices(self, device_name):
         deviceCounter = defaultdict(int)
