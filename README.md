@@ -195,7 +195,7 @@ optional arguments:
                         a comma separated list.
   --string_map STRING_MAP
                         A json string mapping tokens to replacement strings.
-                        The tokens, surrended by \{\}, when appearing in the
+                        The tokens, surrounded by \{\}, when appearing in the
                         test fields of the json file, are to be replaced with
                         the mapped values.
   --timeout TIMEOUT     Specify a timeout running the test on the platforms.
