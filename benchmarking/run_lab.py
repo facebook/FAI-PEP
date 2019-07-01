@@ -378,13 +378,21 @@ class RunLab(object):
 
     def _claimBenchmarks(self):
         claimer_id = self.args.claimer_id
-        # get available devices
-        devices = ",".join([k for k in self.devices
-                            if any(self.devices[k][hash]["available"] is True
-                            for hash in self.devices[k])])
+        # get available devices with their hashes
+        devices = []
+        hashes = []
+        numDevices = 0
+        for k in self.devices:
+            for hash in self.devices[k]:
+                numDevices += 1
+                if self.devices[k][hash]["available"]:
+                    devices.append(k)
+                    hashes.append(hash)
+        hashes = ",".join(hashes) if numDevices > 1 else None
+        devices = ",".join(devices)
         jobs = []
         if len(devices) > 0:
-            jobs = self.db.claimBenchmarks(claimer_id, devices)
+            jobs = self.db.claimBenchmarks(claimer_id, devices, hashes)
         return jobs
 
     def _selectBenchmarks(self, jobs):
