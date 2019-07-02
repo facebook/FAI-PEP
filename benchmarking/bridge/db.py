@@ -32,7 +32,7 @@ class DBDriver(object):
 
         self.benchmark_db_entry = benchmark_db_entry
 
-    def submitBenchmarks(self, data, devices, identifier, user, claimer=None):
+    def submitBenchmarks(self, data, devices, identifier, user, hashes=None):
         json_data = json.dumps(data)
         params = {
             'table': self.table,
@@ -43,8 +43,8 @@ class DBDriver(object):
             'benchmarks': json_data,
             'user': user,
         }
-        if claimer:
-            params['claimer'] = claimer
+        if hashes:
+            params['hashes'] = hashes
         self._requestData(params)
 
     def claimBenchmarks(self, server_id, devices, hashes=None):
