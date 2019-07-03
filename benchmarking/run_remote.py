@@ -56,6 +56,9 @@ parser.add_argument("-c", "--custom_binary",
 parser.add_argument("--cache_config", required=True,
     help="The config file to specify the cached uploaded files. If the files "
     "are already uploaded in the recent past, do not upload again.")
+parser.add_argument("--hashes", default=None,
+    help="Specify the exact devices to run remotely by hashes. Have to use "
+    "together with --remote and --devices")
 parser.add_argument("--debug", action="store_true",
             help="Debug mode to retain all the running binaries and models.")
 parser.add_argument("--devices",
@@ -227,7 +230,7 @@ class RunRemote(object):
 
         list_job_queues = self._listJobQueues()
         if not self.args.force_submit:
-            self._checkDevices(self.args.devices)
+            self._checkDevices(self.args.devices, self.args.hashes)
             assert self.args.job_queue != "*" and \
                 self.args.job_queue in list_job_queues, \
                 "--job_queue must be choosen from " + " ".join(list_job_queues)
@@ -296,12 +299,13 @@ class RunRemote(object):
         user_identifier = int(self.args.user_identifier) \
             if self.args.user_identifier else randint(1, 1000000000000000)
         user = getuser() if not self.args.user_string else self.args.user_string
+        hashes = self.args.hashes
         for benchmark in benchmarks:
             data = {
                 "benchmark": benchmark,
                 "info": self.info,
             }
-            self.db.submitBenchmarks(data, new_devices, user_identifier, user)
+            self.db.submitBenchmarks(data, new_devices, user_identifier, user, hashes)
         if self.args.async_submit:
             return
 
@@ -436,36 +440,61 @@ class RunRemote(object):
             tgt = tgt[item]
         tgt.pop(ref_path[-1])
 
-    def _listDevices(self):
+    def _listDevices(self, flag=True):
         devices = self.db.listDevices(self.args.job_queue)
-        headers = ["Device", "Status", "Abbrs", "Claimer"]
+        headers = ["Device", "Status", "Abbrs", "Hash"]
         rows = []
         for device in devices:
             abbrs = self.devices.getAbbrs(device["device"])
             abbrs = ",".join(abbrs) if abbrs else ""
-            if self.args.job_queue in ["android", "ios"]:
-                claimer = device["hash"]
-            else:
-                claimer = device["claimer"]
-            row = [device["device"], device["status"], abbrs, claimer]
+            hash = device["hash"]
+            row = [device["device"], device["status"], abbrs, hash]
             rows.append(row)
         rows.sort()
-        print()
-        print(tabulate(rows, headers=headers, tablefmt='orgtbl'))
-        print()
+        if flag:
+            table = tabulate(rows, headers=headers, tablefmt='orgtbl')
+            print("\n{}\n".format(table))
         return rows
 
-    def _checkDevices(self, specified_devices):
-        devices = set()
-        for device in self.db.listDevices(self.args.job_queue):
-            abbrs = self.devices.getAbbrs(device["device"])
-            devices.add(device["device"])
-            devices.update(set(abbrs if abbrs else ""))
+    def _checkDevices(self, specified_devices, hashes=None):
+        rows = self._listDevices(flag=False)
         specifiedDevices = set(specified_devices.split(","))
-        deivesNotIn = specifiedDevices.difference(devices)
-        if deivesNotIn:
-            raise Exception("Devices {}".format(deivesNotIn) +
-                " is not available in the job_queue {}".format(self.args.job_queue))
+        specifiedHashes = None
+        if hashes:
+            hashes = hashes.split(",")
+            devices = specified_devices.split(",")
+            if len(hashes) != len(devices):
+                raise Exception(
+                    "You need to provide same number of hashes and devices")
+            specifiedHashes = {}
+            for i, hash in enumerate(hashes):
+                specifiedHashes[hash] = devices[i]
+        devices = {}
+        devicesIn = True
+        for row in rows:
+            abbrs = row[-2].split(",") if row[-2] else []
+            if row[-1] not in devices:
+                devices[row[-1]] = {row[0]}.union(set(abbrs))
+            else:
+                devices[row[-1]].union({row[0]}.union(set(abbrs)))
+        if specifiedHashes:
+            for specifiedHash in specifiedHashes:
+                if specifiedHash not in devices or \
+                        specifiedHashes[specifiedHash] not in devices[specifiedHash]:
+                    devicesIn = False
+        else:
+            allDevices = set()
+            for v in devices.values():
+                allDevices = allDevices.union(v)
+            devicesIn = not specifiedDevices.difference(allDevices)
+        if not devicesIn:
+            errMessages = " ".join(["Devices", specified_devices,
+                "is not available in the job_queue", self.args.job_queue])
+            if hashes:
+                errMessages = " ".join(["Devices", specified_devices,
+                    "with hashes", ",".join(hashes),
+                    "is not available in the job_queue", self.args.job_queue])
+            raise Exception(errMessages)
 
     def _queryNumDevices(self, device_name):
         deviceCounter = defaultdict(int)

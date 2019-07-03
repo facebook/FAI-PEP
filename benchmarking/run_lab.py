@@ -381,14 +381,12 @@ class RunLab(object):
         # get available devices with their hashes
         devices = []
         hashes = []
-        numDevices = 0
         for k in self.devices:
             for hash in self.devices[k]:
-                numDevices += 1
                 if self.devices[k][hash]["available"]:
                     devices.append(k)
                     hashes.append(hash)
-        hashes = ",".join(hashes) if numDevices > 1 else None
+        hashes = ",".join(hashes)
         devices = ",".join(devices)
         jobs = []
         if len(devices) > 0:
