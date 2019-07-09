@@ -27,7 +27,7 @@ class UploadDownloadFilesDjango(UploadDownloadFilesBase):
 
         url = ''
         if result_json['status'] == 'success':
-            url = self.server_addr + "/" + result_json['path']
+            url = os.path.join(self.server_addr, result_json["path"])
         getLogger().info("File has been uploaded to {}".format(url))
         return url
 

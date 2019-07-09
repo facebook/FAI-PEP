@@ -34,7 +34,7 @@ def getBenchmarks(bfile, framework=None):
     if "benchmarks" in content:
         path = os.path.abspath(os.path.dirname(bfile))
         for benchmark_file in content["benchmarks"]:
-            filename = path + "/" + benchmark_file
+            filename = os.path.join(path, benchmark_file)
             assert os.path.isfile(filename), \
                 "Benchmark {} doesn't exist".format(filename)
             with open(filename, 'r') as f:

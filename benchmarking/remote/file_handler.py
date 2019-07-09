@@ -63,7 +63,9 @@ class FileHandler(object):
         elif filename.startswith("/"):
             path = filename
         else:
-            path = os.path.dirname(os.path.realpath(basefilename)) + "/" + filename
+            path = os.path.join(
+                os.path.dirname(os.path.realpath(basefilename)),
+                filename)
 
         if not os.path.isfile(path):
             getLogger().info("Skip uploading {}".format(filename))

@@ -127,7 +127,7 @@ class AndroidPlatform(PlatformBase):
         with open(argument_filename, "w") as f:
             f.write(arguments_json)
         tgt_argument_filename = os.path.join(self.tgt_dir, "benchmark.json")
-        activity = self.app["package"] + "/" + self.app["activity"]
+        activity = os.path.join(self.app["package"], self.app["activity"])
         self.util.push(argument_filename, tgt_argument_filename)
         platform_args = {}
         if "platform_args" in kwargs:

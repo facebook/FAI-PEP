@@ -71,10 +71,10 @@ def _readFromPath(framework, frameworks_dir, platform, dst):
     # if user provide frameworks_dir, we want to validate its correctness.
     assert os.path.isdir(frameworks_dir), \
         "{} must be specified.".format(frameworks_dir)
-    framework_dir = frameworks_dir + "/" + framework
+    framework_dir = os.path.join(frameworks_dir, framework)
     assert os.path.isdir(framework_dir), \
         "{} must be specified.".format(framework_dir)
-    platform_dir = framework_dir + "/" + platform
+    platform_dir = os.path.join(framework_dir, platform)
     build_script = None
     if os.path.isdir(platform_dir):
         if os.path.isfile(platform_dir + "/build.sh"):
