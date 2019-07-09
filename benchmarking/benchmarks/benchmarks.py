@@ -267,7 +267,7 @@ class BenchmarkCollector(object):
         filename = file["filename"]
         if location[0:4] == "http":
             # Need to download, return the destination filename
-            return cache_dir + "/" + filename
+            return os.path.join(cache_dir, filename)
         elif location[0:2] == "//":
             assert self.args.root_model_dir is not None, \
                 "When specifying relative directory, the " \

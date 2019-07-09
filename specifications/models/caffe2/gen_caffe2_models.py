@@ -8,6 +8,8 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import argparse
 import copy
 import hashlib
@@ -219,15 +221,16 @@ def genOneModelMeta(args, model_name, model):
     for fname in meta["model"]["files"]:
         f = meta["model"]["files"][fname]
         f["location"] = f["location"].replace("@DIR@", model_dir)
-        target = args.model_cache + "/" + "caffe2" + "/" + model_name + \
-            "/" + f["filename"]
+        target = os.path.join(
+            *[args.model_cache, "caffe2", model_name, f["filename"]]
+        )
         md5 = downloadFile(f["location"], target)
         if md5 is None:
             return
         f["md5"] = md5
 
-    path = args.specifications_dir + "/models/caffe2/" + model_name + "/"
-    filename = path + model_name + ".json"
+    path = [args.specifications_dir, "models/caffe2", model_name, model_name + ".json"]
+    filename = os.path.join(*path)
 
     if not os.path.isfile(filename) or args.overwrite_meta:
         if not os.path.isdir(path):

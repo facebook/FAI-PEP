@@ -12,6 +12,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+import os
 import re
 from six import string_types
 import time
@@ -101,7 +102,9 @@ class ADB(PlatformUtilBase):
         return adb
 
     def _setOneCPUFrequency(self, cpu, freq_target):
-        directory = "/sys/devices/system/cpu/" + cpu + "/"
+        directory = os.path.join(
+            *["/sys/devices/system/cpu/", cpu, "/"]
+        )
 
         scaling_governor = directory + "cpufreq/scaling_governor"
         self.su_shell(["\"echo userspace > {}\"".format(scaling_governor)])

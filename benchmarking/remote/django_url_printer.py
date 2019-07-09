@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
+import os
 import urllib
 
 from remote.url_printer_base import URLPrinterBase
@@ -26,7 +27,7 @@ DISPLAY_COLUMNS = [
 class DjangoURLPrinter(URLPrinterBase):
     def __init__(self, args):
         self.args = args
-        self.db_url = self.args.server_addr + "/" + DJANGO_SUB_URL
+        self.db_url = os.path.join(self.args.server_addr, DJANGO_SUB_URL)
 
     def getColumnSelParams(self):
         col_sel_params = []

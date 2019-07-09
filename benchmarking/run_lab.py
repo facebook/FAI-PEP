@@ -236,7 +236,7 @@ class runAsync(object):
         data = {}
         dirs = self._listdirs(output_dir)
         for d in dirs:
-            f = output_dir + "/" + d + "/data.txt"
+            f = os.path.join(*[output_dir, d, "data.txt"])
             if not os.path.isfile(f):
                 getLogger().error("The output {} doesn't exist".format(f))
                 continue
@@ -250,7 +250,7 @@ class runAsync(object):
         return json.dumps(data)
 
     def _listdirs(self, path):
-        return [x for x in os.listdir(path) if os.path.isdir(path + "/" + x)]
+        return [x for x in os.listdir(path) if os.path.isdir(os.path.join(path, x))]
 
     def _handlePowerData(self, filename):
         if not os.path.isfile(filename):
@@ -481,9 +481,8 @@ class RunLab(object):
                     "\\": '-',
                     ":": '/',
                 }
-                program_location = self.args.root_model_dir + '/' +\
-                                   getFilename(program_location,
-                                               replace_pattern=replace_pattern)
+                program_location = os.path.join(self.args.root_model_dir,
+                    getFilename(program_location, replace_pattern=replace_pattern))
             elif program_location.startswith("/"):
                 program_location = self.args.root_model_dir + program_location
             if self.args.platform.startswith("ios") and \

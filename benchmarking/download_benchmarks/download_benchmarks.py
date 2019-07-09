@@ -92,8 +92,8 @@ class DownloadBenchmarks(object):
                     '\\': '-',
                     ':': '/',
             }
-            path = self.root_model_dir + '/' +\
-                    getFilename(location, replace_pattern=replace_pattern)
+            path = os.path.join(self.root_model_dir,
+                getFilename(location, replace_pattern=replace_pattern))
         elif not location.startswith("//"):
             return
         else:
