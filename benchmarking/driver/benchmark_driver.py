@@ -233,22 +233,23 @@ def _getStatistics(array):
         'p100': sorted_array[-1],
         'p50': median,
         'p10': sorted_array[len(sorted_array) // 10],
-        'p90': sorted_array[len(sorted_array) -
-                            len(sorted_array) // 10 - 1],
+        'p90': sorted_array[len(sorted_array)
+                            - len(sorted_array) // 10 - 1],
         'MAD': _getMedian(sorted(map(lambda x: abs(x - median),
                                      sorted_array))),
         'mean': mean,
         'stdev': stdev,
+        'cv': stdev / mean,
     }
 
 
 def _getMean(values):
-    return sum(values)//len(values)
+    return sum(values) // len(values)
 
 
 def _getStdev(values, mean):
     sq_diffs = [(x - mean)**2 for x in values]
-    return int((sum(sq_diffs)/len(values))**0.5)
+    return (sum(sq_diffs) / len(values))**0.5
 
 
 def _getMedian(values):
