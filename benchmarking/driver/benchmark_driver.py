@@ -239,7 +239,7 @@ def _getStatistics(array):
                                      sorted_array))),
         'mean': mean,
         'stdev': stdev,
-        'cv': stdev / mean,
+        'cv': stdev / mean if mean else None
     }
 
 
