@@ -4,7 +4,6 @@ import json
 import sys
 from os.path import expanduser
 from unittest.mock import patch
-import subprocess
 import shutil
 
 
