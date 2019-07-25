@@ -19,7 +19,7 @@ from utils.custom_logger import getLogger
 
 
 class PytorchFramework(FrameworkBase):
-    IDENTIFIER = 'PytorchObserver '
+    IDENTIFIER = 'PyTorchObserver '
     NET = 'NET'
 
     def __init__(self, tempdir, args):
