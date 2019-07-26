@@ -122,7 +122,7 @@ class RemoteReporter(ReporterBase):
 
     def _updateSummaryData(self, data, summary, prefix):
         for k in data:
-            summary[prefix + k] = int(data[k])
+            summary[prefix + k] = int(data[k] or 0)
 
     def _log(self, url, access_token, logs):
         num_logs = len(logs)
