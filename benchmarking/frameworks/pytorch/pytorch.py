@@ -12,30 +12,17 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-import os
 
-from frameworks.framework_base import FrameworkBase
+from frameworks.caffe2.caffe2 import Caffe2Framework
 from utils.custom_logger import getLogger
 
 
-class PytorchFramework(FrameworkBase):
+class PytorchFramework(Caffe2Framework):
     IDENTIFIER = 'PyTorchObserver '
     NET = 'NET'
 
-    def __init__(self, tempdir, args):
-        super(PytorchFramework, self).__init__(args)
-        self.tempdir = os.path.join(tempdir, self.getName())
-        os.makedirs(self.tempdir, 0o777)
-        # cannot have any variable pass among methods
-
     def getName(self):
         return "pytorch"
-
-    def runBenchmark(self, info, benchmark, platform):
-        output, output_files = \
-            super(PytorchFramework, self).runBenchmark(info, benchmark,
-                                                      platform)
-        return output, output_files
 
     def runOnPlatform(self, total_num, cmd, platform, platform_args,
                       converter):
