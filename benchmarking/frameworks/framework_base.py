@@ -170,6 +170,17 @@ class FrameworkBase(object):
         if test.get("env", False):
             platform_args["env"] = test["env"]
 
+        if platform.getType() == "host":
+            # Fix the number of threads
+            if not platform_args.get("env", False):
+                platform_args["env"] = {}
+            platform_args["env"]["MKL_NUM_THREADS"] = test.get("num_threads", 1)
+            platform_args["env"]["OMP_NUM_THREADS"] = test.get("num_threads", 1)
+            # Fix the specfic cpu core to run the program
+            cpu_core = test.get("cpu-list", 4)
+            test["commands"][-1] = " ".join(["taskset", "--cpu-list", str(cpu_core),
+                test["commands"][-1]])
+
         self._runCommands(output, test["commands"], platform, programs, model,
                           test, tgt_model_files, tgt_input_files,
                           tgt_result_files, shared_libs, test_files,
