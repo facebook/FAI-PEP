@@ -87,6 +87,11 @@ class FrameworkBase(object):
             converter = None
 
         output = {}
+
+        # inject default parameters into test
+        if "iter" not in test:
+            test["iter"] = -1
+
         # overall preprocess
         if "preprocess" in model and first_iteration:
             commands = model["preprocess"]["commands"]
