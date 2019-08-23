@@ -17,10 +17,38 @@ import sys
 from threading import Timer
 
 from .custom_logger import getLogger
-from .utilities import setRunStatus
+from .utilities import setRunStatus, getRunStatus, setRunTimeout, getRunTimeout
 
 
 def processRun(*args, **kwargs):
+    retryCount = 3
+    if "retry" in kwargs:
+        retryCount = kwargs["retry"]
+        del kwargs["retry"]
+    while retryCount > 0:
+        # reset run status overwritting error
+        # from prior run
+        setRunStatus(0, overwrite=True)
+        ret = _processRun(*args, **kwargs)
+        # break out if the run succeeded
+        if getRunStatus() == 0:
+            getLogger().info("Process Succeeded: %s", ' '.join(*args))
+            break
+        # don't retry for errors which we know will
+        # fail again (ie. timeouts)
+        if getRunTimeout():
+            getLogger().info("Process Failed: %s", ' '.join(*args))
+            break
+        retryCount -= 1
+        getLogger().info(
+            "Process Failed (will retry %d more times): %s",
+            retryCount,
+            ' '.join(*args)
+        )
+    return ret
+
+
+def _processRun(*args, **kwargs):
     getLogger().info("Running: %s", ' '.join(*args))
     err_output = None
     try:
@@ -134,3 +162,4 @@ def _kill(p, cmd):
         pass  # ignore
     getLogger().error("Process timed out: {}".format(cmd))
     setRunStatus(1)
+    setRunTimeout()
