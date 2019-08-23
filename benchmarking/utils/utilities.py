@@ -206,9 +206,14 @@ def parse_kwarg(kwarg_str):
 # run_status == 3: both user and harness error
 run_status = 0
 
+# internal flags which will be masked out when returning the status
+timeout_flag = 1 << 8
+
+# mask to expose only external status bits
+external_status_mask = 0xff
 
 def getRunStatus():
-    return run_status
+    return run_status & external_status_mask
 
 
 def setRunStatus(status, overwrite=False):
@@ -217,6 +222,18 @@ def setRunStatus(status, overwrite=False):
         run_status = status
     else:
         run_status = run_status | status
+
+
+def getRunTimeout():
+    return run_status & timeout_flag == timeout_flag
+
+
+def setRunTimeout(timedOut=True):
+    global run_status
+    if timedOut:
+        run_status = run_status | timeout_flag
+    else:
+        run_status = run_status & ~timeout_flag
 
 
 def getMeta(args, platform):
