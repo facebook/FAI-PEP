@@ -52,16 +52,7 @@ def _processRun(*args, **kwargs):
     getLogger().info("Running: %s", ' '.join(*args))
     err_output = None
     try:
-        log_output = False
-        if "log_output" in kwargs:
-            log_output = kwargs["log_output"]
-            del kwargs["log_output"]
-        ignore_status = False
-        if "ignore_status" in kwargs:
-            ignore_status = kwargs["ignore_status"]
-            del kwargs["ignore_status"]
         non_blocking = False
-        output = None
         if "non_blocking" in kwargs and kwargs["non_blocking"]:
             non_blocking = True
             del kwargs["non_blocking"]
@@ -71,40 +62,23 @@ def _processRun(*args, **kwargs):
                 del kwargs["timeout"]
             _Popen(*args, **kwargs)
             return [], None
-        else:
-            patterns = []
-            if "patterns" in kwargs:
-                patterns = kwargs["patterns"]
-                del kwargs["patterns"]
-            timeout = None
-            if "timeout" in kwargs:
-                timeout = kwargs["timeout"]
-                del kwargs["timeout"]
-            ps = _Popen(*args, **kwargs)
-            t = None
-            if timeout:
-                t = Timer(timeout, _kill, [ps, ' '.join(*args)])
-                t.start()
-            output, match = _getOutput(ps, patterns)
-            ps.stdout.close()
-            if match:
-                # if the process is terminated by mathing output,
-                # assume the process is executed successfully
-                ps.terminate()
-                status = 0
-            else:
-                # wait for the process to terminate
-                status = ps.wait()
-            if t is not None:
-                t.cancel()
-            if log_output or status != 0:
-                getLogger().info('\n'.join(output))
-            if status == 0 or ignore_status:
-                return output, None
-            else:
-                setRunStatus(1)
-                return [], '\n'.join(output)
-
+        timeout = None
+        if "timeout" in kwargs:
+            timeout = kwargs["timeout"]
+            del kwargs["timeout"]
+        ps = _Popen(*args, **kwargs)
+        t = None
+        if timeout:
+            t = Timer(timeout, _kill, [ps, ' '.join(*args)])
+            t.start()
+        if "async" in kwargs and kwargs["async"]:
+            # when running the process asyncronously we return the
+            # popen object and timer for the timeout as a tuple
+            # it is the responsibility of the caller to pass this
+            # tuple into processWait in order to gather the output
+            # from the process
+            return (ps, t), None
+        return processWait((ps, t), **kwargs)
     except subprocess.CalledProcessError as e:
         err_output = e.output.decode("utf-8", "ignore")
         getLogger().error("Command failed: {}".format(err_output))
@@ -113,6 +87,49 @@ def _processRun(*args, **kwargs):
                                                             ' '.join(*args)))
         err_output = "{}".format(sys.exc_info()[0])
     setRunStatus(1)
+    return [], err_output
+
+
+def processWait(processAndTimeout, **kwargs):
+    try:
+        ps, t = processAndTimeout
+        log_output = False
+        if "log_output" in kwargs:
+            log_output = kwargs["log_output"]
+            del kwargs["log_output"]
+        ignore_status = False
+        if "ignore_status" in kwargs:
+            ignore_status = kwargs["ignore_status"]
+            del kwargs["ignore_status"]
+        patterns = []
+        if "patterns" in kwargs:
+            patterns = kwargs["patterns"]
+            del kwargs["patterns"]
+        output, match = _getOutput(ps, patterns)
+        ps.stdout.close()
+        if match:
+            # if the process is terminated by mathing output,
+            # assume the process is executed successfully
+            ps.terminate()
+            status = 0
+        else:
+            # wait for the process to terminate
+            status = ps.wait()
+        if t is not None:
+            t.cancel()
+        if log_output or status != 0:
+            getLogger().info('\n'.join(output))
+        if status == 0 or ignore_status:
+            return output, None
+        else:
+            setRunStatus(1)
+            return [], '\n'.join(output)
+    except subprocess.CalledProcessError as e:
+        err_output = e.output.decode("utf-8", "ignore")
+        getLogger().error("Command failed: {}".format(err_output))
+    except Exception:
+        err_output = "{}".format(sys.exc_info()[0])
+        getLogger().error("Unknown exception {}".format(sys.exc_info()[0]))
     return [], err_output
 
 
