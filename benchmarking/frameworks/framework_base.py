@@ -179,13 +179,15 @@ class FrameworkBase(object):
             # Fix the number of threads
             if not platform_args.get("env", False):
                 platform_args["env"] = {}
-            num_threads = test.get("num_threads", 1)
-            if num_threads > 0:
-                platform_args["env"]["MKL_NUM_THREADS"] = num_threads
-                platform_args["env"]["OMP_NUM_THREADS"] = num_threads
+            MKL_NUM_THREADS = test.get("MKL_NUM_THREADS", 1)
+            OMP_NUM_THREADS = test.get("OMP_NUM_THREADS", 1)
+            if MKL_NUM_THREADS > 0:
+                platform_args["env"]["MKL_NUM_THREADS"] = MKL_NUM_THREADS
+            if OMP_NUM_THREADS > 0:
+                platform_args["env"]["OMP_NUM_THREADS"] = OMP_NUM_THREADS
             # Fix the specfic cpu core to run the program
             cpu_core = test.get("cpu-list", 4)
-            if isinstance(test["commands"], list):
+            if isinstance(test["commands"], list) and cpu_core > 0:
                 test["commands"][-1] = " ".join([
                     "taskset", "--cpu-list", str(cpu_core), test["commands"][-1]])
 
