@@ -16,15 +16,14 @@ import abc
 import json
 import os
 import re
+import signal
 import shutil
 from six import string_types
-import sys
 
 from data_converters.data_converters import getConverters
 from platforms.platforms import getHostPlatform
-from utils.custom_logger import getLogger
-from utils.utilities import deepMerge, deepReplace, \
-                            getFAIPEPROOT, getString
+from utils.subprocess_with_logger import processRun
+from utils.utilities import deepMerge, deepReplace, getFAIPEPROOT, getString
 
 
 class FrameworkBase(object):
@@ -190,12 +189,24 @@ class FrameworkBase(object):
             if isinstance(test["commands"], list) and cpu_core > 0:
                 test["commands"][-1] = " ".join([
                     "taskset", "--cpu-list", str(cpu_core), test["commands"][-1]])
+            # Turn on turbo
+            turbo_mode = test.get("turbo", -1)
+            pid = None
+            if turbo_mode == 1:
+                cmd = ["watch", "-n", "20", "dynamo", "`hostname`", "turnOnTurbo"]
+                async_dict = {"async": True}
+                (ps, t), _ = processRun(cmd, **async_dict)
+                pid = ps.pid
 
         self._runCommands(output, test["commands"], platform, programs, model,
                           test, tgt_model_files, tgt_input_files,
                           tgt_result_files, shared_libs, test_files,
                           total_num, converter, platform_args=platform_args,
                           main_command=True)
+
+        if platform.getType() == "host" and pid:
+            # Turn off turbo
+            os.kill(pid, signal.SIGTERM)
 
         if test["metric"] == "power":
             collection_time = test["collection_time"] \
