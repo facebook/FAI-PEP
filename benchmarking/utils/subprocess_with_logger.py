@@ -24,7 +24,6 @@ def processRun(*args, **kwargs):
     retryCount = 3
     if "retry" in kwargs:
         retryCount = kwargs["retry"]
-        del kwargs["retry"]
     while retryCount > 0:
         # reset run status overwritting error
         # from prior run
@@ -52,26 +51,24 @@ def _processRun(*args, **kwargs):
     getLogger().info("Running: %s", ' '.join(*args))
     err_output = None
     try:
+        run_async = False
+        if "async" in kwargs:
+            run_async = kwargs["async"]
         non_blocking = False
         if "non_blocking" in kwargs and kwargs["non_blocking"]:
             non_blocking = True
-            del kwargs["non_blocking"]
         if non_blocking:
-            # timeout is not useful
-            if "timeout" in kwargs:
-                del kwargs["timeout"]
             _Popen(*args, **kwargs)
             return [], None
         timeout = None
         if "timeout" in kwargs:
             timeout = kwargs["timeout"]
-            del kwargs["timeout"]
         ps = _Popen(*args, **kwargs)
         t = None
         if timeout:
             t = Timer(timeout, _kill, [ps, ' '.join(*args)])
             t.start()
-        if "async" in kwargs and kwargs["async"]:
+        if run_async:
             # when running the process asyncronously we return the
             # popen object and timer for the timeout as a tuple
             # it is the responsibility of the caller to pass this
@@ -96,15 +93,12 @@ def processWait(processAndTimeout, **kwargs):
         log_output = False
         if "log_output" in kwargs:
             log_output = kwargs["log_output"]
-            del kwargs["log_output"]
         ignore_status = False
         if "ignore_status" in kwargs:
             ignore_status = kwargs["ignore_status"]
-            del kwargs["ignore_status"]
         patterns = []
         if "patterns" in kwargs:
             patterns = kwargs["patterns"]
-            del kwargs["patterns"]
         output, match = _getOutput(ps, patterns)
         ps.stdout.close()
         if match:
@@ -134,9 +128,16 @@ def processWait(processAndTimeout, **kwargs):
 
 
 def _Popen(*args, **kwargs):
+    # only allow whitelisted args to be passed into popen
+    customArgs = {}
+    whitelist = ["env"]
+    for arg in whitelist:
+        if arg in kwargs:
+            customArgs[arg] = kwargs[arg]
+
     ps = subprocess.Popen(*args, bufsize=-1, stdout=subprocess.PIPE,
                           stderr=subprocess.STDOUT,
-                          universal_newlines=True, **kwargs)
+                          universal_newlines=True, **customArgs)
     # We set the buffer size to system default.
     # this is not really recommended. However, we need to stream the
     # output as they are available. So we do this. But, if the data
