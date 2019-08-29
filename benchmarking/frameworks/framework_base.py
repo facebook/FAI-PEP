@@ -189,24 +189,12 @@ class FrameworkBase(object):
             if isinstance(test["commands"], list) and cpu_core > 0:
                 test["commands"][-1] = " ".join([
                     "taskset", "--cpu-list", str(cpu_core), test["commands"][-1]])
-            # Turn on turbo
-            turbo_mode = test.get("turbo", -1)
-            pid = None
-            if turbo_mode == 1:
-                cmd = ["watch", "-n", "20", "dynamo", "`hostname`", "turnOnTurbo"]
-                async_dict = {"async": True}
-                (ps, t), _ = processRun(cmd, **async_dict)
-                pid = ps.pid
 
         self._runCommands(output, test["commands"], platform, programs, model,
                           test, tgt_model_files, tgt_input_files,
                           tgt_result_files, shared_libs, test_files,
                           total_num, converter, platform_args=platform_args,
                           main_command=True)
-
-        if platform.getType() == "host" and pid:
-            # Turn off turbo
-            os.kill(pid, signal.SIGTERM)
 
         if test["metric"] == "power":
             collection_time = test["collection_time"] \
