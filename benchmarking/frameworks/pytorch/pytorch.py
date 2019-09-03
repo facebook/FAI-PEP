@@ -42,7 +42,8 @@ class PytorchFramework(Caffe2Framework):
         platform_args["ignore_status"] = True
         # emulate do...while... loop
         while True:
-            output = platform.runBenchmark(cmd, platform_args=platform_args)
+            output, meta = platform.runBenchmark(cmd,
+                                                 platform_args=platform_args)
             one_result, valid_run_idxs = \
                 converter_obj.collect(output, args)
             valid_run_idxs = [num + idx for idx in valid_run_idxs]
@@ -69,4 +70,5 @@ class PytorchFramework(Caffe2Framework):
                 results = results[valid_run_idxs[num - total_num]:]
             break
         metric = converter_obj.convert(results)
+        metric["meta"] = meta
         return metric
