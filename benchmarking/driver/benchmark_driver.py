@@ -133,7 +133,16 @@ def _processDelayData(input_data):
 
 def _mergeDelayData(treatment_data, control_data, bname):
     data = copy.deepcopy(treatment_data)
+    # meta is not a metric, so handle is seperatly
+    data["meta"] = _mergeDelayMeta(
+        treatment_data["meta"],
+        control_data["meta"],
+        bname
+    )
     for k in treatment_data:
+        # meta was already merged, so don't try to merge it again
+        if k == "meta":
+            continue
         if k not in control_data:
             getLogger().error(
                 "Value {} existed in treatment but not ".format(k) +
@@ -184,6 +193,18 @@ def _mergeDelayData(treatment_data, control_data, bname):
                 diff_summary["mean"] = tsummary["mean"] - csummary["mean"]
             data[k]['diff_summary'] = diff_summary
     return data
+
+
+def _mergeDelayMeta(treatment_meta, control_meta, bname):
+    meta = copy.deepcopy(treatment_meta)
+    for k in treatment_meta:
+        if k not in control_meta:
+            getLogger().error(
+                "Value {} existed in treatment but not ".format(k)
+                + "control for benchmark {}".format(bname))
+            continue
+        meta["control_{}".format(k)] = control_meta[k]
+    return meta
 
 
 def _processErrorData(treatment_files, golden_files):

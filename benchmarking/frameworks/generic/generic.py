@@ -54,7 +54,7 @@ class GenericFramework(FrameworkBase):
                 entry["location"], target))
 
         # run benchmark
-        output = platform.runBenchmark(commands, log_to_screen_only=True)
+        output, meta = platform.runBenchmark(commands, log_to_screen_only=True)
 
         # todo: output files
         output_files = None

@@ -76,7 +76,7 @@ class PlatformBase(object):
 
     @abc.abstractmethod
     def runBenchmark(self, cmd, *args, **kwargs):
-        return None
+        return None, None
 
     @abc.abstractmethod
     def preprocess(self, *args, **kwargs):

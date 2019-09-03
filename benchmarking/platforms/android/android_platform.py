@@ -109,6 +109,16 @@ class AndroidPlatform(PlatformBase):
     def runBenchmark(self, cmd, *args, **kwargs):
         if not isinstance(cmd, list):
             cmd = shlex.split(cmd)
+
+        # profiling is not supported on android
+        if "platform_args" in kwargs and \
+           "enable_profiling" in kwargs["platform_args"]:
+            del kwargs["platform_args"]["enable_profiling"]
+
+        # meta is used to store any data about the benchmark run
+        # that is not the output of the command
+        meta = {}
+
         # We know this command may fail. Avoid propogating this
         # failure to the upstream
         success = getRunStatus()
@@ -118,7 +128,7 @@ class AndroidPlatform(PlatformBase):
             log = self.runAppBenchmark(cmd, *args, **kwargs)
         else:
             log = self.runBinaryBenchmark(cmd, *args, **kwargs)
-        return log
+        return log, meta
 
     def runAppBenchmark(self, cmd, *args, **kwargs):
         arguments = self.getPairedArguments(cmd)

@@ -89,6 +89,13 @@ class IOSPlatform(PlatformBase):
             if "power" in platform_args and platform_args["power"]:
                 platform_args["non_blocking"] = True
                 run_cmd += ["--justlaunch"]
+        # profiling is not supported on ios
+        if "enable_profiling" in platform_args:
+            del platform_args["enable_profiling"]
+
+        # meta is used to store any data about the benchmark run
+        # that is not the output of the command
+        meta = {}
 
         if arguments:
             run_cmd += ["--args",
@@ -96,7 +103,7 @@ class IOSPlatform(PlatformBase):
                                   for x in arguments])]
         # the command may fail, but the err_output is what we need
         log_screen = self.util.run(run_cmd, **platform_args)
-        return log_screen
+        return log_screen, meta
 
     def rebootDevice(self):
         success = self.util.reboot()

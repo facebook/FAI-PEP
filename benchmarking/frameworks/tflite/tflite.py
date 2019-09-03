@@ -85,9 +85,10 @@ class TFLiteFramework(FrameworkBase):
 
     def runOnPlatform(self, total_num, cmd, platform, platform_args,
                       converter_class):
-        output = platform.runBenchmark(cmd, platform_args=platform_args,
-                                       log_to_screen_only=True)
+        output, meta = platform.runBenchmark(cmd, platform_args=platform_args,
+                                             log_to_screen_only=True)
         result = self._collectData(output)
+        result["meta"] = meta
         return result
 
     def _collectData(self, output):

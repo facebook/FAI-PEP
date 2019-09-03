@@ -21,7 +21,8 @@ import socket
 
 from platforms.host.hdb import HDB
 from platforms.platform_base import PlatformBase
-from utils.subprocess_with_logger import processRun
+from utils.subprocess_with_logger import processRun, processWait
+from profilers.profilers import getProfilerByUsage
 
 
 class HostPlatform(PlatformBase):
@@ -57,9 +58,39 @@ class HostPlatform(PlatformBase):
                 for k in customized_env:
                     env[k] = str(customized_env[k])
                 platform_args["env"] = env
+        # enable async if profiling was requested
+        runAsync = False
+        if "enable_profiling" in platform_args:
+            runAsync = platform_args["enable_profiling"]
+            del platform_args["enable_profiling"]
+        platform_args["async"] = runAsync
 
-        output, _ = processRun(cmd, **platform_args)
-        return output
+        # meta is used to store any data about the benchmark run
+        # that is not the output of the command
+        meta = {}
+
+        if not runAsync:
+            output, _ = processRun(cmd, **platform_args)
+            return output, meta
+
+        procAndTimeout, err = processRun(cmd, **platform_args)
+        if err:
+            return [], meta
+
+        ps, _ = procAndTimeout
+
+        profiler = getProfilerByUsage("server")
+
+        if profiler:
+            profilerFuture = profiler.start()
+
+        output, _ = processWait(procAndTimeout, **platform_args)
+
+        if profiler:
+            profilerRunId = profiler.getId(profilerFuture)
+            meta["profiler_run_id"] = profilerRunId
+
+        return output, meta
 
     def _getProcessorName(self):
         if platform.system() == "Windows":

@@ -15,11 +15,15 @@ from __future__ import unicode_literals
 
 
 profilers = {}
+profilersByUsage = {}
 
 
-def registerProfiler(name, profiler):
+def registerProfiler(name, profiler, usage=None):
     global profilers
+    global profilersByUsage
     profilers[name] = profiler
+    if usage:
+        profilersByUsage[usage] = profiler
 
 
 def getProfiler(name, id=None):
@@ -27,3 +31,10 @@ def getProfiler(name, id=None):
     if name not in profilers:
         return None
     return profilers[name](id)
+
+
+def getProfilerByUsage(usage, id=None):
+    global profilersByUsage
+    if usage not in profilersByUsage:
+        return None
+    return profilersByUsage[usage](id)
