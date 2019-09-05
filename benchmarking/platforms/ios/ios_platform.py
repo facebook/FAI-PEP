@@ -92,6 +92,8 @@ class IOSPlatform(PlatformBase):
         # profiling is not supported on ios
         if "enable_profiling" in platform_args:
             del platform_args["enable_profiling"]
+        if "profiler_args" in platform_args:
+            del platform_args["profiler_args"]
 
         # meta is used to store any data about the benchmark run
         # that is not the output of the command

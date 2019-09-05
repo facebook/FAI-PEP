@@ -22,13 +22,13 @@ class ProfilerBase(object):
     def __init__(self, id=None):
         self.id = id
 
-    def start(self):
+    def start(self, **kwargs):
         f = Future(self._start)
-        f.start(self.id)
+        f.start(self.id, **kwargs)
         return f
 
     @abc.abstractmethod
-    def _start(self, id):
+    def _start(self, id, **kwargs):
         return None
 
     def getId(self, f):
