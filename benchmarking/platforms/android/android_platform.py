@@ -114,6 +114,9 @@ class AndroidPlatform(PlatformBase):
         if "platform_args" in kwargs and \
            "enable_profiling" in kwargs["platform_args"]:
             del kwargs["platform_args"]["enable_profiling"]
+        if "platform_args" in kwargs and \
+           "profiler_args" in kwargs["platform_args"]:
+            del kwargs["platform_args"]["profiler_args"]
 
         # meta is used to store any data about the benchmark run
         # that is not the output of the command

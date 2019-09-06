@@ -64,6 +64,10 @@ class HostPlatform(PlatformBase):
             runAsync = platform_args["enable_profiling"]
             del platform_args["enable_profiling"]
         platform_args["async"] = runAsync
+        profiler_args = {}
+        if "profiler_args" in platform_args:
+            profiler_args = platform_args["profiler_args"]
+            del platform_args["profiler_args"]
 
         # meta is used to store any data about the benchmark run
         # that is not the output of the command
@@ -82,7 +86,7 @@ class HostPlatform(PlatformBase):
         profiler = getProfilerByUsage("server")
 
         if profiler:
-            profilerFuture = profiler.start()
+            profilerFuture = profiler.start(**profiler_args)
 
         output, _ = processWait(procAndTimeout, **platform_args)
 

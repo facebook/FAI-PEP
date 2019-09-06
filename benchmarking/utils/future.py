@@ -30,8 +30,12 @@ class Future(object):
         self.finished = False
         self.joined = False
 
-    def start(self, *args):
-        self.thread = threading.Thread(target=self._runAndCapture, args=args)
+    def start(self, *args, **kwargs):
+        self.thread = threading.Thread(
+            target=self._runAndCapture,
+            args=args,
+            kwargs=kwargs
+        )
         self.thread.start()
 
     def result(self):
@@ -44,6 +48,6 @@ class Future(object):
     def isFinished(self):
         return self.finished
 
-    def _runAndCapture(self, *args):
-        self.retval = self.func(*args)
+    def _runAndCapture(self, *args, **kwargs):
+        self.retval = self.func(*args, **kwargs)
         self.finished = True

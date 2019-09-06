@@ -389,6 +389,8 @@ class FrameworkBase(object):
         profiling_enabled = False
         if "profiler" in test:
             profiling_enabled = test["profiler"].get("enabled", False)
+        if profiling_enabled:
+            platform_args["profiler_args"] = test["profiler"]
         for idx, cmd in enumerate(cmds):
             # note that we only enable profiling for the last command
             # of the main commands.
