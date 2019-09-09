@@ -180,8 +180,13 @@ class RunBench(object):
                 not os.path.isfile(os.path.join(self.root_dir, "config.txt")):
             args = self._saveDefaultArgs(new_args)
         else:
-            with open(os.path.join(self.root_dir, "config.txt"), "r") as f:
-                args = json.load(f)
+            args = {}
+            tiered_configs = ["config.txt", "config_overrides.txt"]
+            for config in tiered_configs:
+                config_file = os.path.join(self.root_dir, config)
+                if os.path.isfile(config_file):
+                    with open(config_file, "r") as f:
+                        args.update(json.load(f))
         for v in new_args:
             if v in args:
                 del args[v]
