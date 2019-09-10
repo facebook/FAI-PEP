@@ -20,6 +20,8 @@ import requests
 from six import string_types
 import sys
 from time import sleep
+import socket
+import uuid
 
 from .custom_logger import getLogger
 
@@ -260,3 +262,10 @@ def getMeta(args, platform):
         with open(meta_file, "r") as f:
             meta = json.load(f)
     return meta
+
+
+def getMachineId():
+    ident = socket.getfqdn()
+    if len(ident) == 0 or ident == 'localhost':
+        ident = uuid.uuid1().hex
+    return ident

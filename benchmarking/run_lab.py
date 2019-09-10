@@ -37,7 +37,7 @@ from platforms.android.adb import ADB
 from reboot_device import reboot as reboot_device
 from utils.check_argparse import claimer_id_type
 from utils.custom_logger import getLogger, setLoggerLevel
-from utils.utilities import getFilename
+from utils.utilities import getFilename, getMachineId
 
 
 parser = argparse.ArgumentParser(description="Run the benchmark remotely")
@@ -47,9 +47,9 @@ parser.add_argument("--android_dir", default="/data/local/tmp/",
 parser.add_argument("--app_id",
     help="The app id you use to upload/download your file for everstore "
     "and access the job queue")
-parser.add_argument("--claimer_id", required=True, type=claimer_id_type,
-    help="A unique claimer id to represent itself. Must talk to Caffe2 team "
-    "to set it up.")
+parser.add_argument("--claimer_id", default=getMachineId(),
+    type=claimer_id_type, help="A unique claimer id to represent itself. "
+    "Must talk to Caffe2 team to set it up.")
 parser.add_argument("--cooldown", default=0, type=float,
     help="Specify the time interval between two test runs.")
 parser.add_argument("-d", "--devices",
