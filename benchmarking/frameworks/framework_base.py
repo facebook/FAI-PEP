@@ -13,17 +13,17 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import abc
+import ast
 import json
 import os
 import re
-import signal
 import shutil
 from six import string_types
 
 from data_converters.data_converters import getConverters
 from platforms.platforms import getHostPlatform
-from utils.subprocess_with_logger import processRun
-from utils.utilities import deepMerge, deepReplace, getFAIPEPROOT, getString
+from utils.utilities import deepMerge, deepReplace, \
+    getFAIPEPROOT, getString
 
 
 class FrameworkBase(object):
@@ -431,11 +431,17 @@ class FrameworkBase(object):
         return hostdir
 
     def _replaceStringMap(self, root, platform, program_path, stringmap_from_info):
-        string_map = json.loads(self.args.string_map) \
-            if self.args.string_map else {}
+        try:
+            # backward compatible
+            string_map = json.loads(self.args.string_map) \
+                if self.args.string_map else {}
 
-        info_string_map = json.loads(stringmap_from_info) \
-            if stringmap_from_info else {}
+            info_string_map = json.loads(stringmap_from_info) \
+                if stringmap_from_info else {}
+        except BaseException:
+            string_map = ast.literal_eval(self.args.string_map) \
+                if self.args.string_map else {}
+            info_string_map = stringmap_from_info if stringmap_from_info else {}
 
         deepMerge(string_map, info_string_map)
 
