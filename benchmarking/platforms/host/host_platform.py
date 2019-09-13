@@ -83,7 +83,7 @@ class HostPlatform(PlatformBase):
 
         ps, _ = procAndTimeout
 
-        profiler = getProfilerByUsage("server")
+        profiler = getProfilerByUsage("server", os.getpid())
 
         if profiler:
             profilerFuture = profiler.start(**profiler_args)
