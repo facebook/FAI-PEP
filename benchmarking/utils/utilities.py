@@ -151,9 +151,9 @@ def requestsData(url, **kwargs):
             trust_env to False to solve the problem.
             Reference: https://stackoverflow.com/a/39822223
             """
-            session = requests.Session()
-            session.trust_env = False
-            result = session.post(url, **kwargs)
+            with requests.Session() as session:
+                session.trust_env = False
+                result = session.post(url, **kwargs)
             if result.status_code != 200:
                 getLogger().error("Post request failed, receiving code {}".
                                   format(result.status_code))
