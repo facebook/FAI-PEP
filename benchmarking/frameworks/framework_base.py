@@ -431,17 +431,9 @@ class FrameworkBase(object):
         return hostdir
 
     def _replaceStringMap(self, root, platform, program_path, stringmap_from_info):
-        try:
-            # backward compatible
-            string_map = json.loads(self.args.string_map) \
-                if self.args.string_map else {}
-
-            info_string_map = json.loads(stringmap_from_info) \
-                if stringmap_from_info else {}
-        except BaseException:
-            string_map = ast.literal_eval(self.args.string_map) \
-                if self.args.string_map else {}
-            info_string_map = stringmap_from_info if stringmap_from_info else {}
+        string_map = ast.literal_eval(self.args.string_map) \
+            if self.args.string_map else {}
+        info_string_map = stringmap_from_info if stringmap_from_info else {}
 
         deepMerge(string_map, info_string_map)
 
