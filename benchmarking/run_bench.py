@@ -77,6 +77,12 @@ class RunBench(object):
                     i = i + 1
                 else:
                     args[unknowns[i]] = None
+            elif len(unknowns[i]) > 1 and unknowns[i][:1] == '-':
+                if i < len(unknowns) - 1 and unknowns[i + 1][:1] != '-':
+                    args[unknowns[i]] = unknowns[i + 1]
+                    i = i + 1
+                else:
+                    args[unknowns[i]] = None
             else:
                 # error conditionm, skipping
                 pass
@@ -195,8 +201,42 @@ class RunBench(object):
                 del args["--remote"]
         return args
 
+    def _updateArgsWithBenchmarkOverrides(self, args):
+        unknowns = self._getUnknownArgs()
+        # Attempt to find benchmark_file flag in unknowns
+        # It might not be there depending on what type of
+        # run this is
+        benchmark_file = None
+        if "--benchmark_file" in unknowns:
+            benchmark_file = unknowns["--benchmark_file"]
+        if not benchmark_file and "-b" in unknowns:
+            benchmark_file = unknowns["-b"]
+        if not benchmark_file:
+            return
+
+        # Try to load the benchmark_file and it's default_args section
+        if not os.path.isfile(benchmark_file):
+            return
+        benchmark = {}
+        with open(benchmark_file, "r") as f:
+            benchmark = json.load(f)
+        defaults = {}
+        if "default_args" in benchmark:
+            defaults = benchmark["default_args"]
+        if len(defaults) == 0:
+            return
+
+        # Remove args which are further overidden via cli flags
+        for arg in defaults:
+            if arg in unknowns:
+                del defaults[arg]
+
+        # Override args with default_overrides
+        args.update(defaults)
+
     def _getRawArgs(self):
         args = self._getSavedArgs()
+        self._updateArgsWithBenchmarkOverrides(args)
         raw_args = []
         for u in args:
             raw_args.extend([getString(u),
