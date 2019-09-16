@@ -21,6 +21,7 @@ import json
 import logging
 import multiprocessing
 import os
+import signal
 import shutil
 import stat
 import sys
@@ -116,8 +117,25 @@ REBOOT_INTERVAL = datetime.timedelta(hours=8)
 LOCK = threading.RLock()
 LOG_LIMIT = 16 * (10**6)
 
+DRAIN = False
+RUNNING_JOBS = 0
+
+
+def drainHandler(signum, frame):
+    global DRAIN
+    DRAIN = True
+
+
+def hookSignals():
+    signal.signal(signal.SIGUSR1, drainHandler)
+
 
 def stopRun(args):
+    global DRAIN
+    global RUNNING_JOBS
+    if DRAIN and RUNNING_JOBS == 0:
+        getLogger().info("Finished draining. Exiting...")
+        return True
     if args.status_file and os.path.isfile(args.status_file):
         with open(args.status_file, "r") as file:
             content = file.read().strip()
@@ -168,11 +186,13 @@ class runAsync(object):
         return {"status": status, "output": output}
 
     def callback(self, result_dict):
+        global RUNNING_JOBS
         with LOCK:
             device = self._updateDevices(result_dict)
             self._submitDone(device)
             self._removeBenchmarkFiles(device)
             self._coolDown(device)
+            RUNNING_JOBS -= 1
         time.sleep(1)
 
     def error_callback(self, *args):
@@ -361,6 +381,7 @@ class RunLab(object):
         self.pool = multiprocessing.Pool(processes=numProcesses)
 
     def run(self):
+        hookSignals()
         while(not stopRun(self.args)):
             with LOCK:
                 self._runOnce()
@@ -435,6 +456,9 @@ class RunLab(object):
             raw_args = self._getRawArgs(job, tempdir)
             self.devices[job["device"]][job["hash"]]["start_time"] = time.ctime()
             app = runAsync(self.args, self.devices, self.db, job, tempdir)
+
+            global RUNNING_JOBS
+            RUNNING_JOBS += 1
 
             """
             Python's multiprocessing need to pickle things to sling them
