@@ -77,7 +77,7 @@ parser.add_argument("--file_storage",
 parser.add_argument("--force_submit", action="store_true",
     help="Force to submit the run.")
 parser.add_argument("--framework",
-    choices=["caffe2", "generic", "oculus", "pytorch", "tflite"],
+    choices=["caffe2", "generic", "oculus", "pytorch", "tflite", "glow"],
     help="Specify the framework to benchmark on.")
 parser.add_argument("--frameworks_dir", default=None,
     help="The root directory that all frameworks resides. "

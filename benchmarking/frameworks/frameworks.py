@@ -18,13 +18,15 @@ from .generic.generic import GenericFramework
 from .oculus.oculus import OculusFramework
 from .pytorch.pytorch import PytorchFramework
 from .tflite.tflite import TFLiteFramework
+from .glow.glow import GlowFramework
 
 frameworks = {
     'caffe2': Caffe2Framework,
     'generic': GenericFramework,
     'oculus': OculusFramework,
     'pytorch': PytorchFramework,
-    'tflite': TFLiteFramework
+    'tflite': TFLiteFramework,
+    'glow': GlowFramework
 }
 
 
