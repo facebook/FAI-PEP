@@ -386,11 +386,11 @@ class FrameworkBase(object):
                                       model_files,
                                       input_files, output_files,
                                       shared_libs, test_files, main_command)
-        profiling_enabled = False
+        profiling_enabled = True
         if "profiler" in test:
-            profiling_enabled = test["profiler"].get("enabled", False)
+            profiling_enabled = test.get("profiler", {}).get("enabled", True)
         if profiling_enabled:
-            platform_args["profiler_args"] = test["profiler"]
+            platform_args["profiler_args"] = test.get("profiler", {})
         for idx, cmd in enumerate(cmds):
             # note that we only enable profiling for the last command
             # of the main commands.
