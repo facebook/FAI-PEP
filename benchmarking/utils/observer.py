@@ -15,7 +15,7 @@ import json
 
 # converts the passed in fields into one of the formats expected by the data converter
 # and prepends the identifer to the json string
-def emitMetric(identifier="PytorchObserver", **kwargs):
+def emitMetric(identifier="PyTorchObserver", **kwargs):
     data = {}
     # check basic fields in all formats are present
     if "type" not in kwargs or "metric" not in kwargs or "unit" not in kwargs:
