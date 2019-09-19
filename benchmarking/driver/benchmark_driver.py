@@ -258,7 +258,7 @@ def _getStatistics(array):
                             - len(sorted_array) // 10 - 1],
         'MAD': _getMedian(sorted(map(lambda x: abs(x - median),
                                      sorted_array))),
-        'mean': mean if mean != 0 else None,
+        'mean': mean,
         'stdev': stdev,
         'cv': stdev / mean if mean != 0 else None
     }
