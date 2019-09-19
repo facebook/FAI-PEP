@@ -11,10 +11,16 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import sys
+import os
 
+LOGFILE = os.getenv("AIBENCH_LOGFILE")
 FORMAT = '%(levelname)s %(asctime)s %(filename)s:%(lineno)4d: %(message)s'
-logging.basicConfig(level=logging.DEBUG, format=FORMAT,
-                    datefmt="%H:%M:%S", stream=sys.stdout)
+if(LOGFILE is not None):
+    logging.basicConfig(level=logging.DEBUG, format=FORMAT,
+                        datefmt="%H:%M:%S", filename=LOGFILE)
+else:
+    logging.basicConfig(level=logging.DEBUG, format=FORMAT,
+                        datefmt="%H:%M:%S", stream=sys.stdout)
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 logger = logging.getLogger("GlobalLogger")
