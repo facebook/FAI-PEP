@@ -41,16 +41,11 @@ def load_chart(chart_type, series, container, kw_extra=None, *args, **kwargs):
     if kw_extra is None:
         kw_extra = {}
 
-    if 'x_is_date' not in kw_extra:
-        kw_extra['x_is_date'] = False
-    if 'x_axis_format' not in kw_extra:
-        kw_extra['x_axis_format'] = "%d %b %Y"
-    if 'color_category' not in kw_extra:
-        kw_extra['color_category'] = "category20"
-    if 'tag_script_js' not in kw_extra:
-        kw_extra['tag_script_js'] = True
-    if 'chart_attr' not in kw_extra:
-        kw_extra['chart_attr'] = {}
+    kw_extra['x_is_date'] = kw_extra.get('x_is_date', False)
+    kw_extra['x_axis_format'] = kw_extra.get('x_axis_format', "%d %b %Y")
+    kw_extra['color_category'] = kw_extra.get('color_category', "category20")
+    kw_extra['tag_script_js'] = kw_extra.get('tag_script_js', True)
+    kw_extra['chart_attr'] = kw_extra.get('chart_attr', {})
     # set the container name
     kw_extra['name'] = str(container)
 
