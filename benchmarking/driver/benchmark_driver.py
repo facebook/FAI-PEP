@@ -36,6 +36,7 @@ def runOneBenchmark(info, benchmark, framework, platform,
         minfo["shared_libs"] = info["shared_libs"]
     try:
         data = _runOnePass(minfo, mbenchmark, framework, platform)
+        status = status | getRunStatus()
         meta = None
         if "control" in info:
             cinfo = copy.deepcopy(info["control"])
@@ -46,6 +47,7 @@ def runOneBenchmark(info, benchmark, framework, platform,
                 cooldown = float(benchmark["model"]["cooldown"])
             time.sleep(cooldown)
             control = _runOnePass(cinfo, benchmark, framework, platform)
+            status = status | getRunStatus()
             bname = benchmark["model"]["name"]
             data = _mergeDelayData(data, control, bname)
         if benchmark["tests"][0]["metric"] != "generic":
