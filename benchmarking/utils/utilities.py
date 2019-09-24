@@ -202,11 +202,11 @@ def parse_kwarg(kwarg_str):
     return key, value
 
 
-# run_status == 0: success
-# run_status == 1: user error
-# run_status == 2: harness error
-# run_status == 3: both user and harness error
-run_status = 0
+# run_statuses[key] == 0: success
+# run_statuses[key] == 1: user error
+# run_statuses[key] == 2: harness error
+# run_statuses[key] == 3: both user and harness error
+run_statuses = {}
 
 # internal flags which will be masked out when returning the status
 timeout_flag = 1 << 8
@@ -214,28 +214,37 @@ timeout_flag = 1 << 8
 # mask to expose only external status bits
 external_status_mask = 0xff
 
-def getRunStatus():
-    return run_status & external_status_mask
+
+def _getRawRunStatus(key=''):
+    global run_statuses
+    return run_statuses.get(key, 0)
 
 
-def setRunStatus(status, overwrite=False):
-    global run_status
+def _setRawRunStatus(status, key=''):
+    global run_statuses
+    run_statuses[key] = status
+
+
+def getRunStatus(key=''):
+    return _getRawRunStatus(key) & external_status_mask
+
+
+def setRunStatus(status, overwrite=False, key=''):
     if overwrite:
-        run_status = status
+        _setRawRunStatus(status, key)
     else:
-        run_status = run_status | status
+        _setRawRunStatus(_getRawRunStatus(key) | status, key)
 
 
-def getRunTimeout():
-    return run_status & timeout_flag == timeout_flag
+def getRunTimeout(key=''):
+    return _getRawRunStatus(key) & timeout_flag == timeout_flag
 
 
-def setRunTimeout(timedOut=True):
-    global run_status
+def setRunTimeout(timedOut=True, key=''):
     if timedOut:
-        run_status = run_status | timeout_flag
+        _setRawRunStatus(_getRawRunStatus(key) | timeout_flag, key)
     else:
-        run_status = run_status & ~timeout_flag
+        _setRawRunStatus(_getRawRunStatus(key) & ~timeout_flag, key)
 
 
 def getMeta(args, platform):
