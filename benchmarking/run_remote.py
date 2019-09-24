@@ -102,6 +102,8 @@ parser.add_argument("--platform",
     "saved in specifications/frameworks/<framework>/<platforms> directory")
 parser.add_argument("--pre_built_binary",
     help="Specify the pre_built_binary to bypass the building process.")
+parser.add_argument("--force_profile", action="store_true",
+    help="Enable profiling regardless of the setting in the benchmark.")
 parser.add_argument("--query_num_devices",
     help="Return the counter of user specified device name under different condition")
 parser.add_argument("--repo_dir",
@@ -261,6 +263,9 @@ class RunRemote(object):
 
         benchmarks = getBenchmarks(self.args.benchmark_file,
                                    self.args.framework)
+
+        self._updateBenchmarksWithArgs(benchmarks, self.args)
+
         for benchmark in benchmarks:
             self._uploadOneBenchmark(benchmark)
             if self.args.debug:
@@ -317,6 +322,18 @@ class RunRemote(object):
             shutil.rmtree(self.tempdir, True)
         if self.args.screen_reporter:
             self._screenReporter(user_identifier)
+
+    def _updateBenchmarksWithArgs(self, benchmarks, args):
+        for benchmark in benchmarks:
+            content = benchmark["content"]
+            tests = []
+            if "tests" in content:
+                tests = content["tests"]
+            for test in tests:
+                if args.force_profile:
+                    if "profiler" not in test:
+                        test["profiler"] = {}
+                    test["profiler"]["enabled"] = True
 
     def _uploadOneBenchmark(self, benchmark):
         filename = benchmark["filename"]
