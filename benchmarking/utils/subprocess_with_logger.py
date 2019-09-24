@@ -21,16 +21,18 @@ from .utilities import setRunStatus, getRunStatus, setRunTimeout, getRunTimeout
 
 
 def processRun(*args, **kwargs):
+    if "process_key" not in kwargs:
+        kwargs["process_key"] = ""
     retryCount = 3
     if "retry" in kwargs:
         retryCount = kwargs["retry"]
     while retryCount > 0:
         # reset run status overwritting error
         # from prior run
-        setRunStatus(0, overwrite=True)
+        setRunStatus(0, overwrite=True, key=kwargs["process_key"])
         ret = _processRun(*args, **kwargs)
         # break out if the run succeeded
-        if getRunStatus() == 0:
+        if getRunStatus(key=kwargs["process_key"]) == 0:
             getLogger().info("Process Succeeded: %s", ' '.join(*args))
             break
         # don't retry for errors which we know will
@@ -66,7 +68,11 @@ def _processRun(*args, **kwargs):
         ps = _Popen(*args, **kwargs)
         t = None
         if timeout:
-            t = Timer(timeout, _kill, [ps, ' '.join(*args)])
+            t = Timer(
+                timeout,
+                _kill,
+                [ps, ' '.join(*args), kwargs["process_key"]]
+            )
             t.start()
         if run_async:
             # when running the process asyncronously we return the
@@ -83,7 +89,7 @@ def _processRun(*args, **kwargs):
         getLogger().error("Unknown exception {}: {}".format(sys.exc_info()[0],
                                                             ' '.join(*args)))
         err_output = "{}".format(sys.exc_info()[0])
-    setRunStatus(1)
+    setRunStatus(1, key=kwargs["process_key"])
     return [], err_output
 
 
@@ -116,7 +122,7 @@ def processWait(processAndTimeout, **kwargs):
         if status == 0 or ignore_status:
             return output, None
         else:
-            setRunStatus(1)
+            setRunStatus(1, key=kwargs["process_key"])
             return [], '\n'.join(output)
     except subprocess.CalledProcessError as e:
         err_output = e.output.decode("utf-8", "ignore")
@@ -173,11 +179,11 @@ def _getOutput(ps, patterns):
     return lines, match
 
 
-def _kill(p, cmd):
+def _kill(p, cmd, processKey):
     try:
         p.kill()
     except OSError:
         pass  # ignore
     getLogger().error("Process timed out: {}".format(cmd))
-    setRunStatus(1)
+    setRunStatus(1, key=processKey)
     setRunTimeout()
