@@ -227,8 +227,8 @@ class RunBench(object):
             return
 
         # Remove args which are further overidden via cli flags
-        for arg in defaults:
-            if arg in unknowns:
+        for arg in unknowns:
+            if arg in defaults:
                 del defaults[arg]
 
         # Override args with default_overrides
