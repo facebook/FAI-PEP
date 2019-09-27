@@ -40,40 +40,20 @@ class GlowFramework(FrameworkBase):
         cmds = super(GlowFramework, self).composeRunCommand(commands, platform,
                 programs, model, test, model_files, input_files, output_files,
                 shared_libs, preprocess_files, main_command)
-        if cmds:
-            return cmds
-
-        cmd = ["--net", model_files["predict"],
-               "--iter", test["iter"]
-               ]
-        if "program" in programs:
-            cmd = [programs["program"]] + cmd
-        if "init" in model_files:
-            cmd.append("--init_net")
-            cmd.append(model_files["init"])
-        if "commands" in test:
-            if "glow" in test["commands"]:
-                for key in test["commands"]["glow"]:
-                    val = test["commands"]["glow"][key]
-                    cmd.extend(["--" + key, val])
-
-        if shared_libs:
-            cmd = ["export", "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:"
-                    + os.path.dirname(shared_libs[0]), "&&"] + cmd
-        cmd = ' '.join(str(s) for s in cmd)
-        return [cmd]
+        return cmds
 
     def runOnPlatform(self, total_num, cmd, platform, platform_args,
             converter):
         output, meta = platform.runBenchmark(cmd, platform_args=platform_args)
-        result = self._collectData(output)
-        result["meta"] = meta
-        return result
+        results = {}
+        self._maybeAddJsonOutput(output, results)
+        self._maybeAddTraceOutput(platform, results)
+        results["meta"] = meta
+        return results
 
-    def _collectData(self, output):
+    def _maybeAddJsonOutput(self, output, results):
         if output is None:
             return False
-        results = {}
         rows = output
         if isinstance(output, string_types):
             rows = output.split('\n')
@@ -85,4 +65,28 @@ class GlowFramework(FrameworkBase):
             except json.JSONDecodeError:
                 pass
             i += 1
-        return results
+
+    def _maybeAddTraceOutput(self, platform, results):
+        traceFile = os.path.join(platform.getOutputDir(), "trace")
+        if not os.path.exists(traceFile):
+            return
+        with open(traceFile, 'r') as fp:
+            line = fp.readline()
+            while line:
+                try:
+                    parsed = json.loads(line.rstrip(", \n\t"))
+                    key = "NET " + parsed["name"]
+                    if key in results.keys():
+                        results[key]["values"].append(parsed["dur"])
+                    else:
+                        results[key] = {
+                            "type": "NET",
+                            "metric": parsed["name"],
+                            "unit": "microsecond",
+                            "values": [parsed["dur"]]
+                        }
+                except json.JSONDecodeError:
+                    pass
+                except KeyError:
+                    pass
+                line = fp.readline()
