@@ -16,8 +16,10 @@ import argparse
 import copy
 import json
 import os
+import pkg_resources
 import six
 import sys
+import tempfile
 
 from lab_driver import LabDriver
 from utils.custom_logger import getLogger, setLoggerLevel
@@ -211,6 +213,16 @@ class RunBench(object):
             benchmark_file = unknowns["--benchmark_file"]
         if not benchmark_file and "-b" in unknowns:
             benchmark_file = unknowns["-b"]
+        # Remove later when adhoc is moved to seperated infrastructure
+        if "--adhoc" in unknowns:
+            fd, path = tempfile.mkstemp()
+            with pkg_resources.resource_stream(
+                "aibench",
+                "specifications/models/generic/adhoc.json"
+            ) as stream:
+                with os.fdopen(fd, 'wb') as f:
+                    f.write(stream.read())
+            benchmark_file = path
         if not benchmark_file:
             return
 
