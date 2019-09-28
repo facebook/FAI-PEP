@@ -52,7 +52,8 @@ class LabDriver(object):
         setLoggerLevel(self.args.logger_level)
 
     def run(self):
-        if not self.args.lab and not self.args.remote:
+        if not self.args.lab and not self.args.remote and \
+                not "--adhoc" not in self.args:
             assert self.args.benchmark_file, \
                 "--benchmark_file (-b) must be specified"
 

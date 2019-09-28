@@ -130,6 +130,8 @@ parser.add_argument("--user_identifier",
     help="The identifier user pass in to differentiate different benchmark runs.")
 parser.add_argument("--user_string",
     help="The user_string pass in to differentiate different regression benchmark runs.")
+parser.add_argument("--adhoc", action="store_true",
+    help="Use the adhoc template file")
 
 
 class BuildProgram(threading.Thread):
@@ -184,6 +186,7 @@ class BuildProgram(threading.Thread):
 class RunRemote(object):
     def __init__(self, raw_args=None):
         self.args, self.unknowns = parser.parse_known_args(raw_args)
+        self._updateArgs(self.args)
         setLoggerLevel(self.args.logger_level)
         if not self.args.benchmark_db_entry:
             assert self.args.server_addr is not None, \
@@ -612,6 +615,18 @@ class RunRemote(object):
             "type": type,
             "unit": unit,
         }
+
+    def _updateArgs(self, args):
+        # Remove later when adhoc is moved to seperated infrastructure
+        if args.adhoc:
+            fd, path = tempfile.mkstemp()
+            with pkg_resources.resource_stream(
+                "aibench",
+                "specifications/models/generic/adhoc.json"
+            ) as stream:
+                with os.fdopen(fd, 'wb') as f:
+                    f.write(stream.read())
+            args.benchmark_file = path
 
 
 if __name__ == "__main__":
