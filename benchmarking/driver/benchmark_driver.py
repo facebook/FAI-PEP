@@ -70,6 +70,13 @@ def runOneBenchmark(info, benchmark, framework, platform,
         setRunStatus(status)
         getLogger().error(traceback.format_exc())
 
+        # Set result meta and data to default values to that
+        # the reporter will not try to key into a None
+        result = {
+            "meta": {},
+            "data": []
+        }
+
     if data is None or len(data) == 0:
         name = platform.getMangledName()
         model_name = ""
