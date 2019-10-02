@@ -96,6 +96,9 @@ def _processRun(*args, **kwargs):
 def processWait(processAndTimeout, **kwargs):
     try:
         ps, t = processAndTimeout
+        process_key = ""
+        if "process_key" in kwargs:
+            process_key = kwargs["process_key"]
         log_output = False
         if "log_output" in kwargs:
             log_output = kwargs["log_output"]
@@ -122,7 +125,7 @@ def processWait(processAndTimeout, **kwargs):
         if status == 0 or ignore_status:
             return output, None
         else:
-            setRunStatus(1, key=kwargs["process_key"])
+            setRunStatus(1, key=process_key)
             return [], '\n'.join(output)
     except subprocess.CalledProcessError as e:
         err_output = e.output.decode("utf-8", "ignore")
