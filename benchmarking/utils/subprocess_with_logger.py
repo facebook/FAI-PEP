@@ -12,6 +12,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+import os
+import signal
 import subprocess
 import sys
 from threading import Timer
@@ -146,7 +148,8 @@ def _Popen(*args, **kwargs):
 
     ps = subprocess.Popen(*args, bufsize=-1, stdout=subprocess.PIPE,
                           stderr=subprocess.STDOUT,
-                          universal_newlines=True, **customArgs)
+                          universal_newlines=True, preexec_fn=os.setsid,
+                          **customArgs)
     # We set the buffer size to system default.
     # this is not really recommended. However, we need to stream the
     # output as they are available. So we do this. But, if the data
@@ -184,7 +187,7 @@ def _getOutput(ps, patterns):
 
 def _kill(p, cmd, processKey):
     try:
-        p.kill()
+        os.killpg(p.pid, signal.SIGKILL)
     except OSError:
         pass  # ignore
     getLogger().error("Process timed out: {}".format(cmd))
