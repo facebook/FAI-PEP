@@ -75,18 +75,23 @@ class GlowFramework(FrameworkBase):
             while line:
                 try:
                     parsed = json.loads(line.rstrip(", \n\t"))
-                    key = "NET " + parsed["name"]
+                    metric = parsed["name"]
+                    if not metric:
+                        raise ValueError("empty metric")
+                    key = "NET " + metric
                     if key in results.keys():
                         results[key]["values"].append(parsed["dur"])
                     else:
                         results[key] = {
                             "type": "NET",
-                            "metric": parsed["name"],
+                            "metric": metric,
                             "unit": "microsecond",
                             "values": [parsed["dur"]]
                         }
                 except json.JSONDecodeError:
                     pass
                 except KeyError:
+                    pass
+                except ValueError:
                     pass
                 line = fp.readline()
