@@ -48,6 +48,7 @@ class GlowFramework(FrameworkBase):
         results = {}
         self._maybeAddJsonOutput(output, results)
         self._maybeAddTraceOutput(platform, results)
+        self._maybeAddBenchSummary(output, results)
         results["meta"] = meta
         return results
 
@@ -66,6 +67,85 @@ class GlowFramework(FrameworkBase):
                 pass
             i += 1
 
+    def _addOrAppendResult(self, results, key, value, record):
+        if key not in results.keys():
+            results[key] = record
+        results[key]["values"].append(value)
+
+    def _maybeAddBenchSummary(self, output, results):
+        if output is None:
+            return False
+        rows = output
+        if isinstance(output, string_types):
+            rows = output.split('\n')
+        i = 0
+        while i < len(rows):
+            try:
+                fields = rows[i].split(",")
+                if fields[0] == "BenchResult":
+                    if fields[1] == "AddBench":
+                        self._addOrAppendResult(results,
+                            "NET AddBench:runtime",
+                            float(fields[10]), {
+                                "type": "NET",
+                                "metric": "AddBench:runtime",
+                                "unit": "second",
+                                "values": []
+                            }
+                        )
+                        self._addOrAppendResult(results,
+                            "NET AddBench:throughput",
+                            float(fields[11]), {
+                                "type": "NET",
+                                "metric": "AddBench:throughput",
+                                "unit": "Gb/second",
+                                "values": []
+                            }
+                        )
+                    elif fields[1] == "GemmBench":
+                        self._addOrAppendResult(results,
+                            "NET GemmBench:runtime",
+                            float(fields[12]), {
+                                "type": "NET",
+                                "metric": "GemmBench:runtime",
+                                "unit": "second",
+                                "values": []
+                            }
+                        )
+                        self._addOrAppendResult(results,
+                            "NET GemmBench:throughput",
+                            float(fields[13]), {
+                                "type": "NET",
+                                "metric": "GemmBench:throughput",
+                                "unit": "Gb/second",
+                                "values": []
+                            }
+                        )
+                    elif fields[1] == "GemmParallelBench":
+                        self._addOrAppendResult(results,
+                            "NET GemmParallelBench:runtime",
+                            float(fields[11]), {
+                                "type": "NET",
+                                "metric": "GemmParallelBench:runtime",
+                                "unit": "second",
+                                "values": []
+                            }
+                        )
+                        self._addOrAppendResult(results,
+                            "NET GemmParallelBench:throughput",
+                            float(fields[12]), {
+                                "type": "NET",
+                                "metric": "GemmParallelBench:throughput",
+                                "unit": "Gb/second",
+                                "values": []
+                            }
+                        )
+            except IndexError:
+                pass
+            except ValueError:
+                pass
+            i += 1
+
     def _maybeAddTraceOutput(self, platform, results):
         traceFile = os.path.join(platform.getOutputDir(), "trace")
         if not os.path.exists(traceFile):
@@ -79,15 +159,12 @@ class GlowFramework(FrameworkBase):
                     if not metric:
                         raise ValueError("empty metric")
                     key = "NET " + metric
-                    if key in results.keys():
-                        results[key]["values"].append(parsed["dur"])
-                    else:
-                        results[key] = {
-                            "type": "NET",
-                            "metric": metric,
-                            "unit": "microsecond",
-                            "values": [parsed["dur"]]
-                        }
+                    self._addOrAppendResult(results, key, parsed["dur"], {
+                        "type": "NET",
+                        "metric": metric,
+                        "unit": "microsecond",
+                        "values": []
+                    })
                 except json.JSONDecodeError:
                     pass
                 except KeyError:
