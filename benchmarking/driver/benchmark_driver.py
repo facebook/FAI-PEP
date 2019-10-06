@@ -35,6 +35,8 @@ def runOneBenchmark(info, benchmark, framework, platform,
     if "shared_libs" in info:
         minfo["shared_libs"] = info["shared_libs"]
     try:
+        # invalidate CPU cache
+        [1.0 for _ in range(20 << 20)]
         data = _runOnePass(minfo, mbenchmark, framework, platform)
         status = status | getRunStatus()
         meta = None
@@ -46,6 +48,8 @@ def runOneBenchmark(info, benchmark, framework, platform,
             if "model" in benchmark and "cooldown" in benchmark["model"]:
                 cooldown = float(benchmark["model"]["cooldown"])
             time.sleep(cooldown)
+            # invalidate CPU cache
+            [1.0 for _ in range(20 << 20)]
             control = _runOnePass(cinfo, benchmark, framework, platform)
             status = status | getRunStatus()
             bname = benchmark["model"]["name"]
@@ -86,10 +90,10 @@ def runOneBenchmark(info, benchmark, framework, platform,
         if "commit" in info["treatment"]:
             commit_hash = info["treatment"]["commit"]
         getLogger().info(
-            "No data collected for ".format(model_name) +
-            "on {}. ".format(name) +
-            "The run may be failed for " +
-            "{}".format(commit_hash))
+            "No data collected for ".format(model_name)
+            + "on {}. ".format(name)
+            + "The run may be failed for "
+            + "{}".format(commit_hash))
         return status
 
     with lock:
@@ -154,8 +158,8 @@ def _mergeDelayData(treatment_data, control_data, bname):
             continue
         if k not in control_data:
             getLogger().error(
-                "Value {} existed in treatment but not ".format(k) +
-                "control for benchmark {}".format(bname))
+                "Value {} existed in treatment but not ".format(k)
+                + "control for benchmark {}".format(bname))
             continue
         control_value = control_data[k]
         treatment_value = treatment_data[k]
@@ -168,11 +172,11 @@ def _mergeDelayData(treatment_data, control_data, bname):
             control_string = control_value["info_string"]
             if treatment_string != control_string:
                 getLogger().warning(
-                    "Treatment value is used, and the control value is lost. " +
-                    "The field info_string in control " +
-                    "({})".format(control_string) +
-                    "is different from the info_string in treatment " +
-                    "({})".format(treatment_string))
+                    "Treatment value is used, and the control value is lost. "
+                    + "The field info_string in control "
+                    + "({})".format(control_string) +
+                    + "is different from the info_string in treatment "
+                    + "({})".format(treatment_string))
 
         if "values" in control_value:
             data[k]["control_values"] = control_value["values"]
