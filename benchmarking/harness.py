@@ -41,8 +41,8 @@ parser.add_argument("-b", "--benchmark_file", required=True,
 parser.add_argument("--command_args",
     help="Specify optional command arguments that would go with the "
     "main benchmark command")
-parser.add_argument("--cooldown", default=0, type=float,
-    help = "Specify the time interval between two test runs.")
+parser.add_argument("--cooldown", default=1.0, type=float,
+    help="Specify the time interval in seconds between two test runs.")
 parser.add_argument("--debug", action="store_true",
     help="Debug mode to retain all the running binaries and models.")
 parser.add_argument("--device",
