@@ -39,6 +39,7 @@ from reboot_device import reboot as reboot_device
 from utils.check_argparse import claimer_id_type
 from utils.custom_logger import getLogger, setLoggerLevel
 from utils.utilities import getFilename, getMachineId
+from utils.watchdog import WatchDog
 
 
 parser = argparse.ArgumentParser(description="Run the benchmark remotely")
@@ -286,6 +287,12 @@ class runAsync(object):
     def _collectLogData(self, job):
         return job["log"]
 
+    def didUserRequestJobKill(self):
+        return False
+
+    def killJob(self):
+        pass
+
 
 class CoolDownDevice(threading.Thread):
     def __init__(self, device, args, db, force_reboot):
@@ -455,7 +462,15 @@ class RunLab(object):
             tempdir = tempfile.mkdtemp()
             raw_args = self._getRawArgs(job, tempdir)
             self.devices[job["device"]][job["hash"]]["start_time"] = time.ctime()
-            app = runAsync(self.args, self.devices, self.db, job, tempdir)
+            async_runner = runAsync(self.args, self.devices, self.db, job, tempdir)
+
+            # Watchdog will be used to kill currently running jobs
+            # based on user requests
+            app = WatchDog(
+                async_runner,
+                async_runner.didUserRequestJobKill,
+                async_runner.killJob
+            )
 
             global RUNNING_JOBS
             RUNNING_JOBS += 1
@@ -464,12 +479,12 @@ class RunLab(object):
             Python's multiprocessing need to pickle things to sling them
             in different processes. However, bounded methods are not pickable,
             so the way it's doing it here doesn't work.
-            Thus, I added __call__ method in runAsync class and call the
-            class here, since class object is pickable.
+            Thus, I added __call__ method to the class we are passing into the
+            apply_async method.
             Ref: https://stackoverflow.com/a/6975654
             """
             self.pool.apply_async(app, args=[raw_args],
-                callback=app.callback)
+                callback=app.main.callback)
 
     def _saveBenchmarks(self, job):
         # save benchmarks to files
