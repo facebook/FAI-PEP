@@ -13,13 +13,14 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import os
+import select
 import signal
 import subprocess
 import sys
 from threading import Timer
 
 from .custom_logger import getLogger
-from .utilities import setRunStatus, getRunStatus, setRunTimeout, getRunTimeout
+from .utilities import setRunStatus, getRunStatus, setRunTimeout, getRunTimeout, getRunKilled
 
 
 def processRun(*args, **kwargs):
@@ -110,7 +111,7 @@ def processWait(processAndTimeout, **kwargs):
         patterns = []
         if "patterns" in kwargs:
             patterns = kwargs["patterns"]
-        output, match = _getOutput(ps, patterns)
+        output, match = _getOutput(ps, patterns, process_key=process_key)
         ps.stdout.close()
         if match:
             # if the process is terminated by mathing output,
@@ -118,8 +119,18 @@ def processWait(processAndTimeout, **kwargs):
             ps.terminate()
             status = 0
         else:
-            # wait for the process to terminate
-            status = ps.wait()
+            # wait for the process to terminate or for a kill request
+            while not getRunKilled():
+                try:
+                    status = ps.wait(timeout=15.0)
+                    break
+                except subprocess.TimeoutExpired:
+                    pass
+            # check if we exitted loop due to a timeout request
+            if getRunKilled():
+                getLogger().info("Process was killed at user request")
+                ps.terminate()
+                status = 0
         if t is not None:
             t.cancel()
         if log_output or status != 0:
@@ -159,13 +170,23 @@ def _Popen(*args, **kwargs):
     return ps
 
 
-def _getOutput(ps, patterns):
+def _getOutput(ps, patterns, process_key=''):
     if not isinstance(patterns, list):
         patterns = [patterns]
+
+    poller = select.poll()
+    poller.register(ps.stdout)
+
     lines = []
     match = False
-    while True:
-        line = ps.stdout.readline()
+    while not getRunKilled(process_key):
+        # Try to get output from binary if possible
+        # If not possible then loop
+        # and recheck run killed contidion
+        if poller.poll(15.0):
+            line = ps.stdout.readline()
+        else:
+            continue
         if not line:
             break
         nline = line.rstrip()

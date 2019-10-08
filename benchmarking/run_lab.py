@@ -38,7 +38,8 @@ from platforms.android.adb import ADB
 from reboot_device import reboot as reboot_device
 from utils.check_argparse import claimer_id_type
 from utils.custom_logger import getLogger, setLoggerLevel
-from utils.utilities import getFilename, getMachineId
+from utils.utilities import getFilename, getMachineId, setRunKilled
+from utils.utilities import killed_flag as RUN_KILLED
 from utils.watchdog import WatchDog
 
 
@@ -209,7 +210,9 @@ class runAsync(object):
         status = result_dict["status"]
         output = result_dict["output"]
 
-        if status == 0:
+        if status == RUN_KILLED:
+            self.job["status"] = "KILLED"
+        elif status == 0:
             self.job["status"] = "DONE"
         elif status == 1:
             self.job["status"] = "USER_ERROR"
@@ -288,10 +291,14 @@ class runAsync(object):
         return job["log"]
 
     def didUserRequestJobKill(self):
+        jobs = self.db.statusBenchmarks(self.job["identifier"])
+        for job in jobs:
+            if job["status"] == "KILLED":
+                return True
         return False
 
     def killJob(self):
-        pass
+        setRunKilled(True)
 
 
 class CoolDownDevice(threading.Thread):

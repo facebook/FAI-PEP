@@ -210,6 +210,7 @@ run_statuses = {}
 
 # internal flags which will be masked out when returning the status
 timeout_flag = 1 << 8
+killed_flag = 1 << 9
 
 # mask to expose only external status bits
 external_status_mask = 0xff
@@ -245,6 +246,17 @@ def setRunTimeout(timedOut=True, key=''):
         _setRawRunStatus(_getRawRunStatus(key) | timeout_flag, key)
     else:
         _setRawRunStatus(_getRawRunStatus(key) & ~timeout_flag, key)
+
+
+def getRunKilled(key=''):
+    return _getRawRunStatus(key) & killed_flag == killed_flag
+
+
+def setRunKilled(killed=True, key=''):
+    if killed:
+        _setRawRunStatus(_getRawRunStatus(key) | killed_flag, key)
+    else:
+        _setRawRunStatus(_getRawRunStatus(key) & ~killed_flag, key)
 
 
 def getMeta(args, platform):

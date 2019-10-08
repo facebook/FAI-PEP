@@ -28,7 +28,8 @@ from frameworks.frameworks import getFrameworks
 from platforms.platforms import getPlatforms
 from reporters.reporters import getReporters
 from utils.custom_logger import getLogger
-from utils.utilities import parse_kwarg, getRunStatus, setRunStatus
+from utils.utilities import parse_kwarg, getRunStatus, setRunStatus, getRunKilled
+from utils.utilities import killed_flag as RUN_KILLED
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--android_dir", default="/data/local/tmp/",
@@ -218,7 +219,9 @@ class BenchmarkDriver(object):
             shutil.rmtree(tempdir, True)
 
         status = self.status | getRunStatus()
-        if status == 0:
+        if getRunKilled():
+            status_str = "killed"
+        elif status == 0:
             status_str = "success"
         elif status == 1:
             status_str = "user error"
@@ -227,7 +230,7 @@ class BenchmarkDriver(object):
         else:
             status_str = "user and harness error"
         getLogger().info(" ======= {} =======".format(status_str))
-        return status
+        return status if not getRunKilled() else RUN_KILLED
 
     def _getInfo(self):
         info = json.loads(self.args.info)
