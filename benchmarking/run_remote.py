@@ -34,7 +34,7 @@ from remote.screen_reporter import ScreenReporter
 from remote.print_result_url import PrintResultURL
 from utils.build_program import buildProgramPlatform
 from utils.custom_logger import getLogger, setLoggerLevel
-from utils.utilities import getBenchmarks, getMeta, parse_kwarg
+from utils.utilities import getBenchmarks, getMeta, parse_kwarg, unpackAdhocFile
 
 parser = argparse.ArgumentParser(description="Run the benchmark remotely")
 parser.add_argument("--app_id",
@@ -130,7 +130,7 @@ parser.add_argument("--user_identifier",
     help="The identifier user pass in to differentiate different benchmark runs.")
 parser.add_argument("--user_string",
     help="The user_string pass in to differentiate different regression benchmark runs.")
-parser.add_argument("--adhoc", action="store_true",
+parser.add_argument("--adhoc", nargs="?", const="generic", default=None,
     help="Use the adhoc template file")
 
 
@@ -618,15 +618,15 @@ class RunRemote(object):
 
     def _updateArgs(self, args):
         # Remove later when adhoc is moved to seperated infrastructure
-        if args.adhoc:
-            fd, path = tempfile.mkstemp()
-            with pkg_resources.resource_stream(
-                "aibench",
-                "specifications/models/generic/adhoc.json"
-            ) as stream:
-                with os.fdopen(fd, 'wb') as f:
-                    f.write(stream.read())
-            args.benchmark_file = path
+        if args.adhoc is not None:
+            adhoc_file, success = unpackAdhocFile(args.adhoc)
+            if success:
+                args.benchmark_file = adhoc_file
+            else:
+                getLogger().error(
+                    "Could not find specified adhoc config: {}"
+                    .format(args.adhoc)
+                )
 
 
 if __name__ == "__main__":

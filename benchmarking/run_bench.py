@@ -23,7 +23,8 @@ import tempfile
 
 from lab_driver import LabDriver
 from utils.custom_logger import getLogger, setLoggerLevel
-from utils.utilities import getString, getRunStatus, setRunStatus
+from utils.utilities import getString, getRunStatus, setRunStatus, \
+    unpackAdhocFile
 
 
 HOME_DIR = os.path.expanduser('~')
@@ -215,14 +216,17 @@ class RunBench(object):
             benchmark_file = unknowns["-b"]
         # Remove later when adhoc is moved to seperated infrastructure
         if "--adhoc" in unknowns:
-            fd, path = tempfile.mkstemp()
-            with pkg_resources.resource_stream(
-                "aibench",
-                "specifications/models/generic/adhoc.json"
-            ) as stream:
-                with os.fdopen(fd, 'wb') as f:
-                    f.write(stream.read())
-            benchmark_file = path
+            configName = unknowns["--adhoc"]
+            if configName is None:
+                configName = 'generic'
+            adhoc_path, success = unpackAdhocFile(configName)
+            if success:
+                benchmark_file = adhoc_path
+            else:
+                getLogger().error(
+                    "Could not find specified adhoc config: {}"
+                    .format(configName)
+                )
         if not benchmark_file:
             return
 
