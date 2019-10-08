@@ -21,6 +21,7 @@ from six import string_types
 import sys
 from time import sleep
 import socket
+import tempfile
 import uuid
 
 from .custom_logger import getLogger
@@ -290,3 +291,24 @@ def getMachineId():
     if len(ident) == 0 or ident == 'localhost':
         ident = uuid.uuid1().hex
     return ident
+
+
+adhoc_configs = {
+    'generic': 'specifications/models/generic/adhoc.json',
+    'opbench': 'specifications/models/generic/adhoc_microbenchmarks.json',
+}
+
+
+def unpackAdhocFile(configName='generic'):
+    if configName not in adhoc_configs:
+        return '', False
+
+    fd, path = tempfile.mkstemp()
+    with pkg_resources.resource_stream(
+        'aibench',
+        adhoc_configs[configName]
+    ) as stream:
+        with os.fdopen(fd, 'wb') as f:
+            f.write(stream.read())
+
+    return path, True
