@@ -174,7 +174,7 @@ def _mergeDelayData(treatment_data, control_data, bname):
                 getLogger().warning(
                     "Treatment value is used, and the control value is lost. "
                     + "The field info_string in control "
-                    + "({})".format(control_string) +
+                    + "({})".format(control_string)
                     + "is different from the info_string in treatment "
                     + "({})".format(treatment_string))
 
