@@ -134,8 +134,14 @@ def processWait(processAndTimeout, **kwargs):
         if t is not None:
             t.cancel()
         if log_output or status != 0:
+            if status != 0:
+                getLogger().info(
+                    "Process exited with status: {}".format(status)
+                )
+                setRunStatus(1, key=process_key)
             getLogger().info('\n'.join(output))
         if status == 0 or ignore_status:
+            setRunStatus(0, key=process_key)
             return output, None
         else:
             setRunStatus(1, key=process_key)
