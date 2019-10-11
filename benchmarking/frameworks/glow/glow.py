@@ -14,6 +14,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import os
 import json
+import re
 from six import string_types
 from frameworks.framework_base import FrameworkBase
 
@@ -49,6 +50,7 @@ class GlowFramework(FrameworkBase):
         self._maybeAddJsonOutput(output, results)
         self._maybeAddTraceOutput(platform, results)
         self._maybeAddBenchSummary(output, results)
+        self._maybeAddNetRunnerStats(output, results)
         results["meta"] = meta
         return results
 
@@ -144,6 +146,28 @@ class GlowFramework(FrameworkBase):
                 pass
             except ValueError:
                 pass
+            i += 1
+
+    def _maybeAddNetRunnerStats(self, output, results):
+        if output is None:
+            return False
+        rows = output
+        if isinstance(output, string_types):
+            rows = output.split('\n')
+        i = 0
+        while i < len(rows):
+            m = re.match(r"^individual inference latency \[(\w+)\]: ([0-9]+) us$",
+                    rows[i])
+            if m:
+                self._addOrAppendResult(results,
+                    "NET " + m.groups()[0] + " net_runner inference",
+                    int(m.groups()[1]), {
+                        "type": "NET",
+                        "metric": m.groups()[0] + " net_runner inference",
+                        "unit": "microsecond",
+                        "values": []
+                    }
+                )
             i += 1
 
     def _maybeAddTraceOutput(self, platform, results):
