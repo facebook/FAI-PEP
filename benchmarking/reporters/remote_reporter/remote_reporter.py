@@ -116,9 +116,14 @@ class RemoteReporter(ReporterBase):
 
     def _convertToInt(self, meta, summary, key):
         if key in meta:
-            value = int(meta[key])
-            meta.pop(key, None)
-            summary[key] = value
+            try:
+                value = int(meta[key])
+                meta.pop(key, None)
+                summary[key] = value
+            except BaseException:
+                getLogger().warning(
+                    "{} cannot be converted into int".format(meta[key]))
+                pass
 
     def _updateSummaryData(self, data, summary, prefix):
         for k in data:

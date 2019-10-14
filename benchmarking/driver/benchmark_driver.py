@@ -58,7 +58,7 @@ def runOneBenchmark(info, benchmark, framework, platform,
             data = _adjustData(info, data)
         meta = _retrieveMeta(info, benchmark, platform, framework,
                              backend, user_identifier)
-
+        data = _retrieveInfo(info, data)
         result = {
             "meta": meta,
             "data": data
@@ -348,3 +348,14 @@ def _retrieveMeta(info, benchmark, platform, framework, backend, user_identifier
         meta["user"] = info["user"]
 
     return meta
+
+
+def _retrieveInfo(info, data):
+    if "treatment" in info:
+        data["meta"]["treatment_diff"] = info["treatment"].get("diff", "")
+        data["meta"]["treatment_version"] = info["treatment"].get("version", "")
+    if "control" in info and "diff" in info["control"]:
+        data["meta"]["control_diff"] = info["control"].get("diff", "")
+        data["meta"]["control_revision"] = info["control"].get("revision", "")
+
+    return data
