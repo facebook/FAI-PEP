@@ -552,7 +552,6 @@ class RunRemote(object):
             output = self.db.getBenchmarks(ids)
             self._mobilelabResult(output)
             result = json.dumps(output)
-        print(result)
         return result
 
     def _mobilelabResult(self, output):

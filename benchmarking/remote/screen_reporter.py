@@ -88,6 +88,11 @@ class ScreenReporter(object):
                         if self.debug:
                             self._printLog(r)
                     elif metric == "generic":
+                        if isinstance(data, dict):
+                            if "meta" in data:
+                                del data["meta"]
+                            if not data:
+                                return
                         # dump std printout to screen for custom_binary
                         if isinstance(data, list):
                             data = '\n'.join(data)
