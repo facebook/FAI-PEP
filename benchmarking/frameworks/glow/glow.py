@@ -98,7 +98,7 @@ class GlowFramework(FrameworkBase):
                         self._addOrAppendResult(results,
                             "NET AddBench:throughput",
                             float(fields[11]), {
-                                "type": "NET",
+                                "type": "SECONDARY",
                                 "metric": "AddBench:throughput",
                                 "unit": "Gb/second",
                                 "values": []
@@ -117,7 +117,7 @@ class GlowFramework(FrameworkBase):
                         self._addOrAppendResult(results,
                             "NET GemmBench:throughput",
                             float(fields[13]), {
-                                "type": "NET",
+                                "type": "SECONDARY",
                                 "metric": "GemmBench:throughput",
                                 "unit": "Gb/second",
                                 "values": []
@@ -136,7 +136,7 @@ class GlowFramework(FrameworkBase):
                         self._addOrAppendResult(results,
                             "NET GemmParallelBench:throughput",
                             float(fields[12]), {
-                                "type": "NET",
+                                "type": "SECONDARY",
                                 "metric": "GemmParallelBench:throughput",
                                 "unit": "Gb/second",
                                 "values": []
@@ -159,10 +159,14 @@ class GlowFramework(FrameworkBase):
             m = re.match(r"^individual inference latency \[(\w+)\]: ([0-9]+) us$",
                     rows[i])
             if m:
+                if m.groups()[0] == "glow":
+                    mtype = "NET"
+                else:
+                    mtype = "SECONDARY"
                 self._addOrAppendResult(results,
-                    "NET " + m.groups()[0] + " net_runner inference",
+                    mtype + " " + m.groups()[0] + " net_runner inference",
                     int(m.groups()[1]), {
-                        "type": "NET",
+                        "type": mtype,
                         "metric": m.groups()[0] + " net_runner inference",
                         "unit": "microsecond",
                         "values": []
@@ -182,9 +186,13 @@ class GlowFramework(FrameworkBase):
                     metric = parsed["name"]
                     if not metric:
                         raise ValueError("empty metric")
-                    key = "NET " + metric
+                    if metric == "inference_e2e":
+                        mtype = "NET"
+                    else:
+                        mtype = "SECONDARY"
+                    key = mtype + " " + metric
                     self._addOrAppendResult(results, key, parsed["dur"], {
-                        "type": "NET",
+                        "type": mtype,
                         "metric": metric,
                         "unit": "microsecond",
                         "values": []
