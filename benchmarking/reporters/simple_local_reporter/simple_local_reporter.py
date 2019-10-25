@@ -39,7 +39,7 @@ class SimpleLocalReporter(ReporterBase):
             id_dir = getFilename(meta["identifier"])
             dirname = os.path.join(self.simple_local_reporter, id_dir)
         else:
-            dirname = tempfile.mkdtemp(dir=self.simple_local_reporter)
+            dirname = tempfile.mkdtemp(dir=self.simple_local_reporter, prefix="aibench")
 
         if os.path.exists(dirname):
             shutil.rmtree(dirname, True)

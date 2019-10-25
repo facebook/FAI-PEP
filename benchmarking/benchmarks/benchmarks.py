@@ -128,7 +128,7 @@ class BenchmarkCollector(object):
                     self._getDestFilename(file, model_dir)
                 file["location"] = cached_filename
 
-        tmp_dir = tempfile.mkdtemp()
+        tmp_dir = tempfile.mkdtemp(prefix="aibench")
         for tmp_file in collected_tmp_files:
             tmp_file['location'] = \
                     tmp_file['location'].replace("{TEMPDIR}", tmp_dir)

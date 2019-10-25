@@ -52,7 +52,7 @@ class FileHandler(object):
                 getLogger().error("Cannot find {}".format(filename))
             raw_context = pkg_resources.resource_string("aibench", filename)
             temp_name = filename.split("/")[-1]
-            temp_dir = tempfile.mkdtemp()
+            temp_dir = tempfile.mkdtemp(prefix="aibench")
             path = os.path.join(temp_dir, temp_name)
             with open(path, "w") as f:
                 f.write(raw_context.decode("utf-8"))

@@ -16,6 +16,7 @@ from __future__ import unicode_literals
 
 import argparse
 import datetime
+import glob
 from io import StringIO
 import json
 import logging
@@ -256,6 +257,18 @@ class runAsync(object):
             shutil.rmtree(os.path.dirname(program_location), True)
         shutil.rmtree(output_dir, True)
 
+        # Clean up
+        try:
+            rm_list = glob.glob("/tmp/aibench*")
+            rm_list.extend(glob.iglob("/tmp/aibench*"))
+            for f in rm_list:
+                if os.path.isdir(f):
+                    shutil.rmtree(f, True)
+                if os.path.isfile(f):
+                    os.remove(f)
+        except BaseException:
+            pass
+
     def _collectBenchmarkData(self, output_dir):
         data = {}
         dirs = self._listdirs(output_dir)
@@ -466,7 +479,7 @@ class RunLab(object):
 
         # run the benchmarks
         for job in jobs_queue:
-            tempdir = tempfile.mkdtemp()
+            tempdir = tempfile.mkdtemp(prefix="aibench")
             raw_args = self._getRawArgs(job, tempdir)
             self.devices[job["device"]][job["hash"]]["start_time"] = time.ctime()
             async_runner = runAsync(self.args, self.devices, self.db, job, tempdir)
@@ -499,7 +512,7 @@ class RunLab(object):
         benchmark = benchmarks["benchmark"]
         content = benchmark["content"]
         benchmark_str = json.dumps(content)
-        outfd, path = tempfile.mkstemp()
+        outfd, path = tempfile.mkstemp(prefix="aibench")
         with os.fdopen(outfd, "w") as f:
             f.write(benchmark_str)
         job["benchmarks"]["benchmark"]["content"] = path
