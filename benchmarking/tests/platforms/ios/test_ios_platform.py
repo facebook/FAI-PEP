@@ -31,7 +31,7 @@ from platforms.ios.idb import IDB
 
 class IOSPlatformTest(unittest.TestCase):
     def setUp(self):
-        self.tempdir = tempfile.mkdtemp()
+        self.tempdir = tempfile.mkdtemp(prefix="aibench")
         device = {"12345678-9012345678AB901C": "A012BC"}
         idb = IDB(device, self.tempdir)
         with patch("platforms.ios.ios_platform.IOSPlatform.setPlatformHash"),\

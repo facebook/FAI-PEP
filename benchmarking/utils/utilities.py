@@ -303,7 +303,7 @@ def unpackAdhocFile(configName='generic'):
     if configName not in adhoc_configs:
         return '', False
 
-    fd, path = tempfile.mkstemp()
+    fd, path = tempfile.mkstemp(prefix="aibench")
     with pkg_resources.resource_stream(
         'aibench',
         adhoc_configs[configName]

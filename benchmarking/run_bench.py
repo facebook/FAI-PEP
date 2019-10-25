@@ -16,10 +16,7 @@ import argparse
 import copy
 import json
 import os
-import pkg_resources
 import six
-import sys
-import tempfile
 
 from lab_driver import LabDriver
 from utils.custom_logger import getLogger, setLoggerLevel

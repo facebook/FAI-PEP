@@ -16,6 +16,7 @@ from __future__ import unicode_literals
 import argparse
 from collections import defaultdict
 from getpass import getuser
+import glob
 import json
 import os
 import pkg_resources
@@ -240,7 +241,7 @@ class RunRemote(object):
                 self.args.job_queue in list_job_queues, \
                 "--job_queue must be choosen from " + " ".join(list_job_queues)
 
-        self.tempdir = tempfile.mkdtemp()
+        self.tempdir = tempfile.mkdtemp(prefix="aibench")
         program_filenames = {}
         if self.args.info:
             self.info = json.loads(self.args.info)
@@ -325,6 +326,18 @@ class RunRemote(object):
             shutil.rmtree(self.tempdir, True)
         if self.args.screen_reporter:
             self._screenReporter(user_identifier)
+
+        # Clean up
+        try:
+            rm_list = glob.glob("/tmp/aibench*")
+            rm_list.extend(glob.iglob("/tmp/aibench*"))
+            for f in rm_list:
+                if os.path.isdir(f):
+                    shutil.rmtree(f, True)
+                if os.path.isfile(f):
+                    os.remove(f)
+        except BaseException:
+            pass
 
     def _updateBenchmarksWithArgs(self, benchmarks, args):
         for benchmark in benchmarks:
