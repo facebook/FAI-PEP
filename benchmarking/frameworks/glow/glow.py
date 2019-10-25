@@ -96,7 +96,7 @@ class GlowFramework(FrameworkBase):
                             }
                         )
                         self._addOrAppendResult(results,
-                            "NET AddBench:throughput",
+                            "SECONDARY AddBench:throughput",
                             float(fields[11]), {
                                 "type": "SECONDARY",
                                 "metric": "AddBench:throughput",
@@ -115,7 +115,7 @@ class GlowFramework(FrameworkBase):
                             }
                         )
                         self._addOrAppendResult(results,
-                            "NET GemmBench:throughput",
+                            "SECONDARY GemmBench:throughput",
                             float(fields[13]), {
                                 "type": "SECONDARY",
                                 "metric": "GemmBench:throughput",
@@ -134,7 +134,7 @@ class GlowFramework(FrameworkBase):
                             }
                         )
                         self._addOrAppendResult(results,
-                            "NET GemmParallelBench:throughput",
+                            "SECONDARY GemmParallelBench:throughput",
                             float(fields[12]), {
                                 "type": "SECONDARY",
                                 "metric": "GemmParallelBench:throughput",
