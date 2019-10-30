@@ -17,6 +17,7 @@ import json
 import re
 from six import string_types
 from frameworks.framework_base import FrameworkBase
+from collections import defaultdict
 
 
 class GlowFramework(FrameworkBase):
@@ -75,6 +76,17 @@ class GlowFramework(FrameworkBase):
         results[key]["values"].append(value)
 
     def _maybeAddBenchSummary(self, output, results):
+        existingMaps = {"AddBench": (10, 11),
+                        "BatchGemmBench": (12, 13),
+                        "GemmBench": (12, 13),
+                        "GemmParallelBench": (11, 12),
+                        "SLSBench": (10, 11),
+                        "TransposeBench": (11, 12)}
+
+        fieldMap = defaultdict(lambda: (10, 11))
+        for k in existingMaps:
+            fieldMap[k] = existingMaps[k]
+
         if output is None:
             return False
         rows = output
@@ -85,63 +97,30 @@ class GlowFramework(FrameworkBase):
             try:
                 fields = rows[i].split(",")
                 if fields[0] == "BenchResult":
-                    if fields[1] == "AddBench":
-                        self._addOrAppendResult(results,
-                            "NET AddBench:runtime",
-                            float(fields[10]), {
-                                "type": "NET",
-                                "metric": "AddBench:runtime",
-                                "unit": "second",
-                                "values": []
-                            }
-                        )
-                        self._addOrAppendResult(results,
-                            "SECONDARY AddBench:throughput",
-                            float(fields[11]), {
-                                "type": "SECONDARY",
-                                "metric": "AddBench:throughput",
-                                "unit": "Gb/second",
-                                "values": []
-                            }
-                        )
-                    elif fields[1] == "GemmBench":
-                        self._addOrAppendResult(results,
-                            "NET GemmBench:runtime",
-                            float(fields[12]), {
-                                "type": "NET",
-                                "metric": "GemmBench:runtime",
-                                "unit": "second",
-                                "values": []
-                            }
-                        )
-                        self._addOrAppendResult(results,
-                            "SECONDARY GemmBench:throughput",
-                            float(fields[13]), {
-                                "type": "SECONDARY",
-                                "metric": "GemmBench:throughput",
-                                "unit": "Gb/second",
-                                "values": []
-                            }
-                        )
-                    elif fields[1] == "GemmParallelBench":
-                        self._addOrAppendResult(results,
-                            "NET GemmParallelBench:runtime",
-                            float(fields[11]), {
-                                "type": "NET",
-                                "metric": "GemmParallelBench:runtime",
-                                "unit": "second",
-                                "values": []
-                            }
-                        )
-                        self._addOrAppendResult(results,
-                            "SECONDARY GemmParallelBench:throughput",
-                            float(fields[12]), {
-                                "type": "SECONDARY",
-                                "metric": "GemmParallelBench:throughput",
-                                "unit": "Gb/second",
-                                "values": []
-                            }
-                        )
+                    benchName = fields[1]
+
+                    runtimeRecord = {
+                        "type": "NET",
+                        "metric": "{}:runtime".format(benchName),
+                        "unit": "second",
+                        "values": []
+                    }
+                    throughputRecord = {
+                        "type": "SECONDARY",
+                        "metric": "{}:throughput".format(benchName),
+                        "unit": "Gb/second",
+                        "values": []
+                    }
+
+                    self._addOrAppendResult(results,
+                        "NET {}:runtime".format(benchName),
+                        float(fields[fieldMap[benchName][0]]), runtimeRecord
+                    )
+                    self._addOrAppendResult(results,
+                        "SECONDARY {}:throughput".format(benchName),
+                        float(fields[fieldMap[benchName][1]]), throughputRecord
+                    )
+
             except IndexError:
                 pass
             except ValueError:
