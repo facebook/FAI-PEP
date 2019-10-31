@@ -73,6 +73,9 @@ parser.add_argument("--fetch_result", action="store_true",
 parser.add_argument("--fetch_status", action="store_true",
     help="Fetch the status of already submitted jobs, use together with "
     "--user_identifier")
+parser.add_argument("--kill", action="store_true",
+    help="Kill submitted jobs, use together with "
+    "--user_identifier")
 parser.add_argument("--file_storage",
     help="The storage engine for uploading and downloading files")
 parser.add_argument("--force_submit", action="store_true",
@@ -220,6 +223,9 @@ class RunRemote(object):
         if self.args.fetch_status or self.args.fetch_result:
             result = self._fetchResult()
             return result
+        if self.args.kill:
+            self._killJob()
+            return
         if self.args.query_num_devices:
             return self._queryNumDevices(self.args.query_num_devices)
 
@@ -566,6 +572,21 @@ class RunRemote(object):
             self._mobilelabResult(output)
             result = json.dumps(output)
         return result
+
+    def _killJob(self):
+        user_identifier = self.args.user_identifier
+        assert user_identifier, "User identifier must be specified for " \
+            "killing submitted jobs."
+        statuses = self.db.statusBenchmarks(user_identifier)
+        result = json.dumps(statuses)
+        status = json.loads(result)[-1]["status"]
+        if status == "RUNNING":
+            self.db.killBenchmarks(user_identifier)
+            getLogger().info("The job has been killed")
+        else:
+            getLogger().info(
+                "The job cannot be killed since its status is {}".format(status)
+            )
 
     def _mobilelabResult(self, output):
         # always get the last result
