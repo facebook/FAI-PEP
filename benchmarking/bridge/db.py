@@ -102,6 +102,15 @@ class DBDriver(object):
         request_json = self._requestData(params)
         return request_json["values"]
 
+    def killBenchmarks(self, identifier):
+        params = {
+            'table': self.table,
+            'job_queue': self.job_queue,
+            'action': 'kill',
+            'identifier': identifier,
+        }
+        self._requestData(params)
+
     def getBenchmarks(self, ids):
         params = {
             'table': self.table,
