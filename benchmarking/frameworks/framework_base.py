@@ -16,6 +16,7 @@ import abc
 import ast
 import json
 import os
+import random
 import re
 import shutil
 from six import string_types
@@ -184,8 +185,8 @@ class FrameworkBase(object):
                 platform_args["env"]["MKL_NUM_THREADS"] = MKL_NUM_THREADS
             if OMP_NUM_THREADS > 0:
                 platform_args["env"]["OMP_NUM_THREADS"] = OMP_NUM_THREADS
-            # Fix the specfic cpu core to run the program
-            cpu_core = test.get("cpu-list", 4)
+            # Randomly select one cpu core from logic cpu #4 to #13.
+            cpu_core = test.get("cpu-list", random.randint(5, 14))
             if isinstance(test["commands"], list) and cpu_core > 0:
                 test["commands"][-1] = " ".join([
                     "taskset", "--cpu-list", str(cpu_core), test["commands"][-1]])
@@ -369,7 +370,7 @@ class FrameworkBase(object):
     @abc.abstractmethod
     def runOnPlatform(self, total_num, cmd, platform, platform_args,
                       converter):
-        assert False, "Child class need to implement runOnPlatform"
+        raise NotImplementedError("Child class need to implement runOnPlatform")
 
     def _runCommands(self, output, commands, platform, programs, model, test,
                      model_files, input_files, output_files, shared_libs,
