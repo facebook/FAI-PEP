@@ -482,6 +482,8 @@ class RunLab(object):
             tempdir = tempfile.mkdtemp(prefix="aibench")
             raw_args = self._getRawArgs(job, tempdir)
             self.devices[job["device"]][job["hash"]]["start_time"] = time.ctime()
+            identifier = job["identifier"]
+            getLogger().info("Running job with identifier {}".format(identifier))
             async_runner = runAsync(self.args, self.devices, self.db, job, tempdir)
 
             # Watchdog will be used to kill currently running jobs
