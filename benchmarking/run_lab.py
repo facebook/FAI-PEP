@@ -301,7 +301,44 @@ class runAsync(object):
         return file_link
 
     def _collectLogData(self, job):
-        return job["log"]
+        if job["framework"] == "generic":
+            if "control" not in job["benchmarks"]["info"]:
+                res = self._block_from_log(
+                    job["log"], "Program Output:", "=" * 80)
+                res = "\n".join(["=" * 80] + res) if res else None
+            else:
+                res1 = self._block_from_log(
+                    job["log"], "Program Output:", "=" * 80)
+                res1[0] = "After the change, Program Output:"
+                res2 = self._block_from_log(
+                    job["log"], "Program Output:", "=" * 80, False)
+                res2[0] = "Before the change, Program Output:"
+                res = "\n".join(["=" * 80] + res2 + res1) if res1 and res2 else None
+        return res if res else job["log"]
+
+    def _block_from_log(self, log, s1, s2, forward=True):
+        start, end, first = None, None, True
+        temp = log.split("\n")
+        if forward:
+            for i, s in enumerate(temp):
+                if s1 == s:
+                    start = i
+                if s2 == s:
+                    if first:
+                        first = False
+                    else:
+                        end = i
+                if start and end:
+                    return temp[start:end + 1]
+        else:
+            for i, s in enumerate(temp[::-1]):
+                if s1 == s:
+                    start = len(temp) - 1 - i
+                if s2 == s and not end:
+                    end = len(temp) - 1 - i
+                if start and end:
+                    return temp[start:end + 1]
+        return None
 
     def didUserRequestJobKill(self):
         jobs = self.db.statusBenchmarks(self.job["identifier"])
