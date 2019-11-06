@@ -301,6 +301,7 @@ class runAsync(object):
         return file_link
 
     def _collectLogData(self, job):
+        res = None
         if job["framework"] == "generic":
             if "control" not in job["benchmarks"]["info"]:
                 res = self._block_from_log(
