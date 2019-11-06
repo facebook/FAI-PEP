@@ -190,13 +190,23 @@ class runAsync(object):
 
     def callback(self, result_dict):
         global RUNNING_JOBS
-        with LOCK:
-            device = self._updateDevices(result_dict)
-            self._submitDone(device)
-            self._removeBenchmarkFiles(device)
-            self._coolDown(device)
-            RUNNING_JOBS -= 1
-        time.sleep(1)
+        try:
+            with LOCK:
+                device = self._updateDevices(result_dict)
+                self._submitDone(device)
+                self._removeBenchmarkFiles(device)
+                self._coolDown(device)
+                RUNNING_JOBS -= 1
+            time.sleep(1)
+        except Exception as e:
+            getLogger().error("Encoutered fatal error in benchmark callback")
+            getLogger().error(e)
+            getLogger().error(
+                "Benchmark submission and device release might have partially "
+                "completed leaving aibench in a broken state"
+            )
+            getLogger().error("Terminating...")
+            os._exit(1)
 
     def error_callback(self, *args):
         msg = " ".join(args)
