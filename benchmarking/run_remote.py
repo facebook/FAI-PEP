@@ -580,7 +580,7 @@ class RunRemote(object):
         statuses = self.db.statusBenchmarks(user_identifier)
         result = json.dumps(statuses)
         status = json.loads(result)[-1]["status"]
-        if status == "RUNNING":
+        if status in ["RUNNING", "QUEUE"]:
             self.db.killBenchmarks(user_identifier)
             getLogger().info("The job has been killed")
         else:
