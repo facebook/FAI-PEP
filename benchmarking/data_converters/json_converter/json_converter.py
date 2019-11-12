@@ -26,24 +26,24 @@ class JsonConverter(DataConverterBase):
     def getName(self):
         return "json_converter"
 
-    def collect(self, data, args = None):
+    def collect(self, data, args=None):
         rows = self._prepareData(data)
         results = []
         valid_run_idxs = []
         for row in rows:
             try:
                 result = json.loads(row)
-                if ("type" in result and result["type"] == "NET" and
-                        "value" in result) or \
-                        ("NET" in result):  # for backward compatibility
+                if ("type" in result and result["type"] == "NET"
+                        and "value" in result) \
+                        or ("NET" in result):  # for backward compatibility
                     valid_run_idxs.append(len(results))
                 results.append(result)
             except Exception as e:
                 # bypass one line
                 getLogger().info(
-                        "Skip one row %s \n Exception: %s" %
-                        (row, str(e))
-                        )
+                    "Skip one row %s \n Exception: %s" %
+                    (row, str(e))
+                )
                 pass
         if len(valid_run_idxs) > 0:
             # strip data not yet in a valid range
@@ -65,13 +65,13 @@ class JsonConverter(DataConverterBase):
                         new_string = d["info_string"]
                         if old_string != new_string:
                             getLogger().warning("info_string values "
-                                                "for {} ".format(key) +
-                                                "do not match.\n" +
-                                                "Current info_string: " +
-                                                "{}\n ".format(old_string) +
-                                                "does not match new " +
-                                                "info_string: " +
-                                                "{}".format(new_string))
+                                                "for {} ".format(key)
+                                                + "do not match.\n"
+                                                + "Current info_string: "
+                                                + "{}\n ".format(old_string)
+                                                + "does not match new "
+                                                + "info_string: "
+                                                + "{}".format(new_string))
                     else:
                         details[key]["info_string"] = d["info_string"]
                 if "value" in d:
@@ -94,11 +94,14 @@ class JsonConverter(DataConverterBase):
                         key = k + " " + kk
                         if "info_string" in vv:
                             if "info_string" in details[key]:
-                                assert details[key]["info_string"] == vv["info_string"], \
+                                assert details[key]["info_string"] == \
+                                    vv["info_string"], \
                                     "info_string values for {} ".format(key) + \
                                     "do not match.\n" + \
-                                    "Current info_string:\n{}\n ".format(details[key]["info_string"]) + \
-                                    "does not match new info_string:\n{}".format(vv["info_string"])
+                                    "Current info_string:\n{}\n ".format(
+                                    details[key]["info_string"]) + \
+                                    "does not match new info_string:\n{}".format(
+                                    vv["info_string"])
                             else:
                                 details[key]["info_string"] = vv["info_string"]
                         else:
