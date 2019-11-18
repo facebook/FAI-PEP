@@ -17,10 +17,10 @@ LOGFILE = os.getenv("AIBENCH_LOGFILE")
 FORMAT = '%(levelname)s %(asctime)s %(filename)s:%(lineno)4d: %(message)s'
 if(LOGFILE is not None):
     logging.basicConfig(level=logging.DEBUG, format=FORMAT,
-                        datefmt="%H:%M:%S", filename=LOGFILE)
+                        datefmt="%Y-%m-%d %H:%M:%S", filename=LOGFILE)
 else:
     logging.basicConfig(level=logging.DEBUG, format=FORMAT,
-                        datefmt="%H:%M:%S", stream=sys.stdout)
+                        datefmt="%Y-%m-%d %H:%M:%S", stream=sys.stdout)
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 logger = logging.getLogger("GlobalLogger")
