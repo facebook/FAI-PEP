@@ -17,6 +17,8 @@ from frameworks.framework_base import FrameworkBase
 
 
 class GenericFramework(FrameworkBase):
+    IDENTIFIER = 'PyTorchObserver '
+
     def __init__(self, tempdir, args):
         super(GenericFramework, self).__init__(args)
         self.tempdir = os.path.join(tempdir, self.getName())
@@ -27,7 +29,21 @@ class GenericFramework(FrameworkBase):
 
     def runOnPlatform(self, total_num, cmd, platform, platform_args,
                       converter):
-        _, meta = platform.runBenchmark(cmd, platform_args=platform_args)
-        results = {}
-        results["meta"] = meta
-        return results
+        if converter is None:
+            converter = {
+                "name": "json_with_identifier_converter",
+                "args": {
+                    "identifier": self.IDENTIFIER
+                }
+            }
+
+        converter_obj = self.converters[converter["name"]]()
+        args = converter.get("args")
+        results = []
+        output, meta = platform.runBenchmark(cmd, platform_args=platform_args)
+        one_result, valid_run_idxs = converter_obj.collect(output, args)
+        results.extend(one_result)
+        metric = converter_obj.convert(results)
+        metric["meta"] = meta
+
+        return metric
