@@ -392,6 +392,12 @@ class FrameworkBase(object):
             profiling_enabled = test.get("profiler", {}).get("enabled", False)
         if profiling_enabled:
             platform_args["profiler_args"] = test.get("profiler", {})
+        if test and test.get("change_cwd", False):
+            change_cwd = True
+            cwd = os.getcwd()
+            dirname = os.path.dirname(programs["program"])
+        if change_cwd:
+            os.chdir(dirname)
         for idx, cmd in enumerate(cmds):
             # note that we only enable profiling for the last command
             # of the main commands.
@@ -401,6 +407,8 @@ class FrameworkBase(object):
                                             platform_args,
                                             converter)
             deepMerge(output, one_output)
+        if change_cwd:
+            os.chdir(cwd)
 
     @abc.abstractmethod
     def verifyBenchmarkFile(self, benchmark, filename, is_post):
