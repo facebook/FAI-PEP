@@ -92,7 +92,7 @@ class ADB(PlatformUtilBase):
             elif isinstance(target, string_types):
                 freq_target = target
             else:
-                assert False, "Unsupported frequency target"
+                raise AssertionError("Unsupported frequency target")
             self._setOneCPUFrequency(cpu, freq_target)
 
     def _addADB(self):

@@ -82,7 +82,7 @@ class ScreenReporter(object):
                         elif "mean" in net_latency["summary"]:
                             net_delay = data["NET latency"]["summary"]["mean"]
                         else:
-                            assert False, "Net latency is not specified"
+                            raise AssertionError("Net latency is not specified")
                         print("ID:{}\tNET latency: {}".format(identifier,
                                                              net_delay))
                         if self.debug:

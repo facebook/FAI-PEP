@@ -26,7 +26,7 @@ def get_payload(req):
 
     ids = []
     if ids_str is None and (action == 'run' or action == 'release'):
-        assert False, "ids must be specified for " + action
+        raise AssertionError("ids must be specified for {}".format(action))
     elif ids_str is not None:
         ids = ids_str.split(",")
 
@@ -179,4 +179,4 @@ def get_payload(req):
         return {'status': "success"}
 
     else:
-        assert False, "action " + action + " not recognized"
+        raise AssertionError("action {} not recognized".format(action))

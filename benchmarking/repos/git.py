@@ -8,6 +8,8 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from utils.subprocess_with_logger import processRun
 from .repo_base import RepoBase
 

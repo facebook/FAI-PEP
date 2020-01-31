@@ -28,15 +28,15 @@ class PlatformUtilBase(object):
 
     @abc.abstractmethod
     def push(self, src, tgt):
-        assert False, "Push method must be derived"
+        raise AssertionError("Push method must be derived")
 
     @abc.abstractmethod
     def pull(self, src, tgt):
-        assert False, "Pull method must be derived"
+        raise AssertionError("Pull method must be derived")
 
     @abc.abstractmethod
     def deleteFile(self, file):
-        assert False, "Delete file method must be derived"
+        raise AssertionError("Delete file method must be derived")
 
     def _prepareCMD(self, *args):
         cmd = []
