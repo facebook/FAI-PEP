@@ -8,6 +8,8 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from .git import GitRepo
 from .hg import HGRepo
 
@@ -18,5 +20,5 @@ def getRepo(repo, repo_dir):
     elif repo == 'hg':
         return HGRepo(repo_dir)
     else:
-        assert False, "Repo not recognized"
+        raise AssertionError("Repo not recognized")
         return None

@@ -106,7 +106,7 @@ class PlatformBase(object):
                                                 copy_files)
             return d
         else:
-            assert False, "Cannot reach here"
+            raise AssertionError("Cannot reach here")
         return None
 
     def moveFilesFromPlatform(self, files, target_dir=None):
@@ -130,7 +130,7 @@ class PlatformBase(object):
                 output_files[f] = output_file
             return output_files
         else:
-            assert False, "Cannot reach here"
+            raise AssertionError("Cannot reach here")
         return None
 
     def delFilesFromPlatform(self, files):
@@ -143,18 +143,18 @@ class PlatformBase(object):
             for f in files:
                 self.util.deleteFile(files[f])
         else:
-            assert False, "Cannot reach here"
+            raise AssertionError("Cannot reach here")
 
     def getOutputDir(self):
         return self.tgt_dir
 
     @abc.abstractmethod
     def killProgram(self, program):
-        assert False, "kill program is not implemented"
+        raise AssertionError("kill program is not implemented")
 
     @abc.abstractmethod
     def waitForDevice(self):
-        assert False, "wait for device is not implemented"
+        raise AssertionError("wait for device is not implemented")
 
     def getPairedArguments(self, cmd):
         # do not support position arguments

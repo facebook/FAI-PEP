@@ -2,7 +2,6 @@
   "meta": {
     "group": "CNN-MKL",
     "command_args": "--backend mkl"
-    }
   },
   "benchmarks": [
     "../../models/caffe2/vgg16/vgg16.json",

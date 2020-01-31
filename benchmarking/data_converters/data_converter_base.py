@@ -27,14 +27,16 @@ class DataConverterBase(object):
     # collect data from the binary
     @abc.abstractmethod
     def collect(self, data, args):
-        assert False, "Need to call one of " + \
-            "the implementations of the collector"
+        raise AssertionError(
+            "Need to call one of the implementations of the collector"
+        )
 
     # convert the data to a unified format
     @abc.abstractmethod
     def convert(self, data):
-        assert False, "Need to call one of " + \
-            "the implementations of the converter"
+        raise AssertionError(
+            "Need to call one of the implementations of the converter"
+        )
 
     def _prepareData(self, data):
         if data is None:

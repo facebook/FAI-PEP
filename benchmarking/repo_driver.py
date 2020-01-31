@@ -302,7 +302,7 @@ class ExecutablesBuilder (threading.Thread):
             unix_datetime = datetime.datetime.utcfromtimestamp(unix_time)
             if unix_datetime >= start_of_week:
                 return commit_hash
-        assert False, "Cannot find the control commit"
+        raise AssertionError("Cannot find the control commit")
         return None
 
 

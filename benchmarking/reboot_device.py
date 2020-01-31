@@ -37,7 +37,7 @@ def reboot(**kwargs):
     elif platform.startswith("android"):
         util = ADB(device, args.android_dir)
     else:
-        assert False, "Platform {} not recognized".format(platform)
+        raise AssertionError("Platform {} not recognized".format(platform))
     util.reboot()
     print("Reboot Success")
 
