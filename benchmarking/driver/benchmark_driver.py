@@ -352,12 +352,16 @@ def _retrieveMeta(info, benchmark, platform, framework, backend, user_identifier
 
 def _retrieveInfo(info, data):
     if "treatment" in info:
+        if "meta" not in data:
+            data["meta"] = {}
         data["meta"]["treatment_diff"] = info["treatment"].get("diff", "")
         # For early detection, we have treatment version info.
         data["meta"]["treatment_version"] = info["treatment"].get("version", "")
         # For post detection, we have treatment commit info.
         data["meta"]["treatment_commit"] = info["treatment"].get("commit", "")
     if "control" in info and "diff" in info["control"]:
+        if "meta" not in data:
+            data["meta"] = {}
         # For control, we should always have commit info.
         data["meta"]["control_diff"] = info["control"].get("diff", "")
         data["meta"]["control_commit"] = info["control"].get("commit", "")
