@@ -171,6 +171,6 @@ class PlatformBase(object):
                     i = i + 1
                 arguments[key] = value
             elif entry != "{program}":
-                getLogger.warning("Failed to get argument {}".format(entry[i]))
+                getLogger().warning("Failed to get argument {}".format(entry[i]))
             i = i + 1
         return arguments
