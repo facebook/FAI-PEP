@@ -32,7 +32,7 @@ class BenchmarkCollector(object):
         self.model_cache = model_cache
         self.framework = framework
 
-    def collectBenchmarks(self, info, source):
+    def collectBenchmarks(self, info, source, user_identifier):
         assert os.path.isfile(source), "Source {} is not a file".format(source)
         with open(source, 'r') as f:
             content = json.load(f)
@@ -50,9 +50,9 @@ class BenchmarkCollector(object):
             for benchmark_file in content["benchmarks"]:
                 benchmark_file = os.path.join(path, benchmark_file)
                 self._collectOneBenchmark(benchmark_file,
-                                          meta, benchmarks, info)
+                                          meta, benchmarks, info, user_identifier)
         else:
-            self._collectOneBenchmark(source, meta, benchmarks, info)
+            self._collectOneBenchmark(source, meta, benchmarks, info, user_identifier)
 
         for b in benchmarks:
             self._verifyBenchmark(b, b["path"], True)
@@ -61,7 +61,7 @@ class BenchmarkCollector(object):
     def _verifyBenchmark(self, benchmark, filename, is_post):
         self.framework.verifyBenchmarkFile(benchmark, filename, is_post)
 
-    def _collectOneBenchmark(self, source, meta, benchmarks, info):
+    def _collectOneBenchmark(self, source, meta, benchmarks, info, user_identifier):
         assert os.path.isfile(source), \
             "Benchmark {} does not exist".format(source)
         with open(source, 'r') as b:
@@ -75,7 +75,7 @@ class BenchmarkCollector(object):
 
         self._verifyBenchmark(one_benchmark, source, False)
 
-        self._updateFiles(one_benchmark, source)
+        self._updateFiles(one_benchmark, source, user_identifier)
 
         # following change should not appear in updated_json file
         if meta:
@@ -99,7 +99,7 @@ class BenchmarkCollector(object):
 
     # Update all files in the benchmark to absolute path
     # download the files if needed
-    def _updateFiles(self, one_benchmark, filename):
+    def _updateFiles(self, one_benchmark, filename, user_identifier):
 
         model = one_benchmark["model"]
         model_dir = os.path.join(self.model_cache, model["format"],
@@ -115,8 +115,8 @@ class BenchmarkCollector(object):
             s = json.dumps(one_benchmark, indent=2, sort_keys=True)
             with open(filename, "w") as f:
                 f.write(s)
-            getLogger().info("Model {} is changed. ".format(model["name"]) +
-                             "Please update the meta json file.")
+            getLogger().info("Model {} is changed. ".format(model["name"])
+                             + "Please update the meta json file.")
 
         # update the file field with the absolute path
         # needs to be after the file is updated
@@ -128,10 +128,12 @@ class BenchmarkCollector(object):
                     self._getDestFilename(file, model_dir)
                 file["location"] = cached_filename
 
-        tmp_dir = tempfile.mkdtemp(prefix="aibench")
+        tmp_dir = tempfile.mkdtemp(
+            prefix="_".join(["aibench", str(user_identifier), ""])
+        )
         for tmp_file in collected_tmp_files:
             tmp_file['location'] = \
-                    tmp_file['location'].replace("{TEMPDIR}", tmp_dir)
+                tmp_file['location'].replace("{TEMPDIR}", tmp_dir)
 
     def _collectFiles(self, benchmark):
         files = []

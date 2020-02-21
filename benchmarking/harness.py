@@ -146,7 +146,9 @@ class BenchmarkDriver(object):
         if self.args.reboot:
             platform.rebootDevice()
         for idx in range(len(benchmarks)):
-            tempdir = tempfile.mkdtemp(prefix="aibench")
+            tempdir = tempfile.mkdtemp(
+                prefix="_".join(["aibench", str(self.args.user_identifier), ""])
+            )
             # we need to get a different framework instance per thread
             # will consolidate later. For now create a new framework
             frameworks = getFrameworks()
@@ -194,7 +196,9 @@ class BenchmarkDriver(object):
                             shutil.rmtree(f["location"], True)
 
     def run(self):
-        tempdir = tempfile.mkdtemp(prefix="aibench")
+        tempdir = tempfile.mkdtemp(
+            prefix="_".join(["aibench", str(self.args.user_identifier), ""])
+        )
         getLogger().info("Temp directory: {}".format(tempdir))
         info = self._getInfo()
         frameworks = getFrameworks()
@@ -204,7 +208,8 @@ class BenchmarkDriver(object):
         bcollector = BenchmarkCollector(framework, self.args.model_cache,
                                         args=self.args)
         benchmarks = bcollector.collectBenchmarks(info,
-                                                  self.args.benchmark_file)
+                                                  self.args.benchmark_file,
+                                                  self.args.user_identifier)
         platforms = getPlatforms(tempdir, self.args)
         threads = []
         for platform in platforms:
