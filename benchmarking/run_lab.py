@@ -260,7 +260,7 @@ class runAsync(object):
         programs_location = self.job["programs_location"]
         output_dir = device["output_dir"]
 
-        os.remove(benchmark_file)
+        shutil.rmtree(os.path.dirname(benchmark_file), True)
         for model_location in models_location:
             shutil.rmtree(os.path.dirname(model_location), True)
         for program_location in programs_location:
@@ -269,8 +269,9 @@ class runAsync(object):
 
         # Clean up
         try:
-            rm_list = glob.glob("/tmp/aibench*")
-            rm_list.extend(glob.iglob("/tmp/aibench*"))
+            prefix = "/tmp/aibench_" + self.job["identifier"] + "_*"
+            rm_list = glob.glob(prefix)
+            rm_list.extend(glob.iglob(prefix))
             for f in rm_list:
                 if os.path.isdir(f):
                     shutil.rmtree(f, True)
@@ -527,11 +528,13 @@ class RunLab(object):
 
         # run the benchmarks
         for job in jobs_queue:
-            tempdir = tempfile.mkdtemp(prefix="aibench")
-            raw_args = self._getRawArgs(job, tempdir)
-            self.devices[job["device"]][job["hash"]]["start_time"] = time.ctime()
             identifier = job["identifier"]
             getLogger().info("Running job with identifier {}".format(identifier))
+            tempdir = tempfile.mkdtemp(
+                prefix="_".join(["aibench", str(identifier), ""])
+            )
+            raw_args = self._getRawArgs(job, tempdir)
+            self.devices[job["device"]][job["hash"]]["start_time"] = time.ctime()
             async_runner = runAsync(self.args, self.devices, self.db, job, tempdir)
 
             # Watchdog will be used to kill currently running jobs
@@ -562,7 +565,10 @@ class RunLab(object):
         benchmark = benchmarks["benchmark"]
         content = benchmark["content"]
         benchmark_str = json.dumps(content)
-        outfd, path = tempfile.mkstemp(prefix="aibench")
+        identifier = job["identifier"]
+        outfd, path = tempfile.mkstemp(
+            prefix="_".join(["aibench", str(identifier), ""])
+        )
         with os.fdopen(outfd, "w") as f:
             f.write(benchmark_str)
         job["benchmarks"]["benchmark"]["content"] = path
