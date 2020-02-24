@@ -194,7 +194,8 @@ class runAsync(object):
             with LOCK:
                 device = self._updateDevices(result_dict)
                 self._submitDone(device)
-                self._removeBenchmarkFiles(device)
+                if self.args.platform.startswith("host"):
+                    self._removeBenchmarkFiles(device)
                 self._coolDown(device)
                 RUNNING_JOBS -= 1
             time.sleep(1)
@@ -385,22 +386,25 @@ class CoolDownDevice(threading.Thread):
             raw_args.extend(["--device", self.device["hash"]])
             raw_args.extend(["--android_dir", self.args.android_dir])
             reboot_device(raw_args=raw_args)
+            getLogger().info("Sleep 120 seconds")
             time.sleep(120)
             self.device["reboot_time"] = datetime.datetime.now()
         if self.args.reboot:
             # for ios/android
+            getLogger().info("Sleep 180 seconds")
             time.sleep(180)
         else:
+            getLogger().info("Sleep 20 seconds")
             time.sleep(20)
         with LOCK:
-            getLogger().debug("CoolDownDevice lock acquired")
+            getLogger().info("CoolDownDevice lock acquired")
             if success:
                 self.device["available"] = True
             else:
                 self.device["live"] = False
             device_str = getDevicesString([self.device])
             self.db.updateDevices(self.args.claimer_id, device_str, False)
-        getLogger().debug("CoolDownDevice lock released")
+        getLogger().info("CoolDownDevice lock released")
         getLogger().info("Device {}({}) available".format(
             self.device["kind"], self.device["hash"]))
 
