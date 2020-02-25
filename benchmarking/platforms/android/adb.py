@@ -47,9 +47,11 @@ class ADB(PlatformUtilBase):
         ls = None
         while ls is None and t < 6:
             t = t + 1
+            getLogger().info("Sleep 20 seconds")
             time.sleep(20)
             ls = self.shell(['ls', self.tempdir])
         # Need to wait a bit more after the device is rebooted
+        getLogger().info("Sleep 300 seconds")
         time.sleep(300)
         if ls is None:
             getLogger().error("Cannot reach device {} after reboot.".

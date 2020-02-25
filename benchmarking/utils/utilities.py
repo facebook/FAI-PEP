@@ -15,35 +15,37 @@ import copy
 import datetime
 import json
 import os
+import socket
+import sys
+import tempfile
+import uuid
+from time import sleep
+
 import pkg_resources
 import requests
 from six import string_types
-import sys
-from time import sleep
-import socket
-import tempfile
-import uuid
 
 from .custom_logger import getLogger
 
 
 def getBenchmarks(bfile, framework=None):
-    assert os.path.isfile(bfile), \
-        "Specified benchmark file doesn't exist: {}".format(bfile)
+    assert os.path.isfile(bfile), "Specified benchmark file doesn't exist: {}".format(
+        bfile
+    )
 
-    with open(bfile, 'r') as f:
+    with open(bfile, "r") as f:
         content = json.load(f)
     benchmarks = []
     if "benchmarks" in content:
         path = os.path.abspath(os.path.dirname(bfile))
         for benchmark_file in content["benchmarks"]:
             filename = os.path.join(path, benchmark_file)
-            assert os.path.isfile(filename), \
-                "Benchmark {} doesn't exist".format(filename)
-            with open(filename, 'r') as f:
+            assert os.path.isfile(filename), "Benchmark {} doesn't exist".format(
+                filename
+            )
+            with open(filename, "r") as f:
                 cnt = json.load(f)
-                if framework and "model" in cnt and \
-                        "framework" not in cnt["model"]:
+                if framework and "model" in cnt and "framework" not in cnt["model"]:
                     # do not override the framework specified in the json
                     cnt["model"]["framework"] = framework
                 benchmarks.append({"filename": filename, "content": cnt})
@@ -56,33 +58,36 @@ def getBenchmarks(bfile, framework=None):
 
 def getDirectory(commit_hash, commit_time):
     dt = datetime.datetime.utcfromtimestamp(commit_time)
-    directory = os.path.join(str(dt.year), str(dt.month), str(dt.day),
-                             commit_hash)
+    directory = os.path.join(str(dt.year), str(dt.month), str(dt.day), commit_hash)
     return directory
 
 
 def getCommand(command):
     exe = command[0]
     args = [x if x.isdigit() else "'" + x + "'" for x in command[1:]]
-    cmd = exe + ' ' + ' '.join(args)
+    cmd = exe + " " + " ".join(args)
     return cmd
 
 
 def getFilename(name, **kwargs):
-    replace_pattern = {
-        " ": '-',
-        "\\": '-',
-        ":": '-',
-        "/": '-',
-    }
+    replace_pattern = {" ": "-", "\\": "-", ":": "-", "/": "-"}
     if "replace_pattern" in kwargs:
         replace_pattern = kwargs["replace_pattern"]
     filename = name
     for orig_pattern, repl_pattern in replace_pattern.items():
         filename = filename.replace(orig_pattern, repl_pattern)
-    res = "".join([c for c in filename
-                    if c.isalpha() or c.isdigit()
-                    or c == '_' or c == '.' or c == '-' or c == '/']).rstrip()
+    res = "".join(
+        [
+            c
+            for c in filename
+            if c.isalpha()
+            or c.isdigit()
+            or c == "_"
+            or c == "."
+            or c == "-"
+            or c == "/"
+        ]
+    ).rstrip()
     return res
 
 
@@ -156,8 +161,9 @@ def requestsData(url, **kwargs):
                 session.trust_env = False
                 result = session.post(url, **kwargs)
             if result.status_code != 200:
-                getLogger().error("Post request failed, receiving code {}".
-                                  format(result.status_code))
+                getLogger().error(
+                    "Post request failed, receiving code {}".format(result.status_code)
+                )
             else:
                 if delay > 0:
                     getLogger().info("Post request successful")
@@ -175,8 +181,9 @@ def requestsData(url, **kwargs):
         total_delay += sleep_time
         if timeout > 0 and total_delay > timeout:
             break
-    getLogger().error("Failed to post to {}, retrying after {} seconds...".
-                      format(url, total_delay))
+    getLogger().error(
+        "Failed to post to {}, retrying after {} seconds...".format(url, total_delay)
+    )
     return result
 
 
@@ -189,13 +196,12 @@ def requestsJson(url, **kwargs):
     except ValueError as e:
         getLogger().error("Cannot decode json {}".format(e.output))
 
-    getLogger().error("Failed to retrieve json from {}".
-                      format(url))
+    getLogger().error("Failed to retrieve json from {}".format(url))
     return {}
 
 
 def parse_kwarg(kwarg_str):
-    key, value = kwarg_str.split('=')
+    key, value = kwarg_str.split("=")
     try:
         value = ast.literal_eval("'" + value + "'")
     except ValueError:
@@ -214,46 +220,46 @@ timeout_flag = 1 << 8
 killed_flag = 1 << 9
 
 # mask to expose only external status bits
-external_status_mask = 0xff
+external_status_mask = 0xFF
 
 
-def _getRawRunStatus(key=''):
+def _getRawRunStatus(key=""):
     global run_statuses
     return run_statuses.get(key, 0)
 
 
-def _setRawRunStatus(status, key=''):
+def _setRawRunStatus(status, key=""):
     global run_statuses
     run_statuses[key] = status
 
 
-def getRunStatus(key=''):
+def getRunStatus(key=""):
     return _getRawRunStatus(key) & external_status_mask
 
 
-def setRunStatus(status, overwrite=False, key=''):
+def setRunStatus(status, overwrite=False, key=""):
     if overwrite:
         _setRawRunStatus(status, key)
     else:
         _setRawRunStatus(_getRawRunStatus(key) | status, key)
 
 
-def getRunTimeout(key=''):
+def getRunTimeout(key=""):
     return _getRawRunStatus(key) & timeout_flag == timeout_flag
 
 
-def setRunTimeout(timedOut=True, key=''):
+def setRunTimeout(timedOut=True, key=""):
     if timedOut:
         _setRawRunStatus(_getRawRunStatus(key) | timeout_flag, key)
     else:
         _setRawRunStatus(_getRawRunStatus(key) & ~timeout_flag, key)
 
 
-def getRunKilled(key=''):
+def getRunKilled(key=""):
     return _getRawRunStatus(key) & killed_flag == killed_flag
 
 
-def setRunKilled(killed=True, key=''):
+def setRunKilled(killed=True, key=""):
     if killed:
         _setRawRunStatus(_getRawRunStatus(key) | killed_flag, key)
     else:
@@ -263,23 +269,25 @@ def setRunKilled(killed=True, key=''):
 def getMeta(args, platform):
     meta = None
     if not args.frameworks_dir:
-        meta_file = os.path.join("specifications/frameworks",
-                                 args.framework, platform,
-                                 "meta.json")
-        if "aibench" in sys.modules and \
-                pkg_resources.resource_exists("aibench", meta_file):
-            meta = json.loads(
-                pkg_resources.resource_string("aibench", meta_file))
+        meta_file = os.path.join(
+            "specifications/frameworks", args.framework, platform, "meta.json"
+        )
+        if "aibench" in sys.modules and pkg_resources.resource_exists(
+            "aibench", meta_file
+        ):
+            meta = json.loads(pkg_resources.resource_string("aibench", meta_file))
             return meta
         else:
             # look for files in the old default place
-            old_default = str(os.path.dirname(os.path.realpath(__file__))
-                + "/../../specifications/frameworks")
-            meta_file = os.path.join(old_default, args.framework,
-                             platform, "meta.json")
+            old_default = str(
+                os.path.dirname(os.path.realpath(__file__))
+                + "/../../specifications/frameworks"
+            )
+            meta_file = os.path.join(old_default, args.framework, platform, "meta.json")
     else:
-        meta_file = os.path.join(args.frameworks_dir, args.framework,
-                                 platform, "meta.json")
+        meta_file = os.path.join(
+            args.frameworks_dir, args.framework, platform, "meta.json"
+        )
     if os.path.isfile(meta_file):
         with open(meta_file, "r") as f:
             meta = json.load(f)
@@ -288,27 +296,24 @@ def getMeta(args, platform):
 
 def getMachineId():
     ident = socket.getfqdn()
-    if len(ident) == 0 or ident == 'localhost':
+    if len(ident) == 0 or ident == "localhost":
         ident = uuid.uuid1().hex
     return ident
 
 
 adhoc_configs = {
-    'generic': 'specifications/models/generic/adhoc.json',
-    'opbench': 'specifications/models/generic/adhoc_microbenchmarks.json',
+    "generic": "specifications/models/generic/adhoc.json",
+    "opbench": "specifications/models/generic/adhoc_microbenchmarks.json",
 }
 
 
-def unpackAdhocFile(configName='generic'):
+def unpackAdhocFile(configName="generic"):
     if configName not in adhoc_configs:
-        return '', False
+        return "", False
 
     fd, path = tempfile.mkstemp(prefix="aibench")
-    with pkg_resources.resource_stream(
-        'aibench',
-        adhoc_configs[configName]
-    ) as stream:
-        with os.fdopen(fd, 'wb') as f:
+    with pkg_resources.resource_stream("aibench", adhoc_configs[configName]) as stream:
+        with os.fdopen(fd, "wb") as f:
             f.write(stream.read())
 
     return path, True
