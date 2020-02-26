@@ -261,7 +261,7 @@ class runAsync(object):
         programs_location = self.job["programs_location"]
         output_dir = device["output_dir"]
 
-        shutil.rmtree(os.path.dirname(benchmark_file), True)
+        os.remove(benchmark_file)
         for model_location in models_location:
             shutil.rmtree(os.path.dirname(model_location), True)
         for program_location in programs_location:
@@ -526,8 +526,10 @@ class RunLab(object):
         self.db.runBenchmarks(self.args.claimer_id, run_ids)
         run_devices = [self.devices[job["device"]][job["hash"]]
                        for job in jobs_queue]
+        getLogger().info("Updating devices status")
         self.db.updateDevices(self.args.claimer_id,
                                getDevicesString(run_devices), False)
+        getLogger().info("Downloading files")
         self._downloadFiles(jobs_queue)
 
         # run the benchmarks
@@ -569,10 +571,8 @@ class RunLab(object):
         benchmark = benchmarks["benchmark"]
         content = benchmark["content"]
         benchmark_str = json.dumps(content)
-        identifier = job["identifier"]
-        outfd, path = tempfile.mkstemp(
-            prefix="_".join(["aibench", str(identifier), ""])
-        )
+        outfd, path = tempfile.mkstemp(prefix="aibench")
+        getLogger().info("Temp directory: {}".format(path))
         with os.fdopen(outfd, "w") as f:
             f.write(benchmark_str)
         job["benchmarks"]["benchmark"]["content"] = path
@@ -619,9 +619,11 @@ class RunLab(object):
         for job in jobs_queue:
             job["models_location"] = []
             # download the models
+            getLogger().info("Downloading models")
             path = self._saveBenchmarks(job)
             location = self.benchmark_downloader.run(path)
             job["models_location"].extend(location)
+            getLogger().info("Downloading programs")
             # download the programs
             if "info" not in job["benchmarks"]:
                 continue
@@ -634,6 +636,7 @@ class RunLab(object):
                         "job[\"benchmarks\"][\"info\"][\"treatment\"]")
                 else:
                     treatment_info = job["benchmarks"]["info"]["treatment"]
+                    getLogger().info("Downloading treatment binary")
                     treatment_locations = self._downloadBinaries(treatment_info)
                     job["programs_location"] = treatment_locations
 
@@ -643,12 +646,16 @@ class RunLab(object):
                             "job[\"benchmarks\"][\"info\"][\"control\"]")
                     else:
                         control_info = job["benchmarks"]["info"]["control"]
+                        getLogger().info("Downloading control binary")
                         control_locations = self._downloadBinaries(control_info)
                         job["programs_location"].extend(control_locations)
 
-            except Exception:
+            except Exception as e:
                 getLogger().error("Unknown exception {}".format(sys.exc_info()[0]))
                 getLogger().error("File download failure")
+                getLogger().error(e)
+                getLogger().error("Terminating...")
+                os._exit(1)
 
     def _getDevices(self):
         raw_args = []
