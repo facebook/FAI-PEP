@@ -12,6 +12,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+import datetime
 import platform
 import os
 import re
@@ -32,7 +33,7 @@ class HostPlatform(PlatformBase):
             platform_name = str(args.platform_sig)
         else:
             platform_name = platform.platform() + "-" + \
-                               self._getProcessorName()
+                self._getProcessorName()
         self.tempdir = os.path.join(tempdir, platform_hash)
         hdb = HDB(platform_hash, tempdir)
         super(HostPlatform, self).__init__(self.tempdir, self.tempdir, hdb,
@@ -76,7 +77,7 @@ class HostPlatform(PlatformBase):
         if not runAsync:
             output, _ = processRun(cmd, **platform_args)
             return output, meta
-
+        from_time = datetime.datetime.now()
         procAndTimeout, err = processRun(cmd, **platform_args)
         if err:
             return [], meta
@@ -85,6 +86,7 @@ class HostPlatform(PlatformBase):
 
         profiler = getProfilerByUsage("server", os.getpid())
 
+        profiler_args["from_time"] = from_time
         if profiler:
             profilerFuture = profiler.start(**profiler_args)
 
