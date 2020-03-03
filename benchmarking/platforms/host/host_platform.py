@@ -19,9 +19,11 @@ import re
 import shlex
 import shutil
 import socket
+import time
 
 from platforms.host.hdb import HDB
 from platforms.platform_base import PlatformBase
+from utils.custom_logger import getLogger
 from utils.subprocess_with_logger import processRun, processWait
 from profilers.profilers import getProfilerByUsage
 
@@ -86,11 +88,22 @@ class HostPlatform(PlatformBase):
 
         profiler = getProfilerByUsage("server", os.getpid())
 
-        profiler_args["from_time"] = from_time
         if profiler:
             profilerFuture = profiler.start(**profiler_args)
 
         output, _ = processWait(procAndTimeout, **platform_args)
+        # Sleep the host to make sure there is no other process running
+        # if the duration of process is short
+        to_time = datetime.datetime.now()
+        duration = (to_time - from_time).total_seconds()
+        min_duration = 5
+        if duration < min_duration * 60:
+            diff = min_duration * 60 - duration
+            getLogger().info(
+                "Sleep for {} - {} = {} seconds".format(
+                    min_duration * 60, duration, diff)
+            )
+            time.sleep(diff)
 
         if profiler:
             profilerRunId = profiler.getId(profilerFuture)
