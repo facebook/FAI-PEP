@@ -177,9 +177,8 @@ class runAsync(object):
         try:
             app = BenchmarkDriver(raw_args=raw_args)
             status = app.run()
-        except Exception:
-            msg = " ".join(raw_args)
-            getLogger().error(msg)
+        except Exception as e:
+            getLogger().error(e)
 
         output = log_capture_string.getvalue()
         log_capture_string.close()
