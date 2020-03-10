@@ -208,15 +208,21 @@ class BenchmarkCollector(object):
                     f.write(r.content)
         else:
             abs_name = self._getAbsFilename(field, source, None)
-            shutil.copyfile(abs_name, destination_name)
+            if os.path.isfile(abs_name):
+                shutil.copyfile(abs_name, destination_name)
+            else:
+                import distutils.dir_util
+                distutils.dir_util.copy_tree(abs_name, destination_name)
+        if os.path.isdir(destination_name) and field["md5"] == "directory":
+            return False
         assert os.path.isfile(destination_name), \
             "File {} cannot be retrieved".format(destination_name)
         # verify the md5 matches the file downloaded
         md5 = self._calculateMD5(destination_name)
         if md5 != field["md5"]:
-            getLogger().info("Source file {} is changed, ".format(location) +
-                             " updating MD5. " +
-                             "Please commit the updated json file.")
+            getLogger().info("Source file {} is changed, ".format(location)
+                             + " updating MD5. "
+                             + "Please commit the updated json file.")
             field["md5"] = md5
             return True
         return False
