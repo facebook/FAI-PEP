@@ -16,6 +16,7 @@ import datetime
 import platform
 import os
 import re
+import sys
 import shlex
 import shutil
 import socket
@@ -25,6 +26,7 @@ from platforms.host.hdb import HDB
 from platforms.platform_base import PlatformBase
 from utils.custom_logger import getLogger
 from utils.subprocess_with_logger import processRun, processWait
+from utils.utilities import getRunTimeout
 from profilers.profilers import getProfilerByUsage
 
 
@@ -78,6 +80,9 @@ class HostPlatform(PlatformBase):
 
         if not runAsync:
             output, _ = processRun(cmd, **platform_args)
+            if not output and getRunTimeout():
+                getLogger().info("Terminating...")
+                sys.exit(0)
             return output, meta
         from_time = datetime.datetime.now()
         procAndTimeout, err = processRun(cmd, **platform_args)
