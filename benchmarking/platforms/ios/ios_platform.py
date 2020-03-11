@@ -18,7 +18,6 @@ import shlex
 import time
 
 from platforms.platform_base import PlatformBase
-from utils.custom_logger import getLogger
 from utils.subprocess_with_logger import processRun
 from utils.utilities import getRunStatus, setRunStatus
 
