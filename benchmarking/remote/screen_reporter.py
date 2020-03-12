@@ -46,7 +46,7 @@ class ScreenReporter(object):
                     self._display(s)
         for s in statuses:
             status = statuses[s]
-            if status != "DONE" and status != "FAILED" and status != "USER_ERROR":
+            if status not in ["DONE", "FAILED", "USER_ERROR", "TIMEOUT"]:
                 return False
         return True
 

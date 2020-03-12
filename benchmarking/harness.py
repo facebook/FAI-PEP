@@ -28,8 +28,10 @@ from frameworks.frameworks import getFrameworks
 from platforms.platforms import getPlatforms
 from reporters.reporters import getReporters
 from utils.custom_logger import getLogger
-from utils.utilities import parse_kwarg, getRunStatus, setRunStatus, getRunKilled
+from utils.utilities import \
+    parse_kwarg, getRunStatus, setRunStatus, getRunKilled, getRunTimeout
 from utils.utilities import killed_flag as RUN_KILLED
+from utils.utilities import timeout_flag as RUN_TIMEOUT
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--android_dir", default="/data/local/tmp/",
@@ -226,6 +228,8 @@ class BenchmarkDriver(object):
         status = self.status | getRunStatus()
         if getRunKilled():
             status_str = "killed"
+        elif getRunTimeout():
+            status_str = "timeout"
         elif status == 0:
             status_str = "success"
         elif status == 1:
@@ -235,7 +239,11 @@ class BenchmarkDriver(object):
         else:
             status_str = "user and harness error"
         getLogger().info(" ======= {} =======".format(status_str))
-        return status if not getRunKilled() else RUN_KILLED
+        if getRunKilled():
+            return RUN_KILLED
+        if getRunTimeout():
+            return RUN_TIMEOUT
+        return status
 
     def _getInfo(self):
         info = json.loads(self.args.info)

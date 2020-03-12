@@ -41,6 +41,7 @@ from utils.check_argparse import claimer_id_type
 from utils.custom_logger import getLogger, setLoggerLevel
 from utils.utilities import getFilename, getMachineId, setRunKilled
 from utils.utilities import killed_flag as RUN_KILLED
+from utils.utilities import timeout_flag as RUN_TIMEOUT
 from utils.watchdog import WatchDog
 
 
@@ -223,6 +224,8 @@ class runAsync(object):
 
         if status == RUN_KILLED:
             self.job["status"] = "KILLED"
+        elif status == RUN_TIMEOUT:
+            self.job["status"] = "TIMEOUT"
         elif status == 0:
             self.job["status"] = "DONE"
         elif status == 1:
