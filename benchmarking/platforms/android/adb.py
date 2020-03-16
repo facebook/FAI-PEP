@@ -8,16 +8,14 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import os
 import re
-from six import string_types
 import time
 
 from platforms.platform_util_base import PlatformUtilBase
+from six import string_types
 from utils.custom_logger import getLogger
 
 
@@ -49,24 +47,25 @@ class ADB(PlatformUtilBase):
             t = t + 1
             getLogger().info("Sleep 20 seconds")
             time.sleep(20)
-            ls = self.shell(['ls', self.tempdir])
+            ls = self.shell(["ls", self.tempdir])
         # Need to wait a bit more after the device is rebooted
         getLogger().info("Sleep 300 seconds")
         time.sleep(300)
         if ls is None:
-            getLogger().error("Cannot reach device {} after reboot.".
-                              format(self.device))
+            getLogger().error(
+                "Cannot reach device {} after reboot.".format(self.device)
+            )
             return False
         getLogger().info("Device {} rebooted".format(self.device))
         return True
 
     def deleteFile(self, file):
-        return self.shell(['rm', '-f', file])
+        return self.shell(["rm", "-rf", file])
 
     def shell(self, cmd, **kwargs):
         dft = None
-        if 'default' in kwargs:
-            dft = kwargs.pop('default')
+        if "default" in kwargs:
+            dft = kwargs.pop("default")
         val = self.run("shell", cmd, **kwargs)
         if val is None and dft is not None:
             val = dft
@@ -104,15 +103,14 @@ class ADB(PlatformUtilBase):
         return adb
 
     def _setOneCPUFrequency(self, cpu, freq_target):
-        directory = os.path.join(
-            *["/sys/devices/system/cpu/", cpu, "/"]
-        )
+        directory = os.path.join(*["/sys/devices/system/cpu/", cpu, "/"])
 
         scaling_governor = directory + "cpufreq/scaling_governor"
-        self.su_shell(["\"echo userspace > {}\"".format(scaling_governor)])
+        self.su_shell(['"echo userspace > {}"'.format(scaling_governor)])
         set_scaling_governor = self.su_shell(["cat", scaling_governor]).strip()
-        assert set_scaling_governor == "userspace", \
-            getLogger().fatal("Cannot set scaling governor to userspace")
+        assert set_scaling_governor == "userspace", getLogger().fatal(
+            "Cannot set scaling governor to userspace"
+        )
 
         avail_freq = directory + "cpufreq/scaling_available_frequencies"
         freqs = self.su_shell(["cat", avail_freq]).strip().split(" ")
@@ -125,19 +123,18 @@ class ADB(PlatformUtilBase):
         elif freq_target == "mid":
             freq = freqs[int(len(freqs) / 2)]
         else:
-            assert re.match("^\d+$", freq_target), \
-                "Frequency target is not integer"
+            assert re.match("^\d+$", freq_target), "Frequency target is not integer"
             freq = freq_target
         minfreq = directory + "cpufreq/scaling_min_freq"
-        self.su_shell(["\"echo {} > {}\"".format(freq, minfreq)])
+        self.su_shell(['"echo {} > {}"'.format(freq, minfreq)])
         maxfreq = directory + "cpufreq/scaling_max_freq"
-        self.su_shell(["\"echo {} > {}\"".format(freq, maxfreq)])
+        self.su_shell(['"echo {} > {}"'.format(freq, maxfreq)])
         curr_speed = directory + "cpufreq/scaling_cur_freq"
         set_freq = self.su_shell(["cat", curr_speed]).strip()
-        assert set_freq == freq, \
-            "Unable to set frequency {} for {}".format(freq_target, cpu)
-        getLogger().info("On {}, set {} frequency to {}".
-                         format(self.device, cpu, freq))
+        assert set_freq == freq, "Unable to set frequency {} for {}".format(
+            freq_target, cpu
+        )
+        getLogger().info("On {}, set {} frequency to {}".format(self.device, cpu, freq))
 
     def _getCPUs(self):
         dirs = self.su_shell(["ls", "/sys/devices/system/cpu/"])
