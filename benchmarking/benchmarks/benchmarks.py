@@ -192,8 +192,10 @@ class BenchmarkCollector(object):
 
     def _calculateMD5(self, model_name):
         m = hashlib.md5()
-        m.update(open(model_name, 'rb').read())
+        fo = open(model_name, 'rb')
+        m.update(fo.read())
         md5 = m.hexdigest()
+        fo.close()
         return md5
 
     def _copyFile(self, field, destination_name, source):

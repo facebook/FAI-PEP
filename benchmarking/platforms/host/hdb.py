@@ -18,6 +18,8 @@ import shutil
 from platforms.platform_util_base import PlatformUtilBase
 from utils.custom_logger import getLogger
 
+COPY_THRESHOLD = 6442450944  # 6 GB
+
 
 class HDB(PlatformUtilBase):
     def __init__(self, device=None, tempdir=None):
@@ -31,8 +33,11 @@ class HDB(PlatformUtilBase):
                     shutil.rmtree(tgt)
                 shutil.copytree(src, tgt)
             else:
-                shutil.copyfile(src, tgt)
-                os.chmod(tgt, 0o777)
+                if os.stat(src).st_size < COPY_THRESHOLD:
+                    shutil.copyfile(src, tgt)
+                    os.chmod(tgt, 0o777)
+                else:
+                    os.symlink(src, tgt)
 
     def pull(self, src, tgt):
         getLogger().info("pull {} to {}".format(src, tgt))
