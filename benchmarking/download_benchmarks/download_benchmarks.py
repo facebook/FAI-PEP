@@ -104,8 +104,10 @@ class DownloadBenchmarks(object):
         if os.path.isfile(path):
             if md5:
                 m = hashlib.md5()
-                m.update(open(path, 'rb').read())
+                fo = open(path, 'rb')
+                m.update(fo.read())
                 new_md5 = m.hexdigest()
+                fo.close()
                 if md5 == new_md5:
                     getLogger().info("File {}".format(os.path.basename(path)) +
                         " is cached, skip downloading")
