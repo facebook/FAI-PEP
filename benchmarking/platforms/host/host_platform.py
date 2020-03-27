@@ -68,6 +68,8 @@ class HostPlatform(PlatformBase):
         if "enable_profiling" in platform_args:
             runAsync = platform_args["enable_profiling"]
             del platform_args["enable_profiling"]
+            if not self._isGPUMachine():
+                platform_args["env"]["GPUMON_CPU_ONLY_MODE"] = "y"
         platform_args["async"] = runAsync
         profiler_args = {}
         if "profiler_args" in platform_args:
@@ -84,19 +86,37 @@ class HostPlatform(PlatformBase):
                 getLogger().info("Terminating...")
                 sys.exit(0)
             return output, meta
-        from_time = datetime.datetime.now()
+        # from_time = datetime.datetime.now()
         procAndTimeout, err = processRun(cmd, **platform_args)
         if err:
             return [], meta
 
         ps, _ = procAndTimeout
 
-        profiler = getProfilerByUsage("server", os.getpid())
+        # profiler_server = getProfilerByUsage("server", ps.pid)
+        # if profiler_server:
+        #     profilerServerFuture = profiler_server.start(**profiler_args)
 
-        if profiler:
-            profilerFuture = profiler.start(**profiler_args)
+        profiler_trace = getProfilerByUsage("trace", ps.pid)
+        if profiler_trace:
+            profiler_trace.start(**profiler_args)
+            platform_args["filter"] = profiler_trace.getFilter()
 
         output, _ = processWait(procAndTimeout, **platform_args)
+
+        # if profiler_server:
+        #     profilerRunId = profiler_server.getId(profilerServerFuture)
+        #     meta["profiler_run_id"] = profilerRunId
+        #     self._sleepHost(from_time)
+        if profiler_trace:
+            traceryLink = profiler_trace.getLink()
+            filePathes = profiler_trace.getFilePathes()
+            meta["tracery_link"] = traceryLink
+            meta["file_pathes"] = filePathes
+
+        return output, meta
+
+    def _sleepHost(self, from_time):
         # Sleep the host to make sure there is no other process running
         # if the duration of process is short
         to_time = datetime.datetime.now()
@@ -109,12 +129,6 @@ class HostPlatform(PlatformBase):
                     min_duration * 60, duration, diff)
             )
             time.sleep(diff)
-
-        if profiler:
-            profilerRunId = profiler.getId(profilerFuture)
-            meta["profiler_run_id"] = profilerRunId
-
-        return output, meta
 
     def _getProcessorName(self):
         if platform.system() == "Windows":
@@ -137,3 +151,14 @@ class HostPlatform(PlatformBase):
         if not os.path.isdir(out_dir):
             os.makedirs(out_dir, 0o777)
         return out_dir
+
+    def _isGPUMachine(self):
+        fbwhoami_file = "/etc/fbwhoami"
+        if not os.path.isfile(fbwhoami_file):
+            return False
+        with open(fbwhoami_file) as f:
+            for line in f.readlines():
+                pair = line.split("=", 1)
+                if len(pair) == 2 and pair[0] == "SERVER_TYPE":
+                    return "GPU" in pair[1]
+        return False
