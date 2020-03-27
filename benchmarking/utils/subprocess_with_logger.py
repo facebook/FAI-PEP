@@ -139,6 +139,8 @@ def processWait(processAndTimeout, **kwargs):
                     "Process exited with status: {}".format(status)
                 )
                 setRunStatus(1, key=process_key)
+            if "filter" in kwargs:
+                output = _filterOutput(output, kwargs["filter"])
             getLogger().info(
                 '\n\nProgram Output:\n{}\n{}\n{}\n'.format(
                     '=' * 80,
@@ -159,6 +161,16 @@ def processWait(processAndTimeout, **kwargs):
         err_output = "{}".format(sys.exc_info()[0])
         getLogger().error("Unknown exception {}".format(sys.exc_info()[0]))
     return [], err_output
+
+
+def _filterOutput(output, match_list):
+    length = len(output)
+    for i, line in enumerate(output[::-1]):
+        for match in match_list:
+            if match in line:
+                del output[length - i - 1]
+                break
+    return output
 
 
 def _Popen(*args, **kwargs):
