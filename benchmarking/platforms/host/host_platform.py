@@ -68,7 +68,9 @@ class HostPlatform(PlatformBase):
         if "enable_profiling" in platform_args:
             runAsync = platform_args["enable_profiling"]
             del platform_args["enable_profiling"]
-            if not self._isGPUMachine():
+            if runAsync and not self._isGPUMachine():
+                if "env" not in platform_args:
+                    platform_args["env"] = env
                 platform_args["env"]["GPUMON_CPU_ONLY_MODE"] = "y"
         platform_args["async"] = runAsync
         profiler_args = {}
