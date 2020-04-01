@@ -67,7 +67,7 @@ class FileHandler(object):
                 os.path.dirname(os.path.realpath(basefilename)),
                 filename)
 
-        if not os.path.isfile(path):
+        if not os.path.isfile(path) or filename.startswith("//manifold"):
             getLogger().info("Skip uploading {}".format(filename))
             return filename, md5
 
