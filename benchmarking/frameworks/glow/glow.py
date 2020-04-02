@@ -52,8 +52,53 @@ class GlowFramework(FrameworkBase):
         self._maybeAddTraceOutput(platform, results)
         self._maybeAddBenchSummary(output, results)
         self._maybeAddNetRunnerStats(output, results)
+        self._maybeNetRunner(output, results)
         results["meta"] = meta
         return results
+
+    def _maybeNetRunner(self, output, results):
+        if output is None:
+            return False
+        rows = output
+        if isinstance(output, string_types):
+            rows = output.split('\n')
+        i = 0
+        while i < len(rows):
+            match = re.search(
+                r"(.*)latency per (.*) \[(.*)\]:",
+                rows[i]
+            )
+            if match:
+                if match.group(3) == "glow":
+                    mtype = "NET"
+                else:
+                    mtype = "SECONDARY"
+                name = match.group(3)
+                latency_kind = match.group(2)
+                card = match.group(1)
+                if card:
+                    latency_kind = "card " + latency_kind
+                i += 1
+                while "P95" not in rows[i] and i < len(rows):
+                    match = re.search(
+                        r".*latency\((.*)\): P(.*): (.*)",
+                        rows[i]
+                    )
+                    if match:
+                        unit = match.group(1)
+                        value = float(match.group(3))
+
+                        self._addOrAppendResult(results,
+                            mtype + " " + name + " net_runner " + latency_kind,
+                            value, {
+                                "type": mtype,
+                                "metric": name + " net_runner " + latency_kind,
+                                "unit": unit,
+                                "values": []
+                            }
+                        )
+                    i += 1
+            i += 1
 
     def _maybeAddJsonOutput(self, output, results):
         if output is None:
