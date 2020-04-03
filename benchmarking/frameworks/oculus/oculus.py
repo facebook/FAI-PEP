@@ -95,8 +95,9 @@ class OculusFramework(FrameworkBase):
                 value = one_entry["value"]
                 unit = one_entry["unit"]
                 metric = one_entry["metric"]
-                if type in result:
-                    entry = result[type]
+                map_key = "{}_{}".format(type, metric)
+                if map_key in result:
+                    entry = result[map_key]
                     if entry["unit"] is not None and entry["unit"] != unit:
                         getLogger().error("The unit do not match in different"
                                           " test runs {} and {}".
@@ -110,7 +111,7 @@ class OculusFramework(FrameworkBase):
                         entry["metric"] = None
                     entry["values"].append(value)
                 else:
-                    result[type] = {
+                    result[map_key] = {
                         "type": type,
                         "values": [value],
                         "unit": unit,
