@@ -79,10 +79,10 @@ class GlowFramework(FrameworkBase):
                 if card:
                     latency_kind = "card " + latency_kind
                 i += 1
-                while "P95" not in rows[i] and i < len(rows):
+                while i < len(rows) and "p95" not in rows[i].lower():
                     match = re.search(
-                        r".*latency\((.*)\): P(.*): (.*)",
-                        rows[i]
+                        r".*latency\((.*)\): p(.*): (.*)",
+                        rows[i].lower()
                     )
                     if match:
                         unit = match.group(1)
