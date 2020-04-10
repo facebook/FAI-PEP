@@ -79,20 +79,21 @@ class GlowFramework(FrameworkBase):
                 if card:
                     latency_kind = "card " + latency_kind
                 i += 1
-                while i < len(rows) and "p95" not in rows[i].lower():
+                while i < len(rows) and "latency per" not in rows[i].lower():
                     match = re.search(
                         r".*latency\((.*)\): p(.*): (.*)",
                         rows[i].lower()
                     )
                     if match:
                         unit = match.group(1)
+                        percentile = match.group(2)
                         value = float(match.group(3))
 
                         self._addOrAppendResult(results,
-                            mtype + " " + name + " net_runner " + latency_kind,
+                            " ".join([mtype, name, "net_runner", latency_kind, percentile]),
                             value, {
                                 "type": mtype,
-                                "metric": name + " net_runner " + latency_kind,
+                                "metric": " ".join([name, "net_runner", latency_kind, percentile]),
                                 "unit": unit,
                                 "values": []
                             }
