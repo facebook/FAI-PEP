@@ -86,14 +86,18 @@ class GlowFramework(FrameworkBase):
                     )
                     if match:
                         unit = match.group(1)
-                        percentile = match.group(2)
+                        percentile = "p" + match.group(2)
                         value = float(match.group(3))
 
                         self._addOrAppendResult(results,
-                            " ".join([mtype, name, "net_runner", latency_kind, percentile]),
+                            " ".join(
+                                [mtype, name, "net_runner", latency_kind, percentile]
+                            ),
                             value, {
                                 "type": mtype,
-                                "metric": " ".join([name, "net_runner", latency_kind, percentile]),
+                                "metric": " ".join(
+                                    [name, "net_runner", latency_kind, percentile]
+                                ),
                                 "unit": unit,
                                 "values": []
                             }
