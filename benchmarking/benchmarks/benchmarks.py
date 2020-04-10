@@ -23,6 +23,9 @@ from utils.custom_logger import getLogger
 from utils.utilities import deepMerge, deepReplace
 
 
+COPY_THRESHOLD = 6442450944  # 6 GB
+
+
 class BenchmarkCollector(object):
     def __init__(self, framework, model_cache, **kwargs):
 
@@ -211,7 +214,10 @@ class BenchmarkCollector(object):
         else:
             abs_name = self._getAbsFilename(field, source, None)
             if os.path.isfile(abs_name):
-                shutil.copyfile(abs_name, destination_name)
+                if os.stat(abs_name).st_size < COPY_THRESHOLD:
+                    shutil.copyfile(abs_name, destination_name)
+                else:
+                    os.symlink(abs_name, destination_name)
             else:
                 import distutils.dir_util
                 distutils.dir_util.copy_tree(abs_name, destination_name)
