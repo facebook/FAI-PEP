@@ -259,13 +259,16 @@ class runAsync(object):
 
     def _removeBenchmarkFiles(self, device):
         benchmark_file = self.job["benchmarks"]["benchmark"]["content"]
-        models_location = self.job["models_location"]
+        # models_location = self.job["models_location"]
         programs_location = self.job["programs_location"]
         output_dir = device["output_dir"]
 
         os.remove(benchmark_file)
-        for model_location in models_location:
-            shutil.rmtree(os.path.dirname(model_location), True)
+        # We don't delete files from models_location because after each run
+        # to save model re-download time. This might be a problem to have
+        # many files saving on the disk and many disk spaces used.
+        # for model_location in models_location:
+        #     shutil.rmtree(os.path.dirname(model_location), True)
         for program_location in programs_location:
             shutil.rmtree(os.path.dirname(program_location), True)
         shutil.rmtree(output_dir, True)
