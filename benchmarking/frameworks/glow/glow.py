@@ -103,7 +103,8 @@ class GlowFramework(FrameworkBase):
                             }
                         )
                     i += 1
-            i += 1
+            else:
+                i += 1
 
     def _maybeAddJsonOutput(self, output, results):
         if output is None:
