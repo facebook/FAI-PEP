@@ -13,6 +13,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import copy
+import gc
 import hashlib
 import json
 import os
@@ -187,18 +188,26 @@ class BenchmarkCollector(object):
     def _updateOneFile(self, field, model_dir, filename):
         cached_filename = \
             self._getDestFilename(field, model_dir)
-        if "md5" in field and field["md5"] is not None and\
-                (not os.path.isfile(cached_filename) or
-                 self._calculateMD5(cached_filename) != field["md5"]):
+        if "md5" in field and field["md5"] is not None \
+            and (not os.path.isfile(cached_filename)
+            or self._calculateMD5(
+                cached_filename, field["md5"], filename) != field["md5"]):
             return self._copyFile(field, cached_filename, filename)
         return False
 
-    def _calculateMD5(self, model_name):
-        m = hashlib.md5()
-        fo = open(model_name, 'rb')
-        m.update(fo.read())
-        md5 = m.hexdigest()
-        fo.close()
+    def _calculateMD5(self, model_name, old_md5, filename):
+        if os.stat(filename).st_size >= COPY_THRESHOLD:
+            if not os.path.isfile(model_name):
+                os.symlink(filename, model_name)
+            return old_md5
+        getLogger().info("Calculate md5 of {}".format(model_name))
+        with open(model_name, 'rb') as f:
+            file_hash = hashlib.md5()
+            for chunk in iter(lambda: f.read(8192), b''):
+                file_hash.update(chunk)
+        md5 = file_hash.hexdigest()
+        del file_hash
+        gc.collect()
         return md5
 
     def _copyFile(self, field, destination_name, source):
@@ -217,7 +226,8 @@ class BenchmarkCollector(object):
                 if os.stat(abs_name).st_size < COPY_THRESHOLD:
                     shutil.copyfile(abs_name, destination_name)
                 else:
-                    os.symlink(abs_name, destination_name)
+                    if not os.path.isfile(destination_name):
+                        os.symlink(abs_name, destination_name)
             else:
                 import distutils.dir_util
                 distutils.dir_util.copy_tree(abs_name, destination_name)
@@ -226,7 +236,7 @@ class BenchmarkCollector(object):
         assert os.path.isfile(destination_name), \
             "File {} cannot be retrieved".format(destination_name)
         # verify the md5 matches the file downloaded
-        md5 = self._calculateMD5(destination_name)
+        md5 = self._calculateMD5(destination_name, field["md5"], abs_name)
         if md5 != field["md5"]:
             getLogger().info("Source file {} is changed, ".format(location)
                              + " updating MD5. "

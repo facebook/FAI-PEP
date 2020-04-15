@@ -9,6 +9,7 @@
 ##############################################################################
 
 from __future__ import absolute_import, division, print_function, unicode_literals
+import gc
 import hashlib
 import os
 
@@ -64,7 +65,6 @@ class DownloadBenchmarks(object):
                     path = self.downloadFile(location, md5)
                     locations.append(path)
 
-
         assert "tests" in one_benchmark, \
             "tests field is missing in benchmark {}".format(filename)
         tests = one_benchmark["tests"]
@@ -88,9 +88,9 @@ class DownloadBenchmarks(object):
         if location.startswith("http"):
             dirs = location.split(":/")
             replace_pattern = {
-                    ' ': '-',
-                    '\\': '-',
-                    ':': '/',
+                ' ': '-',
+                '\\': '-',
+                ':': '/',
             }
             path = os.path.join(self.root_model_dir,
                 getFilename(location, replace_pattern=replace_pattern))
@@ -103,14 +103,18 @@ class DownloadBenchmarks(object):
             path = self.root_model_dir + location[1:]
         if os.path.isfile(path):
             if md5:
-                m = hashlib.md5()
-                fo = open(path, 'rb')
-                m.update(fo.read())
-                new_md5 = m.hexdigest()
-                fo.close()
+                getLogger().info("Calculate md5 of {}".format(path))
+                file_hash = None
+                with open(path, 'rb') as f:
+                    file_hash = hashlib.md5()
+                    for chunk in iter(lambda: f.read(8192), b''):
+                        file_hash.update(chunk)
+                new_md5 = file_hash.hexdigest()
+                del file_hash
+                gc.collect()
                 if md5 == new_md5:
-                    getLogger().info("File {}".format(os.path.basename(path)) +
-                        " is cached, skip downloading")
+                    getLogger().info("File {}".format(os.path.basename(path))
+                        + " is cached, skip downloading")
                     return path
             else:
                 # assume the file is the same
