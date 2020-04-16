@@ -37,7 +37,8 @@ class HDB(PlatformUtilBase):
                     shutil.copyfile(src, tgt)
                     os.chmod(tgt, 0o777)
                 else:
-                    os.symlink(src, tgt)
+                    if not os.path.isfile(tgt):
+                        os.symlink(src, tgt)
 
     def pull(self, src, tgt):
         getLogger().info("pull {} to {}".format(src, tgt))
