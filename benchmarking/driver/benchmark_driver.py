@@ -13,6 +13,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import copy
+import gc
 import os
 import sys
 import time
@@ -37,6 +38,7 @@ def runOneBenchmark(info, benchmark, framework, platform,
     try:
         # invalidate CPU cache
         [1.0 for _ in range(20 << 20)]
+        gc.collect()
         data = _runOnePass(minfo, mbenchmark, framework, platform)
         status = status | getRunStatus()
         meta = None
@@ -50,6 +52,7 @@ def runOneBenchmark(info, benchmark, framework, platform,
             time.sleep(cooldown)
             # invalidate CPU cache
             [1.0 for _ in range(20 << 20)]
+            gc.collect()
             control = _runOnePass(cinfo, benchmark, framework, platform)
             status = status | getRunStatus()
             bname = benchmark["model"]["name"]

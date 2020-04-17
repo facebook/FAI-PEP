@@ -38,6 +38,9 @@ class HDB(PlatformUtilBase):
                     os.chmod(tgt, 0o777)
                 else:
                     if not os.path.isfile(tgt):
+                        getLogger().info(
+                            "Create symlink between {} and {}".format(src, tgt)
+                        )
                         os.symlink(src, tgt)
 
     def pull(self, src, tgt):

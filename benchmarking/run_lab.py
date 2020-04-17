@@ -16,6 +16,7 @@ from __future__ import unicode_literals
 
 import argparse
 import datetime
+import gc
 import glob
 from io import StringIO
 import json
@@ -283,6 +284,7 @@ class runAsync(object):
                     shutil.rmtree(f, True)
                 if os.path.isfile(f):
                     os.remove(f)
+            gc.collect()
         except BaseException:
             pass
 
@@ -661,6 +663,7 @@ class RunLab(object):
                 getLogger().error(e)
                 getLogger().error("Terminating...")
                 os._exit(1)
+            gc.collect()
 
     def _getDevices(self):
         raw_args = []
