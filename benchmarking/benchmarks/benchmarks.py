@@ -196,8 +196,11 @@ class BenchmarkCollector(object):
         return False
 
     def _calculateMD5(self, model_name, old_md5, filename):
-        if os.stat(filename).st_size >= COPY_THRESHOLD:
+        if os.stat(filename).st_size >= COPY_THRESHOLD or os.path.islink(model_name):
             if not os.path.isfile(model_name):
+                getLogger().info(
+                    "Create symlink between {} and {}".format(filename, model_name)
+                )
                 os.symlink(filename, model_name)
             return old_md5
         getLogger().info("Calculate md5 of {}".format(model_name))
@@ -227,6 +230,10 @@ class BenchmarkCollector(object):
                     shutil.copyfile(abs_name, destination_name)
                 else:
                     if not os.path.isfile(destination_name):
+                        getLogger().info(
+                            "Create symlink between {} and {}".format(
+                                abs_name, destination_name)
+                        )
                         os.symlink(abs_name, destination_name)
             else:
                 import distutils.dir_util
