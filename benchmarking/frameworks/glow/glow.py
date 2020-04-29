@@ -106,6 +106,44 @@ class GlowFramework(FrameworkBase):
             else:
                 i += 1
 
+        i = 0
+        while i < len(rows):
+            match = re.search(
+                r"(.*): (.*) vs (.*)\((.*)\)",
+                rows[i]
+            )
+            if match:
+                test_impls1, test_impls2 = sorted([match.group(2), match.group(3)])
+                i += 1
+                while i < len(rows) and "abs error" in rows[i].lower():
+                    match = re.search(
+                        r".*abs error p(.*): (.*)",
+                        rows[i].lower()
+                    )
+                    if match:
+                        percentile = "p" + match.group(1)
+                        value = float(match.group(2))
+
+                        self._addOrAppendResult(results,
+                            " ".join(
+                                ["NET", test_impls1, "vs", test_impls2,
+                                    "abs error", percentile]
+                            ),
+                            value, {
+                                "type": "NET",
+                                "metric": " ".join(
+                                    [test_impls1, "vs", test_impls2,
+                                        "abs error", percentile]
+                                ),
+                                "unit": "scalar",
+                                "values": []
+                            }
+                        )
+                    i += 1
+
+            else:
+                i += 1
+
     def _maybeAddJsonOutput(self, output, results):
         if output is None:
             return False
