@@ -147,7 +147,7 @@ class DBDriver(object):
         result_json = requestsJson(self.benchmark_db_entry,
                                    data=params, timeout=NETWORK_TIMEOUT)
         if "status" not in result_json or result_json['status'] != "success":
-            getLogger().error(
+            getLogger().warning(
                 "DB post failed, params {}".format(json.dumps(params)))
             return {
                 "status": "fail",
