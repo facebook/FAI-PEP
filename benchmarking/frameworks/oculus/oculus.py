@@ -144,9 +144,11 @@ class OculusFramework(FrameworkBase):
     def _composeRunCommand(self, env_vars, program, platform,
                            test, inputs, outputs):
         cmd = [env_vars, program,
-               "--json", platform.getOutputDir() + "report.json",
-               "--input", ' ' .join(inputs),
-               "--output", ' '.join(outputs)]
+               "--json", platform.getOutputDir() + "report.json"]
+        if len(inputs) > 0:
+            cmd.extend(["--input", ' ' .join(inputs)])
+        if len(outputs) > 0:
+            cmd.extend(["--output", ' '.join(outputs)])
         if "commands" in test:
             if "oculus" in test["commands"]:
                 for key in test["commands"]["oculus"]:
