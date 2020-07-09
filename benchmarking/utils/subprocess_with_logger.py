@@ -86,7 +86,7 @@ def _processRun(*args, **kwargs):
             return (ps, t), None
         return processWait((ps, t), **kwargs)
     except subprocess.CalledProcessError as e:
-        err_output = e.output.decode("utf-8", "ignore")
+        err_output = e.output.decode("utf-8", errors="replace")
         getLogger().error("Command failed: {}".format(err_output))
     except Exception:
         getLogger().error("Unknown exception {}: {}".format(sys.exc_info()[0],
@@ -155,7 +155,7 @@ def processWait(processAndTimeout, **kwargs):
             setRunStatus(1, key=process_key)
             return [], '\n'.join(output)
     except subprocess.CalledProcessError as e:
-        err_output = e.output.decode("utf-8", "ignore")
+        err_output = e.output.decode("utf-8", errors="replace")
         getLogger().error("Command failed: {}".format(err_output))
     except Exception:
         err_output = "{}".format(sys.exc_info()[0])
@@ -216,7 +216,7 @@ def _getOutput(ps, patterns, process_key=''):
         nline = line.rstrip()
         try:
             # decode the string if decode exists
-            decoded_line = nline.decode('utf-8')
+            decoded_line = nline.decode('utf-8', errors="replace")
             nline = decoded_line
         except Exception:
             pass
