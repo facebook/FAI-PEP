@@ -62,6 +62,8 @@ class RunBench(object):
             return ret
         if "--fetch_status" in self.unknowns or "--fetch_result" in self.unknowns:
             return ret
+        if "--list_devices" in self.unknowns:
+            return ret
         if ret is not None:
             setRunStatus(ret >> 8)
         return getRunStatus()
