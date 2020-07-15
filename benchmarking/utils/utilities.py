@@ -28,16 +28,26 @@ from six import string_types
 from .custom_logger import getLogger
 
 
-def getBenchmarks(bfile, framework=None):
-    assert os.path.isfile(bfile), "Specified benchmark file doesn't exist: {}".format(
-        bfile
-    )
+def check_is_json(json_str):
+    try:
+        json.loads(json_str)
+        return True
+    except ValueError:
+        return False
 
-    with open(bfile, "r") as f:
-        content = json.load(f)
+
+def getBenchmarks(json_input, framework=None):
+    if (os.path.isfile(json_input)):
+        with open(json_input, "r") as f:
+            content = json.load(f)
+    elif (check_is_json(json_input)):
+        content = json.loads(json_input)
+    else:
+        raise Exception("specified benchmark file doesn't exist: {json_input}")
+
     benchmarks = []
     if "benchmarks" in content:
-        path = os.path.abspath(os.path.dirname(bfile))
+        path = os.path.abspath(os.path.dirname(json_input))
         for benchmark_file in content["benchmarks"]:
             filename = os.path.join(path, benchmark_file)
             assert os.path.isfile(filename), "Benchmark {} doesn't exist".format(
@@ -52,7 +62,7 @@ def getBenchmarks(bfile, framework=None):
     else:
         if framework and "model" in content:
             content["model"]["framework"] = framework
-        benchmarks.append({"filename": bfile, "content": content})
+        benchmarks.append({"filename": json_input, "content": content})
     return benchmarks
 
 
