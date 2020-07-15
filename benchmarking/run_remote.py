@@ -215,8 +215,9 @@ class RunRemote(object):
 
     def run(self):
         if self.args.list_devices:
+            devices = self.db.listDevices(self.args.job_queue)
             self._listDevices()
-            return
+            return devices
         if self.args.list_job_queues:
             self._printJobQueues()
             return
