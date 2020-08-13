@@ -53,8 +53,53 @@ class GlowFramework(FrameworkBase):
         self._maybeAddBenchSummary(output, results)
         self._maybeAddNetRunnerStats(output, results)
         self._maybeNetRunner(output, results)
+        self._maybeRepro(output, results)
         results["meta"] = meta
         return results
+
+    def _maybeRepro(self, output, results):
+        if output is None:
+            return False
+        rows = output
+        if isinstance(output, string_types):
+            rows = output.split('\n')
+        i = 0
+        while i < len(rows):
+            if "Total inference duration (ms): " in rows[i]:
+                total_inferece_time = float(rows[i].split("Total inference duration (ms): ")[1])
+                self._addOrAppendResult(results,
+                            "Total inference duration",
+                            total_inferece_time, {
+                                "type": "NET",
+                                "metric": "Total inference duration",
+                                "unit": "ms",
+                                "values": []
+                            }
+                )
+            if "Avg inference duration (ms): " in rows[i]:
+                avg_inference_time = float(rows[i].split("Avg inference duration (ms): ")[1])
+                self._addOrAppendResult(results,
+                            "Avg inference duration",
+                            avg_inference_time, {
+                                "type": "NET",
+                                "metric": "Avg inference duration",
+                                "unit": "scalar",
+                                "values": []
+                            }
+                )
+            if "Avg inference per second: " in rows[i]:
+                avg_inference_per_second = float(rows[i].split("Avg inference per second: ")[1])
+                self._addOrAppendResult(results,
+                            "Avg inference per second",
+                            avg_inference_per_second, {
+                                "type": "NET",
+                                "metric": "Avg inference per second",
+                                "unit": "scalar",
+                                "values": []
+                            }
+                )
+            i += 1
+
 
     def _maybeNetRunner(self, output, results):
         if output is None:
