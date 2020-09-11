@@ -184,6 +184,7 @@ def _Popen(*args, **kwargs):
     ps = subprocess.Popen(*args, bufsize=-1, stdout=subprocess.PIPE,
                           stderr=subprocess.STDOUT,
                           universal_newlines=True, preexec_fn=os.setsid,
+                          errors="replace",
                           **customArgs)
     # We set the buffer size to system default.
     # this is not really recommended. However, we need to stream the
