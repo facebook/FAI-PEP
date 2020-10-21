@@ -228,6 +228,7 @@ run_statuses = {}
 # internal flags which will be masked out when returning the status
 timeout_flag = 1 << 8
 killed_flag = 1 << 9
+user_error_flag = 1
 
 # mask to expose only external status bits
 external_status_mask = 0xFF

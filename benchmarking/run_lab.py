@@ -43,6 +43,7 @@ from utils.custom_logger import getLogger, setLoggerLevel
 from utils.utilities import getFilename, getMachineId, setRunKilled
 from utils.utilities import killed_flag as RUN_KILLED
 from utils.utilities import timeout_flag as RUN_TIMEOUT
+from utils.utilities import user_error_flag as USER_ERROR
 from utils.watchdog import WatchDog
 
 
@@ -175,17 +176,22 @@ class runAsync(object):
         ch = logging.StreamHandler(log_capture_string)
         ch.setLevel(logging.DEBUG)
         getLogger().addHandler(ch)
-
-        try:
-            app = BenchmarkDriver(raw_args=raw_args)
-            status = app.run()
-        except Exception as e:
-            getLogger().error(e)
-
-        output = log_capture_string.getvalue()
-        log_capture_string.close()
-        getLogger().handlers.pop()
-        getLogger().debug("RunBenchmark")
+        # verify download success before run
+        if "download_error_log" in self.job:
+            getLogger().error("Error downloading files for job. Skipping run.")
+            status = USER_ERROR
+            output = self.job["download_error_log"]
+        else:
+            try:
+                app = BenchmarkDriver(raw_args=raw_args)
+                getLogger().debug("RunBenchmark")
+                status = app.run()
+            except Exception as e:
+                getLogger().error(e)
+            finally:
+                output = log_capture_string.getvalue()
+                log_capture_string.close()
+                getLogger().handlers.pop()
 
         return {"status": status, "output": output}
 
@@ -569,6 +575,7 @@ class RunLab(object):
             apply_async method.
             Ref: https://stackoverflow.com/a/6975654
             """
+
             self.pool.apply_async(app, args=[raw_args],
                 callback=app.main.callback)
 
@@ -625,11 +632,22 @@ class RunLab(object):
     def _downloadFiles(self, jobs_queue):
         for job in jobs_queue:
             job["models_location"] = []
+            # added log capture for reporting
+            log_capture_string = StringIO()
+            ch = logging.StreamHandler(log_capture_string)
+            ch.setLevel(logging.DEBUG)
+            getLogger().addHandler(ch)
             # download the models
-            getLogger().info("Downloading models")
-            path = self._saveBenchmarks(job)
-            location = self.benchmark_downloader.run(path)
-            job["models_location"].extend(location)
+            try:
+                getLogger().info("Downloading models")
+                path = self._saveBenchmarks(job)
+                location = self.benchmark_downloader.run(path)
+                job["models_location"].extend(location)
+            except Exception as e:
+                getLogger().error("Unknown exception {}".format(sys.exc_info()[0]))
+                getLogger().error("Error downloading models. Job id: {}".format(job["id"]))
+                getLogger().error(e)
+                job["download_error_log"] = log_capture_string.getvalue()
             getLogger().info("Downloading programs")
             # download the programs
             if "info" not in job["benchmarks"]:
@@ -659,10 +677,11 @@ class RunLab(object):
 
             except Exception as e:
                 getLogger().error("Unknown exception {}".format(sys.exc_info()[0]))
-                getLogger().error("File download failure")
+                getLogger().error("Error downloading programs. Job id: {}".format(job["id"]))
                 getLogger().error(e)
-                getLogger().error("Terminating...")
-                os._exit(1)
+                job["download_error_log"] = log_capture_string.getvalue()
+            log_capture_string.close()
+            getLogger().handlers.pop()
             gc.collect()
 
     def _getDevices(self):
