@@ -148,14 +148,15 @@ class DBDriver(object):
                                    data=params, timeout=NETWORK_TIMEOUT)
         if "status" not in result_json or result_json['status'] != "success":
             getLogger().warning(
-                "DB post failed, params {}".format(json.dumps(params)))
+                "DB post failed.\tbenchmark_db_entry: {}\t params: {}".format(self.benchmark_db_entry, json.dumps(params)))
+            for key in result_json:
+                getLogger().error("{}: {}".format(key, result_json[key]))
             return {
                 "status": "fail",
                 "values": [],
             }
         else:
             return result_json
-
     def _processBenchmarkResults(self, result_json):
         for result in result_json:
             benchmarks = json.loads(result["benchmarks"])
