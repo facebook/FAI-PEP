@@ -30,8 +30,8 @@ from reporters.reporters import getReporters
 from utils.custom_logger import getLogger
 from utils.utilities import \
     parse_kwarg, getRunStatus, setRunStatus, getRunKilled, getRunTimeout
-from utils.utilities import killed_flag as RUN_KILLED
-from utils.utilities import timeout_flag as RUN_TIMEOUT
+from utils.utilities import KILLED_FLAG as RUN_KILLED
+from utils.utilities import TIMEOUT_FLAG as RUN_TIMEOUT
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--android_dir", default="/data/local/tmp/",

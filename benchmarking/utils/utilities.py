@@ -25,8 +25,17 @@ import pkg_resources
 import requests
 from six import string_types
 
-from .custom_logger import getLogger
+from utils.custom_logger import getLogger
 
+# Status codes for benchmark
+SUCCESS_FLAG = 0
+USER_ERROR_FLAG = 1
+HARNESS_ERROR_FLAG = 2
+USER_AND_HARNESS_ERROR_FLAG = 3
+TIMEOUT_FLAG = 1 << 8
+KILLED_FLAG = 1 << 9
+# Mask to expose only external status bits
+EXTERNAL_STATUS_MASK = 0XFF
 
 def check_is_json(json_str):
     try:
@@ -157,6 +166,7 @@ def requestsData(url, **kwargs):
     timeout = -1
     if "timeout" in kwargs:
         timeout = kwargs["timeout"]
+    retry = kwargs.pop("retry", True)
     result = None
     while True:
         try:
@@ -184,6 +194,8 @@ def requestsData(url, **kwargs):
             getLogger().error("Post Readtimeout {}".format(e))
         except requests.exceptions.ChunkedEncodingError as e:
             getLogger().error("Post ChunkedEncodingError {}".format(e))
+        if not retry:
+            break
         delay = delay + 1 if delay <= 5 else delay
         sleep_time = 1 << delay
         getLogger().info("wait {} seconds. Retrying...".format(sleep_time))
@@ -219,20 +231,8 @@ def parse_kwarg(kwarg_str):
     return key, value
 
 
-# run_statuses[key] == 0: success
-# run_statuses[key] == 1: user error
-# run_statuses[key] == 2: harness error
-# run_statuses[key] == 3: both user and harness error
+# Run status
 run_statuses = {}
-
-# internal flags which will be masked out when returning the status
-timeout_flag = 1 << 8
-killed_flag = 1 << 9
-user_error_flag = 1
-
-# mask to expose only external status bits
-external_status_mask = 0xFF
-
 
 def _getRawRunStatus(key=""):
     global run_statuses
@@ -245,7 +245,7 @@ def _setRawRunStatus(status, key=""):
 
 
 def getRunStatus(key=""):
-    return _getRawRunStatus(key) & external_status_mask
+    return _getRawRunStatus(key) & EXTERNAL_STATUS_MASK
 
 
 def setRunStatus(status, overwrite=False, key=""):
@@ -256,25 +256,25 @@ def setRunStatus(status, overwrite=False, key=""):
 
 
 def getRunTimeout(key=""):
-    return _getRawRunStatus(key) & timeout_flag == timeout_flag
+    return _getRawRunStatus(key) & TIMEOUT_FLAG == TIMEOUT_FLAG
 
 
 def setRunTimeout(timedOut=True, key=""):
     if timedOut:
-        _setRawRunStatus(_getRawRunStatus(key) | timeout_flag, key)
+        _setRawRunStatus(_getRawRunStatus(key) | TIMEOUT_FLAG, key)
     else:
-        _setRawRunStatus(_getRawRunStatus(key) & ~timeout_flag, key)
+        _setRawRunStatus(_getRawRunStatus(key) & ~TIMEOUT_FLAG, key)
 
 
 def getRunKilled(key=""):
-    return _getRawRunStatus(key) & killed_flag == killed_flag
+    return _getRawRunStatus(key) & KILLED_FLAG == KILLED_FLAG
 
 
 def setRunKilled(killed=True, key=""):
     if killed:
-        _setRawRunStatus(_getRawRunStatus(key) | killed_flag, key)
+        _setRawRunStatus(_getRawRunStatus(key) | KILLED_FLAG, key)
     else:
-        _setRawRunStatus(_getRawRunStatus(key) & ~killed_flag, key)
+        _setRawRunStatus(_getRawRunStatus(key) & ~KILLED_FLAG, key)
 
 
 def getMeta(args, platform):

@@ -41,11 +41,14 @@ from reboot_device import reboot as reboot_device
 from utils.check_argparse import claimer_id_type
 from utils.custom_logger import getLogger, setLoggerLevel
 from utils.utilities import getFilename, getMachineId, setRunKilled
-from utils.utilities import killed_flag as RUN_KILLED
-from utils.utilities import timeout_flag as RUN_TIMEOUT
-from utils.utilities import user_error_flag as USER_ERROR
+from utils.utilities import KILLED_FLAG as RUN_KILLED
+from utils.utilities import TIMEOUT_FLAG as RUN_TIMEOUT
+from utils.utilities import USER_ERROR_FLAG as USER_ERROR
+from utils.utilities import HARNESS_ERROR_FLAG as HARNESS_ERROR
 from utils.watchdog import WatchDog
-
+from utils.log_update_handler import DBLogUpdateHandler
+from utils.log_utils import trimLog, collectLogData, valid_interval
+from utils.log_utils import DEFAULT_INTERVAL as default_interval
 
 parser = argparse.ArgumentParser(description="Run the benchmark remotely")
 
@@ -90,6 +93,10 @@ parser.add_argument("--remote_access_token", default="",
 parser.add_argument("--root_model_dir",
     help="The root model directory if the meta data of the model uses "
     "relative directory, i.e. the location field starts with //")
+parser.add_argument("--rt_logging", action="store_true",
+    help="Enable realtime logging to database.")
+parser.add_argument("--rt_logging_interval", type=valid_interval, default=str(default_interval),
+    help="Realtime logging Update interval in seconds. Minimum 5 seconds.")
 parser.add_argument("--shared_libs",
     help="Pass the shared libs that the framework depends on, "
     "in a comma separated list.")
@@ -121,7 +128,6 @@ parser.add_argument("--benchmark_table",
 
 REBOOT_INTERVAL = datetime.timedelta(hours=8)
 LOCK = threading.RLock()
-LOG_LIMIT = 16 * (10**6)
 
 DRAIN = False
 RUNNING_JOBS = 0
@@ -172,10 +178,20 @@ class runAsync(object):
         return self.run(raw_args)
 
     def run(self, raw_args):
+        handlers = []
         log_capture_string = StringIO()
         ch = logging.StreamHandler(log_capture_string)
         ch.setLevel(logging.DEBUG)
         getLogger().addHandler(ch)
+        handlers.append(ch)
+        # if enabled realtime logger will also update the log entry at regualr intervals.
+        if self.args.rt_logging:
+            dbh = DBLogUpdateHandler(self.db, self.job['identifier'], self.args.rt_logging_interval)
+            dbh.setLevel(logging.DEBUG)
+            getLogger().addHandler(dbh)
+            handlers.append(dbh)
+            getLogger().info("Realtime logging enabled with {}s updates.".format(self.args.rt_logging_interval))
+
         # verify download success before run
         if "download_error_log" in self.job:
             getLogger().error("Error downloading files for job. Skipping run.")
@@ -188,11 +204,15 @@ class runAsync(object):
                 status = app.run()
             except Exception as e:
                 getLogger().error(e)
-            finally:
-                output = log_capture_string.getvalue()
-                log_capture_string.close()
-                getLogger().handlers.pop()
+                #TODO: handle this exception and ensure that device is responsive
+                status = HARNESS_ERROR
 
+        output = log_capture_string.getvalue()
+        log_capture_string.close()
+        for handler in handlers:
+            handler.close()
+            getLogger().handlers.remove(handler)
+        del(handlers)
         return {"status": status, "output": output}
 
     def callback(self, result_dict):
@@ -245,9 +265,7 @@ class runAsync(object):
             outputs = output.split("\n")
             for o in outputs:
                 getLogger().info(o)
-            if sys.getsizeof(output) > LOG_LIMIT:
-                getLogger().error("Error, output are too large")
-                output = output[-LOG_LIMIT:]
+            output = trimLog(output)
             self.job["log"] = output
 
         device = self.devices[self.job["device"]][self.job["hash"]]
@@ -258,7 +276,7 @@ class runAsync(object):
 
     def _submitDone(self, device):
         data = self._collectBenchmarkData(device["output_dir"])
-        log = self._collectLogData(self.job)
+        log = collectLogData(self.job)
         self.db.doneBenchmarks(str(self.job["id"]),
                                 self.job["status"],
                                 data,
@@ -324,47 +342,6 @@ class runAsync(object):
         # remove the temporary file
         os.remove(filename)
         return file_link
-
-    def _collectLogData(self, job):
-        res = None
-        if job["framework"] == "generic":
-            if "control" not in job["benchmarks"]["info"]:
-                res = self._block_from_log(
-                    job["log"], "Program Output:", "=" * 80)
-                res = "\n".join(["=" * 80] + res) if res else None
-            else:
-                res1 = self._block_from_log(
-                    job["log"], "Program Output:", "=" * 80)
-                res1[0] = "After the change, Program Output:"
-                res2 = self._block_from_log(
-                    job["log"], "Program Output:", "=" * 80, False)
-                res2[0] = "Before the change, Program Output:"
-                res = "\n".join(["=" * 80] + res2 + res1) if res1 and res2 else None
-        return res if res else job["log"]
-
-    def _block_from_log(self, log, s1, s2, forward=True):
-        start, end, first = None, None, True
-        temp = log.split("\n")
-        if forward:
-            for i, s in enumerate(temp):
-                if s1 == s:
-                    start = i
-                if s2 == s:
-                    if first:
-                        first = False
-                    else:
-                        end = i
-                if start and end:
-                    return temp[start:end + 1]
-        else:
-            for i, s in enumerate(temp[::-1]):
-                if s1 == s:
-                    start = len(temp) - 1 - i
-                if s2 == s and not end:
-                    end = len(temp) - 1 - i
-                if start and end:
-                    return temp[start:end + 1]
-        return None
 
     def didUserRequestJobKill(self):
         jobs = self.db.statusBenchmarks(self.job["identifier"])
@@ -442,6 +419,7 @@ class RunLab(object):
                            self.args.job_queue,
                            self.args.test,
                            self.args.benchmark_db_entry)
+
         self.devices = {}
         for k in devices:
             kind = k["kind"]

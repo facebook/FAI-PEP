@@ -102,6 +102,17 @@ class DBDriver(object):
         request_json = self._requestData(params)
         return request_json["values"]
 
+    def updateLogBenchmarks(self, identifier, log):
+        params = {
+            'table': self.table,
+            'job_queue': self.job_queue,
+            'action': 'update_log',
+            'identifier': identifier,
+            'log': log,
+        }
+        request_json = self._requestData(params, retry=False)
+        return request_json["status"]
+
     def killBenchmarks(self, identifier):
         params = {
             'table': self.table,
@@ -142,10 +153,10 @@ class DBDriver(object):
         result_json = self._requestData(params)
         return result_json["values"]
 
-    def _requestData(self, params):
+    def _requestData(self, params, retry=True):
         params.update(self.auth_params)
         result_json = requestsJson(self.benchmark_db_entry,
-                                   data=params, timeout=NETWORK_TIMEOUT)
+                                   data=params, timeout=NETWORK_TIMEOUT, retry=retry)
         if "status" not in result_json or result_json['status'] != "success":
             getLogger().warning(
                 "DB post failed.\tbenchmark_db_entry: {}\t params: {}".format(self.benchmark_db_entry, json.dumps(params)))

@@ -19,7 +19,8 @@ from run_lab import RunLab
 from harness import BenchmarkDriver
 from repo_driver import RepoDriver as OSS_RepoDriver
 from utils.custom_logger import getLogger, setLoggerLevel
-
+from utils.log_utils import DEFAULT_INTERVAL as default_interval
+from utils.log_utils import valid_interval
 
 parser = argparse.ArgumentParser(description="Download models from dewey")
 parser.add_argument("--app_id",
@@ -31,6 +32,10 @@ parser.add_argument("--lab", action="store_true",
 parser.add_argument("--logger_level", default="info",
     choices=["info", "warning", "error"],
     help="Specify the logger level")
+parser.add_argument("--rt_logging", action="store_true",
+    help="Enable realtime logging to database.")
+parser.add_argument("--rt_logging_interval", type=valid_interval, default=str(default_interval),
+    help="Realtime logging Update interval in seconds. Minimum 5 seconds.")
 parser.add_argument("--remote", action="store_true",
     help="Submit the job to remote devices to run the benchmark.")
 parser.add_argument("--root_model_dir", required=True,
@@ -95,6 +100,11 @@ class LabDriver(object):
                 "--app_id", self.args.app_id,
                 "--token", self.args.token,
             ]
+            if self.args.rt_logging:
+                unique_args.extend([
+                "--rt_logging",
+                "--rt_logging_interval", str(self.args.rt_logging_interval)
+                ])
             app_class = RunLab
         elif self.args.custom_binary or self.args.pre_built_binary:
             if self.args.custom_binary:
