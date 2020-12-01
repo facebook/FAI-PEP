@@ -322,7 +322,10 @@ class RunRemote(object):
                 "info": self.info,
             }
             self.db.submitBenchmarks(data, new_devices, user_identifier, user, hashes)
+
         if self.args.async_submit:
+            print("Job submitted.")
+            self._printRunDetailsURL(user_identifier)
             return
 
         self.url_printer.printURL(self.scuba_dataset,
@@ -331,8 +334,10 @@ class RunRemote(object):
 
         if not self.args.debug:
             shutil.rmtree(self.tempdir, True)
+
         if self.args.screen_reporter:
             self._screenReporter(user_identifier)
+            self._printRunDetailsURL(user_identifier)
 
         # Clean up
         try:
@@ -555,9 +560,14 @@ class RunRemote(object):
         for jobQueue in list_job_queues:
             print(jobQueue)
 
+    def _printRunDetailsURL(self, user_identifier):
+        if self.args.urlPrefix:
+            print("You can find more info via {}{}".format(
+                self.args.urlPrefix, user_identifier))
+
     def _screenReporter(self, user_identifier):
         reporter = ScreenReporter(self.db, self.devices, self.args.debug)
-        reporter.run(user_identifier, self.args.urlPrefix)
+        reporter.run(user_identifier)
 
     def _fetchResult(self):
         user_identifier = self.args.user_identifier

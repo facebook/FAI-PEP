@@ -22,15 +22,12 @@ class ScreenReporter(object):
         self.devices = devices
         self.debug = debug
 
-    def run(self, user_identifier, urlPrefix=None):
+    def run(self, user_identifier):
         done = False
         statuses = {}
         while not done:
             done = self._runOnce(user_identifier, statuses)
             time.sleep(1)
-        if urlPrefix:
-            print("You can find more info via {}{}".format(
-                urlPrefix, user_identifier))
 
     def _runOnce(self, user_identifier, statuses):
         new_statuses = self.xdb.statusBenchmarks(user_identifier)
