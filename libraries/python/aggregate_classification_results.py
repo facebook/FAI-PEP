@@ -72,7 +72,7 @@ class AggregateOutputs(object):
                     results[key] = value
                 else:
                     results[key]["values"].extend(value["values"])
-        pattern = re.compile("(\w+)_of_top(\d+)_corrects")
+        pattern = re.compile(r"(\w+)_of_top(\d+)_corrects")
         # finally patch up the summary
         for res in results:
             one_result = results[res]

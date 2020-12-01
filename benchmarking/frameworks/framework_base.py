@@ -314,7 +314,7 @@ class FrameworkBase(object):
 
     def _getReplacedCommand(self, command, files, model, test,
                             programs, model_files):
-        pattern = re.compile("\{([\w|\.]+)\}")
+        pattern = re.compile(r"\{([\w|\.]+)\}")
         repeat = True
         while repeat:
             repeat = False

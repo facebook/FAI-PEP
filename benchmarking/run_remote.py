@@ -640,7 +640,7 @@ class RunRemote(object):
     def _mobilelabAddField(self, output, identifier,
                            type, metric, values, unit):
         key = "{}__{}__{}".format(identifier, type, metric)
-        key = re.sub('\W+', '_', key)
+        key = re.sub(r'\W+', '_', key)
         assert key not in output, \
            "duplicate key {}".format(key)
         output[key] = {

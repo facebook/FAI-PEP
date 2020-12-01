@@ -123,7 +123,7 @@ class ADB(PlatformUtilBase):
         elif freq_target == "mid":
             freq = freqs[int(len(freqs) / 2)]
         else:
-            assert re.match("^\d+$", freq_target), "Frequency target is not integer"
+            assert re.match(r"^\d+$", freq_target), "Frequency target is not integer"
             freq = freq_target
         minfreq = directory + "cpufreq/scaling_min_freq"
         self.su_shell(['"echo {} > {}"'.format(freq, minfreq)])
@@ -139,4 +139,4 @@ class ADB(PlatformUtilBase):
     def _getCPUs(self):
         dirs = self.su_shell(["ls", "/sys/devices/system/cpu/"])
         dirs = dirs.split("\n")
-        return [x for x in dirs if re.match("^cpu\d+$", x)]
+        return [x for x in dirs if re.match(r"^cpu\d+$", x)]

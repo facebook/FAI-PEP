@@ -145,7 +145,7 @@ class HostPlatform(PlatformBase):
             if processor_info:
                 for line in processor_info:
                     if "model name" in line:
-                        return re.sub(".*model name.*:", "", line, 1)
+                        return re.sub(r".*model name.*:", "", line, 1)
         return ""
 
     def getOutputDir(self):

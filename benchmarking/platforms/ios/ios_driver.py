@@ -35,7 +35,7 @@ class IOSDriver(object):
         if len(rows) == 0:
             return {}
         rows.pop(0)
-        pattern = re.compile(".* Found ([\d|a-f|\-|A-F]+) \((\w+), .+\) a\.k\.a\. .*")
+        pattern = re.compile(r".* Found ([\d|a-f|\-|A-F]+) \((\w+), .+\) a\.k\.a\. .*")
         devices = {}
         for row in rows:
             match = pattern.match(row)
