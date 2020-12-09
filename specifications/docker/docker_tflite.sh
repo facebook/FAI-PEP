@@ -26,9 +26,6 @@ CONFIG_DIR=/tmp/config
 REPO_DIR=/tmp/tensorflow
 LOCAL_REPORTER_DIR=/tmp/reporter
 
-BAZEL_DIR=/tmp/bazel
-BAZEL=bazel-0.25.0-installer-linux-x86_64.sh
-
 BENCHMARK_FILE=${FAI_PEP_DIR}/specifications/models/tflite/mobilenet_v2/mobilenet_v2_0.35_96.json
 
 mkdir -p "$CONFIG_DIR"
