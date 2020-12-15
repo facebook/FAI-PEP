@@ -34,7 +34,7 @@ class AndroidDriver:
         rows.pop(0)
         devices = set()
         for row in rows:
-            items = row.strip().split(' ')
+            items = row.strip().split()
             if len(items) > 2 and "device" in items:
                 device_id = items[0].strip()
                 devices.add(device_id)
