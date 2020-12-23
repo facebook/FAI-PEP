@@ -53,7 +53,7 @@ def processRun(*args, **kwargs):
 
 
 def _processRun(*args, **kwargs):
-    getLogger().info("Running: %s", ' '.join(*args))
+    getLogger().info(">>>>>> Running: %s", ' '.join(*args))
     err_output = None
     try:
         run_async = False
