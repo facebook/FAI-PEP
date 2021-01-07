@@ -50,7 +50,7 @@ def collectLogData(job):
                 res1[0] = "After the change, Program Output:"
                 res2[0] = "Before the change, Program Output:"
                 res = "\n".join(["=" * 80] + res2 + res1)
-    return res if res else job["log"]
+    return res or job["log"] or "Logs unavailable."
 
 def _block_from_log(log, s1, s2, forward=True):
     start, end, first = None, None, True

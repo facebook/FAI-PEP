@@ -206,8 +206,8 @@ class runAsync(object):
                 getLogger().error(e)
                 #TODO: handle this exception and ensure that device is responsive
                 status = HARNESS_ERROR
-
-        output = log_capture_string.getvalue()
+            finally:
+                output = log_capture_string.getvalue()
         log_capture_string.close()
         for handler in handlers:
             handler.close()
