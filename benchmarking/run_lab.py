@@ -140,6 +140,8 @@ def drainHandler(signum, frame):
 
 def hookSignals():
     signal.signal(signal.SIGUSR1, drainHandler)
+    signal.signal(signal.SIGTERM, drainHandler)
+    signal.signal(signal.SIGINT, drainHandler)
 
 
 def stopRun(args):
