@@ -188,7 +188,7 @@ class runAsync(object):
         handlers.append(ch)
         # if enabled realtime logger will also update the log entry at regualr intervals.
         if self.args.rt_logging:
-            dbh = DBLogUpdateHandler(self.db, self.job['identifier'], self.args.rt_logging_interval)
+            dbh = DBLogUpdateHandler(self.db, self.job['id'], self.args.rt_logging_interval)
             dbh.setLevel(logging.DEBUG)
             getLogger().addHandler(dbh)
             handlers.append(dbh)

@@ -102,12 +102,12 @@ class DBDriver(object):
         request_json = self._requestData(params)
         return request_json["values"]
 
-    def updateLogBenchmarks(self, identifier, log):
+    def updateLogBenchmarks(self, id, log):
         params = {
             'table': self.table,
             'job_queue': self.job_queue,
             'action': 'update_log',
-            'identifier': identifier,
+            'id': id,
             'log': log,
         }
         request_json = self._requestData(params, retry=False)
