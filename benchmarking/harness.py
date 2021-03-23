@@ -212,7 +212,7 @@ class BenchmarkDriver(object):
         benchmarks = bcollector.collectBenchmarks(info,
                                                   self.args.benchmark_file,
                                                   self.args.user_identifier)
-        platforms = getPlatforms(tempdir, self.args)
+        platforms = getPlatforms(self.args, tempdir)
         threads = []
         for platform in platforms:
             t = threading.Thread(target=self.runBenchmark,

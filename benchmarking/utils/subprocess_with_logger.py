@@ -36,7 +36,8 @@ def processRun(*args, **kwargs):
         ret = _processRun(*args, **kwargs)
         # break out if the run succeeded
         if getRunStatus(key=kwargs["process_key"]) == 0:
-            getLogger().info("Process Succeeded: %s", ' '.join(*args))
+            if not kwargs.get("silent", False):
+                getLogger().info("Process Succeeded: %s", ' '.join(*args))
             break
         # don't retry for errors which we know will
         # fail again (ie. timeouts)
@@ -53,7 +54,8 @@ def processRun(*args, **kwargs):
 
 
 def _processRun(*args, **kwargs):
-    getLogger().info(">>>>>> Running: %s", ' '.join(*args))
+    if not kwargs.get("silent", False):
+        getLogger().info(">>>>>> Running: %s", ' '.join(*args))
     err_output = None
     try:
         run_async = False

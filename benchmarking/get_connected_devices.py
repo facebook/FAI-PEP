@@ -48,12 +48,11 @@ parser.add_argument("--hash_platform_mapping",
 
 class GetConnectedDevices(object):
     def __init__(self, **kwargs):
-        getLogger().setLevel(logging.FATAL)
         raw_args = kwargs.get("raw_args", None)
         self.args, self.unknowns = parser.parse_known_args(raw_args)
 
     def run(self):
-        platforms = getPlatforms("/tmp", self.args)
+        platforms = getPlatforms(self.args, tempdir="/tmp")
         devices = []
         for p in platforms:
             devices.append({

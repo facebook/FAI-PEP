@@ -34,10 +34,10 @@ import time
 from bridge.file_storages import UploadDownloadFiles
 from bridge.db import DBDriver
 from download_benchmarks.download_benchmarks import DownloadBenchmarks
-from get_connected_devices import GetConnectedDevices
 from harness import BenchmarkDriver
+from platforms.device_manager import getDevicesString
+from platforms.device_manager import CoolDownDevice, DeviceManager
 from platforms.android.adb import ADB
-from reboot_device import reboot as reboot_device
 from utils.check_argparse import claimer_id_type
 from utils.custom_logger import getLogger, setLoggerLevel
 from utils.utilities import getFilename, getMachineId, setRunKilled
@@ -49,6 +49,9 @@ from utils.watchdog import WatchDog
 from utils.log_update_handler import DBLogUpdateHandler
 from utils.log_utils import trimLog, collectLogData, valid_interval
 from utils.log_utils import DEFAULT_INTERVAL as default_interval
+from platforms.device_manager import DEFAULT_DM_INTERVAL as default_dm_interval
+from platforms.device_manager import MINIMUM_DM_INTERVAL as minimum_dm_interval
+from platforms.device_manager import valid_dm_interval
 
 parser = argparse.ArgumentParser(description="Run the benchmark remotely")
 
@@ -97,6 +100,8 @@ parser.add_argument("--rt_logging", action="store_true",
     help="Enable realtime logging to database.")
 parser.add_argument("--rt_logging_interval", type=valid_interval, default=str(default_interval),
     help="Realtime logging Update interval in seconds. Minimum 5 seconds.")
+parser.add_argument("--device_monitor_interval", type=valid_dm_interval, default=str(default_dm_interval),
+    help="Device monitoring interval in seconds. Minimum {}s, default {}s.".format(minimum_dm_interval, default_dm_interval))
 parser.add_argument("--shared_libs",
     help="Pass the shared libs that the framework depends on, "
     "in a comma separated list.")
@@ -126,7 +131,6 @@ parser.add_argument("--benchmark_db",
 parser.add_argument("--benchmark_table",
     help="The table that will store benchmark infos")
 
-REBOOT_INTERVAL = datetime.timedelta(hours=8)
 LOCK = threading.RLock()
 
 DRAIN = False
@@ -136,7 +140,6 @@ RUNNING_JOBS = 0
 def drainHandler(signum, frame):
     global DRAIN
     DRAIN = True
-
 
 def hookSignals():
     signal.signal(signal.SIGUSR1, drainHandler)
@@ -156,16 +159,6 @@ def stopRun(args):
             if content == "0":
                 return True
     return False
-
-
-def getDevicesString(devices):
-    device_list = [d["kind"] + "|"
-        + d["hash"] + "|"
-        + ("1" if d["available"]
-             else "0" if d["live"] else "2")
-        for d in devices]
-    devices_str = ",".join(device_list)
-    return devices_str
 
 
 class runAsync(object):
@@ -244,7 +237,7 @@ class runAsync(object):
 
     def _coolDown(self, device):
         force_reboot = self.job["status"] != "DONE"
-        t = CoolDownDevice(device, self.args, self.db, force_reboot)
+        t = CoolDownDevice(device, self.args, self.db, force_reboot, LOCK)
         t.start()
 
     def _updateDevices(self, result_dict):
@@ -356,57 +349,11 @@ class runAsync(object):
         setRunKilled(True)
 
 
-class CoolDownDevice(threading.Thread):
-    def __init__(self, device, args, db, force_reboot):
-        threading.Thread.__init__(self)
-        self.device = device
-        self.args = args
-        self.db = db
-        self.force_reboot = force_reboot
-
-    def run(self):
-        reboot = self.args.reboot and \
-            (self.force_reboot
-            or self.device["reboot_time"] + REBOOT_INTERVAL
-            < datetime.datetime.now())
-        assert self.device["available"] is False, \
-            "The device to cool down should not be available"
-        success = True
-        if reboot:
-            raw_args = []
-            raw_args.extend(["--platform", self.args.platform])
-            raw_args.extend(["--device", self.device["hash"]])
-            raw_args.extend(["--android_dir", self.args.android_dir])
-            reboot_device(raw_args=raw_args)
-            getLogger().info("Sleep 120 seconds")
-            time.sleep(120)
-            self.device["reboot_time"] = datetime.datetime.now()
-        if self.args.reboot:
-            # for ios/android
-            getLogger().info("Sleep 180 seconds")
-            time.sleep(180)
-        else:
-            getLogger().info("Sleep 20 seconds")
-            time.sleep(20)
-        with LOCK:
-            getLogger().info("CoolDownDevice lock acquired")
-            if success:
-                self.device["available"] = True
-            else:
-                self.device["live"] = False
-            device_str = getDevicesString([self.device])
-            self.db.updateDevices(self.args.claimer_id, device_str, False)
-        getLogger().info("CoolDownDevice lock released")
-        getLogger().info("Device {}({}) available".format(
-            self.device["kind"], self.device["hash"]))
-
-
 class RunLab(object):
     def __init__(self, raw_args=None):
         self.args, self.unknowns = parser.parse_known_args(raw_args)
         self.benchmark_downloader = DownloadBenchmarks(self.args, getLogger())
         self.adb = ADB(None, self.args.android_dir)
-        devices = self._getDevices()
         setLoggerLevel(self.args.logger_level)
         if not self.args.benchmark_db_entry:
             assert self.args.server_addr is not None, \
@@ -421,32 +368,9 @@ class RunLab(object):
                            self.args.job_queue,
                            self.args.test,
                            self.args.benchmark_db_entry)
+        self.device_manager = DeviceManager(self.args, self.db)
+        self.devices = self.device_manager.getLabDevices()
 
-        self.devices = {}
-        for k in devices:
-            kind = k["kind"]
-            hash = k["hash"]
-            entry = {
-                "kind": kind,
-                "hash": hash,
-                "available": True,
-                "live": True,
-                "start_time": None,
-                "done_time": None,
-                "output_dir": None,
-                "job": None,
-                "adb": ADB(hash, self.args.android_dir),
-                "reboot_time": datetime.datetime.now() - datetime.timedelta(hours=8)
-            }
-            if kind not in self.devices:
-                self.devices[kind] = {}
-            assert hash not in self.devices[kind], \
-                "Device {} ({}) is attached twice.".format(kind, hash)
-            self.devices[kind][hash] = entry
-
-        dvs = [self.devices[k][h] for k in self.devices for h in self.devices[k]]
-        self.db.updateDevices(self.args.claimer_id,
-                               getDevicesString(dvs), True)
         if self.args.platform.startswith("host"):
             numProcesses = 2
         else:
@@ -459,7 +383,9 @@ class RunLab(object):
             with LOCK:
                 self._runOnce()
             time.sleep(1)
+        self.pool.close()
         self.db.updateDevices(self.args.claimer_id, "", True)
+        self.device_manager.shutdown()
 
     def _runOnce(self):
         jobs = self._claimBenchmarks()
@@ -663,25 +589,6 @@ class RunLab(object):
             log_capture_string.close()
             getLogger().handlers.pop()
             gc.collect()
-
-    def _getDevices(self):
-        raw_args = []
-        raw_args.extend(["--platform", self.args.platform])
-        if self.args.platform_sig:
-            raw_args.append("--platform_sig")
-            raw_args.append(self.args.platform_sig)
-        if self.args.devices:
-            raw_args.append("--devices")
-            raw_args.append(self.args.devices)
-        if self.args.hash_platform_mapping:
-            # if the user provides filename, we will load it.
-            raw_args.append("--hash_platform_mapping")
-            raw_args.append(self.args.hash_platform_mapping)
-        app = GetConnectedDevices(raw_args=raw_args)
-        devices_json = app.run()
-        assert devices_json, "Devices cannot be empty"
-        devices = json.loads(devices_json.strip())
-        return devices
 
     def _getRawArgs(self, job, tempdir):
         if "info" in job["benchmarks"]:
