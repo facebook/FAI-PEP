@@ -28,9 +28,9 @@ class AndroidDriver:
         self.devices = devices
         self.type = "android"
 
-    def getDevices(self):
+    def getDevices(self, silent=False):
         adb = ADB()
-        rows = adb.run("devices", "-l")
+        rows = adb.run("devices", "-l", silent=silent)
         rows.pop(0)
         devices = set()
         for row in rows:

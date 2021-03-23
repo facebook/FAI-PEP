@@ -21,7 +21,7 @@ from .windows.windows_platform import WindowsPlatform
 from utils.custom_logger import getLogger
 
 
-def getPlatforms(tempdir, args):
+def getPlatforms(args, tempdir="/tmp"):
     platforms = []
     if args.platform[:4] == "host" or \
        args.platform[:5] == "linux" or \
@@ -30,16 +30,6 @@ def getPlatforms(tempdir, args):
     elif args.platform[:7] == "android":
         driver = AndroidDriver(args)
         platforms.extend(driver.getAndroidPlatforms(tempdir))
-        if args.excluded_devices:
-            excluded_devices = args.excluded_devices.strip().split(',')
-            platforms = \
-                [p for p in platforms if p.platform not in excluded_devices and
-                 (p.platform_hash is None or
-                  p.platform_hash not in excluded_devices)]
-        if args.devices:
-            plts = args.devices.strip().split(',')
-            platforms = [p for p in platforms if p.platform in plts or
-                         p.platform_hash in plts]
     elif args.platform.startswith("ios"):
         driver = IOSDriver(args)
         platforms.extend(driver.getIOSPlatforms(tempdir))
@@ -49,6 +39,16 @@ def getPlatforms(tempdir, args):
         getLogger().error("No platform or physical device detected.")
     return platforms
 
+def getDeviceList(args, tempdir="/tmp", silent=False):
+    assert args.platform in ("android","ios"), "This is only supported for mobile platforms."
+    deviceList = []
+    if args.platform.startswith("android"):
+        driver = AndroidDriver(args)
+        deviceList.extend(driver.getDevices(silent))
+    elif args.platform.startswith("ios"):
+        driver = IOSDriver(args)
+        deviceList.extend(driver.getDevices(tempdir, silent))
+    return deviceList
 
 def getHostPlatform(tempdir, args):
     if os.name == "nt":

@@ -38,9 +38,8 @@ def reboot(**kwargs):
         util = ADB(device, args.android_dir)
     else:
         raise AssertionError("Platform {} not recognized".format(platform))
-    util.reboot()
-    print("Reboot Success")
-
+    success = util.reboot()
+    return success
 
 if __name__ == "__main__":
     reboot()

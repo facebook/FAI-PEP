@@ -39,25 +39,13 @@ class ADB(PlatformUtilBase):
         return self.run("logcat", *args)
 
     def reboot(self):
-        self.run("reboot")
-        getLogger().info("Rebooting: {}".format(self.device))
-        t = 0
-        ls = None
-        while ls is None and t < 6:
-            t = t + 1
-            getLogger().info("Sleep 20 seconds")
-            time.sleep(20)
-            ls = self.shell(["ls", self.tempdir])
-        # Need to wait a bit more after the device is rebooted
-        getLogger().info("Sleep 300 seconds")
-        time.sleep(300)
-        if ls is None:
-            getLogger().error(
-                "Cannot reach device {} after reboot.".format(self.device)
-            )
+        try:
+            self.run("reboot")
+            return True
+        except Exception as e:
+            getLogger().error("Rebooting failure...")
+            getLogger().error("Unknown exception {}".format(e))
             return False
-        getLogger().info("Device {} rebooted".format(self.device))
-        return True
 
     def deleteFile(self, file):
         return self.shell(["rm", "-rf", file])
