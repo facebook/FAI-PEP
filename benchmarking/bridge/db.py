@@ -47,16 +47,15 @@ class DBDriver(object):
             params['hashes'] = hashes
         self._requestData(params)
 
-    def claimBenchmarks(self, server_id, devices, hashes=None):
+    def claimBenchmarks(self, server_id, devices, hashes):
         params = {
             'table': self.table,
             'job_queue': self.job_queue,
             'action': 'claim',
             'claimer': server_id,
             'devices': devices,
+            'hashes': hashes,
         }
-        if hashes:
-            params['hashes'] = hashes
         result_json = self._requestData(params)
         return self._processBenchmarkResults(result_json['values'])
 
