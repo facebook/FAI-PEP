@@ -29,9 +29,9 @@ class IOSDriver(object):
         self.devices = devices
         self.type = "ios"
 
-    def getDevices(self):
+    def getDevices(self, silent=False):
         idb = IDB()
-        rows = idb.run("--detect")
+        rows = idb.run("--detect", silent=silent)
         if len(rows) == 0:
             return {}
         rows.pop(0)
