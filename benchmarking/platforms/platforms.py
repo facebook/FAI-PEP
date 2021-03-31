@@ -39,7 +39,7 @@ def getPlatforms(args, tempdir="/tmp"):
         getLogger().error("No platform or physical device detected.")
     return platforms
 
-def getDeviceList(args, tempdir="/tmp", silent=False):
+def getDeviceList(args, silent=False):
     assert args.platform in ("android","ios"), "This is only supported for mobile platforms."
     deviceList = []
     if args.platform.startswith("android"):
@@ -47,7 +47,7 @@ def getDeviceList(args, tempdir="/tmp", silent=False):
         deviceList.extend(driver.getDevices(silent))
     elif args.platform.startswith("ios"):
         driver = IOSDriver(args)
-        deviceList.extend(driver.getDevices(tempdir, silent))
+        deviceList.extend(driver.getDevices(silent))
     return deviceList
 
 def getHostPlatform(tempdir, args):
