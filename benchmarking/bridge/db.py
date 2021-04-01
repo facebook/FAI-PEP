@@ -59,6 +59,15 @@ class DBDriver(object):
         result_json = self._requestData(params)
         return self._processBenchmarkResults(result_json['values'])
 
+    def updateHeartbeats(self, server_id, hashes):
+        params = {
+            'table': self.table,
+            'action': 'heartbeat',
+            'claimer': server_id,
+            'hashes': hashes,
+        }
+        self._requestData(params)
+
     def releaseBenchmarks(self, server_id, ids):
         params = {
             'table': self.table,

@@ -59,12 +59,10 @@ class DeviceManager(object):
         self.lab_devices = {}
         self.online_devices = None
         self._initializeDevices()
-        # if the lab is hosting mobile devices, thread will monitor connectivity of devices.
-        if args.platform.startswith("android") or args.platform.startswith("ios"):
-            self.running = True
-            self.device_monitor_interval = self.args.device_monitor_interval
-            self.device_monitor=Thread(target=self._runDeviceMonitor)
-            self.device_monitor.start()
+        self.running = True
+        self.device_monitor_interval = self.args.device_monitor_interval
+        self.device_monitor=Thread(target=self._runDeviceMonitor)
+        self.device_monitor.start()
 
     def getLabDevices(self):
         """ Return a reference to the lab's device meta data. """
@@ -72,7 +70,10 @@ class DeviceManager(object):
 
     def _runDeviceMonitor(self):
         while self.running:
-            self._checkDevices()
+            # if the lab is hosting mobile devices, thread will monitor connectivity of devices.
+            if self.args.platform.startswith("android") or self.args.platform.startswith("ios"):
+                self._checkDevices()
+            self._updateHeartbeats()
             time.sleep(self.device_monitor_interval)
 
     def _checkDevices(self):
@@ -98,6 +99,17 @@ class DeviceManager(object):
                         getLogger().info("New device added: {}".format(d))
         except BaseException as ex:
             getLogger().error("Error while checking devices. {}".format(ex))
+
+    def _updateHeartbeats(self):
+        """ Update device heartbeats for all devices which are marked "live" in lab devices. """
+        claimer_id = self.args.claimer_id
+        hashes = []
+        for k in self.lab_devices:
+            for hash in self.lab_devices[k]:
+                if self.lab_devices[k][hash]["live"]:
+                    hashes.append(hash)
+        hashes = ",".join(hashes)
+        self.db.updateHeartbeats(claimer_id, hashes)
 
     def _getDevices(self, devices=None):
         """ Get list of hash and kind for available devices. """
