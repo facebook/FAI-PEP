@@ -26,15 +26,15 @@ def registerProfiler(name, profiler, usage=None):
         profilersByUsage[usage] = profiler
 
 
-def getProfiler(name, id=None):
+def getProfiler(name, id=None, **kwargs):
     global profilers
     if name not in profilers:
         return None
-    return profilers[name](id)
+    return profilers[name](id, **kwargs)
 
 
-def getProfilerByUsage(usage, id=None):
+def getProfilerByUsage(usage, id=None, **kwargs):
     global profilersByUsage
     if usage not in profilersByUsage:
         return None
-    return profilersByUsage[usage](id)
+    return profilersByUsage[usage](id, **kwargs)

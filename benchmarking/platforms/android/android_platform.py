@@ -18,10 +18,12 @@ import re
 import shlex
 import shutil
 import time
+from six import string_types
 
 from platforms.platform_base import PlatformBase
 from utils.custom_logger import getLogger
 from utils.utilities import getRunStatus, setRunStatus
+from profilers.profilers import getProfilerByUsage
 
 
 class AndroidPlatform(PlatformBase):
@@ -57,6 +59,19 @@ class AndroidPlatform(PlatformBase):
             if len(ret) > 0 and ret[0].find("failed to") >= 0:
                 repeat = True
                 size = int(size / 2)
+
+    def fileExistsOnPlatform(self, files):
+        if isinstance(files, string_types):
+            exists=self.util.shell("test -e {} && echo True || echo False".format(files).split(" "))
+            if "True" not in exists:
+                return False
+            return True
+        elif isinstance(files, list):
+            for f in files:
+                if not self.fileExistsOnPlatform(f):
+                    return False
+            return True
+        raise TypeError("fileExistsOnPlatform takes either a string or list of strings.")
 
     def preprocess(self, *args, **kwargs):
         assert "programs" in kwargs, "Must have programs specified"
@@ -110,14 +125,6 @@ class AndroidPlatform(PlatformBase):
         if not isinstance(cmd, list):
             cmd = shlex.split(cmd)
 
-        # profiling is not supported on android
-        if "platform_args" in kwargs and \
-           "enable_profiling" in kwargs["platform_args"]:
-            del kwargs["platform_args"]["enable_profiling"]
-        if "platform_args" in kwargs and \
-           "profiler_args" in kwargs["platform_args"]:
-            del kwargs["platform_args"]["profiler_args"]
-
         # meta is used to store any data about the benchmark run
         # that is not the output of the command
         meta = {}
@@ -128,9 +135,9 @@ class AndroidPlatform(PlatformBase):
         self.util.logcat('-b', 'all', '-c')
         setRunStatus(success, overwrite=True)
         if self.app:
-            log = self.runAppBenchmark(cmd, *args, **kwargs)
+            log, meta = self.runAppBenchmark(cmd, *args, **kwargs)
         else:
-            log = self.runBinaryBenchmark(cmd, *args, **kwargs)
+            log, meta = self.runBinaryBenchmark(cmd, *args, **kwargs)
         return log, meta
 
     def runAppBenchmark(self, cmd, *args, **kwargs):
@@ -149,6 +156,8 @@ class AndroidPlatform(PlatformBase):
                 platform_args["non_blocking"] = True
                 self.util.shell(["am", "start", "-S", activity])
                 return []
+            if platform_args.get("enable_profiling",False):
+                getLogger().warn("Profiling for app benchmarks is not implemented.")
 
         patterns = []
         pattern = re.compile(
@@ -168,6 +177,7 @@ class AndroidPlatform(PlatformBase):
         log_to_screen_only = 'log_to_screen_only' in kwargs and \
             kwargs['log_to_screen_only']
         platform_args = {}
+        meta = {}
         if "platform_args" in kwargs:
             platform_args = kwargs["platform_args"]
             if "taskset" in platform_args:
@@ -188,11 +198,33 @@ class AndroidPlatform(PlatformBase):
                     [">", "/dev/null", "2>&1"]
                 platform_args["non_blocking"] = True
                 del platform_args["power"]
+            if platform_args.get("enable_profiling", False):
+                # attempt to run with profiling, else fallback to standard run
+                success = getRunStatus()
+                try:
+                    simpleperf = getProfilerByUsage("android", None, platform=self, model_name=platform_args.get("model_name",None), cmd=cmd)
+                    if simpleperf:
+                        f = simpleperf.start()
+                        output, meta = f.result()
+                        log_logcat = []
+                        if not log_to_screen_only:
+                            log_logcat = self.util.logcat('-d')
+                        return output + log_logcat, meta
+                # if this has not succeeded for some reason reset run status and run without profiling.
+                except RuntimeError as ex:
+                    getLogger().error("An error occurred when running Simpleperf profiler. {}".format(ex))
+                    setRunStatus(success, overwrite=True)
+                except FileNotFoundError as ex:
+                    getLogger().error("An error occurred when running Simpleperf profiler. {}".format(ex))
+                    setRunStatus(success, overwrite=True)
+                except Exception:
+                    getLogger().exception("An error has occurred when running Simpleperf profiler.")
+                    setRunStatus(success, overwrite=True)
         log_screen = self.util.shell(cmd, **platform_args)
         log_logcat = []
         if not log_to_screen_only:
             log_logcat = self.util.logcat('-d')
-        return log_screen + log_logcat
+        return log_screen + log_logcat, meta
 
     def collectMetaData(self, info):
         meta = super(AndroidPlatform, self).collectMetaData(info)

@@ -230,6 +230,18 @@ def parse_kwarg(kwarg_str):
         getLogger().error("Failed to parse kwarg str: {}".format(kwarg_str))
     return key, value
 
+def getModelName(model):
+    # given benchmark model entry parse model name, returns string.
+    if model["framework"] == "caffe2":
+        model_file_name = model["files"]["predict"]["filename"]
+    elif model.get("files",{}).get("model",{}).get("filename",None):
+        model_file_name = model["files"]["model"]["filename"]
+    elif "name" in model:
+        model_file_name = model["name"]
+    else:
+        model_file_name = "model"
+    model_name = os.path.splitext(model_file_name)[0].replace(" ","_")
+    return model_name
 
 # Run status
 run_statuses = {}

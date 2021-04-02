@@ -24,7 +24,7 @@ from six import string_types
 from data_converters.data_converters import getConverters
 from platforms.platforms import getHostPlatform
 from utils.utilities import deepMerge, deepReplace, \
-    getFAIPEPROOT, getString
+    getFAIPEPROOT, getString, getModelName
 
 
 class FrameworkBase(object):
@@ -392,6 +392,7 @@ class FrameworkBase(object):
             profiling_enabled = test.get("profiler", {}).get("enabled", False)
         if profiling_enabled:
             platform_args["profiler_args"] = test.get("profiler", {})
+            platform_args["model_name"] = getModelName(model)
         for idx, cmd in enumerate(cmds):
             # note that we only enable profiling for the last command
             # of the main commands.
