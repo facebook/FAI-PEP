@@ -70,10 +70,9 @@ class IOSDriver(object):
                 self.devices = supported_devices
 
         for device in self.devices:
-            model = self.devices[device]
             idb = IDB(device, tempdir)
             platform = IOSPlatform(tempdir, idb, self.args)
-            platform.setPlatform(model)
+            platform.setPlatform(device)
             platforms.append(platform)
 
         return platforms
