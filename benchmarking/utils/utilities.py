@@ -52,7 +52,7 @@ def getBenchmarks(json_input, framework=None):
     elif (check_is_json(json_input)):
         content = json.loads(json_input)
     else:
-        raise Exception("specified benchmark file doesn't exist: {json_input}")
+        raise Exception(f"specified benchmark file doesn't exist: {json_input}")
 
     benchmarks = []
     if "benchmarks" in content:
