@@ -12,6 +12,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import ast
 import copy
+import certifi
 import datetime
 import json
 import os
@@ -159,6 +160,12 @@ def getFAIPEPROOT():
     root_dir = os.path.join(dir_path, "../../")
     return os.path.abspath(root_dir)
 
+def ca_cert():
+    """ Get valid ca_cert path for requests """
+    ca_cert_path = os.environ.get("CA_CERT_PATH")
+    if not ca_cert_path or not os.path.exists(ca_cert_path):
+        os.environ["CA_CERT_PATH"] = certifi.where()
+    return os.environ["CA_CERT_PATH"]
 
 def requestsData(url, **kwargs):
     delay = 0
@@ -179,6 +186,9 @@ def requestsData(url, **kwargs):
             """
             with requests.Session() as session:
                 session.trust_env = False
+                # This session object can be reused.
+                # If the CA_CERT file has changed it will not be updated implicitly.
+                session.verify=ca_cert()
                 result = session.post(url, **kwargs)
             if result.status_code != 200:
                 getLogger().error(
@@ -188,12 +198,14 @@ def requestsData(url, **kwargs):
                 if delay > 0:
                     getLogger().info("Post request successful")
                 return result
-        except requests.ConnectionError as e:
-            getLogger().error("Post Connection failed {}".format(e))
-        except requests.exceptions.ReadTimeout as e:
-            getLogger().error("Post Readtimeout {}".format(e))
-        except requests.exceptions.ChunkedEncodingError as e:
-            getLogger().error("Post ChunkedEncodingError {}".format(e))
+        except requests.exceptions.SSLError:
+            getLogger().exception("Post SSL verification failed")
+        except requests.ConnectionError:
+            getLogger().exception("Post Connection failed")
+        except requests.exceptions.ReadTimeout:
+            getLogger().exception("Post Readtimeout")
+        except requests.exceptions.ChunkedEncodingError:
+            getLogger().exception("Post ChunkedEncodingError")
         if not retry:
             break
         delay = delay + 1 if delay <= 5 else delay
