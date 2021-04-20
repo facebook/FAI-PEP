@@ -621,6 +621,7 @@ class RunLab(object):
             "--root_model_dir", self.args.root_model_dir,
             "--simple_local_reporter", tempdir,
             "--user_identifier", str(job["identifier"]),
+            "--user_string", job.get("user"),
         ])
         if job["framework"] != "generic":
             raw_args.extend(["--remote_reporter", self.args.remote_reporter])
