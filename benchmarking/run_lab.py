@@ -364,7 +364,6 @@ class RunLab(object):
             while self.args.server_addr[-1] == '/':
                 self.args.server_addr = self.args.server_addr[:-1]
             self.args.benchmark_db_entry = self.args.server_addr + "/benchmark/"
-        self.args.benchmark_db_entry = "https://interngraph.50304.od.facebook.com/aibench/xdb"
         self.db = DBDriver(self.args.benchmark_db,
                            self.args.app_id,
                            self.args.token,

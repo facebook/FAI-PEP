@@ -32,13 +32,12 @@ class AndroidPlatform(PlatformBase):
             tempdir, args.android_dir, adb, args.hash_platform_mapping,
             args.device_name_mapping)
         self.args = args
-        platform = adb.shell(
-            ['getprop', 'ro.product.model'], default="")[0].strip() + \
-            '-' + \
-            adb.shell(
-            ['getprop', 'ro.build.version.release'], default="")[0].strip() + \
-            '-' + \
-            adb.shell(['getprop', 'ro.build.version.sdk'], default="")[0].strip()
+        self.rel_version = adb.shell(['getprop', 'ro.build.version.release'], default="")[0].strip()
+        self.build_version = adb.shell(['getprop', 'ro.build.version.sdk'], default="")[0].strip()
+        platform = adb.shell(['getprop', 'ro.product.model'], default="")[0].strip() + \
+            '-' + self.rel_version + '-' + self.build_version
+        self.platform_abi = adb.shell(['getprop ro.product.cpu.abi'], default="")[0].strip()
+        self.os_version = "{}-{}".format(self.rel_version, self.build_version)
         self.type = "android"
         self.setPlatform(platform)
         self.setPlatformHash(adb.device)
@@ -46,6 +45,14 @@ class AndroidPlatform(PlatformBase):
         self.app = None
         if self.args.set_freq:
             self.util.setFrequency(self.args.set_freq)
+
+    def getKind(self):
+        if self.platform_model and self.platform_os_version:
+            return "{}-{}".format(self.platform_model, self.platform_os_version)
+        return self.platform
+
+    def getOS(self):
+        return "Android {} sdk {}".format(self.rel_version, self.build_version)
 
     def _setLogCatSize(self):
         repeat = True

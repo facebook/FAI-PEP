@@ -13,6 +13,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import os
 from platforms.host.host_platform import HostPlatform
 
 
@@ -20,3 +21,7 @@ class WindowsPlatform(HostPlatform):
     def __init__(self, tempdir):
         super(WindowsPlatform, self).__init__(tempdir)
         self.type = "windows"
+
+    def getOS(self):
+        ver = os.sys.getwindowsversion()
+        return "Windows {}.{} build {}".format(ver.major, ver.minor, ver.build)

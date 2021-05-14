@@ -52,6 +52,9 @@ class HostPlatform(PlatformBase):
         os.makedirs(self.tempdir, 0o777)
         self.type = "host"
 
+    def getOS(self):
+        return "{} {}".format(os.uname().sysname, os.uname().release)
+
     def runBenchmark(self, cmd, *args, **kwargs):
         if not isinstance(cmd, list):
             cmd = shlex.split(cmd)

@@ -23,13 +23,26 @@ from utils.utilities import getRunStatus, setRunStatus
 
 
 class IOSPlatform(PlatformBase):
-    def __init__(self, tempdir, idb, args):
+    def __init__(self, tempdir, idb, args, platform_meta):
         super(IOSPlatform, self).__init__(tempdir, args.ios_dir, idb,
                                           args.hash_platform_mapping,
                                           args.device_name_mapping)
+        self.platform_os_version = platform_meta.get("os_version")
+        self.platform_model = platform_meta.get("model")
+        self.platform_abi = platform_meta.get("abi")
         self.setPlatformHash(idb.device)
         self.type = "ios"
         self.app = None
+
+    def getKind(self):
+        if self.platform_model and self.platform_os_version:
+            return "{}-{}".format(self.platform_model, self.platform_os_version)
+        return self.platform
+
+    def getOS(self):
+        if self.platform_os_version:
+            return "iOS {}".format(self.platform_os_version)
+        return "iOS"
 
     def preprocess(self, *args, **kwargs):
         assert "programs" in kwargs, "Must have programs specified"

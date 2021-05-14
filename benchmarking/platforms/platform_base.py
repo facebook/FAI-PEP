@@ -26,11 +26,14 @@ class PlatformBase(object):
         self.tempdir = tempdir
         self.platform = None
         self.platform_hash = platform_util.device
-        self.platform_name = None
+        self.platform_abi = None
+        self.platform_os_version = None
+        self.platform_model = None
         self.type = None
         self.util = platform_util
         self.tgt_dir = tgt_dir
         self.hash_platform_mapping = None
+        self.device_name_mapping = None
         if isinstance(hash_platform_mapping, string_types):
             # if the user provides filename, we will load it.
             try:
@@ -70,11 +73,6 @@ class PlatformBase(object):
 
     def setPlatform(self, platform):
         self.platform = getFilename(platform)
-        if self.device_name_mapping and \
-                self.platform in self.device_name_mapping:
-            self.platform_name = self.device_name_mapping[self.platform]
-        else:
-            self.platform_name = "null"
 
     def setPlatformHash(self, platform_hash):
         self.platform_hash = platform_hash
@@ -82,8 +80,25 @@ class PlatformBase(object):
                 self.platform_hash in self.hash_platform_mapping:
             self.platform = self.hash_platform_mapping[self.platform_hash]
 
-    def getName(self):
+    @abc.abstractmethod
+    def getABI(self):
+        return self.platform_abi or "null"
+
+    @abc.abstractmethod
+    def getKind(self):
         return self.platform
+
+    @abc.abstractmethod
+    def getOS(self):
+        pass
+
+    @abc.abstractmethod
+    def getName(self):
+        if self.device_name_mapping and \
+                self.getKind() in self.device_name_mapping:
+            return self.device_name_mapping[self.getKind()]
+        else:
+            return "null"
 
     def getMangledName(self):
         name = self.platform

@@ -33,6 +33,7 @@ DEFAULT_DM_INTERVAL = 10
 def getDevicesString(devices):
     device_list = [d["kind"] + "|"
         + d["hash"] + "|" + d["name"] + "|"
+        + d["abi"] + "|" + d["os"] + "|"
         + ("1" if d["available"]
              else "0" if d["live"] else "2")
         for d in devices]
@@ -112,7 +113,7 @@ class DeviceManager(object):
         self.db.updateHeartbeats(claimer_id, hashes)
 
     def _getDevices(self, devices=None):
-        """ Get list of hash and kind for available devices. """
+        """ Get list of device meta data for available devices. """
         raw_args = []
         raw_args.extend(["--platform", self.args.platform])
         if self.args.platform_sig:
@@ -145,10 +146,14 @@ class DeviceManager(object):
             kind = k["kind"]
             hash = k["hash"]
             name = k["name"]
+            abi = k["abi"]
+            os = k["os"]
             entry = {
                 "kind": kind,
                 "hash": hash,
                 "name": name,
+                "abi": abi,
+                "os": os,
                 "available": True,
                 "live": True,
                 "start_time": None,
@@ -179,10 +184,14 @@ class DeviceManager(object):
         kind = device["kind"]
         hash = device["hash"]
         name = device["name"]
+        abi = device["abi"]
+        os = device["os"]
         entry = {
             "kind": kind,
             "hash": hash,
             "name": name,
+            "abi": abi,
+            "os": os,
             "available": True,
             "live": True,
             "start_time": None,

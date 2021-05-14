@@ -23,26 +23,29 @@ from platforms.ios.ios_platform import IOSPlatform
 class IOSDriver(object):
     def __init__(self, args, devices=None):
         self.args = args
+        self.devices = self.getDevices()
         if devices:
             if isinstance(devices, string_types):
                 devices = [devices]
-        self.devices = devices
+            self.devices = {d: self.devices[d] for d in self.devices if d in devices}
         self.type = "ios"
 
     def getDevices(self, silent=False):
         idb = IDB()
-        rows = idb.run("--detect", silent=silent)
+        rows = idb.run(["--detect", "--timeout", "1"], silent=silent)
         if len(rows) == 0:
             return {}
         rows.pop(0)
-        pattern = re.compile(r".* Found ([\d|a-f|\-|A-F]+) \((\w+), .+\) a\.k\.a\. .*")
+        pattern = re.compile(r".* Found ([\d|a-f|\-|A-F]+) \((\w+), .+, .+, (.+), (.+), .+\) a\.k\.a\. .*")
         devices = {}
         for row in rows:
             match = pattern.match(row)
             if match:
                 hash = match.group(1)
                 model = match.group(2)
-                devices[hash] = model
+                abi = match.group(3)
+                os_version = match.group(4)
+                devices[hash] = {"model":model, "abi":abi, "os_version":os_version}
         return devices
 
     def getIOSPlatforms(self, tempdir):
@@ -54,11 +57,11 @@ class IOSDriver(object):
             idb = IDB(device["hash"], tempdir)
             platform = IOSPlatform(tempdir, idb, self.args)
             platform.setPlatform(device["kind"])
+            platform.setOSVersion(device.get("os_version", None))
+            platform.setABI(device.get("abi", None))
             platforms.append(platform)
             return platforms
 
-        if self.devices is None:
-            self.devices = self.getDevices()
         if self.args.excluded_devices:
             excluded_devices = \
                 set(self.args.excluded_devices.strip().split(','))
@@ -71,7 +74,12 @@ class IOSDriver(object):
 
         for device in self.devices:
             idb = IDB(device, tempdir)
-            platform = IOSPlatform(tempdir, idb, self.args)
+            platform_meta = {
+                "os_version": self.devices[device]["os_version"],
+                "model": self.devices[device]["model"],
+                "abi": self.devices[device]["abi"]
+            }
+            platform = IOSPlatform(tempdir, idb, self.args, platform_meta)
             platform.setPlatform(device)
             platforms.append(platform)
 

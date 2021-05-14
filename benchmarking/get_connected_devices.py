@@ -59,9 +59,11 @@ class GetConnectedDevices(object):
         devices = []
         for p in platforms:
             devices.append({
-                "kind": p.platform,
+                "kind": p.getKind(),
+                "name": p.getName(),
                 "hash": p.platform_hash,
-                "name": p.platform_name,
+                "abi": p.getABI(),
+                "os": p.getOS(),
             }
             )
         json_str = json.dumps(devices)
