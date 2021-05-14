@@ -44,6 +44,9 @@ parser.add_argument("--platform_sig",
     help="Specify the platforms signature which clusters the same type machine. ")
 parser.add_argument("--hash_platform_mapping",
     help="Specify the devices hash platform mapping json file.")
+parser.add_argument("--device_name_mapping",
+    default=None,
+    help="Specify device to product name mapping json file.")
 
 
 class GetConnectedDevices(object):
@@ -58,6 +61,7 @@ class GetConnectedDevices(object):
             devices.append({
                 "kind": p.platform,
                 "hash": p.platform_hash,
+                "name": p.platform_name,
             }
             )
         json_str = json.dumps(devices)

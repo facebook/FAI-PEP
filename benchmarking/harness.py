@@ -131,6 +131,9 @@ parser.add_argument("--wipe_cache", default=False,
     help="Specify whether to evict cache or not before running")
 parser.add_argument("--hash_platform_mapping",
     help="Specify the devices hash platform mapping json file.")
+parser.add_argument("--device_name_mapping",
+    default=None,
+    help="Specify device to product name mapping json file.")
 # Avoid the prefix user so that it doesn't collide with --user_identifier
 parser.add_argument("--user_string",
     help="Specify the user running the test (to be passed to the remote reporter).")

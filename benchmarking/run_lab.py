@@ -120,6 +120,9 @@ parser.add_argument("--token",
 parser.add_argument("--hash_platform_mapping",
     default=None,
     help="Specify the devices hash platform mapping json file.")
+parser.add_argument("--device_name_mapping",
+    default=None,
+    help="Specify device to product name mapping json file.")
 parser.add_argument("--file_storage",
     help="The storage engine for uploading and downloading files")
 parser.add_argument("--benchmark_db_entry",
@@ -361,6 +364,7 @@ class RunLab(object):
             while self.args.server_addr[-1] == '/':
                 self.args.server_addr = self.args.server_addr[:-1]
             self.args.benchmark_db_entry = self.args.server_addr + "/benchmark/"
+        self.args.benchmark_db_entry = "https://interngraph.50304.od.facebook.com/aibench/xdb"
         self.db = DBDriver(self.args.benchmark_db,
                            self.args.app_id,
                            self.args.token,
@@ -638,6 +642,9 @@ class RunLab(object):
             # if the user provides filename, we will load it.
             raw_args.append("--hash_platform_mapping")
             raw_args.append(self.args.hash_platform_mapping)
+        if self.args.device_name_mapping:
+            raw_args.append("--device_name_mapping")
+            raw_args.append(self.args.device_name_mapping)
 
         return raw_args
 

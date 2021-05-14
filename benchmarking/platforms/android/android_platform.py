@@ -29,7 +29,8 @@ from profilers.profilers import getProfilerByUsage
 class AndroidPlatform(PlatformBase):
     def __init__(self, tempdir, adb, args):
         super(AndroidPlatform, self).__init__(
-            tempdir, args.android_dir, adb, args.hash_platform_mapping)
+            tempdir, args.android_dir, adb, args.hash_platform_mapping,
+            args.device_name_mapping)
         self.args = args
         platform = adb.shell(
             ['getprop', 'ro.product.model'], default="")[0].strip() + \

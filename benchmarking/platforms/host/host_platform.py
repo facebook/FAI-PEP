@@ -41,7 +41,8 @@ class HostPlatform(PlatformBase):
         self.tempdir = os.path.join(tempdir, platform_hash)
         hdb = HDB(platform_hash, tempdir)
         super(HostPlatform, self).__init__(self.tempdir, self.tempdir, hdb,
-                                           args.hash_platform_mapping)
+                                           args.hash_platform_mapping,
+                                           args.device_name_mapping)
 
         # reset the platform and platform hash
         self.setPlatform(platform_name)

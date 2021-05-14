@@ -25,7 +25,8 @@ from utils.utilities import getRunStatus, setRunStatus
 class IOSPlatform(PlatformBase):
     def __init__(self, tempdir, idb, args):
         super(IOSPlatform, self).__init__(tempdir, args.ios_dir, idb,
-                                          args.hash_platform_mapping)
+                                          args.hash_platform_mapping,
+                                          args.device_name_mapping)
         self.setPlatformHash(idb.device)
         self.type = "ios"
         self.app = None

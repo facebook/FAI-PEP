@@ -22,10 +22,11 @@ from utils.utilities import getFilename
 
 
 class PlatformBase(object):
-    def __init__(self, tempdir, tgt_dir, platform_util, hash_platform_mapping):
+    def __init__(self, tempdir, tgt_dir, platform_util, hash_platform_mapping, device_name_mapping):
         self.tempdir = tempdir
         self.platform = None
         self.platform_hash = platform_util.device
+        self.platform_name = None
         self.type = None
         self.util = platform_util
         self.tgt_dir = tgt_dir
@@ -47,14 +48,33 @@ class PlatformBase(object):
             except BaseException:
                 pass
 
+        if isinstance(device_name_mapping, string_types):
+            # if the user provides filename, we will load it.
+            try:
+                with open(device_name_mapping) as f:
+                    self.device_name_mapping = json.load(f)
+            except OSError as e:
+                getLogger().info("OSError: {}".format(e))
+            except ValueError as e:
+                getLogger().info('Invalid json: {}'.format(e))
+        else:
+            # otherwise read from internal
+            try:
+                from aibench.specifications.device_name_mapping import device_name_mapping
+                self.device_name_mapping = device_name_mapping
+            except BaseException:
+                pass
+
     def getType(self):
         return self.type
 
     def setPlatform(self, platform):
         self.platform = getFilename(platform)
-        if self.hash_platform_mapping and \
-                self.platform_hash in self.hash_platform_mapping:
-            self.platform = self.hash_platform_mapping[self.platform_hash]
+        if self.device_name_mapping and \
+                self.platform in self.device_name_mapping:
+            self.platform_name = self.device_name_mapping[self.platform]
+        else:
+            self.platform_name = "null"
 
     def setPlatformHash(self, platform_hash):
         self.platform_hash = platform_hash

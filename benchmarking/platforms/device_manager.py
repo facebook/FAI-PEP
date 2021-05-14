@@ -32,7 +32,7 @@ DEFAULT_DM_INTERVAL = 10
 
 def getDevicesString(devices):
     device_list = [d["kind"] + "|"
-        + d["hash"] + "|"
+        + d["hash"] + "|" + d["name"] + "|"
         + ("1" if d["available"]
              else "0" if d["live"] else "2")
         for d in devices]
@@ -128,6 +128,10 @@ class DeviceManager(object):
             # if the user provides filename, we will load it.
             raw_args.append("--hash_platform_mapping")
             raw_args.append(self.args.hash_platform_mapping)
+        if self.args.device_name_mapping:
+            # if the user provides filename, we will load it.
+            raw_args.append("--device_name_mapping")
+            raw_args.append(self.args.device_name_mapping)
         app = GetConnectedDevices(raw_args=raw_args)
         devices_json = app.run()
         assert devices_json, "Devices cannot be empty"
@@ -140,9 +144,11 @@ class DeviceManager(object):
         for k in self.online_devices:
             kind = k["kind"]
             hash = k["hash"]
+            name = k["name"]
             entry = {
                 "kind": kind,
                 "hash": hash,
+                "name": name,
                 "available": True,
                 "live": True,
                 "start_time": None,
@@ -172,9 +178,11 @@ class DeviceManager(object):
     def _enableDevice(self, device):
         kind = device["kind"]
         hash = device["hash"]
+        name = device["name"]
         entry = {
             "kind": kind,
             "hash": hash,
+            "name": name,
             "available": True,
             "live": True,
             "start_time": None,
