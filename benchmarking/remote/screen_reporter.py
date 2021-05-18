@@ -17,10 +17,11 @@ import time
 
 
 class ScreenReporter(object):
-    def __init__(self, xdb, devices, debug=False):
+    def __init__(self, xdb, devices, debug=False, log_output_path=""):
         self.xdb = xdb
         self.devices = devices
         self.debug = debug
+        self.log_output_path = log_output_path
 
     def run(self, user_identifier):
         done = False
@@ -82,8 +83,6 @@ class ScreenReporter(object):
                             raise AssertionError("Net latency is not specified")
                         print("ID:{}\tNET latency: {}".format(identifier,
                                                              net_delay))
-                        if self.debug:
-                            self._printLog(r)
                     elif metric == "generic":
                         if isinstance(data, dict):
                             if "meta" in data:
@@ -94,5 +93,16 @@ class ScreenReporter(object):
                         if isinstance(data, list):
                             data = '\n'.join(data)
                         print(data)
+                if self.debug:
+                    if self.log_output_path is None:
+                        self._printLog(r)
+                    else:
+                        try:
+                            with open(self.log_output_path, "w") as outfile:
+                                outfile.write(r["log"])
+                                print("Logs written to " + self.log_output_path)
+                        except Exception as e:
+                            print("Caught exception: " + str(e) + "\nCould not write to file specified at " + self.log_output_path)
+
             else:
                 self._printLog(r)
