@@ -54,11 +54,15 @@ class IOSDriver(object):
             device_str = self.args.device
             assert device_str[0] == '{', "device must be a json string"
             device = json.loads(device_str)
-            idb = IDB(device["hash"], tempdir)
-            platform = IOSPlatform(tempdir, idb, self.args)
-            platform.setPlatform(device["kind"])
-            platform.setOSVersion(device.get("os_version", None))
-            platform.setABI(device.get("abi", None))
+            hash = device["hash"]
+            idb = IDB(hash, tempdir)
+            platform_meta = {
+                "os_version": self.devices[hash]["os_version"],
+                "model": self.devices[hash]["model"],
+                "abi": self.devices[hash]["abi"]
+            }
+            platform = IOSPlatform(tempdir, idb, self.args, platform_meta)
+            platform.setPlatform(self.devices[hash]["model"])
             platforms.append(platform)
             return platforms
 
@@ -80,7 +84,7 @@ class IOSDriver(object):
                 "abi": self.devices[device]["abi"]
             }
             platform = IOSPlatform(tempdir, idb, self.args, platform_meta)
-            platform.setPlatform(device)
+            platform.setPlatform(self.devices[device]["model"])
             platforms.append(platform)
 
         return platforms
