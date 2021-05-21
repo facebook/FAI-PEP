@@ -62,8 +62,8 @@ parser.add_argument("--hashes", default=None,
     "together with --remote and --devices")
 parser.add_argument("--debug", action="store_true",
             help="Debug mode to retain all the running binaries and models.")
-parser.add_argument("--log_output_path", default=None,
-    help="Path where the benchmark logs are written to. If not specified, the logs are outputted to the terminal")
+parser.add_argument("--log_output_dir", default=None,
+    help="Directory where the benchmark logs are written to. If not specified, the logs are outputted to the terminal")
 parser.add_argument("--devices",
     help="Specify the devices to benchmark on, in comma separated list.")
 parser.add_argument("--devices_config", default=None,
@@ -568,7 +568,7 @@ class RunRemote(object):
                 self.args.urlPrefix, user_identifier))
 
     def _screenReporter(self, user_identifier):
-        reporter = ScreenReporter(self.db, self.devices, self.args.debug, self.args.log_output_path)
+        reporter = ScreenReporter(self.db, self.devices, self.args.debug, self.args.log_output_dir)
         reporter.run(user_identifier)
 
     def _fetchResult(self):
