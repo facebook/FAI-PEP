@@ -13,15 +13,15 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import json
+import os
 import time
 
-
 class ScreenReporter(object):
-    def __init__(self, xdb, devices, debug=False, log_output_path=""):
+    def __init__(self, xdb, devices, debug=False, log_output_dir=None):
         self.xdb = xdb
         self.devices = devices
         self.debug = debug
-        self.log_output_path = log_output_path
+        self.log_output_dir = log_output_dir
 
     def run(self, user_identifier):
         done = False
@@ -56,10 +56,23 @@ class ScreenReporter(object):
         self._displayResult(s)
 
     def _printLog(self, r):
-        log = r["log"]
-        outputs = log.split("\n")
-        for o in outputs:
-            print(o)
+        if self.log_output_dir is None:
+            log = r["log"]
+            outputs = log.split("\n")
+            for o in outputs:
+                print(o)
+        else:
+            try:
+                if not os.path.exists(self.log_output_dir):
+                    os.makedirs(self.log_output_dir)
+                # Use device name to create an output log file in the directory 'log_output_dir'
+                output_file_name = self.log_output_dir + "/" + r["device"] + ".txt"
+                with open(output_file_name, "w") as outfile:
+                    outfile.write(r["log"])
+                    print("Logs written for " + r["device"] + " at " + self.log_output_dir)
+            except Exception as e:
+                print("Caught exception: " + str(e))
+                print("Could not write to file specified at " + self.log_output_dir)
 
     def _displayResult(self, s):
         if s["status"] != "DONE" and s["status"] != "FAILED" and \
@@ -94,15 +107,6 @@ class ScreenReporter(object):
                             data = '\n'.join(data)
                         print(data)
                 if self.debug:
-                    if self.log_output_path is None:
-                        self._printLog(r)
-                    else:
-                        try:
-                            with open(self.log_output_path, "w") as outfile:
-                                outfile.write(r["log"])
-                                print("Logs written to " + self.log_output_path)
-                        except Exception as e:
-                            print("Caught exception: " + str(e) + "\nCould not write to file specified at " + self.log_output_path)
-
+                    self._printLog(r)
             else:
                 self._printLog(r)
