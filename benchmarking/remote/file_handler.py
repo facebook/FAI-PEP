@@ -107,7 +107,8 @@ class FileHandler(object):
 
     def _calculateMD5(self, filename):
         m = hashlib.md5()
-        m.update(open(filename, 'rb').read())
+        with open(filename, 'rb') as f:
+            m.update(f.read())
         md5 = m.hexdigest()
         return md5
 
