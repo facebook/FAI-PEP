@@ -67,14 +67,10 @@ class IOSDriver(object):
             return platforms
 
         if self.args.excluded_devices:
-            excluded_devices = \
-                set(self.args.excluded_devices.strip().split(','))
-            self.devices = self.devices.difference(excluded_devices)
+            self.devices = {d: self.devices[d] for d in self.devices if d not in self.args.excluded_devices}
 
         if self.args.devices:
-            supported_devices = set(self.args.devices.strip().split(','))
-            if supported_devices.issubset(self.devices):
-                self.devices = supported_devices
+            self.devices = {d: self.devices[d] for d in self.devices if d in self.args.devices}
 
         for device in self.devices:
             idb = IDB(device, tempdir)
