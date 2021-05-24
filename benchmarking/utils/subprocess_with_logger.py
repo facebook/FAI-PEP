@@ -176,10 +176,10 @@ def _filterOutput(output, match_list):
 
 
 def _Popen(*args, **kwargs):
-    # only allow whitelisted args to be passed into popen
+    # only allow allowlisted args to be passed into popen
     customArgs = {}
-    whitelist = ["env"]
-    for arg in whitelist:
+    allowlist = ["env"]
+    for arg in allowlist:
         if arg in kwargs:
             customArgs[arg] = kwargs[arg]
 
