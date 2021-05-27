@@ -49,7 +49,8 @@ parser.add_argument("--pre_built_binary",
     help="Specify the pre_built_binary to bypass the building process.")
 parser.add_argument("--user_string",
     help="If set, use this instead of the $USER env variable as the user string.")
-
+parser.add_argument("--buck_target", default ="",
+    help="The buck command to build the custom binary")
 
 class LabDriver(object):
     def __init__(self, raw_args=None):
@@ -84,6 +85,10 @@ class LabDriver(object):
             if self.args.user_string:
                 unique_args.extend([
                     "--user_string", self.args.user_string,
+                ])
+            if self.args.buck_target:
+                unique_args.extend([
+                    "--buck_target", self.args.buck_target,
                 ])
 
             # hack to remove --repo from the argument list since python2

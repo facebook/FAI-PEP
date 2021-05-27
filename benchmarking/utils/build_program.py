@@ -19,15 +19,24 @@ import pkg_resources
 from .custom_logger import getLogger
 from .subprocess_with_logger import processRun
 
+def buildUsingBuck(dst, platform, buck_target):
+    _setUpTempDirectory(dst)
+
+    final_command = f"{buck_target} --out {dst}"
+    result, _ = processRun(final_command.split())
+
+    getLogger().info('\n'.join(result))
+
+    if _isBuildSuccessful(dst, platform, final_command):
+        os.chmod(dst, 0o500)
+        return True
+    return False
+
 
 def buildProgramPlatform(dst, repo_dir, framework, frameworks_dir,
                          platform, *args):
     script = getBuildScript(framework, frameworks_dir, platform, dst)
-    dst_dir = os.path.dirname(dst)
-    if os.path.isfile(dst):
-        os.remove(dst)
-    elif not os.path.isdir(dst_dir):
-        os.makedirs(dst_dir)
+    _setUpTempDirectory(dst)
 
     if os.name == "nt":
         result, _ = processRun([script, repo_dir, dst])
@@ -36,17 +45,30 @@ def buildProgramPlatform(dst, repo_dir, framework, frameworks_dir,
         if args:
             cmds.extend(list(args))
         result, _ = processRun(cmds)
-    if os.path.isfile(dst):
-        os.chmod(dst, 0o777)
+
     getLogger().info('\n'.join(result))
 
+    if _isBuildSuccessful(dst, platform, script):
+        os.chmod(dst, 0o500)
+        return True
+    return False
+
+
+def _setUpTempDirectory(dst):
+    dst_dir = os.path.dirname(dst)
+
+    if os.path.isfile(dst):
+        os.remove(dst)
+    elif not os.path.isdir(dst_dir):
+        os.makedirs(dst_dir)
+
+def _isBuildSuccessful(dst, platform, script):
     if not os.path.isfile(dst) and \
             (not (os.path.isdir(dst) and platform.startswith("ios"))):
         getLogger().error(
-            "Build program using script {} failed.".format(script))
+            "Build program using \"{}\" failed.".format(script))
         return False
     return True
-
 
 def getBuildScript(framework, frameworks_dir, platform, dst):
     if not frameworks_dir:

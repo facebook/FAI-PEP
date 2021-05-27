@@ -33,7 +33,7 @@ from remote.devices import Devices
 from remote.file_handler import FileHandler
 from remote.screen_reporter import ScreenReporter
 from remote.print_result_url import PrintResultURL
-from utils.build_program import buildProgramPlatform
+from utils.build_program import buildProgramPlatform, buildUsingBuck
 from utils.custom_logger import getLogger, setLoggerLevel
 from utils.utilities import getBenchmarks, getMeta, parse_kwarg, unpackAdhocFile
 
@@ -138,7 +138,8 @@ parser.add_argument("--user_string",
     help="The user_string pass in to differentiate different regression benchmark runs.")
 parser.add_argument("--adhoc", nargs="?", const="generic", default=None,
     help="Use the adhoc template file")
-
+parser.add_argument("--buck_target", default ="",
+    help="The buck command to build the custom binary")
 
 class BuildProgram(threading.Thread):
     def __init__(self, args, file_handler, tempdir, filenames, prebuilt_binary=None):
@@ -162,6 +163,13 @@ class BuildProgram(threading.Thread):
             program = program + ".ipa"
         if self.prebuilt_binary:
             program = self.prebuilt_binary
+        elif self.args.buck_target:
+            print("Building program with buck...")
+            success = buildUsingBuck(program,
+                                     self.args.platform,
+                                     self.args.buck_target)
+            if not success:
+                return
         else:
             print("Building program...")
             success = buildProgramPlatform(program, self.args.repo_dir,
