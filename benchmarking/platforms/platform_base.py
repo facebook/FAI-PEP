@@ -199,7 +199,7 @@ class PlatformBase(object):
             entry = cmd[i]
             if entry[:2] == "--":
                 key = entry[2:]
-                value = cmd[i+1] if i < len(cmd) else "true"
+                value = cmd[i+1] if i < len(cmd) - 1 else "true"
                 if value[:2] == "--":
                     value = "true"
                 else:
