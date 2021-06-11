@@ -8,10 +8,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 import json
 import os
 import re
@@ -208,26 +204,20 @@ class AndroidPlatform(PlatformBase):
                 del platform_args["power"]
             if platform_args.get("enable_profiling", False):
                 # attempt to run with profiling, else fallback to standard run
-                success = getRunStatus()
                 try:
                     simpleperf = getProfilerByUsage("android", None, platform=self, model_name=platform_args.get("model_name",None), cmd=cmd)
                     if simpleperf:
                         f = simpleperf.start()
                         output, meta = f.result()
+                        if not output or not meta:
+                            raise RuntimeError("No data returned from Simpleperf profiler.")
                         log_logcat = []
                         if not log_to_screen_only:
                             log_logcat = self.util.logcat('-d')
                         return output + log_logcat, meta
                 # if this has not succeeded for some reason reset run status and run without profiling.
-                except RuntimeError as ex:
-                    getLogger().error("An error occurred when running Simpleperf profiler. {}".format(ex))
-                    setRunStatus(success, overwrite=True)
-                except FileNotFoundError as ex:
-                    getLogger().error("An error occurred when running Simpleperf profiler. {}".format(ex))
-                    setRunStatus(success, overwrite=True)
-                except Exception:
-                    getLogger().exception("An error has occurred when running Simpleperf profiler.")
-                    setRunStatus(success, overwrite=True)
+                except Exception as ex:
+                    getLogger().exception(f"An error has occurred when running Simpleperf profiler. {ex}")
         log_screen = self.util.shell(cmd, **platform_args)
         log_logcat = []
         if not log_to_screen_only:
