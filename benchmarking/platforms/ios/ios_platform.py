@@ -18,9 +18,10 @@ import shlex
 import time
 
 from platforms.platform_base import PlatformBase
+from utils.custom_logger import getLogger
 from utils.subprocess_with_logger import processRun
 from utils.utilities import getRunStatus, setRunStatus
-
+from profilers.profilers import getProfilerByUsage
 
 class IOSPlatform(PlatformBase):
     def __init__(self, tempdir, idb, args, platform_meta):
@@ -102,11 +103,19 @@ class IOSPlatform(PlatformBase):
             if "power" in platform_args and platform_args["power"]:
                 platform_args["non_blocking"] = True
                 run_cmd += ["--justlaunch"]
-        # profiling is not supported on ios
-        if "enable_profiling" in platform_args:
-            del platform_args["enable_profiling"]
-        if "profiler_args" in platform_args:
-            del platform_args["profiler_args"]
+        if platform_args.get("enable_profiling", False):
+            # attempt to run with profiling, else fallback to standard run
+            try:
+                args = ' '.join(["--" + x + " " + arguments[x] for x in arguments])
+                xctrace = getProfilerByUsage("ios", None, platform=self, model_name=platform_args.get("model_name",None), args=args)
+                if xctrace:
+                    f = xctrace.start()
+                    output, meta = f.result()
+                    if not output or not meta:
+                        raise RuntimeError("No data returned from XCTrace profiler.")
+                    return output, meta
+            except Exception as ex:
+                getLogger().exception(f"An error occurred when running XCTrace profiler. {ex}")
 
         # meta is used to store any data about the benchmark run
         # that is not the output of the command
