@@ -191,6 +191,10 @@ class PlatformBase(object):
     def waitForDevice(self):
         raise AssertionError("wait for device is not implemented")
 
+    @abc.abstractmethod
+    def currentPower(self):
+        raise AssertionError("current power is not implemented")
+
     def getPairedArguments(self, cmd):
         # do not support position arguments
         arguments = {}

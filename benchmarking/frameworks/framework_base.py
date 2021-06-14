@@ -25,6 +25,7 @@ from data_converters.data_converters import getConverters
 from platforms.platforms import getHostPlatform
 from utils.utilities import deepMerge, deepReplace, \
     getFAIPEPROOT, getString, getModelName
+from utils import software_power
 
 
 class FrameworkBase(object):
@@ -166,8 +167,16 @@ class FrameworkBase(object):
 
         program = programs["program"] if "program" in programs else ""
         if test["metric"] == "power":
-            from utils.monsoon_power import collectPowerData
             platform_args["power"] = True
+            method = test.get("method")
+            platform_args["method"] = method
+
+            if method == "software":
+                power_util = software_power.PowerUtil(platform, test.get("collection_time", 300))
+            else:
+                # FIXME "Monsoon" was unimportable
+                from utils.monsoon_power import collectPowerData
+
             # in power metric, the output is ignored
             total_num = 0
             platform.killProgram(program)
@@ -198,15 +207,19 @@ class FrameworkBase(object):
                           main_command=True)
 
         if test["metric"] == "power":
-            collection_time = test["collection_time"] \
-                if "collection_time" in test else 180
-            voltage = float(test["voltage"]) if "voltage" in test else 4.0
-            output = collectPowerData(platform.platform_hash,
-                                      collection_time, voltage, test["iter"],
-                                      self.args.monsoon_map)
-            platform.waitForDevice(20)
-            # kill the process if exists
-            platform.killProgram(program)
+            if test.get("method") == "software":
+                output = power_util.collect()
+            else:
+                collection_time = test["collection_time"] \
+                    if "collection_time" in test else 180
+                voltage = float(test["voltage"]) if "voltage" in test else 4.0
+                output = collectPowerData(
+                    platform.platform_hash,
+                    collection_time, voltage, test["iter"],
+                    self.args.monsoon_map)
+                platform.waitForDevice(20)
+                # kill the process if exists
+                platform.killProgram(program)
 
         # remove the files before copying out the output files
         # this will save some time in ios platform, since in ios

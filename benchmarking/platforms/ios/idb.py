@@ -79,3 +79,14 @@ class IDB(PlatformUtilBase):
         # no need to delete file since files are added to a bundle
         # and the app is installed in every benchmark
         pass
+
+    def batteryLevel(self):
+        try:
+            response = self.run("--get_battery_level")
+            level = int(response[-1].lstrip("BatteryCurrentCapacity:"))
+
+            getLogger().info("Result {}".format(level))
+            return level
+        except Exception:
+            getLogger().exception("Could not read battery level")
+            return -1

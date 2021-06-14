@@ -134,3 +134,18 @@ class IOSPlatform(PlatformBase):
         success = self.util.reboot()
         if success:
             time.sleep(180)
+
+    def killProgram(self, program):
+        # TODO Implement or find workaround for hardware power measurement
+        pass
+
+    def currentPower(self):
+        result = self.util.batteryLevel()
+        return result
+
+    @property
+    def powerInfo(self):
+        return {
+            "unit": "percentage",
+            "metric": "batteryLevel"
+        }

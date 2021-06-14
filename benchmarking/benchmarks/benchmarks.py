@@ -218,6 +218,7 @@ class BenchmarkCollector(object):
             return False
         location = field["location"]
         if location[0:4] == "http":
+            abs_name = destination_name
             getLogger().info("Downloading {}".format(location))
             r = requests.get(location)
             if r.status_code == 200:

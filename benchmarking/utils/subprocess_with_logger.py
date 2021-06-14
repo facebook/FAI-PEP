@@ -13,6 +13,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import os
+import time
 import select
 import signal
 import subprocess
@@ -33,6 +34,11 @@ def processRun(*args, **kwargs):
         # reset run status overwritting error
         # from prior run
         setRunStatus(0, overwrite=True, key=kwargs["process_key"])
+        sleep = kwargs.get("retry_sleep")
+        if sleep:
+            getLogger().info("Sleeping for {}".format(sleep))
+            time.sleep(sleep)
+
         ret = _processRun(*args, **kwargs)
         # break out if the run succeeded
         if getRunStatus(key=kwargs["process_key"]) == 0:
