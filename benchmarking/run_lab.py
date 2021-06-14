@@ -22,6 +22,7 @@ from io import StringIO
 import json
 import logging
 import multiprocessing
+from concurrent.futures import ProcessPoolExecutor as Pool
 import os
 import signal
 import shutil
@@ -123,6 +124,9 @@ parser.add_argument("--hash_platform_mapping",
 parser.add_argument("--device_name_mapping",
     default=None,
     help="Specify device to product name mapping json file.")
+parser.add_argument('--usb_hub_device_mapping',
+    default=None,
+    help="Specify the usb hub hash, port mapping to devices")
 parser.add_argument("--file_storage",
     help="The storage engine for uploading and downloading files")
 parser.add_argument("--benchmark_db_entry",
@@ -165,12 +169,13 @@ def stopRun(args):
 
 
 class runAsync(object):
-    def __init__(self, args, devices, db, job, tempdir):
+    def __init__(self, args, devices, db, job, tempdir, usb_controller):
         self.args = args
         self.devices = devices
         self.db = db
         self.job = job
         self.tempdir = tempdir
+        self.usb_controller = usb_controller
 
     def __call__(self, raw_args):
         return self.run(raw_args)
@@ -197,7 +202,7 @@ class runAsync(object):
             output = self.job["download_error_log"]
         else:
             try:
-                app = BenchmarkDriver(raw_args=raw_args)
+                app = BenchmarkDriver(raw_args=raw_args, usb_controller=self.usb_controller)
                 getLogger().debug("RunBenchmark")
                 status = app.run()
             except Exception as e:
@@ -213,7 +218,8 @@ class runAsync(object):
         del(handlers)
         return {"status": status, "output": output}
 
-    def callback(self, result_dict):
+    def callback(self, future_result_dict):
+        result_dict = future_result_dict.result()
         global RUNNING_JOBS
         try:
             with LOCK:
@@ -378,7 +384,7 @@ class RunLab(object):
             numProcesses = 2
         else:
             numProcesses = multiprocessing.cpu_count() - 1
-        self.pool = multiprocessing.Pool(processes=numProcesses)
+        self.pool = Pool(max_workers=numProcesses, initializer=hookSignals)
 
     def run(self):
         hookSignals()
@@ -386,7 +392,6 @@ class RunLab(object):
             with LOCK:
                 self._runOnce()
             time.sleep(1)
-        self.pool.close()
         self.db.updateDevices(self.args.claimer_id, "", True)
         self.device_manager.shutdown()
 
@@ -463,7 +468,7 @@ class RunLab(object):
             )
             raw_args = self._getRawArgs(job, tempdir)
             self.devices[job["device"]][job["hash"]]["start_time"] = time.ctime()
-            async_runner = runAsync(self.args, self.devices, self.db, job, tempdir)
+            async_runner = runAsync(self.args, self.devices, self.db, job, tempdir, self.device_manager.usb_controller)
 
             # Watchdog will be used to kill currently running jobs
             # based on user requests
@@ -485,8 +490,8 @@ class RunLab(object):
             Ref: https://stackoverflow.com/a/6975654
             """
 
-            self.pool.apply_async(app, args=[raw_args],
-                callback=app.main.callback)
+            future = self.pool.submit(app, raw_args)
+            future.add_done_callback(app.main.callback)
 
     def _saveBenchmarks(self, job):
         # save benchmarks to files

@@ -24,7 +24,7 @@ from utils.utilities import getRunStatus, setRunStatus
 from profilers.profilers import getProfilerByUsage
 
 class IOSPlatform(PlatformBase):
-    def __init__(self, tempdir, idb, args, platform_meta):
+    def __init__(self, tempdir, idb, args, platform_meta, usb_controller=None):
         super(IOSPlatform, self).__init__(tempdir, args.ios_dir, idb,
                                           args.hash_platform_mapping,
                                           args.device_name_mapping)
@@ -32,6 +32,7 @@ class IOSPlatform(PlatformBase):
         self.platform_model = platform_meta.get("model")
         self.platform_abi = platform_meta.get("abi")
         self.setPlatformHash(idb.device)
+        self.usb_controller = usb_controller
         self.type = "ios"
         self.app = None
 

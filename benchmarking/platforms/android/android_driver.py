@@ -40,7 +40,7 @@ class AndroidDriver:
                 devices.add(device_id)
         return devices
 
-    def getAndroidPlatforms(self, tempdir):
+    def getAndroidPlatforms(self, tempdir, usb_controller):
         platforms = []
         if self.args.device:
             device = None
@@ -51,7 +51,7 @@ class AndroidDriver:
             else:
                 hash = self.args.device
             adb = ADB(hash, tempdir)
-            platform = AndroidPlatform(tempdir, adb, self.args)
+            platform = AndroidPlatform(tempdir, adb, self.args, usb_controller)
             platforms.append(platform)
             if device:
                 platform.setPlatform(device["kind"])

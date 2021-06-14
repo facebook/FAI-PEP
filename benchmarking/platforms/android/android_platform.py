@@ -23,7 +23,7 @@ from profilers.profilers import getProfilerByUsage
 
 
 class AndroidPlatform(PlatformBase):
-    def __init__(self, tempdir, adb, args):
+    def __init__(self, tempdir, adb, args, usb_controller=None):
         super(AndroidPlatform, self).__init__(
             tempdir, args.android_dir, adb, args.hash_platform_mapping,
             args.device_name_mapping)
@@ -37,6 +37,7 @@ class AndroidPlatform(PlatformBase):
         self.type = "android"
         self.setPlatform(platform)
         self.setPlatformHash(adb.device)
+        self.usb_controller = usb_controller
         self._setLogCatSize()
         self.app = None
         if self.args.set_freq:
