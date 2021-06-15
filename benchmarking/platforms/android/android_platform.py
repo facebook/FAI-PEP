@@ -259,3 +259,21 @@ class AndroidPlatform(PlatformBase):
             getLogger().error("Cannot reach device {} ({}) after {}.".
                               format(self.platform, self.platform_hash,
                                      timeout))
+
+    def currentPower(self):
+        try:
+            result = self.util.shell(["dumpsys", "battery"], retry=10, retry_sleep=2)
+            for line in result:
+                if "Charge counter" in line:
+                    result_line = line
+            return int(result_line.split(': ')[-1])
+        except Exception:
+            getLogger().exception("Could not read battery level")
+            return -1
+
+    @property
+    def powerInfo(self):
+        return {
+            "unit": "mAh",
+            "metric": "batteryLevel"
+        }
