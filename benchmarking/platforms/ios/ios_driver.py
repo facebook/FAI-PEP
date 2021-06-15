@@ -48,7 +48,7 @@ class IOSDriver(object):
                 devices[hash] = {"model":model, "abi":abi, "os_version":os_version}
         return devices
 
-    def getIOSPlatforms(self, tempdir):
+    def getIOSPlatforms(self, tempdir, usb_controller):
         platforms = []
         if self.args.device:
             device_str = self.args.device
@@ -61,7 +61,7 @@ class IOSDriver(object):
                 "model": self.devices[hash]["model"],
                 "abi": self.devices[hash]["abi"]
             }
-            platform = IOSPlatform(tempdir, idb, self.args, platform_meta)
+            platform = IOSPlatform(tempdir, idb, self.args, platform_meta, usb_controller)
             platform.setPlatform(self.devices[hash]["model"])
             platforms.append(platform)
             return platforms

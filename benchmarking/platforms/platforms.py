@@ -21,7 +21,7 @@ from .windows.windows_platform import WindowsPlatform
 from utils.custom_logger import getLogger
 
 
-def getPlatforms(args, tempdir="/tmp"):
+def getPlatforms(args, tempdir="/tmp", usb_controller=None):
     platforms = []
     if args.platform[:4] == "host" or \
        args.platform[:5] == "linux" or \
@@ -29,10 +29,10 @@ def getPlatforms(args, tempdir="/tmp"):
         platforms.append(HostPlatform(tempdir, args))
     elif args.platform[:7] == "android":
         driver = AndroidDriver(args)
-        platforms.extend(driver.getAndroidPlatforms(tempdir))
+        platforms.extend(driver.getAndroidPlatforms(tempdir, usb_controller))
     elif args.platform.startswith("ios"):
         driver = IOSDriver(args)
-        platforms.extend(driver.getIOSPlatforms(tempdir))
+        platforms.extend(driver.getIOSPlatforms(tempdir, usb_controller))
     elif os.name == "nt":
         platforms.append(WindowsPlatform(tempdir))
     if not platforms:

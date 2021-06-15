@@ -64,6 +64,11 @@ class DeviceManager(object):
         self.device_monitor_interval = self.args.device_monitor_interval
         self.device_monitor=Thread(target=self._runDeviceMonitor)
         self.device_monitor.start()
+        if self.args.usb_hub_device_mapping:
+            from utils.usb_controller import USBController
+            self.usb_controller = USBController(self.args.usb_hub_device_mapping)
+        else:
+            self.usb_controller = None
 
     def getLabDevices(self):
         """ Return a reference to the lab's device meta data. """
@@ -85,7 +90,11 @@ class DeviceManager(object):
             new_devices = [h for h in online_hashes if h not in [p["hash"] for p in self.online_devices]]
             if offline_devices:
                 for offline_device in offline_devices:
-                    if "rebooting" not in self.lab_devices[offline_device["kind"]][offline_device["hash"]]:
+                    lab_device = self.lab_devices[offline_device["kind"]][offline_device["hash"]]
+                    usb_disabled = False
+                    if self.usb_controller and not self.usb_controller.active.get(lab_device["hash"], True):
+                        usb_disabled = True
+                    if "rebooting" not in lab_device and not usb_disabled:
                         getLogger().error("Device {} has become unavailable.".format(offline_device))
                         self._disableDevice(offline_device)
                         # TODO: self._sendErrorReport()
@@ -161,7 +170,8 @@ class DeviceManager(object):
                 "output_dir": None,
                 "job": None,
                 "adb": ADB(hash, self.args.android_dir),
-                "reboot_time": datetime.datetime.now() - datetime.timedelta(hours=8)
+                "reboot_time": datetime.datetime.now() - datetime.timedelta(hours=8),
+                "usb_hub": {}
             }
             if kind not in self.lab_devices:
                 self.lab_devices[kind] = {}
@@ -199,7 +209,8 @@ class DeviceManager(object):
             "output_dir": None,
             "job": None,
             "adb": ADB(hash, self.args.android_dir),
-            "reboot_time": datetime.datetime.now() - datetime.timedelta(hours=8)
+            "reboot_time": datetime.datetime.now() - datetime.timedelta(hours=8),
+            "usb_hub": {}
         }
         if kind not in self.lab_devices:
             self.lab_devices[kind]={}

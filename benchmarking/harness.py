@@ -144,6 +144,7 @@ class BenchmarkDriver(object):
         setRunStatus(0, overwrite=True)
         self.status = 0
         raw_args = kwargs.get("raw_args", None)
+        self.usb_controller = kwargs.get("usb_controller")
         self.args, self.unknowns = parser.parse_known_args(raw_args)
         self._lock = threading.Lock()
 
@@ -215,7 +216,7 @@ class BenchmarkDriver(object):
         benchmarks = bcollector.collectBenchmarks(info,
                                                   self.args.benchmark_file,
                                                   self.args.user_identifier)
-        platforms = getPlatforms(self.args, tempdir)
+        platforms = getPlatforms(self.args, tempdir, self.usb_controller)
         threads = []
         for platform in platforms:
             t = threading.Thread(target=self.runBenchmark,
