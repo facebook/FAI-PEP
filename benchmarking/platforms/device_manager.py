@@ -107,8 +107,8 @@ class DeviceManager(object):
                         if d["hash"] not in [device["hash"] for device in self.online_devices]:
                             self.online_devices.append(d)
                         getLogger().info("New device added: {}".format(d))
-        except BaseException as ex:
-            getLogger().error("Error while checking devices. {}".format(ex))
+        except BaseException:
+            getLogger().exception("Error while checking devices.")
 
     def _updateHeartbeats(self):
         """ Update device heartbeats for all devices which are marked "live" in lab devices. """
