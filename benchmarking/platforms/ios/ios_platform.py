@@ -102,7 +102,7 @@ class IOSPlatform(PlatformBase):
         if "platform_args" in kwargs:
             platform_args = kwargs["platform_args"]
             if "power" in platform_args and platform_args["power"]:
-                platform_args["non_blocking"] = True
+                platform_args["timeout"] = 10
                 run_cmd += ["--justlaunch"]
         if platform_args.get("enable_profiling", False):
             # attempt to run with profiling, else fallback to standard run
