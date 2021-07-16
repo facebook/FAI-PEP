@@ -12,6 +12,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import json
 import os
 import time
@@ -31,9 +32,16 @@ class ScreenReporter(object):
             time.sleep(1)
 
     def _runOnce(self, user_identifier, statuses):
-        new_statuses = self.xdb.statusBenchmarks(user_identifier)
-        if len(new_statuses) == 0:
-            return False
+        retries = 3
+        while retries > 0:
+            new_statuses = self.xdb.statusBenchmarks(user_identifier)
+            if len(new_statuses) > 0 and "id" in new_statuses:
+                break
+            time.sleep(1)
+            retries -= 1
+        else:
+            print(f"Could not find benchmark entry for user_identifier {user_identifier}.")
+            return True
         for s in new_statuses:
             if s["id"] not in statuses:
                 statuses[s["id"]] = s["status"]
