@@ -35,7 +35,7 @@ def trimLog(output):
 
 def collectLogData(job):
     res = None
-    if job["framework"] == "generic":
+    if job.get("framework") == "generic":
         if "control" not in job["benchmarks"]["info"]:
             res = _block_from_log(
                 job["log"], "Program Output:", "=" * 80)

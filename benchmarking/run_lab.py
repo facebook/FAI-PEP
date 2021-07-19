@@ -15,9 +15,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import argparse
-import datetime
 import gc
-import glob
 from io import StringIO
 import json
 import logging
@@ -27,7 +25,6 @@ import os
 import signal
 import shutil
 import stat
-import sys
 import tempfile
 import threading
 import time
@@ -42,10 +39,12 @@ from platforms.android.adb import ADB
 from utils.check_argparse import claimer_id_type
 from utils.custom_logger import getLogger, setLoggerLevel
 from utils.utilities import getFilename, getMachineId, setRunKilled
+from utils.utilities import SUCCESS_FLAG as SUCCESS
 from utils.utilities import KILLED_FLAG as RUN_KILLED
 from utils.utilities import TIMEOUT_FLAG as RUN_TIMEOUT
 from utils.utilities import USER_ERROR_FLAG as USER_ERROR
 from utils.utilities import HARNESS_ERROR_FLAG as HARNESS_ERROR
+from utils.utilities import DownloadException, BenchmarkArgParseException
 from utils.watchdog import WatchDog
 from utils.log_update_handler import DBLogUpdateHandler
 from utils.log_utils import trimLog, collectLogData, valid_interval
@@ -143,7 +142,6 @@ LOCK = threading.RLock()
 DRAIN = False
 RUNNING_JOBS = 0
 
-
 def drainHandler(signum, frame):
     global DRAIN
     DRAIN = True
@@ -169,18 +167,19 @@ def stopRun(args):
 
 
 class runAsync(object):
-    def __init__(self, args, devices, db, job, tempdir, usb_controller):
+    def __init__(self, args, device, db, job, benchmark_downloader, usb_controller):
         self.args = args
-        self.devices = devices
+        self.device = device
         self.db = db
         self.job = job
-        self.tempdir = tempdir
+        self.tempdir = tempfile.mkdtemp(prefix="_".join(["aibench", str(job.get("identifier")), ""]))
+        self.benchmark_downloader = benchmark_downloader
         self.usb_controller = usb_controller
 
-    def __call__(self, raw_args):
-        return self.run(raw_args)
+    def __call__(self):
+        return self.run()
 
-    def run(self, raw_args):
+    def run(self):
         handlers = []
         log_capture_string = StringIO()
         ch = logging.StreamHandler(log_capture_string)
@@ -194,127 +193,216 @@ class runAsync(object):
             getLogger().addHandler(dbh)
             handlers.append(dbh)
             getLogger().info("Realtime logging enabled with {}s updates.".format(self.args.rt_logging_interval))
-
-        # verify download success before run
-        if "download_error_log" in self.job:
-            getLogger().error("Error downloading files for job. Skipping run.")
-            status = USER_ERROR
-            output = self.job["download_error_log"]
-        else:
-            try:
-                app = BenchmarkDriver(raw_args=raw_args, usb_controller=self.usb_controller)
-                getLogger().debug("RunBenchmark")
-                status = app.run()
-            except Exception as e:
-                getLogger().error(e)
-                #TODO: handle this exception and ensure that device is responsive
-                status = HARNESS_ERROR
-            finally:
-                output = log_capture_string.getvalue()
-        log_capture_string.close()
-        for handler in handlers:
-            handler.close()
-            getLogger().handlers.remove(handler)
-        del(handlers)
-        return {"status": status, "output": output}
-
-    def callback(self, future_result_dict):
-        result_dict = future_result_dict.result()
-        global RUNNING_JOBS
         try:
-            with LOCK:
-                device = self._updateDevices(result_dict)
-                self._submitDone(device)
-                if self.args.platform.startswith("host"):
-                    self._removeBenchmarkFiles(device)
-                self._coolDown(device)
-                RUNNING_JOBS -= 1
+            self._setFramework()
+            self._downloadFiles()
+            raw_args = self._getRawArgs()
+            app = BenchmarkDriver(raw_args=raw_args, usb_controller=self.usb_controller)
+            getLogger().debug(f"Running BenchmarkDriver for benchmark {self.job['identifier']} id ({self.job['id']})")
+            status = app.run()
+        except DownloadException:
+            getLogger().exception(f"An error occurred while running benchmark {self.job['identifier']} id ({self.job['id']})")
+            status = HARNESS_ERROR
+        except BenchmarkArgParseException:
+            getLogger().exception(f"An error occurred while running benchmark {self.job['identifier']} id ({self.job['id']})")
+            status = USER_ERROR
+        except Exception:
+            getLogger().exception(f"An error occurred while running benchmark {self.job['identifier']} id ({self.job['id']})")
+            status = HARNESS_ERROR
+        finally:
+            output = log_capture_string.getvalue()
+            log_capture_string.close()
+            for handler in handlers:
+                handler.close()
+                getLogger().handlers.remove(handler)
+            del(handlers)
+            self._setStatusOutput(status, output)
+            self._submitDone()
+            self._removeBenchmarkFiles()
             time.sleep(1)
-        except Exception as e:
-            getLogger().error("Encoutered fatal error in benchmark callback")
-            getLogger().error(e)
-            getLogger().error(
-                "Benchmark submission and device release might have partially "
-                "completed leaving aibench in a broken state"
-            )
-            getLogger().error("Terminating...")
-            os._exit(1)
 
-    def error_callback(self, *args):
-        msg = " ".join(args)
-        getLogger().error(msg)
+        return {'device': self.device, 'job': self.job}
 
-    def _coolDown(self, device):
-        force_reboot = self.job["status"] != "DONE"
-        t = CoolDownDevice(device, self.args, self.db, force_reboot, LOCK)
-        t.start()
+    def _setFramework(self):
+        """ Set framework of job based on benchmark config.  Default to caffe2 """
+        try:
+            content = self.job["benchmarks"]["benchmark"]["content"]
+            if content["tests"][0]["metric"] == "generic":
+                self.job["framework"] = "generic"
+            elif "model" in content and "framework" in content["model"]:
+                self.job["framework"] = content["model"]["framework"]
+            else:
+                getLogger().error("Framework is not specified, use Caffe2 as default")
+                self.job["framework"] = "caffe2"
+        except Exception:
+            raise BenchmarkArgParseException("Error parsing raw args from job.")
 
-    def _updateDevices(self, result_dict):
-        status = result_dict["status"]
-        output = result_dict["output"]
+    def _getRawArgs(self):
+        """ Create raw args for BenchmarkDriver """
+        try:
+            if "info" in self.job["benchmarks"]:
+                info = self.job["benchmarks"]["info"]
+            # pass the device hash as well as type
+            device = {
+                "kind": self.job["device"],
+                "hash": self.job["hash"]
+            }
+            device_str = json.dumps(device)
+            raw_args = []
+            raw_args.extend([
+                "--benchmark_file", self.job["benchmarks"]["benchmark"]["content"],
+                "--cooldown", str(self.args.cooldown),
+                "--device", device_str,
+                "--framework", self.job["framework"],
+                "--info", json.dumps(info),
+                "--model_cache", self.args.model_cache,
+                "--platform", self.args.platform,
+                "--remote_access_token", self.args.remote_access_token,
+                "--root_model_dir", self.args.root_model_dir,
+                "--simple_local_reporter", self.tempdir,
+                "--user_identifier", str(self.job["identifier"]),
+                "--user_string", self.job.get("user"),
+            ])
+            if self.job["framework"] != "generic":
+                raw_args.extend(["--remote_reporter", self.args.remote_reporter])
+            if self.args.shared_libs:
+                raw_args.extend(["--shared_libs", "'" + self.args.shared_libs + "'"])
+            if self.args.timeout:
+                raw_args.extend(["--timeout", str(self.args.timeout)])
+            if self.args.platform_sig:
+                raw_args.append("--platform_sig")
+                raw_args.append(self.args.platform_sig)
+            if self.args.monsoon_map:
+                raw_args.extend(["--monsoon_map", str(self.args.monsoon_map)])
+            if self.args.hash_platform_mapping:
+                # if the user provides filename, we will load it.
+                raw_args.append("--hash_platform_mapping")
+                raw_args.append(self.args.hash_platform_mapping)
+            if self.args.device_name_mapping:
+                raw_args.append("--device_name_mapping")
+                raw_args.append(self.args.device_name_mapping)
+            return raw_args
+        except Exception:
+            raise BenchmarkArgParseException("Error parsing raw args from job.")
 
+    def _saveBenchmarks(self):
+        """ Save benchmark config to file """
+        content = self.job["benchmarks"]["benchmark"]["content"]
+        benchmark_str = json.dumps(content)
+        path = self.tempdir + "benchmark"
+        with open(path, "w") as f:
+            f.write(benchmark_str)
+        self.job["benchmarks"]["benchmark"]["content"] = path
+        return path
+
+    def _downloadBinaries(self, info_dict):
+        """ Download benchmark binaries and return locations. """
+        programs = info_dict["programs"]
+        program_locations = []
+        for bin_name in programs:
+            program_location = programs[bin_name]["location"]
+            self.benchmark_downloader.downloadFile(program_location, None)
+            if program_location.startswith("//"):
+                program_location = self.args.root_model_dir + program_location[1:]
+            elif program_location.startswith("http"):
+                replace_pattern = {
+                    " ": '-',
+                    "\\": '-',
+                    ":": '/',
+                }
+                program_location = os.path.join(self.args.root_model_dir,
+                    getFilename(program_location, replace_pattern=replace_pattern))
+            elif program_location.startswith("/"):
+                program_location = self.args.root_model_dir + program_location
+            if self.args.platform.startswith("ios") and \
+                    bin_name == "program" and \
+                    not program_location.endswith(".ipa"):
+                new_location = program_location + ".ipa"
+                os.rename(program_location, new_location)
+                program_location = new_location
+            os.chmod(program_location, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
+            programs[bin_name]["location"] = program_location
+            program_locations.append(program_location)
+        return program_locations
+
+    def _downloadFiles(self):
+        """ Download benchmark files. """
+        try:
+            # Download models
+            self.job["models_location"] = []
+            getLogger().info(f"Downloading models for benchmark {self.job['identifier']} id {self.job['id']}")
+            path = self._saveBenchmarks()
+            location = self.benchmark_downloader.run(path)
+            self.job["models_location"].extend(location)
+            # Download programs
+            if "info" in self.job["benchmarks"]:
+                getLogger().info(f"Downloading programs for benchmark {self.job['identifier']} id {self.job['id']}")
+                if "treatment" not in self.job["benchmarks"]["info"]:
+                    getLogger().error("Field treatment "
+                        "must exist in job[\"benchmarks\"]")
+                elif "programs" not in self.job["benchmarks"]["info"]["treatment"]:
+                    getLogger().error("Field \"program\" must exist in "
+                        "job[\"benchmarks\"][\"info\"][\"treatment\"]")
+                else:
+                    treatment_info = self.job["benchmarks"]["info"]["treatment"]
+                    getLogger().info("Downloading treatment binary")
+                    treatment_locations = self._downloadBinaries(treatment_info)
+                    self.job["programs_location"] = treatment_locations
+
+                if "control" in self.job["benchmarks"]["info"]:
+                    if "programs" not in self.job["benchmarks"]["info"]["control"]:
+                        getLogger().error("Field \"program\" must exist in "
+                            "job[\"benchmarks\"][\"info\"][\"control\"]")
+                    else:
+                        control_info = self.job["benchmarks"]["info"]["control"]
+                        getLogger().info("Downloading control binary")
+                        control_locations = self._downloadBinaries(control_info)
+                        self.job["programs_location"].extend(control_locations)
+        except Exception:
+            raise DownloadException(f"Failed to download files for benchmark {self.job['identifier']} id {self.job['id']}")
+        finally:
+            gc.collect()
+
+    def _setStatusOutput(self, status, output):
+        """ Set job status and log, to be submitted to db and returned to main process """
         if status == RUN_KILLED:
             self.job["status"] = "KILLED"
         elif status == RUN_TIMEOUT:
             self.job["status"] = "TIMEOUT"
-        elif status == 0:
+        elif status == SUCCESS:
             self.job["status"] = "DONE"
-        elif status == 1:
+        elif status == USER_ERROR:
             self.job["status"] = "USER_ERROR"
         else:
             self.job["status"] = "FAILED"
         if not output:
             getLogger().error("Error, output are None")
         else:
-            outputs = output.split("\n")
-            for o in outputs:
-                getLogger().info(o)
             output = trimLog(output)
             self.job["log"] = output
 
-        device = self.devices[self.job["device"]][self.job["hash"]]
-        device["output_dir"] = self.tempdir
-        device["done_time"] = time.ctime()
-
-        return device
-
-    def _submitDone(self, device):
-        data = self._collectBenchmarkData(device["output_dir"])
+    def _submitDone(self):
+        """ Collect benchmark data and log, submit to db. """
+        data = self._collectBenchmarkData(self.tempdir)
         log = collectLogData(self.job)
         self.db.doneBenchmarks(str(self.job["id"]),
                                 self.job["status"],
                                 data,
                                 log)
 
-    def _removeBenchmarkFiles(self, device):
-        benchmark_file = self.job["benchmarks"]["benchmark"]["content"]
-        # models_location = self.job["models_location"]
-        programs_location = self.job["programs_location"]
-        output_dir = device["output_dir"]
+    def _removeBenchmarkFiles(self):
+        """ Attempt to remove temporary files, ignore errors. """
+        shutil.rmtree(self.tempdir, True)
+        programs_location = self.job.get("programs_location", [])
+        for program_location in programs_location:
+            shutil.rmtree(os.path.dirname(program_location), True)
 
-        os.remove(benchmark_file)
         # We don't delete files from models_location because after each run
         # to save model re-download time. This might be a problem to have
         # many files saving on the disk and many disk spaces used.
+        # models_location = self.job.get("models_location", [])
         # for model_location in models_location:
         #     shutil.rmtree(os.path.dirname(model_location), True)
-        for program_location in programs_location:
-            shutil.rmtree(os.path.dirname(program_location), True)
-        shutil.rmtree(output_dir, True)
-
-        # Clean up
-        try:
-            prefix = "/tmp/aibench_" + self.job["identifier"] + "_*"
-            rm_list = glob.glob(prefix)
-            rm_list.extend(glob.iglob(prefix))
-            for f in rm_list:
-                if os.path.isdir(f):
-                    shutil.rmtree(f, True)
-                if os.path.isfile(f):
-                    os.remove(f)
-            gc.collect()
-        except BaseException:
-            pass
 
     def _collectBenchmarkData(self, output_dir):
         data = {}
@@ -448,7 +536,7 @@ class RunLab(object):
         self.db.releaseBenchmarks(self.args.claimer_id, releasing_ids)
 
     def _runBenchmarks(self, jobs_queue):
-        # run the jobs in job queue
+        """ Given a queue of jobs, update run statuses and device statuses in db, and spawn job processes. """
         run_ids = ",".join([str(job["id"]) for job in jobs_queue])
         self.db.runBenchmarks(self.args.claimer_id, run_ids)
         run_devices = [self.devices[job["device"]][job["hash"]]
@@ -456,19 +544,13 @@ class RunLab(object):
         getLogger().info("Updating devices status")
         self.db.updateDevices(self.args.claimer_id,
                                getDevicesString(run_devices), False)
-        getLogger().info("Downloading files")
-        self._downloadFiles(jobs_queue)
 
         # run the benchmarks
         for job in jobs_queue:
-            identifier = job["identifier"]
-            getLogger().info("Running job with identifier {}".format(identifier))
-            tempdir = tempfile.mkdtemp(
-                prefix="_".join(["aibench", str(identifier), ""])
-            )
-            raw_args = self._getRawArgs(job, tempdir)
-            self.devices[job["device"]][job["hash"]]["start_time"] = time.ctime()
-            async_runner = runAsync(self.args, self.devices, self.db, job, tempdir, self.device_manager.usb_controller)
+            getLogger().info(f"Running job with identifier {job['identifier']} and id {job['id']}")
+            device = self.devices[job["device"]][job["hash"]]
+            device["start_time"] = time.ctime()
+            async_runner = runAsync(self.args, device, self.db, job, self.benchmark_downloader, self.device_manager.usb_controller)
 
             # Watchdog will be used to kill currently running jobs
             # based on user requests
@@ -489,169 +571,34 @@ class RunLab(object):
             apply_async method.
             Ref: https://stackoverflow.com/a/6975654
             """
+            future = self.pool.submit(app)
+            future.add_done_callback(self.callback)
 
-            future = self.pool.submit(app, raw_args)
-            future.add_done_callback(app.main.callback)
+    def callback(self, future_result_dict):
+        """ Decrement running jobs count, output job log, and start device cooldown. """
+        global RUNNING_JOBS
+        RUNNING_JOBS -= 1
+        result = future_result_dict.result()
+        job = result['job']
+        device = result['device']
+        device = self.devices[device['kind']][device['hash']]
 
-    def _saveBenchmarks(self, job):
-        # save benchmarks to files
-        benchmarks = job["benchmarks"]
-        benchmark = benchmarks["benchmark"]
-        content = benchmark["content"]
-        benchmark_str = json.dumps(content)
-        outfd, path = tempfile.mkstemp(prefix="aibench")
-        getLogger().info("Temp directory: {}".format(path))
-        with os.fdopen(outfd, "w") as f:
-            f.write(benchmark_str)
-        job["benchmarks"]["benchmark"]["content"] = path
-        if content["tests"][0]["metric"] == "generic":
-            job["framework"] = "generic"
-        elif "model" in content and "framework" in content["model"]:
-            job["framework"] = content["model"]["framework"]
-        else:
-            getLogger().error("Framework is not specified, "
-                "use Caffe2 as default")
-            job["framework"] = "caffe2"
-        return path
+        # output benchmark log in main thread.
+        getLogger().info("\n{}\n\nBenchmark:\t\t{}\nJob:\t\t\t{}\nDevice Kind:\t\t{}\nDevice Hash:\t\t{}\n{}\n\n{}".format(
+            '#'*80,
+            job['identifier'],
+            job['id'],
+            device['kind'],
+            device['hash'],
+            job['log'],
+            '#'*80))
 
-    def _downloadBinaries(self, info_dict):
-        programs = info_dict["programs"]
-        program_locations = []
-        for bin_name in programs:
-            program_location = programs[bin_name]["location"]
-            self.benchmark_downloader.downloadFile(program_location, None)
-            if program_location.startswith("//"):
-                program_location = self.args.root_model_dir + program_location[1:]
-            elif program_location.startswith("http"):
-                replace_pattern = {
-                    " ": '-',
-                    "\\": '-',
-                    ":": '/',
-                }
-                program_location = os.path.join(self.args.root_model_dir,
-                    getFilename(program_location, replace_pattern=replace_pattern))
-            elif program_location.startswith("/"):
-                program_location = self.args.root_model_dir + program_location
-            if self.args.platform.startswith("ios") and \
-                    bin_name == "program" and \
-                    not program_location.endswith(".ipa"):
-                new_location = program_location + ".ipa"
-                os.rename(program_location, new_location)
-                program_location = new_location
-            os.chmod(program_location, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
-            programs[bin_name]["location"] = program_location
-            program_locations.append(program_location)
-        return program_locations
+        with LOCK:
+            self._coolDown(device, force_reboot = job['status'] != 'DONE')
 
-    def _downloadFiles(self, jobs_queue):
-        for job in jobs_queue:
-            job["models_location"] = []
-            # added log capture for reporting
-            log_capture_string = StringIO()
-            ch = logging.StreamHandler(log_capture_string)
-            ch.setLevel(logging.DEBUG)
-            getLogger().addHandler(ch)
-            # download the models
-            try:
-                getLogger().info("Downloading models")
-                path = self._saveBenchmarks(job)
-                location = self.benchmark_downloader.run(path)
-                job["models_location"].extend(location)
-            except Exception as e:
-                getLogger().error("Unknown exception {}".format(sys.exc_info()[0]))
-                getLogger().error("Error downloading models. Job id: {}".format(job["id"]))
-                getLogger().error(e)
-                job["download_error_log"] = log_capture_string.getvalue()
-            getLogger().info("Downloading programs")
-            # download the programs
-            if "info" not in job["benchmarks"]:
-                continue
-            try:
-                if "treatment" not in job["benchmarks"]["info"]:
-                    getLogger().error("Field treatment "
-                        "must exist in job[\"benchmarks\"]")
-                elif "programs" not in job["benchmarks"]["info"]["treatment"]:
-                    getLogger().error("Field \"program\" must exist in "
-                        "job[\"benchmarks\"][\"info\"][\"treatment\"]")
-                else:
-                    treatment_info = job["benchmarks"]["info"]["treatment"]
-                    getLogger().info("Downloading treatment binary")
-                    treatment_locations = self._downloadBinaries(treatment_info)
-                    job["programs_location"] = treatment_locations
-
-                if "control" in job["benchmarks"]["info"]:
-                    if "programs" not in job["benchmarks"]["info"]["control"]:
-                        getLogger().error("Field \"program\" must exist in "
-                            "job[\"benchmarks\"][\"info\"][\"control\"]")
-                    else:
-                        control_info = job["benchmarks"]["info"]["control"]
-                        getLogger().info("Downloading control binary")
-                        control_locations = self._downloadBinaries(control_info)
-                        job["programs_location"].extend(control_locations)
-
-            except Exception as e:
-                getLogger().error("Unknown exception {}".format(sys.exc_info()[0]))
-                getLogger().error("Error downloading programs. Job id: {}".format(job["id"]))
-                getLogger().error(e)
-                job["download_error_log"] = log_capture_string.getvalue()
-            log_capture_string.close()
-            getLogger().handlers.pop()
-            gc.collect()
-
-    def _getRawArgs(self, job, tempdir):
-        if "info" in job["benchmarks"]:
-            info = job["benchmarks"]["info"]
-        elif "program" in job["benchmarks"]:
-            # TODO: remove after all clients are updated
-            info = {
-                "treatment": {
-                    "commit": "interactive",
-                    "commit_time": 0,
-                    "program": job["benchmarks"]["program"],
-                }
-            }
-        # pass the device hash as well as type
-        device = {
-            "kind": job["device"],
-            "hash": job["hash"]
-        }
-        device_str = json.dumps(device)
-        raw_args = []
-        raw_args.extend([
-            "--benchmark_file", job["benchmarks"]["benchmark"]["content"],
-            "--cooldown", str(self.args.cooldown),
-            "--device", device_str,
-            "--framework", job["framework"],
-            "--info", json.dumps(info),
-            "--model_cache", self.args.model_cache,
-            "--platform", self.args.platform,
-            "--remote_access_token", self.args.remote_access_token,
-            "--root_model_dir", self.args.root_model_dir,
-            "--simple_local_reporter", tempdir,
-            "--user_identifier", str(job["identifier"]),
-            "--user_string", job.get("user"),
-        ])
-        if job["framework"] != "generic":
-            raw_args.extend(["--remote_reporter", self.args.remote_reporter])
-        if self.args.shared_libs:
-            raw_args.extend(["--shared_libs", "'" + self.args.shared_libs + "'"])
-        if self.args.timeout:
-            raw_args.extend(["--timeout", str(self.args.timeout)])
-        if self.args.platform_sig:
-            raw_args.append("--platform_sig")
-            raw_args.append(self.args.platform_sig)
-        if self.args.monsoon_map:
-            raw_args.extend(["--monsoon_map", str(self.args.monsoon_map)])
-        if self.args.hash_platform_mapping:
-            # if the user provides filename, we will load it.
-            raw_args.append("--hash_platform_mapping")
-            raw_args.append(self.args.hash_platform_mapping)
-        if self.args.device_name_mapping:
-            raw_args.append("--device_name_mapping")
-            raw_args.append(self.args.device_name_mapping)
-
-        return raw_args
-
+    def _coolDown(self, device, force_reboot=False):
+        t = CoolDownDevice(device, self.args, self.db, force_reboot, LOCK)
+        t.start()
 
 if __name__ == "__main__":
     raw_args = None

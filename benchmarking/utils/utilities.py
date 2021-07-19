@@ -38,6 +38,14 @@ KILLED_FLAG = 1 << 9
 # Mask to expose only external status bits
 EXTERNAL_STATUS_MASK = 0XFF
 
+class DownloadException(Exception):
+    """ Raised where exception occurs when downloading benchmark files. """
+    pass
+
+class BenchmarkArgParseException(Exception):
+    """ Raised where benchmark arguments could not be parsed or are invalid. """
+    pass
+
 def check_is_json(json_str):
     try:
         json.loads(json_str)
