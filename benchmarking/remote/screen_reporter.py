@@ -35,7 +35,7 @@ class ScreenReporter(object):
         retries = 3
         while retries > 0:
             new_statuses = self.xdb.statusBenchmarks(user_identifier)
-            if len(new_statuses) > 0 and "id" in new_statuses:
+            if len(new_statuses) > 0 and "id" in new_statuses[0]:
                 break
             time.sleep(1)
             retries -= 1
