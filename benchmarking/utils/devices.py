@@ -204,5 +204,11 @@ devices = {
         "abbr": [
             "iphone8-12.0.1"
         ]
+    },
+    "D421AP-14.1.0": {
+        "name": "D421AP-14.1.0",
+        "abbr": [
+            "iphone11_pro-14.1.0"
+        ]
     }
 }
