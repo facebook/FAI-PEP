@@ -195,7 +195,8 @@ class runAsync(object):
             getLogger().info("Realtime logging enabled with {}s updates.".format(self.args.rt_logging_interval))
         try:
             self._setFramework()
-            self._downloadFiles()
+            with LOCK:
+                self._downloadFiles()
             raw_args = self._getRawArgs()
             app = BenchmarkDriver(raw_args=raw_args, usb_controller=self.usb_controller)
             getLogger().debug(f"Running BenchmarkDriver for benchmark {self.job['identifier']} id ({self.job['id']})")
