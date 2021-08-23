@@ -33,8 +33,8 @@ class DjangoURLPrinter(URLPrinterBase):
         col_sel_params = []
         for display_column in DISPLAY_COLUMNS:
             col_param = {
-                'name': 'columns',
-                'value': display_column,
+                "name": "columns",
+                "value": display_column,
             }
             col_sel_params.append(col_param)
         return col_sel_params
@@ -42,13 +42,13 @@ class DjangoURLPrinter(URLPrinterBase):
     def getGraphConfParams(self):
         graph_conf_params = [
             {
-                'name': 'graph-type-dropdown',
-                'value': 'bar-graph',
+                "name": "graph-type-dropdown",
+                "value": "bar-graph",
             },
             {
-                'name': 'rank-column-dropdown',
-                'value': 'p10',
-            }
+                "name": "rank-column-dropdown",
+                "value": "p10",
+            },
         ]
         return graph_conf_params
 
@@ -65,10 +65,10 @@ class DjangoURLPrinter(URLPrinterBase):
                     "type": "string",
                     "input": "text",
                     "operator": "equal",
-                    "value": str(user_identifier)
+                    "value": str(user_identifier),
                 }
             ],
-            "valid": True
+            "valid": True,
         }
         return filter_params
 
@@ -78,9 +78,9 @@ class DjangoURLPrinter(URLPrinterBase):
         filter_params = self.getFilterParams(user_identifier)
 
         params = {
-            'sort': '-p10',
-            'selection_form': json.dumps(col_sel_params + graph_conf_params),
-            'filters': json.dumps(filter_params),
+            "sort": "-p10",
+            "selection_form": json.dumps(col_sel_params + graph_conf_params),
+            "filters": json.dumps(filter_params),
         }
 
         return params
@@ -95,9 +95,7 @@ class DjangoURLPrinter(URLPrinterBase):
             # python 3
             param_string = urllib.parse.urlencode(params)
 
-        url = (
-            self.db_url + "?{}"
-        ).format(param_string)
+        url = (self.db_url + "?{}").format(param_string)
 
         print("Result URL => " + url)
 

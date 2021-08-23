@@ -11,6 +11,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from utils.subprocess_with_logger import processRun
+
 from .repo_base import RepoBase
 
 
@@ -25,41 +26,38 @@ class HGRepo(RepoBase):
             hg.append(self.dir)
         hg.append(cmd)
         hg.extend(args)
-        return '\n'.join(processRun(hg)[0])
+        return "\n".join(processRun(hg)[0])
 
     def pull(self, *args):
-        return self._run('update', args[0])
+        return self._run("update", args[0])
 
     def checkout(self, *args):
-        self._run('update', *args)
+        self._run("update", *args)
 
     def getCurrentCommitHash(self):
         commit = self.getCommitHash(None)
-        if commit[-1] == '+':
+        if commit[-1] == "+":
             commit = commit[:-1]
         return self.getCommitHash(commit)
 
     def getCommitHash(self, commit):
         if commit:
-            output = self._run('log', '--template', '<START>{node}<END>',
-                               '-r', commit)
+            output = self._run("log", "--template", "<START>{node}<END>", "-r", commit)
         else:
-            output = self._run('log', '-l', "1",
-                               '--template', '<START>{node}<END>')
-        start = output.index('<START>') + len('<START>')
-        end = output.index('<END>')
+            output = self._run("log", "-l", "1", "--template", "<START>{node}<END>")
+        start = output.index("<START>") + len("<START>")
+        end = output.index("<END>")
         return output[start:end]
 
     def getCommitTime(self, commit):
-        t = self._run('log', '--template', '<START>{date}<END>',
-                      '-r', commit).strip()
-        start = t.index('<START>') + len('<START>')
-        end = t.index('<END>')
+        t = self._run("log", "--template", "<START>{date}<END>", "-r", commit).strip()
+        start = t.index("<START>") + len("<START>")
+        end = t.index("<END>")
         return int(float(t[start:end]))
 
     def getNextCommitHash(self, commit, step):
         self.pull(commit)
-        res = self._run('next', str(step))
+        res = self._run("next", str(step))
         if res is None:
             return commit
         res = res.split("\n")
@@ -71,12 +69,13 @@ class HGRepo(RepoBase):
     def getCommitsInRange(self, start_date, end_date):
         sdate = start_date.strftime("%Y-%m-%d %H:%M:%S")
         # edate = end_date.strftime("%Y-%m-%d %H:%M:%S")
-        output = self._run('log',
-                           '-r',
-                           'children(first(reverse(::.) & date(\"<' +
-                           sdate + '\")))',
-                           '--template', '{node}:{date}\\n'
-                           ).strip()
+        output = self._run(
+            "log",
+            "-r",
+            'children(first(reverse(::.) & date("<' + sdate + '")))',
+            "--template",
+            "{node}:{date}\\n",
+        ).strip()
         return output
 
     def getPriorCommits(self, commit, num):

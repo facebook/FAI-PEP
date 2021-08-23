@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from .models import ModelFile
-
 from django.http import JsonResponse
-
 from django.views.decorators.csrf import csrf_exempt
+
+from .models import ModelFile
 
 
 @csrf_exempt
 def upload(request):
 
     # Handle file upload
-    if request.method == 'POST' and 'file' in request.FILES:
-        file = request.FILES['file']
+    if request.method == "POST" and "file" in request.FILES:
+        file = request.FILES["file"]
         model_file = ModelFile(name=str(file), file=file)
         model_file.save()
 

@@ -12,22 +12,28 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import json
 import os
 import shlex
 import time
 
 from platforms.platform_base import PlatformBase
+from profilers.profilers import getProfilerByUsage
 from utils.custom_logger import getLogger
 from utils.subprocess_with_logger import processRun
 from utils.utilities import getRunStatus, setRunStatus
-from profilers.profilers import getProfilerByUsage
+
 
 class IOSPlatform(PlatformBase):
     def __init__(self, tempdir, idb, args, platform_meta, usb_controller=None):
-        super(IOSPlatform, self).__init__(tempdir, args.ios_dir, idb,
-                                          args.hash_platform_mapping,
-                                          args.device_name_mapping)
+        super(IOSPlatform, self).__init__(
+            tempdir,
+            args.ios_dir,
+            idb,
+            args.hash_platform_mapping,
+            args.device_name_mapping,
+        )
         self.platform_os_version = platform_meta.get("os_version")
         self.platform_model = platform_meta.get("model")
         self.platform_abi = platform_meta.get("abi")
@@ -54,21 +60,20 @@ class IOSPlatform(PlatformBase):
         # find the first zipped app file
         assert "program" in programs, "program is not specified"
         program = programs["program"]
-        assert program.endswith(".ipa"), \
-            "IOS program must be an ipa file"
+        assert program.endswith(".ipa"), "IOS program must be an ipa file"
 
         processRun(["unzip", "-o", "-d", self.tempdir, program])
         # get the app name
         app_dir = os.path.join(self.tempdir, "Payload")
-        dirs = [f for f in os.listdir(app_dir)
-                if os.path.isdir(os.path.join(app_dir, f))]
+        dirs = [
+            f for f in os.listdir(app_dir) if os.path.isdir(os.path.join(app_dir, f))
+        ]
         assert len(dirs) == 1, "Only one app in the Payload directory"
         app_name = dirs[0]
         self.app = os.path.join(app_dir, app_name)
         del programs["program"]
 
-        bundle_id, _ = processRun(["osascript", "-e",
-                                   "id of app \"" + self.app + "\""])
+        bundle_id, _ = processRun(["osascript", "-e", 'id of app "' + self.app + '"'])
         assert len(bundle_id) > 0, "bundle id cannot be found"
         self.util.setBundleId(bundle_id[0].strip())
 
@@ -96,8 +101,13 @@ class IOSPlatform(PlatformBase):
         tgt_argument_filename = os.path.join(self.tgt_dir, "benchmark.json")
         self.util.push(argument_filename, tgt_argument_filename)
 
-        run_cmd = ["--bundle", self.app,
-                   "--noninteractive", "--noinstall", "--unbuffered"]
+        run_cmd = [
+            "--bundle",
+            self.app,
+            "--noninteractive",
+            "--noinstall",
+            "--unbuffered",
+        ]
         platform_args = {}
         if "platform_args" in kwargs:
             platform_args = kwargs["platform_args"]
@@ -107,8 +117,14 @@ class IOSPlatform(PlatformBase):
         if platform_args.get("enable_profiling", False):
             # attempt to run with profiling, else fallback to standard run
             try:
-                args = ' '.join(["--" + x + " " + arguments[x] for x in arguments])
-                xctrace = getProfilerByUsage("ios", None, platform=self, model_name=platform_args.get("model_name",None), args=args)
+                args = " ".join(["--" + x + " " + arguments[x] for x in arguments])
+                xctrace = getProfilerByUsage(
+                    "ios",
+                    None,
+                    platform=self,
+                    model_name=platform_args.get("model_name", None),
+                    args=args,
+                )
                 if xctrace:
                     f = xctrace.start()
                     output, meta = f.result()
@@ -116,16 +132,19 @@ class IOSPlatform(PlatformBase):
                         raise RuntimeError("No data returned from XCTrace profiler.")
                     return output, meta
             except Exception as ex:
-                getLogger().exception(f"An error occurred when running XCTrace profiler. {ex}")
+                getLogger().exception(
+                    f"An error occurred when running XCTrace profiler. {ex}"
+                )
 
         # meta is used to store any data about the benchmark run
         # that is not the output of the command
         meta = {}
 
         if arguments:
-            run_cmd += ["--args",
-                        ' '.join(["--" + x + " " + arguments[x]
-                                  for x in arguments])]
+            run_cmd += [
+                "--args",
+                " ".join(["--" + x + " " + arguments[x] for x in arguments]),
+            ]
         # the command may fail, but the err_output is what we need
         log_screen = self.util.run(run_cmd, **platform_args)
         return log_screen, meta
@@ -145,7 +164,4 @@ class IOSPlatform(PlatformBase):
 
     @property
     def powerInfo(self):
-        return {
-            "unit": "percentage",
-            "metric": "batteryLevel"
-        }
+        return {"unit": "percentage", "metric": "batteryLevel"}

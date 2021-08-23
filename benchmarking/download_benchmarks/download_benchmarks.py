@@ -9,12 +9,14 @@
 ##############################################################################
 
 from __future__ import absolute_import, division, print_function, unicode_literals
+
 import gc
 import hashlib
 import os
 
 from utils.custom_logger import getLogger
 from utils.utilities import getBenchmarks, getFilename
+
 from .download_file import DownloadFile
 
 
@@ -48,25 +50,26 @@ class DownloadBenchmarks(object):
             if "files" in one_benchmark["model"]:
                 for field in one_benchmark["model"]["files"]:
                     value = one_benchmark["model"]["files"][field]
-                    assert "location" in value, \
-                        "location field is missing in benchmark " \
-                        "{}".format(filename)
+                    assert (
+                        "location" in value
+                    ), "location field is missing in benchmark " "{}".format(filename)
                     location = value["location"]
                     md5 = value.get("md5")
                     path = self.downloadFile(location, md5)
                     locations.append(path)
             if "libraries" in one_benchmark["model"]:
                 for value in one_benchmark["model"]["libraries"]:
-                    assert "location" in value, \
-                        "location field is missing in benchmark " \
-                        "{}".format(filename)
+                    assert (
+                        "location" in value
+                    ), "location field is missing in benchmark " "{}".format(filename)
                     location = value["location"]
                     md5 = value["md5"]
                     path = self.downloadFile(location, md5)
                     locations.append(path)
 
-        assert "tests" in one_benchmark, \
-            "tests field is missing in benchmark {}".format(filename)
+        assert (
+            "tests" in one_benchmark
+        ), "tests field is missing in benchmark {}".format(filename)
         tests = one_benchmark["tests"]
         for test in tests:
             if "input_files" in test:
@@ -88,12 +91,14 @@ class DownloadBenchmarks(object):
         if location.startswith("http"):
             dirs = location.split(":/")
             replace_pattern = {
-                ' ': '-',
-                '\\': '-',
-                ':': '/',
+                " ": "-",
+                "\\": "-",
+                ":": "/",
             }
-            path = os.path.join(self.root_model_dir,
-                getFilename(location, replace_pattern=replace_pattern))
+            path = os.path.join(
+                self.root_model_dir,
+                getFilename(location, replace_pattern=replace_pattern),
+            )
         elif not location.startswith("//"):
             return
         else:
@@ -105,23 +110,25 @@ class DownloadBenchmarks(object):
             if md5:
                 getLogger().info("Calculate md5 of {}".format(path))
                 file_hash = None
-                with open(path, 'rb') as f:
+                with open(path, "rb") as f:
                     file_hash = hashlib.md5()
-                    for chunk in iter(lambda: f.read(8192), b''):
+                    for chunk in iter(lambda: f.read(8192), b""):
                         file_hash.update(chunk)
                 new_md5 = file_hash.hexdigest()
                 del file_hash
                 gc.collect()
                 if md5 == new_md5:
-                    getLogger().info("File {}".format(os.path.basename(path))
-                        + " is cached, skip downloading")
+                    getLogger().info(
+                        "File {}".format(os.path.basename(path))
+                        + " is cached, skip downloading"
+                    )
                     return path
             else:
                 # assume the file is the same
                 return path
-        downloader_controller = DownloadFile(dirs=dirs,
-                                             logger=self.logger,
-                                             args=self.args)
+        downloader_controller = DownloadFile(
+            dirs=dirs, logger=self.logger, args=self.args
+        )
         downloader_controller.download_file(location, path)
         return path
 

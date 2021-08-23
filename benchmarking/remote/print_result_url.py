@@ -1,8 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from remote.url_printer_base import getResultURLHandles
-
 import remote.django_url_printer
+from remote.url_printer_base import getResultURLHandles
 
 
 class PrintResultURL(object):

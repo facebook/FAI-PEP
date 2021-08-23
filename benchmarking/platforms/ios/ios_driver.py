@@ -12,12 +12,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import json
 import re
-from six import string_types
 
 from platforms.ios.idb import IDB
 from platforms.ios.ios_platform import IOSPlatform
+from six import string_types
 
 
 class IOSDriver(object):
@@ -36,7 +37,9 @@ class IOSDriver(object):
         if len(rows) == 0:
             return {}
         rows.pop(0)
-        pattern = re.compile(r".* Found ([\d|a-f|\-|A-F]+) \((\w+), .+, .+, (.+), (.+), .+\) a\.k\.a\. .*")
+        pattern = re.compile(
+            r".* Found ([\d|a-f|\-|A-F]+) \((\w+), .+, .+, (.+), (.+), .+\) a\.k\.a\. .*"
+        )
         devices = {}
         for row in rows:
             match = pattern.match(row)
@@ -45,39 +48,47 @@ class IOSDriver(object):
                 model = match.group(2)
                 abi = match.group(3)
                 os_version = match.group(4)
-                devices[hash] = {"model":model, "abi":abi, "os_version":os_version}
+                devices[hash] = {"model": model, "abi": abi, "os_version": os_version}
         return devices
 
     def getIOSPlatforms(self, tempdir, usb_controller):
         platforms = []
         if self.args.device:
             device_str = self.args.device
-            assert device_str[0] == '{', "device must be a json string"
+            assert device_str[0] == "{", "device must be a json string"
             device = json.loads(device_str)
             hash = device["hash"]
             idb = IDB(hash, tempdir)
             platform_meta = {
                 "os_version": self.devices[hash]["os_version"],
                 "model": self.devices[hash]["model"],
-                "abi": self.devices[hash]["abi"]
+                "abi": self.devices[hash]["abi"],
             }
-            platform = IOSPlatform(tempdir, idb, self.args, platform_meta, usb_controller)
+            platform = IOSPlatform(
+                tempdir, idb, self.args, platform_meta, usb_controller
+            )
             platform.setPlatform(self.devices[hash]["model"])
             platforms.append(platform)
             return platforms
 
         if self.args.excluded_devices:
-            self.devices = {d: self.devices[d] for d in self.devices if d not in self.args.excluded_devices}
+            self.devices = {
+                d: self.devices[d]
+                for d in self.devices
+                if d not in self.args.excluded_devices
+            }
 
         if self.args.devices:
-            self.devices = {d: self.devices[d] for d in self.devices if d in self.args.devices}
+            self.devices = {
+                d: self.devices[d] for d in self.devices if d in self.args.devices
+            }
 
         for device in self.devices:
             idb = IDB(device, tempdir)
             platform_meta = {
                 "os_version": self.devices[device]["os_version"],
                 "model": self.devices[device]["model"],
-                "abi": self.devices[device]["abi"]
+                "abi": self.devices[device]["abi"],
             }
             platform = IOSPlatform(tempdir, idb, self.args, platform_meta)
             platform.setPlatform(self.devices[device]["model"])

@@ -12,6 +12,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import json
 
 from reporters.reporter_base import ReporterBase
@@ -30,9 +31,9 @@ class RemoteReporter(ReporterBase):
             return
         access_token = self.remote_access_token
         remote = self._getRemoteInfo()
-        logs = self._composeMessages(content, remote['category'])
+        logs = self._composeMessages(content, remote["category"])
 
-        self._log(remote['url'], access_token, logs)
+        self._log(remote["url"], access_token, logs)
 
     def _merge_dicts(self, *dict_args):
         """
@@ -48,10 +49,10 @@ class RemoteReporter(ReporterBase):
         endpoint = self.remote_reporter.strip().split("|")
         assert len(endpoint) == 2, "Category not speied in remote endpoint"
         res = {}
-        res['url'] = endpoint[0].strip()
-        if len(res['url']) < 5 or res['url'][:4] != 'http':
-            res['url'] = 'https://' + res['url']
-        res['category'] = endpoint[1].strip()
+        res["url"] = endpoint[0].strip()
+        if len(res["url"]) < 5 or res["url"][:4] != "http":
+            res["url"] = "https://" + res["url"]
+        res["category"] = endpoint[1].strip()
 
         return res
 
@@ -61,28 +62,27 @@ class RemoteReporter(ReporterBase):
         meta["command"] = meta["command_str"]
         del meta["command_str"]
         base_summary = {}
-        self._convertToInt(meta, base_summary, 'time')
-        self._convertToInt(meta, base_summary, 'commit_time')
-        self._convertToInt(meta, base_summary, 'control_time')
-        self._convertToInt(meta, base_summary, 'control_commit_time')
-        self._convertToInt(meta, base_summary, 'regression_direction')
+        self._convertToInt(meta, base_summary, "time")
+        self._convertToInt(meta, base_summary, "commit_time")
+        self._convertToInt(meta, base_summary, "control_time")
+        self._convertToInt(meta, base_summary, "control_commit_time")
+        self._convertToInt(meta, base_summary, "regression_direction")
 
         for item in content[self.DATA]:
             data = content[self.DATA][item]
             new_meta = meta.copy()
             if "type" in data:
-                new_meta['type'] = data['type']
+                new_meta["type"] = data["type"]
             summary = base_summary.copy()
             if "summary" in data:
-                self._updateSummaryData(data['summary'], summary, "")
-            if 'control_summary' in data:
-                self._updateSummaryData(data['control_summary'],
-                                        summary, "control_")
-            if 'diff_summary' in data:
-                self._updateSummaryData(data['diff_summary'], summary, "diff_")
-            if 'regressed' in data:
-                summary['regressed'] = data['regressed']
-            if 'num_runs' in data:
+                self._updateSummaryData(data["summary"], summary, "")
+            if "control_summary" in data:
+                self._updateSummaryData(data["control_summary"], summary, "control_")
+            if "diff_summary" in data:
+                self._updateSummaryData(data["diff_summary"], summary, "diff_")
+            if "regressed" in data:
+                summary["regressed"] = data["regressed"]
+            if "num_runs" in data:
                 summary["num_runs"] = data["num_runs"]
             if "unit" in data:
                 new_meta["unit"] = data["unit"]
@@ -92,24 +92,22 @@ class RemoteReporter(ReporterBase):
             if "metric" in data:
                 new_meta["metric"] = data["metric"]
             message = {
-                'int': summary,
-                'normal': new_meta,
-                'normvector': {},
+                "int": summary,
+                "normal": new_meta,
+                "normvector": {},
             }
-            if 'values' in data:
-                message['normvector']['values'] = data['values']
-            if 'control_values' in data:
-                message['normvector']['control_values'] = \
-                    data['control_values']
+            if "values" in data:
+                message["normvector"]["values"] = data["values"]
+            if "control_values" in data:
+                message["normvector"]["control_values"] = data["control_values"]
 
             message_string = json.dumps(message, sort_keys=True)
             log = {
-                'category': category,
-                'message': message_string,
+                "category": category,
+                "message": message_string,
                 # This allows double quotes, back slashes, etc.
                 # to work correctly.
-                'line_escape': False,
-
+                "line_escape": False,
             }
             logs.append(log)
         return logs
@@ -121,8 +119,7 @@ class RemoteReporter(ReporterBase):
                 meta.pop(key, None)
                 summary[key] = value
             except BaseException:
-                getLogger().warning(
-                    "{} cannot be converted into int".format(meta[key]))
+                getLogger().warning("{} cannot be converted into int".format(meta[key]))
                 pass
 
     def _updateSummaryData(self, data, summary, prefix):
@@ -133,25 +130,22 @@ class RemoteReporter(ReporterBase):
         num_logs = len(logs)
         logs_string = json.dumps(logs, sort_keys=True)
         parameters = {
-            'access_token': access_token,
-            'logs': logs_string,
+            "access_token": access_token,
+            "logs": logs_string,
         }
         result = requestsJson(url, json=parameters, timeout=300)
-        count_key = 'count'
-        is_good = result != {} and \
-            count_key in result and \
-            result[count_key] == num_logs
+        count_key = "count"
+        is_good = result != {} and count_key in result and result[count_key] == num_logs
         if not is_good:
             getLogger().error("Submit data to remote server failed")
             if count_key not in result:
-                getLogger().error(
-                    "%s is not in request return value", count_key)
+                getLogger().error("%s is not in request return value", count_key)
             else:
                 getLogger().error(
-                    "Sent %d records out of a total of %d",
-                    result[count_key], num_logs)
+                    "Sent %d records out of a total of %d", result[count_key], num_logs
+                )
         else:
             getLogger().info(
-                "Sent %d records to remote server %s successfully.",
-                num_logs, url)
+                "Sent %d records to remote server %s successfully.", num_logs, url
+            )
         return is_good

@@ -12,6 +12,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import copy
 import datetime
 
@@ -29,27 +30,33 @@ class ScreenReporter(ReporterBase):
             getLogger().info("No data to write")
             return
         meta = content[self.META]
-        net_name = meta['net_name']
+        net_name = meta["net_name"]
         platform_name = meta[self.PLATFORM]
         framework_name = meta["framework"]
-        metric_name = meta['metric']
-        ts = float(meta['commit_time'])
-        commit = meta['commit']
+        metric_name = meta["metric"]
+        ts = float(meta["commit_time"])
+        commit = meta["commit"]
 
-        print("NET: {}\tMETRIC: {}\tID: {}".format(net_name, metric_name,
-                                                   meta["identifier"]))
+        print(
+            "NET: {}\tMETRIC: {}\tID: {}".format(
+                net_name, metric_name, meta["identifier"]
+            )
+        )
         if "platform_hash" in meta:
-            print("PLATFORM: {}\tHASH: {}".format(platform_name,
-                                                  meta["platform_hash"]))
+            print("PLATFORM: {}\tHASH: {}".format(platform_name, meta["platform_hash"]))
         else:
             print("PLATFORM: {}".format(platform_name))
-        print("FRAMEWORK: {}\tCOMMIT: {}\tTIME: {}".
-              format(framework_name, commit, datetime.datetime.fromtimestamp(
-                     int(ts)).strftime('%Y-%m-%d %H:%M:%S')))
+        print(
+            "FRAMEWORK: {}\tCOMMIT: {}\tTIME: {}".format(
+                framework_name,
+                commit,
+                datetime.datetime.fromtimestamp(int(ts)).strftime("%Y-%m-%d %H:%M:%S"),
+            )
+        )
 
         del_keys = []
         for key in data:
-            if key.startswith('NET'):
+            if key.startswith("NET"):
                 self._printOneData(key, data[key])
                 del_keys.append(key)
         for key in del_keys:
@@ -68,11 +75,15 @@ class ScreenReporter(ReporterBase):
 
     def _printOneDataLine(self, key, s):
         if "p50" in s and "MAD" in s:
-            print("{}: value median {:.5f}  MAD: {:.5f}".
-                  format(key, s["p50"], s["MAD"]))
+            print(
+                "{}: value median {:.5f}  MAD: {:.5f}".format(key, s["p50"], s["MAD"])
+            )
         elif "mean" in s and "stdev" in s:
-            print("{}: value mean {:.5f}  stdev: {:.5f}".
-                  format(key, s["mean"], s["stdev"]))
+            print(
+                "{}: value mean {:.5f}  stdev: {:.5f}".format(
+                    key, s["mean"], s["stdev"]
+                )
+            )
 
     def _getOperatorStats(self, data):
         pass

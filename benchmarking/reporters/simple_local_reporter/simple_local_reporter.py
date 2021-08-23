@@ -12,6 +12,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import json
 import os
 import shutil
@@ -44,7 +45,7 @@ class SimpleLocalReporter(ReporterBase):
         if os.path.exists(dirname):
             shutil.rmtree(dirname, True)
         os.makedirs(dirname)
-        with open(os.path.join(dirname, "data.txt"), 'w') as file:
+        with open(os.path.join(dirname, "data.txt"), "w") as file:
             content_d = json.dumps(data)
             file.write(content_d)
         pname = meta[self.PLATFORM]

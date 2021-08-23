@@ -12,21 +12,25 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from mock import patch
-import unittest
+
+import argparse
+import json
 import os
 import sys
-import argparse
 import tempfile
-import json
+import unittest
 
-BENCHMARK_DIR = os.path.abspath(os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    os.pardir, os.pardir, os.pardir))
+from mock import patch
+
+BENCHMARK_DIR = os.path.abspath(
+    os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, os.pardir
+    )
+)
 sys.path.append(BENCHMARK_DIR)
 
-from platforms.ios.ios_platform import IOSPlatform
 from platforms.ios.idb import IDB
+from platforms.ios.ios_platform import IOSPlatform
 
 
 class IOSPlatformTest(unittest.TestCase):
@@ -34,11 +38,13 @@ class IOSPlatformTest(unittest.TestCase):
         self.tempdir = tempfile.mkdtemp(prefix="aibench")
         device = {"12345678-9012345678AB901C": "A012BC"}
         idb = IDB(device, self.tempdir)
-        with patch("platforms.ios.ios_platform.IOSPlatform.setPlatformHash"),\
-             patch("platforms.ios.ios_platform.getArgs",
-                   return_value=argparse.Namespace(ios_dir=self.tempdir)),\
-             patch("platforms.platform_base.getArgs",
-                   return_value=argparse.Namespace(hash_platform_mapping=None)):
+        with patch("platforms.ios.ios_platform.IOSPlatform.setPlatformHash"), patch(
+            "platforms.ios.ios_platform.getArgs",
+            return_value=argparse.Namespace(ios_dir=self.tempdir),
+        ), patch(
+            "platforms.platform_base.getArgs",
+            return_value=argparse.Namespace(hash_platform_mapping=None),
+        ):
 
             self.platform = IOSPlatform(self.tempdir, idb)
 
@@ -48,9 +54,10 @@ class IOSPlatformTest(unittest.TestCase):
 
     def _process_run_for_preprocess(self, args):
         app = self.tempdir + "/Payload/TestDir.app"
-        self.assertTrue(args == ["osascript", "-e", "id of app \"" + app + "\""]
-                        or args == ["unzip", "-o", "-d",
-                                    self.tempdir, "test_program.ipa"])
+        self.assertTrue(
+            args == ["osascript", "-e", 'id of app "' + app + '"']
+            or args == ["unzip", "-o", "-d", self.tempdir, "test_program.ipa"]
+        )
         return ["com.facebook.test"], ""
 
     def _set_bundle_id_for_preprocess(self, bundle_id):
@@ -62,14 +69,17 @@ class IOSPlatformTest(unittest.TestCase):
 
     def test_preprocess(self):
         programs = {"program": "test_program.ipa"}
-        with patch("platforms.ios.ios_platform.processRun",
-                   side_effect=self._process_run_for_preprocess),\
-             patch("os.listdir", side_effect=self._list_dir_for_preprocess),\
-             patch("os.path.isdir", return_value=True),\
-             patch("platforms.ios.idb.IDB.run",
-                   side_effect=self._idb_run_for_preprocess),\
-             patch("platforms.ios.idb.IDB.setBundleId",
-                   side_effect=self._set_bundle_id_for_preprocess):
+        with patch(
+            "platforms.ios.ios_platform.processRun",
+            side_effect=self._process_run_for_preprocess,
+        ), patch("os.listdir", side_effect=self._list_dir_for_preprocess), patch(
+            "os.path.isdir", return_value=True
+        ), patch(
+            "platforms.ios.idb.IDB.run", side_effect=self._idb_run_for_preprocess
+        ), patch(
+            "platforms.ios.idb.IDB.setBundleId",
+            side_effect=self._set_bundle_id_for_preprocess,
+        ):
             self.platform.preprocess(programs=programs)
 
     def _push_for_run_benchmark(self, src, tgt):
@@ -85,26 +95,35 @@ class IOSPlatformTest(unittest.TestCase):
         test.close()
 
     def _idb_run_for_run_benchmark(self, *args, **kwargs):
-        expected_cmd = ['--bundle', None, '--noninteractive', '--noinstall',
-                        '--unbuffered', '--args',
-                        "--input_dims 1,3,224,224 --warmup 1 --input_type "
-                        "float --iter 50 --run_individual true --init_net "
-                        "/tmp/init_net.pb --input data --net "
-                        "/tmp/predict_net.pb"]
+        expected_cmd = [
+            "--bundle",
+            None,
+            "--noninteractive",
+            "--noinstall",
+            "--unbuffered",
+            "--args",
+            "--input_dims 1,3,224,224 --warmup 1 --input_type "
+            "float --iter 50 --run_individual true --init_net "
+            "/tmp/init_net.pb --input data --net "
+            "/tmp/predict_net.pb",
+        ]
         self.assertEqual(args[0], expected_cmd)
         return True
 
     def test_run_benchmark(self):
         self.platform.util.setBundleId("com.facebook.test")
-        cmd = "{program} --net /tmp/predict_net.pb --init_net /tmp/init_net.pb "\
-              "--warmup 1 --iter 50 --input \"data\" --input_dims \"1,3,224,224\" "\
-              "--input_type float --run_individual true"
+        cmd = (
+            "{program} --net /tmp/predict_net.pb --init_net /tmp/init_net.pb "
+            '--warmup 1 --iter 50 --input "data" --input_dims "1,3,224,224" '
+            "--input_type float --run_individual true"
+        )
 
-        with patch("platforms.ios.idb.IDB.push",
-                   side_effect=self._push_for_run_benchmark),\
-             patch("platforms.ios.idb.IDB.run",
-                   side_effect=self._idb_run_for_run_benchmark):
-            res = self.platform.runBenchmark(cmd, platfor_args={'timeout': 300.0})
+        with patch(
+            "platforms.ios.idb.IDB.push", side_effect=self._push_for_run_benchmark
+        ), patch(
+            "platforms.ios.idb.IDB.run", side_effect=self._idb_run_for_run_benchmark
+        ):
+            res = self.platform.runBenchmark(cmd, platfor_args={"timeout": 300.0})
             self.assertTrue(res)
 
 

@@ -1,8 +1,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import bridge.django_auth
 from bridge.auth_base import getAuthHandles
 
-import bridge.django_auth
 
 class Auth(object):
     def __init__(self, benchmark_db, app_id, token, is_test):

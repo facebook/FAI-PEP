@@ -12,12 +12,14 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import os
+
 from frameworks.framework_base import FrameworkBase
 
 
 class GenericFramework(FrameworkBase):
-    IDENTIFIER = 'PyTorchObserver '
+    IDENTIFIER = "PyTorchObserver "
 
     def __init__(self, tempdir, args):
         super(GenericFramework, self).__init__(args)
@@ -27,14 +29,11 @@ class GenericFramework(FrameworkBase):
     def getName(self):
         return "generic"
 
-    def runOnPlatform(self, total_num, cmd, platform, platform_args,
-                      converter):
+    def runOnPlatform(self, total_num, cmd, platform, platform_args, converter):
         if converter is None:
             converter = {
                 "name": "json_with_identifier_converter",
-                "args": {
-                    "identifier": self.IDENTIFIER
-                }
+                "args": {"identifier": self.IDENTIFIER},
             }
 
         converter_obj = self.converters[converter["name"]]()

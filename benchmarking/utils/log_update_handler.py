@@ -14,16 +14,21 @@ import logging
 import sys
 import threading
 import time
+
 from bridge.db import DBDriver
 from utils.custom_logger import getLogger
-from utils.log_utils import trimLog, LOG_LIMIT
 from utils.log_utils import DEFAULT_INTERVAL
+from utils.log_utils import trimLog, LOG_LIMIT
+
 
 class DBLogUpdateHandler(logging.Handler):
     """
     Handler class to write log data to DB at regular intervals.
     """
-    def __init__(self, db: DBDriver, id: int, interval: float = DEFAULT_INTERVAL, retries = 3):
+
+    def __init__(
+        self, db: DBDriver, id: int, interval: float = DEFAULT_INTERVAL, retries=3
+    ):
         """
         Initialize the handler.
         If stream is not specified, sys.stderr is used.
@@ -60,12 +65,14 @@ class DBLogUpdateHandler(logging.Handler):
                     else:
                         self.log = [output]
                     status = self.db.updateLogBenchmarks(self.id, output)
-                    if status != 'success':
+                    if status != "success":
                         getLogger().error("Error updating logs.")
                         self.retries_left -= 1
                         if self.retries_left == 0:
                             self.running = False
-                            getLogger().error("Max failed attempts reached for log updates. Stopping log update requests.")
+                            getLogger().error(
+                                "Max failed attempts reached for log updates. Stopping log update requests."
+                            )
                     else:
                         self.retries_left = self.retries
                     self.lastreq = time.time()

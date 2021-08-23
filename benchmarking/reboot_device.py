@@ -12,19 +12,25 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import argparse
 
 from platforms.android.adb import ADB
 from platforms.ios.idb import IDB
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--android_dir", default="/data/local/tmp/",
-    help="The directory in the android device all files are pushed to.")
-parser.add_argument("--device", required=True,
-    help="Specify the device hash to reboot")
-parser.add_argument("-p", "--platform", required=True,
-    help="Specify the platform to benchmark on. "
-        "Must starts with ios or android")
+parser.add_argument(
+    "--android_dir",
+    default="/data/local/tmp/",
+    help="The directory in the android device all files are pushed to.",
+)
+parser.add_argument("--device", required=True, help="Specify the device hash to reboot")
+parser.add_argument(
+    "-p",
+    "--platform",
+    required=True,
+    help="Specify the platform to benchmark on. " "Must starts with ios or android",
+)
 
 
 def reboot(**kwargs):
@@ -40,6 +46,7 @@ def reboot(**kwargs):
         raise AssertionError("Platform {} not recognized".format(platform))
     success = util.reboot()
     return success
+
 
 if __name__ == "__main__":
     reboot()

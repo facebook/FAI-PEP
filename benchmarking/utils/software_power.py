@@ -19,7 +19,7 @@ class PowerUtil:
         time.sleep(self.duration)
 
         self.platform.usb_controller.connect(self.platform.platform_hash)
-        time.sleep(2) # device needs a second to connect
+        time.sleep(2)  # device needs a second to connect
         self.data.append(self.platform.currentPower())
 
         getLogger().info("Done collecting {}".format(self.data))
@@ -27,7 +27,7 @@ class PowerUtil:
         result["software_power"] = _composeStructuredData(
             self.data,
             self.platform.powerInfo["metric"],
-            self.platform.powerInfo["unit"]
+            self.platform.powerInfo["unit"],
         )
         return result
 
@@ -35,7 +35,8 @@ class PowerUtil:
 def _composeStructuredData(data, metric, unit):
     # TODO(axit): Fix the structure based on how we want to display battery data
     def _index(percentile):
-        return int(percentile/100.0 * len(data)) - 1
+        return int(percentile / 100.0 * len(data)) - 1
+
     return {
         "values": data,
         "type": "NET",
@@ -50,5 +51,5 @@ def _composeStructuredData(data, metric, unit):
             "mean": 0,
             "stdev": 0,
             "MAD": 0,
-        }
+        },
     }

@@ -12,7 +12,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import abc
+
 from six import string_types
 
 
@@ -27,24 +29,19 @@ class DataConverterBase(object):
     # collect data from the binary
     @abc.abstractmethod
     def collect(self, data, args):
-        raise AssertionError(
-            "Need to call one of the implementations of the collector"
-        )
+        raise AssertionError("Need to call one of the implementations of the collector")
 
     # convert the data to a unified format
     @abc.abstractmethod
     def convert(self, data):
-        raise AssertionError(
-            "Need to call one of the implementations of the converter"
-        )
+        raise AssertionError("Need to call one of the implementations of the converter")
 
     def _prepareData(self, data):
         if data is None:
             return []
         if isinstance(data, string_types):
-            rows = data.split('\n')
+            rows = data.split("\n")
         else:
-            assert isinstance(data, list), \
-                "Input format must be string or list"
+            assert isinstance(data, list), "Input format must be string or list"
             rows = data
         return rows

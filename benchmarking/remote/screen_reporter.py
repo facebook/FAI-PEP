@@ -17,6 +17,7 @@ import json
 import os
 import time
 
+
 class ScreenReporter(object):
     def __init__(self, xdb, devices, debug=False, log_output_dir=None):
         self.xdb = xdb
@@ -40,7 +41,9 @@ class ScreenReporter(object):
             time.sleep(1)
             retries -= 1
         else:
-            print(f"Could not find benchmark entry for user_identifier {user_identifier}.")
+            print(
+                f"Could not find benchmark entry for user_identifier {user_identifier}."
+            )
             return True
         for s in new_statuses:
             if s["id"] not in statuses:
@@ -58,9 +61,11 @@ class ScreenReporter(object):
 
     def _display(self, s):
         abbrs = self.devices.getAbbrs(s["device"])
-        print("Job status for {}".format(s["device"]) +
-            (" (" + ",".join(abbrs) + ")" if abbrs else "") +
-            " is changed to {}".format(s["status"]))
+        print(
+            "Job status for {}".format(s["device"])
+            + (" (" + ",".join(abbrs) + ")" if abbrs else "")
+            + " is changed to {}".format(s["status"])
+        )
         self._displayResult(s)
 
     def _printLog(self, r):
@@ -77,14 +82,19 @@ class ScreenReporter(object):
                 output_file_name = self.log_output_dir + "/" + r["device"] + ".txt"
                 with open(output_file_name, "w") as outfile:
                     outfile.write(r["log"])
-                    print("Logs written for " + r["device"] + " at " + self.log_output_dir)
+                    print(
+                        "Logs written for " + r["device"] + " at " + self.log_output_dir
+                    )
             except Exception as e:
                 print("Caught exception: " + str(e))
                 print("Could not write to file specified at " + self.log_output_dir)
 
     def _displayResult(self, s):
-        if s["status"] != "DONE" and s["status"] != "FAILED" and \
-                s["status"] != "USER_ERROR":
+        if (
+            s["status"] != "DONE"
+            and s["status"] != "FAILED"
+            and s["status"] != "USER_ERROR"
+        ):
             return
         output = self.xdb.getBenchmarks(str(s["id"]))
         for r in output:
@@ -102,8 +112,7 @@ class ScreenReporter(object):
                             net_delay = data["NET latency"]["summary"]["mean"]
                         else:
                             raise AssertionError("Net latency is not specified")
-                        print("ID:{}\tNET latency: {}".format(identifier,
-                                                             net_delay))
+                        print("ID:{}\tNET latency: {}".format(identifier, net_delay))
                     elif metric == "generic":
                         if isinstance(data, dict):
                             if "meta" in data:
@@ -112,7 +121,7 @@ class ScreenReporter(object):
                                 return
                         # dump std printout to screen for custom_binary
                         if isinstance(data, list):
-                            data = '\n'.join(data)
+                            data = "\n".join(data)
                         print(data)
                 if self.debug:
                     self._printLog(r)

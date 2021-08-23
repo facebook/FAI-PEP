@@ -24,8 +24,9 @@ class Devices(object):
     def __init__(self, filename=None):
         if filename:
             # if the user provides filename, we will load it.
-            assert os.path.isfile(filename), \
-                "Device file {} does not exist".format(filename)
+            assert os.path.isfile(filename), "Device file {} does not exist".format(
+                filename
+            )
             with open(filename, "r") as f:
                 self.devices = json.load(f)
         else:
@@ -35,8 +36,10 @@ class Devices(object):
 
     def getFullNames(self, devices):
         names = devices.split(",")
-        new_names = [self.devices[name]["name"]
-            if name in self.devices else name for name in names]
+        new_names = [
+            self.devices[name]["name"] if name in self.devices else name
+            for name in names
+        ]
         return ",".join(new_names)
 
     def getAbbrs(self, abbr):
@@ -50,14 +53,15 @@ class Devices(object):
         device_abbr = []
         for name, _ in self.devices.items():
             device = self.devices[name]
-            assert "name" in device, \
-                "Field name is required in devices"
-            assert device["name"] == name, \
-                "Device key ({}) and name ({})".format(name, device["name"]) + \
-                " do not match"
+            assert "name" in device, "Field name is required in devices"
+            assert device["name"] == name, (
+                "Device key ({}) and name ({})".format(name, device["name"])
+                + " do not match"
+            )
             if "abbr" in device:
-                assert isinstance(device["abbr"], list), \
-                    "Abbreviations for {} needs to be a list".format(name)
+                assert isinstance(
+                    device["abbr"], list
+                ), "Abbreviations for {} needs to be a list".format(name)
                 for abbr in device["abbr"]:
                     device_abbr.append((device, abbr))
 
@@ -65,6 +69,7 @@ class Devices(object):
             self._elaborateOneDevice(device_abbr_pair[0], device_abbr_pair[1])
 
     def _elaborateOneDevice(self, device, abbr):
-        assert abbr not in self.devices, "Abbreviation " + \
-            "{} is already specified in the device list".format(abbr)
+        assert (
+            abbr not in self.devices
+        ), "Abbreviation " + "{} is already specified in the device list".format(abbr)
         self.devices[abbr] = device

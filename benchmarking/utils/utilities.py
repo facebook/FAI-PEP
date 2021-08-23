@@ -12,7 +12,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import ast
 import copy
-import certifi
 import datetime
 import json
 import os
@@ -22,10 +21,10 @@ import tempfile
 import uuid
 from time import sleep
 
+import certifi
 import pkg_resources
 import requests
 from six import string_types
-
 from utils.custom_logger import getLogger
 
 # Status codes for benchmark
@@ -36,15 +35,20 @@ USER_AND_HARNESS_ERROR_FLAG = 3
 TIMEOUT_FLAG = 1 << 8
 KILLED_FLAG = 1 << 9
 # Mask to expose only external status bits
-EXTERNAL_STATUS_MASK = 0XFF
+EXTERNAL_STATUS_MASK = 0xFF
+
 
 class DownloadException(Exception):
-    """ Raised where exception occurs when downloading benchmark files. """
+    """Raised where exception occurs when downloading benchmark files."""
+
     pass
 
+
 class BenchmarkArgParseException(Exception):
-    """ Raised where benchmark arguments could not be parsed or are invalid. """
+    """Raised where benchmark arguments could not be parsed or are invalid."""
+
     pass
+
 
 def check_is_json(json_str):
     try:
@@ -55,10 +59,10 @@ def check_is_json(json_str):
 
 
 def getBenchmarks(json_input, framework=None):
-    if (os.path.isfile(json_input)):
+    if os.path.isfile(json_input):
         with open(json_input, "r") as f:
             content = json.load(f)
-    elif (check_is_json(json_input)):
+    elif check_is_json(json_input):
         content = json.loads(json_input)
     else:
         raise Exception(f"specified benchmark file doesn't exist: {json_input}")
@@ -168,12 +172,14 @@ def getFAIPEPROOT():
     root_dir = os.path.join(dir_path, "../../")
     return os.path.abspath(root_dir)
 
+
 def ca_cert():
-    """ Get valid ca_cert path for requests """
+    """Get valid ca_cert path for requests"""
     ca_cert_path = os.environ.get("CA_CERT_PATH")
     if not ca_cert_path or not os.path.exists(ca_cert_path):
         os.environ["CA_CERT_PATH"] = certifi.where()
     return os.environ["CA_CERT_PATH"]
+
 
 def requestsData(url, **kwargs):
     delay = 0
@@ -196,7 +202,7 @@ def requestsData(url, **kwargs):
                 session.trust_env = False
                 # This session object can be reused.
                 # If the CA_CERT file has changed it will not be updated implicitly.
-                session.verify=ca_cert()
+                session.verify = ca_cert()
                 result = session.post(url, **kwargs)
             if result.status_code != 200:
                 getLogger().error(
@@ -250,21 +256,24 @@ def parse_kwarg(kwarg_str):
         getLogger().error("Failed to parse kwarg str: {}".format(kwarg_str))
     return key, value
 
+
 def getModelName(model):
     # given benchmark model entry parse model name, returns string.
     if model["framework"] == "caffe2":
         model_file_name = model["files"]["predict"]["filename"]
-    elif model.get("files",{}).get("model",{}).get("filename",None):
+    elif model.get("files", {}).get("model", {}).get("filename", None):
         model_file_name = model["files"]["model"]["filename"]
     elif "name" in model:
         model_file_name = model["name"]
     else:
         model_file_name = "model"
-    model_name = os.path.splitext(model_file_name)[0].replace(" ","_")
+    model_name = os.path.splitext(model_file_name)[0].replace(" ", "_")
     return model_name
+
 
 # Run status
 run_statuses = {}
+
 
 def _getRawRunStatus(key=""):
     global run_statuses

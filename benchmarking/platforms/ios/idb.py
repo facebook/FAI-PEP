@@ -12,6 +12,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import os
 import shutil
 import sys
@@ -56,17 +57,16 @@ class IDB(PlatformUtilBase):
         src_filename = os.path.join(self.cached_tree, src)
         if not os.path.isfile(src_filename):
             self.run("--download", "--to", self.cached_tree)
-        assert os.path.isfile(src_filename), \
-            "File {} doesn't exist in app".format(src_filename)
+        assert os.path.isfile(src_filename), "File {} doesn't exist in app".format(
+            src_filename
+        )
         shutil.copyfile(src_filename, tgt)
 
     def reboot(self):
         # use idevicediagnostics to reboot device if exists
         try:
-            super(IDB, self).run("idevicepair",
-                                 "-u", self.device, "pair")
-            super(IDB, self).run("idevicediagnostics",
-                                 "-u", self.device, "restart")
+            super(IDB, self).run("idevicepair", "-u", self.device, "pair")
+            super(IDB, self).run("idevicediagnostics", "-u", self.device, "restart")
             return True
         except Exception:
             getLogger().error("Rebooting failure...")

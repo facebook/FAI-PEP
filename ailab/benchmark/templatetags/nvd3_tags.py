@@ -2,14 +2,22 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import collections
 
+from django.conf import settings
 from django.template.defaultfilters import register
 from django.utils.safestring import mark_safe
-from django.conf import settings
+from nvd3 import (
+    lineWithFocusChart,
+    lineChart,
+    multiBarChart,
+    pieChart,
+    stackedAreaChart,
+    multiBarHorizontalChart,
+    linePlusBarChart,
+    cumulativeLineChart,
+    discreteBarChart,
+    scatterChart,
+)
 from nvd3.NVD3Chart import NVD3Chart
-from nvd3 import lineWithFocusChart, lineChart, \
-    multiBarChart, pieChart, stackedAreaChart, \
-    multiBarHorizontalChart, linePlusBarChart, \
-    cumulativeLineChart, discreteBarChart, scatterChart
 
 
 @register.simple_tag
@@ -41,42 +49,42 @@ def load_chart(chart_type, series, container, kw_extra=None, *args, **kwargs):
     if kw_extra is None:
         kw_extra = {}
 
-    if 'x_is_date' not in kw_extra:
-        kw_extra['x_is_date'] = False
-    if 'x_axis_format' not in kw_extra:
-        kw_extra['x_axis_format'] = "%d %b %Y"
-    if 'color_category' not in kw_extra:
-        kw_extra['color_category'] = "category20"
-    if 'tag_script_js' not in kw_extra:
-        kw_extra['tag_script_js'] = True
-    if 'chart_attr' not in kw_extra:
-        kw_extra['chart_attr'] = {}
+    if "x_is_date" not in kw_extra:
+        kw_extra["x_is_date"] = False
+    if "x_axis_format" not in kw_extra:
+        kw_extra["x_axis_format"] = "%d %b %Y"
+    if "color_category" not in kw_extra:
+        kw_extra["color_category"] = "category20"
+    if "tag_script_js" not in kw_extra:
+        kw_extra["tag_script_js"] = True
+    if "chart_attr" not in kw_extra:
+        kw_extra["chart_attr"] = {}
     # set the container name
-    kw_extra['name'] = str(container)
+    kw_extra["name"] = str(container)
 
     # Build chart
     chart = eval(chart_type)(**kw_extra)
 
-    xdata = series['x']
-    y_axis_list = [k for k in series.keys() if k.startswith('y')]
+    xdata = series["x"]
+    y_axis_list = [k for k in series.keys() if k.startswith("y")]
     if len(y_axis_list) > 1:
         # Ensure numeric sorting
         y_axis_list = sorted(y_axis_list, key=lambda x: int(x[1:]))
 
     for key in y_axis_list:
         ydata = series[key]
-        axis_no = key.split('y')[1]
+        axis_no = key.split("y")[1]
 
-        name = series['name' + axis_no] if series.get('name' + axis_no) else None
-        extra = series['extra' + axis_no] if series.get('extra' + axis_no) else {}
-        kwargs = series['kwargs' + axis_no] if series.get('kwargs' + axis_no) else {}
+        name = series["name" + axis_no] if series.get("name" + axis_no) else None
+        extra = series["extra" + axis_no] if series.get("extra" + axis_no) else {}
+        kwargs = series["kwargs" + axis_no] if series.get("kwargs" + axis_no) else {}
 
         chart.add_serie(name=name, y=ydata, x=xdata, extra=extra, **kwargs)
 
     chart.display_container = False
     chart.buildcontent()
 
-    html_string = chart.htmlcontent + '\n'
+    html_string = chart.htmlcontent + "\n"
     return mark_safe(html_string)
 
 
@@ -103,11 +111,11 @@ def include_container(include_container, height=400, width=600):
     chart.set_graph_width(width)
     chart.buildcontainer()
 
-    return mark_safe(chart.container + '\n')
+    return mark_safe(chart.container + "\n")
 
 
 @register.simple_tag
-def include_chart_jscss(static_dir='', css_dir='', js_dir=''):
+def include_chart_jscss(static_dir="", css_dir="", js_dir=""):
     """
     Include the html for the chart container and css for nvd3
     This will include something similar as :
@@ -135,41 +143,53 @@ def include_chart_jscss(static_dir='', css_dir='', js_dir=''):
         * ``js_dir`` -
     """
     if static_dir:
-        static_dir += '/'
+        static_dir += "/"
 
     css_files_dirs = collections.OrderedDict()
     js_files_dirs = collections.OrderedDict()
 
-    css_files_dirs['nv.d3.min.css'] = '%s%snvd3/build/' % (settings.STATIC_URL, static_dir)
+    css_files_dirs["nv.d3.min.css"] = "%s%snvd3/build/" % (
+        settings.STATIC_URL,
+        static_dir,
+    )
 
-    js_files_dirs['d3.min.js'] = '%s%sd3/' % (settings.STATIC_URL, static_dir)
-    js_files_dirs['nv.d3.min.js'] = '%s%snvd3/build/' % (settings.STATIC_URL, static_dir)
+    js_files_dirs["d3.min.js"] = "%s%sd3/" % (settings.STATIC_URL, static_dir)
+    js_files_dirs["nv.d3.min.js"] = "%s%snvd3/build/" % (
+        settings.STATIC_URL,
+        static_dir,
+    )
 
     if css_dir:
-        if not css_dir.endswith('/'):
-            css_dir += '/'
+        if not css_dir.endswith("/"):
+            css_dir += "/"
         for css_file in css_files_dirs:
-            css_files_dirs[css_file] = '%s%s%s' % (settings.STATIC_URL, static_dir, css_dir)
+            css_files_dirs[css_file] = "%s%s%s" % (
+                settings.STATIC_URL,
+                static_dir,
+                css_dir,
+            )
 
     if js_dir:
-        if not js_dir.endswith('/'):
-            js_dir += '/'
+        if not js_dir.endswith("/"):
+            js_dir += "/"
         for js_file in js_files_dirs:
-            js_files_dirs[js_file] = '%s%s%s' % (settings.STATIC_URL, static_dir, js_dir)
+            js_files_dirs[js_file] = "%s%s%s" % (
+                settings.STATIC_URL,
+                static_dir,
+                js_dir,
+            )
 
     chart = NVD3Chart()
     chart.header_css = [
-        '<link media="all" href="%s" type="text/css" rel="stylesheet" />\n' % h for h in
-        (
-            '%s%s' % (path, css_file) for css_file, path in css_files_dirs.items()
+        '<link media="all" href="%s" type="text/css" rel="stylesheet" />\n' % h
+        for h in (
+            "%s%s" % (path, css_file) for css_file, path in css_files_dirs.items()
         )
     ]
 
     chart.header_js = [
-        '<script src="%s" type="text/javascript" charset="utf-8"></script>\n' % h for h in
-        (
-            '%s%s' % (path, js_file) for js_file, path in js_files_dirs.items()
-        )
+        '<script src="%s" type="text/javascript" charset="utf-8"></script>\n' % h
+        for h in ("%s%s" % (path, js_file) for js_file, path in js_files_dirs.items())
     ]
     chart.buildhtmlheader()
-    return mark_safe(chart.htmlheader + '\n')
+    return mark_safe(chart.htmlheader + "\n")
