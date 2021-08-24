@@ -12,22 +12,23 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import datetime
-import platform
 import os
+import platform
 import re
-import sys
 import shlex
 import shutil
 import socket
+import sys
 import time
 
 from platforms.host.hdb import HDB
 from platforms.platform_base import PlatformBase
+from profilers.profilers import getProfilerByUsage
 from utils.custom_logger import getLogger
 from utils.subprocess_with_logger import processRun, processWait
 from utils.utilities import getRunTimeout
-from profilers.profilers import getProfilerByUsage
 
 
 class HostPlatform(PlatformBase):
@@ -36,13 +37,16 @@ class HostPlatform(PlatformBase):
         if args.platform_sig is not None:
             platform_name = str(args.platform_sig)
         else:
-            platform_name = platform.platform() + "-" + \
-                self._getProcessorName()
+            platform_name = platform.platform() + "-" + self._getProcessorName()
         self.tempdir = os.path.join(tempdir, platform_hash)
         hdb = HDB(platform_hash, tempdir)
-        super(HostPlatform, self).__init__(self.tempdir, self.tempdir, hdb,
-                                           args.hash_platform_mapping,
-                                           args.device_name_mapping)
+        super(HostPlatform, self).__init__(
+            self.tempdir,
+            self.tempdir,
+            hdb,
+            args.hash_platform_mapping,
+            args.device_name_mapping,
+        )
 
         # reset the platform and platform hash
         self.setPlatform(platform_name)
@@ -132,7 +136,8 @@ class HostPlatform(PlatformBase):
             diff = min_duration * 60 - duration
             getLogger().info(
                 "Sleep for {} - {} = {} seconds".format(
-                    min_duration * 60, duration, diff)
+                    min_duration * 60, duration, diff
+                )
             )
             time.sleep(diff)
 
@@ -140,8 +145,7 @@ class HostPlatform(PlatformBase):
         if platform.system() == "Windows":
             return platform.processor()
         elif platform.system() == "Darwin":
-            processor_info, _ = processRun(
-                ["sysctl", "-n", "machdep.cpu.brand_string"])
+            processor_info, _ = processRun(["sysctl", "-n", "machdep.cpu.brand_string"])
             if len(processor_info) > 0:
                 return processor_info[0].rstrip()
         elif platform.system() == "Linux":

@@ -1,8 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from bridge.upload_download_files_base import getFileHandles
-
 import bridge.upload_download_files_django
+from bridge.upload_download_files_base import getFileHandles
 
 
 class UploadDownloadFiles(object):
@@ -16,7 +15,7 @@ class UploadDownloadFiles(object):
             self.obj = self.file_handles[file_storage](self.args)
 
     def upload(self, **kwargs):
-        res = ''
+        res = ""
         if self.obj is not None:
             res = self.obj.upload(**kwargs)
         return res

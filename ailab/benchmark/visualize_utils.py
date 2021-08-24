@@ -7,7 +7,7 @@ from django.db.models import Q
 
 
 def construct_single_q(rule):
-    operator = rule['operator']
+    operator = rule["operator"]
     neg = False
     if operator.startswith("not_"):
         neg = True
@@ -22,13 +22,13 @@ def construct_single_q(rule):
         "less_or_equal": "lte",
         "greater": "gt",
         "greater_or_equal": "gte",
-        "between": "range"
+        "between": "range",
     }[operator]
 
     if cond != "range":
-        cond_dict = {"{}__{}".format(rule['id'], cond): rule['value']}
+        cond_dict = {"{}__{}".format(rule["id"], cond): rule["value"]}
     else:
-        cond_dict = {"{}__{}".format(rule['id'], cond): tuple(rule['value'])}
+        cond_dict = {"{}__{}".format(rule["id"], cond): tuple(rule["value"])}
 
     q_obj = Q(**cond_dict)
 
@@ -40,12 +40,12 @@ def construct_single_q(rule):
 
 def construct_q(filters):
     # Base case
-    if 'condition' not in filters:
+    if "condition" not in filters:
         return construct_single_q(filters)
 
-    q_list = [construct_q(rule) for rule in filters['rules']]
+    q_list = [construct_q(rule) for rule in filters["rules"]]
 
-    if filters['condition'] == 'AND':
+    if filters["condition"] == "AND":
         q_obj = reduce(operator.and_, q_list)
     else:
         q_obj = reduce(operator.or_, q_list)

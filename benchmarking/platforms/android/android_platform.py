@@ -14,25 +14,40 @@ import re
 import shlex
 import shutil
 import time
-from six import string_types
 
 from platforms.platform_base import PlatformBase
+from profilers.profilers import getProfilerByUsage
+from six import string_types
 from utils.custom_logger import getLogger
 from utils.utilities import getRunStatus, setRunStatus
-from profilers.profilers import getProfilerByUsage
 
 
 class AndroidPlatform(PlatformBase):
     def __init__(self, tempdir, adb, args, usb_controller=None):
         super(AndroidPlatform, self).__init__(
-            tempdir, args.android_dir, adb, args.hash_platform_mapping,
-            args.device_name_mapping)
+            tempdir,
+            args.android_dir,
+            adb,
+            args.hash_platform_mapping,
+            args.device_name_mapping,
+        )
         self.args = args
-        self.rel_version = adb.shell(['getprop', 'ro.build.version.release'], default="")[0].strip()
-        self.build_version = adb.shell(['getprop', 'ro.build.version.sdk'], default="")[0].strip()
-        platform = adb.shell(['getprop', 'ro.product.model'], default="")[0].strip() + \
-            '-' + self.rel_version + '-' + self.build_version
-        self.platform_abi = adb.shell(['getprop ro.product.cpu.abi'], default="")[0].strip()
+        self.rel_version = adb.shell(
+            ["getprop", "ro.build.version.release"], default=""
+        )[0].strip()
+        self.build_version = adb.shell(["getprop", "ro.build.version.sdk"], default="")[
+            0
+        ].strip()
+        platform = (
+            adb.shell(["getprop", "ro.product.model"], default="")[0].strip()
+            + "-"
+            + self.rel_version
+            + "-"
+            + self.build_version
+        )
+        self.platform_abi = adb.shell(["getprop ro.product.cpu.abi"], default="")[
+            0
+        ].strip()
         self.os_version = "{}-{}".format(self.rel_version, self.build_version)
         self.type = "android"
         self.setPlatform(platform)
@@ -54,7 +69,7 @@ class AndroidPlatform(PlatformBase):
     def _setLogCatSize(self):
         repeat = True
         size = 131072
-        while (repeat and size > 256):
+        while repeat and size > 256:
             repeat = False
             # We know this command may fail. Avoid propogating this
             # failure to the upstream
@@ -67,7 +82,9 @@ class AndroidPlatform(PlatformBase):
 
     def fileExistsOnPlatform(self, files):
         if isinstance(files, string_types):
-            exists=self.util.shell("test -e {} && echo True || echo False".format(files).split(" "))
+            exists = self.util.shell(
+                "test -e {} && echo True || echo False".format(files).split(" ")
+            )
             if "True" not in exists:
                 return False
             return True
@@ -76,7 +93,9 @@ class AndroidPlatform(PlatformBase):
                 if not self.fileExistsOnPlatform(f):
                     return False
             return True
-        raise TypeError("fileExistsOnPlatform takes either a string or list of strings.")
+        raise TypeError(
+            "fileExistsOnPlatform takes either a string or list of strings."
+        )
 
     def preprocess(self, *args, **kwargs):
         assert "programs" in kwargs, "Must have programs specified"
@@ -87,8 +106,9 @@ class AndroidPlatform(PlatformBase):
         # find the first zipped app file
         assert "program" in programs, "program is not specified"
 
-        if "platform" in benchmark["model"] and \
-                benchmark["model"]["platform"].startswith("android"):
+        if "platform" in benchmark["model"] and benchmark["model"][
+            "platform"
+        ].startswith("android"):
             if "app" in benchmark["model"]:
                 self.app = benchmark["model"]["app"]
 
@@ -101,10 +121,8 @@ class AndroidPlatform(PlatformBase):
                 return
 
         # Uninstall if exist
-        package = self.util.shell(["pm", "list", "packages",
-                                   self.app["package"]])
-        if len(package) > 0 and \
-                package[0].strip() == "package:" + self.app["package"]:
+        package = self.util.shell(["pm", "list", "packages", self.app["package"]])
+        if len(package) > 0 and package[0].strip() == "package:" + self.app["package"]:
             self.util.shell(["pm", "uninstall", self.app["package"]])
         # temporary fix to allow install apk files
         if not programs["program"].endswith(".apk"):
@@ -137,7 +155,7 @@ class AndroidPlatform(PlatformBase):
         # We know this command may fail. Avoid propogating this
         # failure to the upstream
         success = getRunStatus()
-        self.util.logcat('-b', 'all', '-c')
+        self.util.logcat("-b", "all", "-c")
         setRunStatus(success, overwrite=True)
         if self.app:
             log, meta = self.runAppBenchmark(cmd, *args, **kwargs)
@@ -161,16 +179,19 @@ class AndroidPlatform(PlatformBase):
                 platform_args["non_blocking"] = True
                 self.util.shell(["am", "start", "-S", activity])
                 return []
-            if platform_args.get("enable_profiling",False):
+            if platform_args.get("enable_profiling", False):
                 getLogger().warn("Profiling for app benchmarks is not implemented.")
 
         patterns = []
         pattern = re.compile(
-            r".*{}.*{}.*BENCHMARK_DONE".format(self.app["package"],
-                                               self.app["activity"]))
+            r".*{}.*{}.*BENCHMARK_DONE".format(
+                self.app["package"], self.app["activity"]
+            )
+        )
         patterns.append(pattern)
         pattern = re.compile(
-            r".*ActivityManager: Killing .*{}".format(self.app["package"]))
+            r".*ActivityManager: Killing .*{}".format(self.app["package"])
+        )
         patterns.append(pattern)
         platform_args["patterns"] = patterns
         self.util.shell(["am", "start", "-S", "-W", activity])
@@ -179,8 +200,9 @@ class AndroidPlatform(PlatformBase):
         return log_logcat
 
     def runBinaryBenchmark(self, cmd, *args, **kwargs):
-        log_to_screen_only = 'log_to_screen_only' in kwargs and \
-            kwargs['log_to_screen_only']
+        log_to_screen_only = (
+            "log_to_screen_only" in kwargs and kwargs["log_to_screen_only"]
+        )
         platform_args = {}
         meta = {}
         if "platform_args" in kwargs:
@@ -196,38 +218,50 @@ class AndroidPlatform(PlatformBase):
             if "power" in platform_args and platform_args["power"]:
                 # launch settings page to prevent the phone
                 # to go into sleep mode
-                self.util.shell(["am", "start", "-a",
-                                "android.settings.SETTINGS"])
+                self.util.shell(["am", "start", "-a", "android.settings.SETTINGS"])
                 time.sleep(1)
-                cmd = ["nohup"] + ["sh", "-c", "'" + " ".join(cmd) + "'"] + \
-                    [">", "/dev/null", "2>&1"]
+                cmd = (
+                    ["nohup"]
+                    + ["sh", "-c", "'" + " ".join(cmd) + "'"]
+                    + [">", "/dev/null", "2>&1"]
+                )
                 platform_args["non_blocking"] = True
                 del platform_args["power"]
             if platform_args.get("enable_profiling", False):
                 # attempt to run with profiling, else fallback to standard run
                 try:
-                    simpleperf = getProfilerByUsage("android", None, platform=self, model_name=platform_args.get("model_name",None), cmd=cmd)
+                    simpleperf = getProfilerByUsage(
+                        "android",
+                        None,
+                        platform=self,
+                        model_name=platform_args.get("model_name", None),
+                        cmd=cmd,
+                    )
                     if simpleperf:
                         f = simpleperf.start()
                         output, meta = f.result()
                         if not output or not meta:
-                            raise RuntimeError("No data returned from Simpleperf profiler.")
+                            raise RuntimeError(
+                                "No data returned from Simpleperf profiler."
+                            )
                         log_logcat = []
                         if not log_to_screen_only:
-                            log_logcat = self.util.logcat('-d')
+                            log_logcat = self.util.logcat("-d")
                         return output + log_logcat, meta
                 # if this has not succeeded for some reason reset run status and run without profiling.
                 except Exception as ex:
-                    getLogger().exception(f"An error has occurred when running Simpleperf profiler. {ex}")
+                    getLogger().exception(
+                        f"An error has occurred when running Simpleperf profiler. {ex}"
+                    )
         log_screen = self.util.shell(cmd, **platform_args)
         log_logcat = []
         if not log_to_screen_only:
-            log_logcat = self.util.logcat('-d')
+            log_logcat = self.util.logcat("-d")
         return log_screen + log_logcat, meta
 
     def collectMetaData(self, info):
         meta = super(AndroidPlatform, self).collectMetaData(info)
-        meta['platform_hash'] = self.platform_hash
+        meta["platform_hash"] = self.platform_hash
         return meta
 
     def killProgram(self, program):
@@ -253,12 +287,14 @@ class AndroidPlatform(PlatformBase):
         count = 0
         ls = []
         while len(ls) == 0 and count < num:
-            ls = self.util.shell(['ls', self.tgt_dir])
+            ls = self.util.shell(["ls", self.tgt_dir])
             time.sleep(period)
         if len(ls) == 0:
-            getLogger().error("Cannot reach device {} ({}) after {}.".
-                              format(self.platform, self.platform_hash,
-                                     timeout))
+            getLogger().error(
+                "Cannot reach device {} ({}) after {}.".format(
+                    self.platform, self.platform_hash, timeout
+                )
+            )
 
     def currentPower(self):
         try:
@@ -266,14 +302,11 @@ class AndroidPlatform(PlatformBase):
             for line in result:
                 if "Charge counter" in line:
                     result_line = line
-            return int(result_line.split(': ')[-1])
+            return int(result_line.split(": ")[-1])
         except Exception:
             getLogger().exception("Could not read battery level")
             return -1
 
     @property
     def powerInfo(self):
-        return {
-            "unit": "mAh",
-            "metric": "batteryLevel"
-        }
+        return {"unit": "mAh", "metric": "batteryLevel"}

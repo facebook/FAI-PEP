@@ -12,11 +12,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import json
-from six import string_types
 
 from platforms.android.adb import ADB
 from platforms.android.android_platform import AndroidPlatform
+from six import string_types
 
 
 class AndroidDriver:
@@ -45,7 +46,7 @@ class AndroidDriver:
         if self.args.device:
             device = None
             device_str = self.args.device
-            if device_str[0] == '{':
+            if device_str[0] == "{":
                 device = json.loads(device_str)
                 hash = device["hash"]
             else:
@@ -60,12 +61,11 @@ class AndroidDriver:
         if self.devices is None:
             self.devices = self.getDevices()
         if self.args.excluded_devices:
-            excluded_devices = \
-                set(self.args.excluded_devices.strip().split(','))
+            excluded_devices = set(self.args.excluded_devices.strip().split(","))
             self.devices = self.devices.difference(excluded_devices)
 
         if self.args.devices:
-            supported_devices = set(self.args.devices.strip().split(','))
+            supported_devices = set(self.args.devices.strip().split(","))
             if supported_devices.issubset(self.devices):
                 self.devices = supported_devices
 

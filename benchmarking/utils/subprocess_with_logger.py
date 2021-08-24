@@ -12,16 +12,23 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import os
-import time
 import select
 import signal
 import subprocess
 import sys
+import time
 from threading import Timer
 
 from .custom_logger import getLogger
-from .utilities import setRunStatus, getRunStatus, setRunTimeout, getRunTimeout, getRunKilled
+from .utilities import (
+    setRunStatus,
+    getRunStatus,
+    setRunTimeout,
+    getRunTimeout,
+    getRunKilled,
+)
 
 
 def processRun(*args, **kwargs):
@@ -43,25 +50,23 @@ def processRun(*args, **kwargs):
         # break out if the run succeeded
         if getRunStatus(key=kwargs["process_key"]) == 0:
             if not kwargs.get("silent", False):
-                getLogger().info("Process Succeeded: %s", ' '.join(*args))
+                getLogger().info("Process Succeeded: %s", " ".join(*args))
             break
         # don't retry for errors which we know will
         # fail again (ie. timeouts)
         if getRunTimeout():
-            getLogger().info("Process Failed: %s", ' '.join(*args))
+            getLogger().info("Process Failed: %s", " ".join(*args))
             break
         retryCount -= 1
         getLogger().info(
-            "Process Failed (will retry %d more times): %s",
-            retryCount,
-            ' '.join(*args)
+            "Process Failed (will retry %d more times): %s", retryCount, " ".join(*args)
         )
     return ret
 
 
 def _processRun(*args, **kwargs):
     if not kwargs.get("silent", False):
-        getLogger().info(">>>>>> Running: %s", ' '.join(*args))
+        getLogger().info(">>>>>> Running: %s", " ".join(*args))
     err_output = None
     try:
         run_async = False
@@ -79,11 +84,7 @@ def _processRun(*args, **kwargs):
         ps = _Popen(*args, **kwargs)
         t = None
         if timeout:
-            t = Timer(
-                timeout,
-                _kill,
-                [ps, ' '.join(*args), kwargs["process_key"]]
-            )
+            t = Timer(timeout, _kill, [ps, " ".join(*args), kwargs["process_key"]])
             t.start()
         if run_async:
             # when running the process asyncronously we return the
@@ -97,8 +98,9 @@ def _processRun(*args, **kwargs):
         err_output = e.output.decode("utf-8", errors="replace")
         getLogger().error("Command failed: {}".format(err_output))
     except Exception:
-        getLogger().error("Unknown exception {}: {}".format(sys.exc_info()[0],
-                                                            ' '.join(*args)))
+        getLogger().error(
+            "Unknown exception {}: {}".format(sys.exc_info()[0], " ".join(*args))
+        )
         err_output = "{}".format(sys.exc_info()[0])
     setRunStatus(1, key=kwargs["process_key"])
     return [], err_output
@@ -143,17 +145,13 @@ def processWait(processAndTimeout, **kwargs):
             t.cancel()
         if log_output or status != 0:
             if status != 0:
-                getLogger().info(
-                    "Process exited with status: {}".format(status)
-                )
+                getLogger().info("Process exited with status: {}".format(status))
                 setRunStatus(1, key=process_key)
             if "filter" in kwargs:
                 output = _filterOutput(output, kwargs["filter"])
             getLogger().info(
-                '\n\nProgram Output:\n{}\n{}\n{}\n'.format(
-                    '=' * 80,
-                    '\n'.join(output),
-                    '=' * 80
+                "\n\nProgram Output:\n{}\n{}\n{}\n".format(
+                    "=" * 80, "\n".join(output), "=" * 80
                 )
             )
         if status == 0 or ignore_status:
@@ -161,7 +159,7 @@ def processWait(processAndTimeout, **kwargs):
             return output, None
         else:
             setRunStatus(1, key=process_key)
-            return [], '\n'.join(output)
+            return [], "\n".join(output)
     except subprocess.CalledProcessError as e:
         err_output = e.output.decode("utf-8", errors="replace")
         getLogger().error("Command failed: {}".format(err_output))
@@ -189,11 +187,16 @@ def _Popen(*args, **kwargs):
         if arg in kwargs:
             customArgs[arg] = kwargs[arg]
 
-    ps = subprocess.Popen(*args, bufsize=-1, stdout=subprocess.PIPE,
-                          stderr=subprocess.STDOUT,
-                          universal_newlines=True, preexec_fn=os.setsid,
-                          errors="replace",
-                          **customArgs)
+    ps = subprocess.Popen(
+        *args,
+        bufsize=-1,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        universal_newlines=True,
+        preexec_fn=os.setsid,
+        errors="replace",
+        **customArgs
+    )
     # We set the buffer size to system default.
     # this is not really recommended. However, we need to stream the
     # output as they are available. So we do this. But, if the data
@@ -203,7 +206,7 @@ def _Popen(*args, **kwargs):
     return ps
 
 
-def _getOutput(ps, patterns, process_key=''):
+def _getOutput(ps, patterns, process_key=""):
     if not isinstance(patterns, list):
         patterns = [patterns]
 
@@ -225,7 +228,7 @@ def _getOutput(ps, patterns, process_key=''):
         nline = line.rstrip()
         try:
             # decode the string if decode exists
-            decoded_line = nline.decode('utf-8', errors="replace")
+            decoded_line = nline.decode("utf-8", errors="replace")
             nline = decoded_line
         except Exception:
             pass

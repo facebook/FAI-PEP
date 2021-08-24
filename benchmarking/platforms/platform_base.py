@@ -12,17 +12,25 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import abc
 import json
 import os
-from six import string_types
 
+from six import string_types
 from utils.custom_logger import getLogger
 from utils.utilities import getFilename
 
 
 class PlatformBase(object):
-    def __init__(self, tempdir, tgt_dir, platform_util, hash_platform_mapping, device_name_mapping):
+    def __init__(
+        self,
+        tempdir,
+        tgt_dir,
+        platform_util,
+        hash_platform_mapping,
+        device_name_mapping,
+    ):
         self.tempdir = tempdir
         self.platform = None
         self.platform_hash = platform_util.device
@@ -42,11 +50,14 @@ class PlatformBase(object):
             except OSError as e:
                 getLogger().info("OSError: {}".format(e))
             except ValueError as e:
-                getLogger().info('Invalid json: {}'.format(e))
+                getLogger().info("Invalid json: {}".format(e))
         else:
             # otherwise read from internal
             try:
-                from aibench.specifications.hash_platform_mapping import hash_platform_mapping
+                from aibench.specifications.hash_platform_mapping import (
+                    hash_platform_mapping,
+                )
+
                 self.hash_platform_mapping = hash_platform_mapping
             except BaseException:
                 pass
@@ -59,11 +70,14 @@ class PlatformBase(object):
             except OSError as e:
                 getLogger().info("OSError: {}".format(e))
             except ValueError as e:
-                getLogger().info('Invalid json: {}'.format(e))
+                getLogger().info("Invalid json: {}".format(e))
         else:
             # otherwise read from internal
             try:
-                from aibench.specifications.device_name_mapping import device_name_mapping
+                from aibench.specifications.device_name_mapping import (
+                    device_name_mapping,
+                )
+
                 self.device_name_mapping = device_name_mapping
             except BaseException:
                 pass
@@ -76,8 +90,10 @@ class PlatformBase(object):
 
     def setPlatformHash(self, platform_hash):
         self.platform_hash = platform_hash
-        if self.hash_platform_mapping and \
-                self.platform_hash in self.hash_platform_mapping:
+        if (
+            self.hash_platform_mapping
+            and self.platform_hash in self.hash_platform_mapping
+        ):
             self.platform = self.hash_platform_mapping[self.platform_hash]
 
     @abc.abstractmethod
@@ -94,8 +110,7 @@ class PlatformBase(object):
 
     @abc.abstractmethod
     def getName(self):
-        if self.device_name_mapping and \
-                self.getKind() in self.device_name_mapping:
+        if self.device_name_mapping and self.getKind() in self.device_name_mapping:
             return self.device_name_mapping[self.getKind()]
         else:
             return "null"
@@ -122,7 +137,7 @@ class PlatformBase(object):
         pass
 
     def copyFilesToPlatform(self, files, target_dir=None, copy_files=True):
-        target_dir = (self.tgt_dir if target_dir is None else target_dir)
+        target_dir = self.tgt_dir if target_dir is None else target_dir
         if isinstance(files, string_types):
             target_file = os.path.join(target_dir, os.path.basename(files))
             if copy_files:
@@ -131,14 +146,12 @@ class PlatformBase(object):
         elif isinstance(files, list):
             target_files = []
             for f in files:
-                target_files.append(self.copyFilesToPlatform(f, target_dir,
-                                                             copy_files))
+                target_files.append(self.copyFilesToPlatform(f, target_dir, copy_files))
             return target_files
         elif isinstance(files, dict):
             d = {}
             for f in files:
-                d[f] = self.copyFilesToPlatform(files[f], target_dir,
-                                                copy_files)
+                d[f] = self.copyFilesToPlatform(files[f], target_dir, copy_files)
             return d
         else:
             raise AssertionError("Cannot reach here")
@@ -160,8 +173,7 @@ class PlatformBase(object):
         elif isinstance(files, dict):
             output_files = {}
             for f in files:
-                output_file = self.moveFilesFromPlatform(files[f],
-                                                         target_dir)
+                output_file = self.moveFilesFromPlatform(files[f], target_dir)
                 output_files[f] = output_file
             return output_files
         else:
@@ -203,7 +215,7 @@ class PlatformBase(object):
             entry = cmd[i]
             if entry[:2] == "--":
                 key = entry[2:]
-                value = cmd[i+1] if i < len(cmd) - 1 else "true"
+                value = cmd[i + 1] if i < len(cmd) - 1 else "true"
                 if value[:2] == "--":
                     value = "true"
                 else:

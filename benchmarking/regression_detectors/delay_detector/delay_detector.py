@@ -13,8 +13,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from regression_detectors.regression_detector_base \
-    import RegressionDetectorBase
+from regression_detectors.regression_detector_base import RegressionDetectorBase
 from utils.custom_logger import getLogger
 
 
@@ -22,8 +21,7 @@ class DelayRegressionDetector(RegressionDetectorBase):
     def __init__(self):
         super(DelayRegressionDetector, self).__init__()
 
-    def isRegressed(self, filename, latest_data, compare_data,
-                    control_in_compare):
+    def isRegressed(self, filename, latest_data, compare_data, control_in_compare):
         # The algorithm to check whether there is a regression
         if control_in_compare:
             return self.detectionOnMeasurement(latest_data, compare_data)
@@ -31,12 +29,12 @@ class DelayRegressionDetector(RegressionDetectorBase):
             return self.detectionOnDiff(latest_data, compare_data)
 
     def detectionOnDiff(self, latest_data, compare_data):
-        if "diff_summary" not in latest_data or \
-                not all("diff_summary" in x for x in compare_data):
+        if "diff_summary" not in latest_data or not all(
+            "diff_summary" in x for x in compare_data
+        ):
             getLogger().error("Diff summary does not exist in data")
             return self.detectionOnMeasurement(latest_data, compare_data)
-        return self._detectionP50vsP90(latest_data, compare_data,
-                                       "diff_summary")
+        return self._detectionP50vsP90(latest_data, compare_data, "diff_summary")
 
     def detectionOnMeasurement(self, latest_data, compare_data):
         return self._detectionP50vsP90(latest_data, compare_data, "summary")
@@ -47,8 +45,7 @@ class DelayRegressionDetector(RegressionDetectorBase):
         if len(compare_data) < 5:
             return False
         latest_p50 = latest_data[summary_kind]["p50"]
-        p90s = self._getSummaryValue(compare_data,
-                                     summary_kind, "p90")
+        p90s = self._getSummaryValue(compare_data, summary_kind, "p90")
         p90s.sort()
         p90_range = p90s[-1] - p90s[0]
         p90_idx = int((len(p90s) * 9) / 10)

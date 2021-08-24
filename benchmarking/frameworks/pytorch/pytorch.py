@@ -18,20 +18,17 @@ from utils.custom_logger import getLogger
 
 
 class PytorchFramework(Caffe2Framework):
-    IDENTIFIER = 'PyTorchObserver '
-    NET = 'NET'
+    IDENTIFIER = "PyTorchObserver "
+    NET = "NET"
 
     def getName(self):
         return "pytorch"
 
-    def runOnPlatform(self, total_num, cmd, platform, platform_args,
-                      converter):
+    def runOnPlatform(self, total_num, cmd, platform, platform_args, converter):
         if converter is None:
             converter = {
                 "name": "json_with_identifier_converter",
-                "args": {
-                    "identifier": self.IDENTIFIER
-                }
+                "args": {"identifier": self.IDENTIFIER},
             }
 
         converter_obj = self.converters[converter["name"]]()
@@ -42,24 +39,22 @@ class PytorchFramework(Caffe2Framework):
         platform_args["ignore_status"] = True
         # emulate do...while... loop
         while True:
-            output, meta = platform.runBenchmark(cmd,
-                                                 platform_args=platform_args)
-            one_result, valid_run_idxs = \
-                converter_obj.collect(output, args)
+            output, meta = platform.runBenchmark(cmd, platform_args=platform_args)
+            one_result, valid_run_idxs = converter_obj.collect(output, args)
             valid_run_idxs = [num + idx for idx in valid_run_idxs]
             num += len(valid_run_idxs)
             results.extend(one_result)
             if num < total_num:
                 num_items = len(valid_run_idxs)
                 if num_items > 0:
-                    getLogger().info("%d items collected, Still missing %d "
-                                     "runs. Collect again." %
-                                     (num_items, total_num - num))
+                    getLogger().info(
+                        "%d items collected, Still missing %d "
+                        "runs. Collect again." % (num_items, total_num - num)
+                    )
 
                     continue
                 else:
-                    getLogger().info("No new items collected, "
-                                     "finish collecting...")
+                    getLogger().info("No new items collected, " "finish collecting...")
             elif total_num >= 0 and num > total_num:
                 # if collect more than the needed number, get the
                 # latest entries. This may happen when the data in
@@ -67,7 +62,7 @@ class PytorchFramework(Caffe2Framework):
                 # android 5 devices. Or, it may happen when multiple
                 # runs are needed to collect the desired number of
                 # iterations
-                results = results[valid_run_idxs[num - total_num]:]
+                results = results[valid_run_idxs[num - total_num] :]
             break
         metric = converter_obj.convert(results)
         metric["meta"] = meta

@@ -18,6 +18,5 @@ class RegressionDetectorBase(object):
     def __init__(self):
         pass
 
-    def isRegressed(self, filename, latest_data, compare_data,
-                    control_in_compare):
+    def isRegressed(self, filename, latest_data, compare_data, control_in_compare):
         return None

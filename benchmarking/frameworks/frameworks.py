@@ -15,18 +15,18 @@ from __future__ import unicode_literals
 
 from .caffe2.caffe2 import Caffe2Framework
 from .generic.generic import GenericFramework
+from .glow.glow import GlowFramework
 from .oculus.oculus import OculusFramework
 from .pytorch.pytorch import PytorchFramework
 from .tflite.tflite import TFLiteFramework
-from .glow.glow import GlowFramework
 
 frameworks = {
-    'caffe2': Caffe2Framework,
-    'generic': GenericFramework,
-    'oculus': OculusFramework,
-    'pytorch': PytorchFramework,
-    'tflite': TFLiteFramework,
-    'glow': GlowFramework
+    "caffe2": Caffe2Framework,
+    "generic": GenericFramework,
+    "oculus": OculusFramework,
+    "pytorch": PytorchFramework,
+    "tflite": TFLiteFramework,
+    "glow": GlowFramework,
 }
 
 

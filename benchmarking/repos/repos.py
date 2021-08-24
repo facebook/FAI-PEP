@@ -15,9 +15,9 @@ from .hg import HGRepo
 
 
 def getRepo(repo, repo_dir):
-    if repo == 'git':
+    if repo == "git":
         return GitRepo(repo_dir)
-    elif repo == 'hg':
+    elif repo == "hg":
         return HGRepo(repo_dir)
     else:
         raise AssertionError("Repo not recognized")

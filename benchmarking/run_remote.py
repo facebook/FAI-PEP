@@ -14,132 +14,219 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import argparse
-from collections import defaultdict
-from getpass import getuser
 import glob
 import json
 import os
-import pkg_resources
-from random import randint
 import re
 import shutil
-from tabulate import tabulate
+import subprocess
 import tempfile
 import threading
-import subprocess
+from collections import defaultdict
+from getpass import getuser
+from random import randint
 
+import pkg_resources
 from bridge.db import DBDriver
 from remote.devices import Devices
 from remote.file_handler import FileHandler
-from remote.screen_reporter import ScreenReporter
 from remote.print_result_url import PrintResultURL
+from remote.screen_reporter import ScreenReporter
+from tabulate import tabulate
 from utils.build_program import buildProgramPlatform, buildUsingBuck
 from utils.custom_logger import getLogger, setLoggerLevel
 from utils.utilities import getBenchmarks, getMeta, parse_kwarg, unpackAdhocFile
 
 parser = argparse.ArgumentParser(description="Run the benchmark remotely")
-parser.add_argument("--app_id",
+parser.add_argument(
+    "--app_id",
     help="The app id you use to upload/download your file for everstore "
-    "and access the job queue")
-parser.add_argument("--async_submit", action="store_true",
+    "and access the job queue",
+)
+parser.add_argument(
+    "--async_submit",
+    action="store_true",
     help="Return once the job has been submitted to db. No need to wait till "
-    "finish so that you can submit mutiple jobs in async way.")
-parser.add_argument("-b", "--benchmark_file",
-    help="Specify the json file for the benchmark or a number of benchmarks")
-parser.add_argument("--benchmark_db",
-    help="The database that will store benchmark infos")
-parser.add_argument("--benchmark_db_entry",
-    help="The entry point of server's database")
-parser.add_argument("--benchmark_table",
-    help="The table that will store benchmark infos")
-parser.add_argument("-c", "--custom_binary",
-    help="Specify the custom binary that you want to run.")
-parser.add_argument("--cache_config", required=True,
+    "finish so that you can submit mutiple jobs in async way.",
+)
+parser.add_argument(
+    "-b",
+    "--benchmark_file",
+    help="Specify the json file for the benchmark or a number of benchmarks",
+)
+parser.add_argument(
+    "--benchmark_db", help="The database that will store benchmark infos"
+)
+parser.add_argument("--benchmark_db_entry", help="The entry point of server's database")
+parser.add_argument(
+    "--benchmark_table", help="The table that will store benchmark infos"
+)
+parser.add_argument(
+    "-c", "--custom_binary", help="Specify the custom binary that you want to run."
+)
+parser.add_argument(
+    "--cache_config",
+    required=True,
     help="The config file to specify the cached uploaded files. If the files "
-    "are already uploaded in the recent past, do not upload again.")
-parser.add_argument("--hashes", default=None,
+    "are already uploaded in the recent past, do not upload again.",
+)
+parser.add_argument(
+    "--hashes",
+    default=None,
     help="Specify the exact devices to run remotely by hashes. Have to use "
-    "together with --remote and --devices")
-parser.add_argument("--debug", action="store_true",
-            help="Debug mode to retain all the running binaries and models.")
-parser.add_argument("--log_output_dir", default=None,
-    help="Directory where the benchmark logs are written to. If not specified, the logs are outputted to the terminal")
-parser.add_argument("--devices",
-    help="Specify the devices to benchmark on, in comma separated list.")
-parser.add_argument("--devices_config", default=None,
-    help="The config file in absolute path to map abbreviations to full names")
+    "together with --remote and --devices",
+)
+parser.add_argument(
+    "--debug",
+    action="store_true",
+    help="Debug mode to retain all the running binaries and models.",
+)
+parser.add_argument(
+    "--log_output_dir",
+    default=None,
+    help="Directory where the benchmark logs are written to. If not specified, the logs are outputted to the terminal",
+)
+parser.add_argument(
+    "--devices", help="Specify the devices to benchmark on, in comma separated list."
+)
+parser.add_argument(
+    "--devices_config",
+    default=None,
+    help="The config file in absolute path to map abbreviations to full names",
+)
 parser.add_argument("--env", help="environment variables passed to runtime binary")
-parser.add_argument("--fetch_result", action="store_true",
+parser.add_argument(
+    "--fetch_result",
+    action="store_true",
     help="Fetch the result of already submitted jobs, use together with "
-    "--user_identifier")
-parser.add_argument("--fetch_status", action="store_true",
+    "--user_identifier",
+)
+parser.add_argument(
+    "--fetch_status",
+    action="store_true",
     help="Fetch the status of already submitted jobs, use together with "
-    "--user_identifier")
-parser.add_argument("--kill", action="store_true",
-    help="Kill submitted jobs, use together with "
-    "--user_identifier")
-parser.add_argument("--file_storage",
-    help="The storage engine for uploading and downloading files")
-parser.add_argument("--force_submit", action="store_true",
-    help="Force to submit the run.")
-parser.add_argument("--framework",
+    "--user_identifier",
+)
+parser.add_argument(
+    "--kill",
+    action="store_true",
+    help="Kill submitted jobs, use together with " "--user_identifier",
+)
+parser.add_argument(
+    "--file_storage", help="The storage engine for uploading and downloading files"
+)
+parser.add_argument(
+    "--force_submit", action="store_true", help="Force to submit the run."
+)
+parser.add_argument(
+    "--framework",
     choices=["caffe2", "generic", "oculus", "pytorch", "tflite", "glow"],
-    help="Specify the framework to benchmark on.")
-parser.add_argument("--frameworks_dir", default=None,
+    help="Specify the framework to benchmark on.",
+)
+parser.add_argument(
+    "--frameworks_dir",
+    default=None,
     help="The root directory that all frameworks resides. "
     "Usually it is the specifications/frameworks directory. "
-    "If not provide, we will try to find it from the binary.")
-parser.add_argument("--info",
-    help="The json serialized options describing the control and treatment.")
-parser.add_argument("--job_queue",
+    "If not provide, we will try to find it from the binary.",
+)
+parser.add_argument(
+    "--info", help="The json serialized options describing the control and treatment."
+)
+parser.add_argument(
+    "--job_queue",
     default="aibench_interactive",
-    help="Specify the db job queue that the benchmark is sent to")
-parser.add_argument("--list_devices", action="store_true",
-    help="List the devices associated to the job queue")
-parser.add_argument("--list_job_queues", action="store_true",
-    help="List the job queues that have available devices")
-parser.add_argument("--logger_level", default="info",
+    help="Specify the db job queue that the benchmark is sent to",
+)
+parser.add_argument(
+    "--list_devices",
+    action="store_true",
+    help="List the devices associated to the job queue",
+)
+parser.add_argument(
+    "--list_job_queues",
+    action="store_true",
+    help="List the job queues that have available devices",
+)
+parser.add_argument(
+    "--logger_level",
+    default="info",
     choices=["info", "warning", "error"],
-    help="Specify the logger level")
-parser.add_argument("--platform",
+    help="Specify the logger level",
+)
+parser.add_argument(
+    "--platform",
     help="Specify the platform to benchmark on."
     "Use this flag if the framework"
     " needs special compilation scripts. The scripts are called build.sh "
-    "saved in specifications/frameworks/<framework>/<platforms> directory")
-parser.add_argument("--pre_built_binary",
-    help="Specify the pre_built_binary to bypass the building process.")
-parser.add_argument("--force_profile", action="store_true",
-    help="Enable profiling regardless of the setting in the benchmark.")
-parser.add_argument("--query_num_devices",
-    help="Return the counter of user specified device name under different condition")
-parser.add_argument("--repo_dir",
-    help="Required. The base framework repo directory used for benchmark.")
-parser.add_argument("--result_db",
-    help="The database that will store benchmark results")
-parser.add_argument("--root_model_dir",
+    "saved in specifications/frameworks/<framework>/<platforms> directory",
+)
+parser.add_argument(
+    "--pre_built_binary",
+    help="Specify the pre_built_binary to bypass the building process.",
+)
+parser.add_argument(
+    "--force_profile",
+    action="store_true",
+    help="Enable profiling regardless of the setting in the benchmark.",
+)
+parser.add_argument(
+    "--query_num_devices",
+    help="Return the counter of user specified device name under different condition",
+)
+parser.add_argument(
+    "--repo_dir", help="Required. The base framework repo directory used for benchmark."
+)
+parser.add_argument(
+    "--result_db", help="The database that will store benchmark results"
+)
+parser.add_argument(
+    "--root_model_dir",
     help="The root model directory if the meta data of the model uses "
-    "relative directory, i.e. the location field starts with //")
-parser.add_argument("--screen_reporter", action="store_true",
-    help="Display the summary of the benchmark result on screen.")
-parser.add_argument("--server_addr",
-    help="The lab's server address")
-parser.add_argument("--string_map",
-    help="The json serialized arguments passed into treatment for remote run.")
-parser.add_argument("--test", action="store_true",
-    help="Indicate whether this is a test run. Test runs use a different database.")
-parser.add_argument("--token",
+    "relative directory, i.e. the location field starts with //",
+)
+parser.add_argument(
+    "--screen_reporter",
+    action="store_true",
+    help="Display the summary of the benchmark result on screen.",
+)
+parser.add_argument("--server_addr", help="The lab's server address")
+parser.add_argument(
+    "--string_map",
+    help="The json serialized arguments passed into treatment for remote run.",
+)
+parser.add_argument(
+    "--test",
+    action="store_true",
+    help="Indicate whether this is a test run. Test runs use a different database.",
+)
+parser.add_argument(
+    "--token",
     help="The token you use to upload/download your file for everstore "
-    "and access the job queue")
-parser.add_argument("--urlPrefix",
-    help="URL Prefix if you want to find your result from the URL.")
-parser.add_argument("--user_identifier",
-    help="The identifier user pass in to differentiate different benchmark runs.")
-parser.add_argument("--user_string",
-    help="The user_string pass in to differentiate different regression benchmark runs.")
-parser.add_argument("--adhoc", nargs="?", const="generic", default=None,
-    help="Use the adhoc template file")
-parser.add_argument("--buck_target", default ="",
-    help="The buck command to build the custom binary")
+    "and access the job queue",
+)
+parser.add_argument(
+    "--urlPrefix", help="URL Prefix if you want to find your result from the URL."
+)
+parser.add_argument(
+    "--user_identifier",
+    help="The identifier user pass in to differentiate different benchmark runs.",
+)
+parser.add_argument(
+    "--user_string",
+    help="The user_string pass in to differentiate different regression benchmark runs.",
+)
+parser.add_argument(
+    "--adhoc",
+    nargs="?",
+    const="generic",
+    default=None,
+    help="Use the adhoc template file",
+)
+parser.add_argument(
+    "--buck_target", default="", help="The buck command to build the custom binary"
+)
+
 
 class BuildProgram(threading.Thread):
     def __init__(self, args, file_handler, tempdir, filenames, prebuilt_binary=None):
@@ -165,17 +252,18 @@ class BuildProgram(threading.Thread):
             program = self.prebuilt_binary
         elif self.args.buck_target:
             print("Building program with buck...")
-            success = buildUsingBuck(program,
-                                     self.args.platform,
-                                     self.args.buck_target)
+            success = buildUsingBuck(program, self.args.platform, self.args.buck_target)
             if not success:
                 return
         else:
             print("Building program...")
-            success = buildProgramPlatform(program, self.args.repo_dir,
-                                           self.args.framework,
-                                           self.args.frameworks_dir,
-                                           self.args.platform)
+            success = buildProgramPlatform(
+                program,
+                self.args.repo_dir,
+                self.args.framework,
+                self.args.frameworks_dir,
+                self.args.platform,
+            )
             if not success:
                 return
 
@@ -203,25 +291,28 @@ class RunRemote(object):
         self._updateArgs(self.args)
         setLoggerLevel(self.args.logger_level)
         if not self.args.benchmark_db_entry:
-            assert self.args.server_addr is not None, \
-                "Either server_addr or benchmark_db_entry must be specified"
-            while self.args.server_addr[-1] == '/':
+            assert (
+                self.args.server_addr is not None
+            ), "Either server_addr or benchmark_db_entry must be specified"
+            while self.args.server_addr[-1] == "/":
                 self.args.server_addr = self.args.server_addr[:-1]
             self.args.benchmark_db_entry = self.args.server_addr + "/benchmark/"
-        self.db = DBDriver(self.args.benchmark_db,
-                           self.args.app_id,
-                           self.args.token,
-                           self.args.benchmark_table,
-                           self.args.job_queue,
-                           self.args.test,
-                           self.args.benchmark_db_entry)
+        self.db = DBDriver(
+            self.args.benchmark_db,
+            self.args.app_id,
+            self.args.token,
+            self.args.benchmark_table,
+            self.args.job_queue,
+            self.args.test,
+            self.args.benchmark_db_entry,
+        )
         self.url_printer = PrintResultURL(self.args)
         self.file_handler = FileHandler(self.args)
         self.devices = Devices(self.args.devices_config)
         # Hard code scuba table
         self.scuba_dataset = "caffe2_benchmarking"
         self.info = None
-        self.temprdir = ''
+        self.temprdir = ""
 
     def run(self):
         if self.args.list_devices:
@@ -240,23 +331,25 @@ class RunRemote(object):
         if self.args.query_num_devices:
             return self._queryNumDevices(self.args.query_num_devices)
 
-        assert self.args.benchmark_file, \
-            "--benchmark_file (-b) must be specified"
+        assert self.args.benchmark_file, "--benchmark_file (-b) must be specified"
         assert self.args.devices, "--devices must be specified"
         assert self.args.framework, "--framework must be specified"
         assert self.args.platform, "--platform must be specified"
         assert self.args.repo_dir, "--repo_dir must be specified"
-        assert ((self.args.info is not None) and
-            (self.args.custom_binary is None) and
-            (self.args.pre_built_binary is None)) or (self.args.info is None), \
-            "--info cannot co-exist with --custom_binary and --pre_built_binary"
+        assert (
+            (self.args.info is not None)
+            and (self.args.custom_binary is None)
+            and (self.args.pre_built_binary is None)
+        ) or (
+            self.args.info is None
+        ), "--info cannot co-exist with --custom_binary and --pre_built_binary"
 
         list_job_queues = self._listJobQueues()
         if not self.args.force_submit:
             self._checkDevices(self.args.devices, self.args.hashes)
-            assert self.args.job_queue != "*" and \
-                self.args.job_queue in list_job_queues, \
-                "--job_queue must be choosen from " + " ".join(list_job_queues)
+            assert (
+                self.args.job_queue != "*" and self.args.job_queue in list_job_queues
+            ), "--job_queue must be choosen from " + " ".join(list_job_queues)
 
         self.tempdir = tempfile.mkdtemp(prefix="aibench")
         program_filenames = {}
@@ -267,23 +360,27 @@ class RunRemote(object):
             if self.args.string_map:
                 self.info["treatment"]["string_map"] = str(self.args.string_map)
 
-        assert (("treatment" in self.info) and
-                ("programs" in self.info["treatment"])), \
-            'In --info, field treatment must exist. In info["treatment"] ' \
+        assert ("treatment" in self.info) and ("programs" in self.info["treatment"]), (
+            'In --info, field treatment must exist. In info["treatment"] '
             "program field must exist (may be None)"
+        )
 
-        binary = self.info["treatment"]["programs"]["program"]["location"] \
-            if ("programs" in self.info["treatment"] and
-                "program" in self.info["treatment"]["programs"]) \
-            else self.args.custom_binary if self.args.custom_binary \
+        binary = (
+            self.info["treatment"]["programs"]["program"]["location"]
+            if (
+                "programs" in self.info["treatment"]
+                and "program" in self.info["treatment"]["programs"]
+            )
+            else self.args.custom_binary
+            if self.args.custom_binary
             else self.args.pre_built_binary
-        t = BuildProgram(self.args, self.file_handler,
-                         self.tempdir, program_filenames,
-                         binary)
+        )
+        t = BuildProgram(
+            self.args, self.file_handler, self.tempdir, program_filenames, binary
+        )
         t.start()
 
-        benchmarks = getBenchmarks(self.args.benchmark_file,
-                                   self.args.framework)
+        benchmarks = getBenchmarks(self.args.benchmark_file, self.args.framework)
 
         self._updateBenchmarksWithArgs(benchmarks, self.args)
 
@@ -306,24 +403,25 @@ class RunRemote(object):
                     test["env"] = cmd_env
         t.join()
 
-        assert "program" in program_filenames, \
-            "program does not exist. Build may be failed."
+        assert (
+            "program" in program_filenames
+        ), "program does not exist. Build may be failed."
 
         for fn in program_filenames:
-            self.info["treatment"]["programs"][fn] = {
-                "location": program_filenames[fn]
-            }
+            self.info["treatment"]["programs"][fn] = {"location": program_filenames[fn]}
 
         # Pass meta file from build to benchmark
         meta = getMeta(self.args, self.args.platform)
         if meta:
-            assert "meta" not in self.info, \
-                "info field already has a meta field"
+            assert "meta" not in self.info, "info field already has a meta field"
             self.info["meta"] = meta
 
         new_devices = self.devices.getFullNames(self.args.devices)
-        user_identifier = int(self.args.user_identifier) \
-            if self.args.user_identifier else randint(1, 1000000000000000)
+        user_identifier = (
+            int(self.args.user_identifier)
+            if self.args.user_identifier
+            else randint(1, 1000000000000000)
+        )
         user = getuser() if not self.args.user_string else self.args.user_string
         hashes = self.args.hashes
         for benchmark in benchmarks:
@@ -338,9 +436,7 @@ class RunRemote(object):
             self._printRunDetailsURL(user_identifier)
             return
 
-        self.url_printer.printURL(self.scuba_dataset,
-                                  user_identifier,
-                                  benchmarks)
+        self.url_printer.printURL(self.scuba_dataset, user_identifier, benchmarks)
 
         if not self.args.debug:
             shutil.rmtree(self.tempdir, True)
@@ -382,25 +478,26 @@ class RunRemote(object):
             if "files" in one_benchmark["model"]:
                 for field in one_benchmark["model"]["files"]:
                     value = one_benchmark["model"]["files"][field]
-                    assert "location" in value, \
-                        "location field is missing in benchmark " \
-                        "{}".format(filename)
+                    assert (
+                        "location" in value
+                    ), "location field is missing in benchmark " "{}".format(filename)
                     ref_path = ["files", field]
                     if self._uploadFile(value, filename, benchmark, ref_path):
                         del_paths.append(ref_path)
             if "libraries" in one_benchmark["model"]:
                 for value in one_benchmark["model"]["libraries"]:
-                    assert "location" in value, \
-                        "location field is missing in benchmark " \
-                        "{}".format(filename)
+                    assert (
+                        "location" in value
+                    ), "location field is missing in benchmark " "{}".format(filename)
                     self._uploadFile(value, filename, benchmark)
 
         for del_path in del_paths:
             self._del_from_benchmark(benchmark["content"]["model"], del_path)
 
         # upload test file
-        assert "tests" in one_benchmark, \
-            "tests field is missing in benchmark {}".format(filename)
+        assert (
+            "tests" in one_benchmark
+        ), "tests field is missing in benchmark {}".format(filename)
         tests = one_benchmark["tests"]
         for test in tests:
             if "input_files" in test:
@@ -424,8 +521,9 @@ class RunRemote(object):
                 else:
                     self._uploadFile(value, basefilename)
 
-    def _uploadFile(self, f, basefilename, benchmark=None,
-                    ref_path=None, cache_file=True):
+    def _uploadFile(
+        self, f, basefilename, benchmark=None, ref_path=None, cache_file=True
+    ):
         if "location" not in f:
             return
         location = f["location"]
@@ -439,8 +537,12 @@ class RunRemote(object):
         Note: Support the file in model first
         """
         if location.startswith("//repo"):
-            assert ref_path is not None, "repo is not yet \
-                supported for {}".format(location)
+            assert (
+                ref_path is not None
+            ), "repo is not yet \
+                supported for {}".format(
+                location
+            )
             for side in self.info:
                 if side == "extra":
                     continue
@@ -449,40 +551,47 @@ class RunRemote(object):
                 if "commit" in value:
                     commit_hash = value["commit"] or "master"
                 tgt_file = self._downloadRepoFile(location, self.tempdir, commit_hash)
-                f["location"], f["md5"] = self.file_handler.uploadFile(tgt_file, md5,
-                                                                        basefilename,
-                                                                        cache_file)
+                f["location"], f["md5"] = self.file_handler.uploadFile(
+                    tgt_file, md5, basefilename, cache_file
+                )
                 # add to info
                 assert len(ref_path), "ref_path must be a path to target file"
                 value["programs"][".".join(ref_path)] = {"location": f["location"]}
                 # remove from benchmark
-                assert benchmark is not None, \
-                    "benchmark must be passed into _uploadFile"
+                assert (
+                    benchmark is not None
+                ), "benchmark must be passed into _uploadFile"
             return True
         else:
-            f["location"], f["md5"] = self.file_handler.uploadFile(location, md5,
-                                                                    basefilename,
-                                                                    cache_file)
+            f["location"], f["md5"] = self.file_handler.uploadFile(
+                location, md5, basefilename, cache_file
+            )
             return False
 
     def _downloadRepoFile(self, location, tgt_dir, commit_hash):
         """
         location: //repo/fbsource/fbcode/aibench/...../a.py
         """
-        raw_scm_query = pkg_resources.resource_string("aibench",
-            "benchmarking/bin/scm_query.par")
+        raw_scm_query = pkg_resources.resource_string(
+            "aibench", "benchmarking/bin/scm_query.par"
+        )
         query_exe = os.path.join(tgt_dir, "scm_query.par")
         with open(query_exe, "wb") as f:
             f.write(raw_scm_query)
-        cmd = ['chmod', '+x', os.path.join(tgt_dir, "scm_query.par")]
+        cmd = ["chmod", "+x", os.path.join(tgt_dir, "scm_query.par")]
         subprocess.check_output(cmd)
         dirs = location[2:].split("/")
         tgt_file = os.path.join(tgt_dir, dirs[-1])
         cmd = [
-            query_exe, '--repo', dirs[1],
-            '--file_path', '/'.join(dirs[2:]),
-            '--target_file', tgt_file,
-            '--commit_hash', commit_hash
+            query_exe,
+            "--repo",
+            dirs[1],
+            "--file_path",
+            "/".join(dirs[2:]),
+            "--target_file",
+            tgt_file,
+            "--commit_hash",
+            commit_hash,
         ]
         getLogger().info("Downloading {}".format(location))
         subprocess.check_output(cmd)
@@ -507,7 +616,7 @@ class RunRemote(object):
             rows.append(row)
         rows.sort()
         if flag:
-            table = tabulate(rows, headers=headers, tablefmt='orgtbl')
+            table = tabulate(rows, headers=headers, tablefmt="orgtbl")
             print("\n{}\n".format(table))
         return rows
 
@@ -519,8 +628,7 @@ class RunRemote(object):
             hashes = hashes.split(",")
             devices = specified_devices.split(",")
             if len(hashes) != len(devices):
-                raise Exception(
-                    "You need to provide same number of hashes and devices")
+                raise Exception("You need to provide same number of hashes and devices")
             specifiedHashes = {}
             for i, hash in enumerate(hashes):
                 specifiedHashes[hash] = devices[i]
@@ -534,8 +642,10 @@ class RunRemote(object):
                 devices[row[-1]].union({row[0]}.union(set(abbrs)))
         if specifiedHashes:
             for specifiedHash in specifiedHashes:
-                if specifiedHash not in devices or \
-                        specifiedHashes[specifiedHash] not in devices[specifiedHash]:
+                if (
+                    specifiedHash not in devices
+                    or specifiedHashes[specifiedHash] not in devices[specifiedHash]
+                ):
                     devicesIn = False
         else:
             allDevices = set()
@@ -543,12 +653,25 @@ class RunRemote(object):
                 allDevices = allDevices.union(v)
             devicesIn = not specifiedDevices.difference(allDevices)
         if not devicesIn:
-            errMessages = " ".join(["Devices", specified_devices,
-                "is not available in the job_queue", self.args.job_queue])
+            errMessages = " ".join(
+                [
+                    "Devices",
+                    specified_devices,
+                    "is not available in the job_queue",
+                    self.args.job_queue,
+                ]
+            )
             if hashes:
-                errMessages = " ".join(["Devices", specified_devices,
-                    "with hashes", ",".join(hashes),
-                    "is not available in the job_queue", self.args.job_queue])
+                errMessages = " ".join(
+                    [
+                        "Devices",
+                        specified_devices,
+                        "with hashes",
+                        ",".join(hashes),
+                        "is not available in the job_queue",
+                        self.args.job_queue,
+                    ]
+                )
             raise Exception(errMessages)
 
     def _queryNumDevices(self, device_name):
@@ -562,7 +685,7 @@ class RunRemote(object):
 
     def _listJobQueues(self):
         devices = self.db.listDevices(job_queue="*")
-        list_job_queues = sorted({device['job_queue'] for device in devices})
+        list_job_queues = sorted({device["job_queue"] for device in devices})
         return list_job_queues
 
     def _printJobQueues(self):
@@ -572,17 +695,24 @@ class RunRemote(object):
 
     def _printRunDetailsURL(self, user_identifier):
         if self.args.urlPrefix:
-            print("You can find more info via {}{}".format(
-                self.args.urlPrefix, user_identifier))
+            print(
+                "You can find more info via {}{}".format(
+                    self.args.urlPrefix, user_identifier
+                )
+            )
 
     def _screenReporter(self, user_identifier):
-        reporter = ScreenReporter(self.db, self.devices, self.args.debug, self.args.log_output_dir)
+        reporter = ScreenReporter(
+            self.db, self.devices, self.args.debug, self.args.log_output_dir
+        )
         reporter.run(user_identifier)
 
     def _fetchResult(self):
         user_identifier = self.args.user_identifier
-        assert user_identifier, "User identifier must be specified for " \
+        assert user_identifier, (
+            "User identifier must be specified for "
             "fetching the status and/or result of the previously run benchmarks"
+        )
         statuses = self.db.statusBenchmarks(user_identifier)
         result = None
         if self.args.fetch_status:
@@ -596,8 +726,9 @@ class RunRemote(object):
 
     def _killJob(self):
         user_identifier = self.args.user_identifier
-        assert user_identifier, "User identifier must be specified for " \
-            "killing submitted jobs."
+        assert user_identifier, (
+            "User identifier must be specified for " "killing submitted jobs."
+        )
         statuses = self.db.statusBenchmarks(user_identifier)
         result = json.dumps(statuses)
         status = json.loads(result)[-1]["status"]
@@ -616,10 +747,7 @@ class RunRemote(object):
             if raw_result is None:
                 continue
             result = json.loads(raw_result)
-            mobilelab_result = {
-                "treatment": {},
-                "control": {}
-            }
+            mobilelab_result = {"treatment": {}, "control": {}}
             for k in result:
                 # k is identifier
                 v = result[k]
@@ -634,11 +762,9 @@ class RunRemote(object):
                                 vv["values"] = [vv["summary"]["p50"]]
                         if "control_summary" in vv:
                             if "mean" in vv["control_summary"]:
-                                vv["control_values"] = \
-                                    [vv["control_summary"]["mean"]]
+                                vv["control_values"] = [vv["control_summary"]["mean"]]
                             elif "p50" in vv["control_summary"]:
-                                vv["control_values"] = \
-                                    [vv["control_summary"]["p50"]]
+                                vv["control_values"] = [vv["control_summary"]["p50"]]
                     # check values again
                     if "values" not in vv or len(vv["values"]) == 0:
                         continue
@@ -647,22 +773,30 @@ class RunRemote(object):
                     if vv["metric"] == "flops":
                         continue
                     unit = vv["unit"] if "unit" in vv else "null"
-                    self._mobilelabAddField(mobilelab_result["treatment"],
-                                            k, vv["type"], vv["metric"],
-                                            vv["values"], unit)
+                    self._mobilelabAddField(
+                        mobilelab_result["treatment"],
+                        k,
+                        vv["type"],
+                        vv["metric"],
+                        vv["values"],
+                        unit,
+                    )
                     if "control_values" in vv:
-                        self._mobilelabAddField(mobilelab_result["control"], k,
-                                                vv["type"], vv["metric"],
-                                                vv["control_values"], unit)
+                        self._mobilelabAddField(
+                            mobilelab_result["control"],
+                            k,
+                            vv["type"],
+                            vv["metric"],
+                            vv["control_values"],
+                            unit,
+                        )
 
             item["mobilelab_result"] = mobilelab_result
 
-    def _mobilelabAddField(self, output, identifier,
-                           type, metric, values, unit):
+    def _mobilelabAddField(self, output, identifier, type, metric, values, unit):
         key = "{}__{}__{}".format(identifier, type, metric)
-        key = re.sub(r'\W+', '_', key)
-        assert key not in output, \
-           "duplicate key {}".format(key)
+        key = re.sub(r"\W+", "_", key)
+        assert key not in output, "duplicate key {}".format(key)
         output[key] = {
             "values": values,
             "metric": metric,
@@ -678,8 +812,7 @@ class RunRemote(object):
                 args.benchmark_file = adhoc_file
             else:
                 getLogger().error(
-                    "Could not find specified adhoc config: {}"
-                    .format(args.adhoc)
+                    "Could not find specified adhoc config: {}".format(args.adhoc)
                 )
 
 

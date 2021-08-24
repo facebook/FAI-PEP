@@ -14,17 +14,21 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-from django.conf.urls import url, include
-from django.contrib import admin
+
 from django.conf import settings
+from django.conf.urls import url, include
 from django.conf.urls.static import static
+from django.contrib import admin
 
 from .views import redirect_to_viz
 
-urlpatterns = [
-    url(r'^admin/', admin.site.urls),
-    url(r'^$', redirect_to_viz),
-    url(r'^benchmark/', include('benchmark.urls')),
-    url(r'^upload/', include('file_storage.urls')),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) +\
-    static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns = (
+    [
+        url(r"^admin/", admin.site.urls),
+        url(r"^$", redirect_to_viz),
+        url(r"^benchmark/", include("benchmark.urls")),
+        url(r"^upload/", include("file_storage.urls")),
+    ]
+    + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+)

@@ -12,27 +12,43 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import argparse
-import cv2
 import json
-import numpy as np
 import pickle
+
+import cv2
+import numpy as np
 import pycocotools.mask as mask_util
 
 
 parser = argparse.ArgumentParser(description="Process the single image output")
 
-parser.add_argument("--blob-names", type=str, required=True,
-    help="Comma separated blob names. ")
-parser.add_argument("--blob-files", type=str, required=True,
+parser.add_argument(
+    "--blob-names", type=str, required=True, help="Comma separated blob names. "
+)
+parser.add_argument(
+    "--blob-files",
+    type=str,
+    required=True,
     help="Comma separated blob files. The order is expected to be "
-    "the same as the blob names.")
-parser.add_argument("--im-info", type=str, required=True,
-    help="The file for image info. Used to get the height,width of the image")
-parser.add_argument("--output-file", type=str, required=True,
-    help="The output file of the processed predictions.")
-parser.add_argument("--rle-encode", action="store_true",
-    help="Whether to use rle encode.")
+    "the same as the blob names.",
+)
+parser.add_argument(
+    "--im-info",
+    type=str,
+    required=True,
+    help="The file for image info. Used to get the height,width of the image",
+)
+parser.add_argument(
+    "--output-file",
+    type=str,
+    required=True,
+    help="The output file of the processed predictions.",
+)
+parser.add_argument(
+    "--rle-encode", action="store_true", help="Whether to use rle encode."
+)
 
 
 class ProcessSingleImageOutput(object):
@@ -45,12 +61,10 @@ class ProcessSingleImageOutput(object):
             line = f.readline()
             while line != "":
                 content_list = []
-                dims_list = [int(dim.strip())
-                             for dim in line.strip().split(',')]
+                dims_list = [int(dim.strip()) for dim in line.strip().split(",")]
                 line = f.readline().strip()
                 if len(line) > 0:
-                    content_list = \
-                        [float(entry.strip()) for entry in line.split(',')]
+                    content_list = [float(entry.strip()) for entry in line.split(",")]
                 line = f.readline()
                 dims = np.asarray(dims_list)
                 content = np.asarray(content_list)
@@ -62,7 +76,7 @@ class ProcessSingleImageOutput(object):
         blob_names = self.args.blob_names.split(",")
         blob_files = self.args.blob_files.split(",")
         blobs = {}
-        assert(len(blob_names) == len(blob_files))
+        assert len(blob_names) == len(blob_files)
         for i in range(len(blob_names)):
             blobs[blob_names[i]] = self.getData(blob_files[i])
         # restructure the blobs.
@@ -72,8 +86,9 @@ class ProcessSingleImageOutput(object):
         for i in range(num):
             one_entry = {}
             for name in blob_names:
-                assert len(blobs[name]) == num, \
-                    "Different entries have different numbers"
+                assert (
+                    len(blobs[name]) == num
+                ), "Different entries have different numbers"
                 one_entry[name] = blobs[name][i]
             blob_array.append(one_entry)
         return blob_array
@@ -103,13 +118,21 @@ class ProcessSingleImageOutput(object):
 
         return boxes_exp
 
-    def compute_segm_results(self, masks, ref_boxes, classids, im_h, im_w,
-                             thresh_binarize=0.5, rle_encode=True):
-        ''' masks: (#boxes, #classes, mask_dim, mask_dim)
-            ref_boxes: (#boxes, 5), where each row is [x1, y1, x2, y2, cls]
-            classids: (#boxes, )
-            ret: list of im_masks, [im_mask, ...] or [im_mask_rle, ...]
-        '''
+    def compute_segm_results(
+        self,
+        masks,
+        ref_boxes,
+        classids,
+        im_h,
+        im_w,
+        thresh_binarize=0.5,
+        rle_encode=True,
+    ):
+        """masks: (#boxes, #classes, mask_dim, mask_dim)
+        ref_boxes: (#boxes, 5), where each row is [x1, y1, x2, y2, cls]
+        classids: (#boxes, )
+        ret: list of im_masks, [im_mask, ...] or [im_mask_rle, ...]
+        """
         assert len(masks.shape) == 4
         assert masks.shape[2] == masks.shape[3]
         assert masks.shape[0] == ref_boxes.shape[0]
@@ -146,14 +169,16 @@ class ProcessSingleImageOutput(object):
             y_0 = max(ref_box[1], 0)
             y_1 = min(ref_box[3] + 1, im_h)
             im_mask[y_0:y_1, x_0:x_1] = mask[
-                (y_0 - ref_box[1]):(y_1 - ref_box[1]),
-                (x_0 - ref_box[0]):(x_1 - ref_box[0])]
+                (y_0 - ref_box[1]) : (y_1 - ref_box[1]),
+                (x_0 - ref_box[0]) : (x_1 - ref_box[0]),
+            ]
 
             ret = im_mask
             if rle_encode:
                 # Get RLE encoding used by the COCO evaluation API
-                rle = mask_util.encode(
-                    np.array(im_mask[:, :, np.newaxis], order='F'))[0]
+                rle = mask_util.encode(np.array(im_mask[:, :, np.newaxis], order="F"))[
+                    0
+                ]
                 ret = rle
 
             all_segms.append(ret)
@@ -169,8 +194,9 @@ class ProcessSingleImageOutput(object):
             im_infos.append(im_info)
 
         blobs = self.getBlobs()
-        assert len(im_infos) == len(blobs), \
-            "The number for im_infos and blobs do not match"
+        assert len(im_infos) == len(
+            blobs
+        ), "The number for im_infos and blobs do not match"
         results = []
         for i in range(len(blobs)):
             one_blob = blobs[i]
@@ -183,9 +209,12 @@ class ProcessSingleImageOutput(object):
             im_masks = []
             if R > 0:
                 im_masks = self.compute_segm_results(
-                    masks, boxes, classids,
-                    im_info["height"], im_info["width"],
-                    rle_encode=self.args.rle_encode
+                    masks,
+                    boxes,
+                    classids,
+                    im_info["height"],
+                    im_info["width"],
+                    rle_encode=self.args.rle_encode,
                 )
 
             boxes = np.column_stack((boxes, scores))
@@ -194,7 +223,7 @@ class ProcessSingleImageOutput(object):
                 "classids": classids,
                 "boxes": boxes,
                 "masks": masks,
-                "im_masks": im_masks
+                "im_masks": im_masks,
             }
             results.append(ret)
         with open(self.args.output_file, "w") as f:

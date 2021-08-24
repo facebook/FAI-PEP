@@ -11,6 +11,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from utils.subprocess_with_logger import processRun
+
 from .repo_base import RepoBase
 
 
@@ -25,44 +26,48 @@ class GitRepo(RepoBase):
             git.append(self.dir)
         git.append(cmd)
         git.extend(args)
-        return '\n'.join(processRun(git)[0])
+        return "\n".join(processRun(git)[0])
 
     def pull(self, *args):
-        return self._run('pull', *args)
+        return self._run("pull", *args)
 
     def checkout(self, *args):
-        self._run('checkout', *args)
+        self._run("checkout", *args)
         self._run("submodule", "sync")
-        self._run('submodule', 'update', '--init', '--recursive')
+        self._run("submodule", "update", "--init", "--recursive")
 
     def getCurrentCommitHash(self):
-        return self.getCommitHash('HEAD')
+        return self.getCommitHash("HEAD")
 
     def getCommitHash(self, commit):
-        return self._run('rev-parse', commit).rstrip()
+        return self._run("rev-parse", commit).rstrip()
 
     def getCommitTime(self, commit):
-        return int(self._run('show', '-s', '--format=%at', commit).strip())
+        return int(self._run("show", "-s", "--format=%at", commit).strip())
 
     def getNextCommitHash(self, commit, step):
-        commits = self._run('rev-list', '--reverse', '--ancestry-path',
-                            commit+"..HEAD").strip().split('\n')
+        commits = (
+            self._run("rev-list", "--reverse", "--ancestry-path", commit + "..HEAD")
+            .strip()
+            .split("\n")
+        )
         if len(commits) <= step:
             return commit
-        next_commit = commits[step-1].strip()
+        next_commit = commits[step - 1].strip()
         return next_commit
 
     def getCommitsInRange(self, start_date, end_date):
-        return self._run('log',
-                         '--after',
-                         start_date.isoformat(),
-                         '--before',
-                         end_date.isoformat(),
-                         '--reverse',
-                         '--pretty=format:%H:%ct').strip()
+        return self._run(
+            "log",
+            "--after",
+            start_date.isoformat(),
+            "--before",
+            end_date.isoformat(),
+            "--reverse",
+            "--pretty=format:%H:%ct",
+        ).strip()
 
     def getPriorCommits(self, commit, num):
-        return self._run('log',
-                         '-' + str(num),
-                         '--pretty=format:%H:%ct',
-                         commit).strip()
+        return self._run(
+            "log", "-" + str(num), "--pretty=format:%H:%ct", commit
+        ).strip()

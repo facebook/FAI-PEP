@@ -11,7 +11,6 @@ import multiprocessing
 
 import brainstem
 from brainstem.result import Result
-
 from utils.custom_logger import getLogger
 
 
@@ -20,17 +19,18 @@ manager = multiprocessing.Manager()
 
 class USBController:
     """Controller for Acroname USB hubs. This class will allow lab devices
-      to be connected and disconnected from the lab by their device meta data.
+    to be connected and disconnected from the lab by their device meta data.
 
-      loaded with mapping:
-      {
-          "hub_serial": {
-              "port_number": "device_hash"
-          }
-      }
+    loaded with mapping:
+    {
+        "hub_serial": {
+            "port_number": "device_hash"
+        }
+    }
     """
+
     def __init__(self, usb_hub_device_mapping):
-        self.device_map = {}   # map of device hash to (hub_serial, port_num)
+        self.device_map = {}  # map of device hash to (hub_serial, port_num)
         self.active = manager.dict()  # device hash to enable/disable boolean status
 
         with open(usb_hub_device_mapping) as f:
@@ -53,14 +53,22 @@ class USBController:
         result = stem.discoverAndConnect(brainstem.link.Spec.USB, int(hub_serial))
 
         if result != Result.NO_ERROR:
-            raise Exception("Could not connect to hub {} with error code {}".format(hub_serial, result))
+            raise Exception(
+                "Could not connect to hub {} with error code {}".format(
+                    hub_serial, result
+                )
+            )
 
         try:
             result = stem.usb.setPortEnable(port_number)
             if result == Result.NO_ERROR:
                 self.active[device_hash] = True
             else:
-                raise Exception("Could not enable port {} with error code {}".format(port_number, result))
+                raise Exception(
+                    "Could not enable port {} with error code {}".format(
+                        port_number, result
+                    )
+                )
         finally:
             stem.disconnect()
 
@@ -74,13 +82,21 @@ class USBController:
         result = stem.discoverAndConnect(brainstem.link.Spec.USB, int(hub_serial))
 
         if result != Result.NO_ERROR:
-            raise Exception("Could not connect to hub {} with error code {}".format(hub_serial, result))
+            raise Exception(
+                "Could not connect to hub {} with error code {}".format(
+                    hub_serial, result
+                )
+            )
 
         try:
             result = stem.usb.setPortDisable(port_number)
             if result == Result.NO_ERROR:
                 self.active[device_hash] = False
             else:
-                raise Exception("Could not diable port {} with error code {}".format(port_number, result))
+                raise Exception(
+                    "Could not diable port {} with error code {}".format(
+                        port_number, result
+                    )
+                )
         finally:
             stem.disconnect()

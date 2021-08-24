@@ -32,9 +32,7 @@ class Future(object):
 
     def start(self, *args, **kwargs):
         self.thread = threading.Thread(
-            target=self._runAndCapture,
-            args=args,
-            kwargs=kwargs
+            target=self._runAndCapture, args=args, kwargs=kwargs
         )
         self.thread.start()
 

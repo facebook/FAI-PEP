@@ -19,6 +19,7 @@ import argparse
 
 def claimer_id_type(claimer_id):
     if len(claimer_id) > 40:
-        raise argparse.ArgumentTypeError("The length of claimer_id should be "
-            "less than 40")
+        raise argparse.ArgumentTypeError(
+            "The length of claimer_id should be " "less than 40"
+        )
     return claimer_id

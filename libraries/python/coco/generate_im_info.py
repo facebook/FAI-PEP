@@ -14,32 +14,55 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import argparse
 import json
 import logging
-import numpy as np
 import sys
 
-FORMAT = '%(levelname)s %(asctime)s %(filename)s:%(lineno)4d: %(message)s'
-logging.basicConfig(level=logging.DEBUG, format=FORMAT,
-                    datefmt="%H:%M:%S", stream=sys.stdout)
+import numpy as np
+
+FORMAT = "%(levelname)s %(asctime)s %(filename)s:%(lineno)4d: %(message)s"
+logging.basicConfig(
+    level=logging.DEBUG, format=FORMAT, datefmt="%H:%M:%S", stream=sys.stdout
+)
 logger = logging.getLogger(__name__)
 
 
 parser = argparse.ArgumentParser(description="Load and extract coco dataset")
 
-parser.add_argument("--batch-size", type=int, default=-1,
+parser.add_argument(
+    "--batch-size",
+    type=int,
+    default=-1,
     help="The batch size of the input data. If less than zero, all inputs "
     "are in one batch. Otherwise, the number of inputs must be multiples "
-    "of the batch size.")
-parser.add_argument("--dataset-file", type=str, required=True,
-    help="The file of the dataset containing image annotations")
-parser.add_argument("--min-size", type=int, required=True,
-    help="The minimum size to scale the input image.")
-parser.add_argument("--max-size", type=int, required=True,
-    help="The maximum size to scale the input image.")
-parser.add_argument("--output-file", type=str, required=True,
-    help="The output file containing the info for im_info blob.")
+    "of the batch size.",
+)
+parser.add_argument(
+    "--dataset-file",
+    type=str,
+    required=True,
+    help="The file of the dataset containing image annotations",
+)
+parser.add_argument(
+    "--min-size",
+    type=int,
+    required=True,
+    help="The minimum size to scale the input image.",
+)
+parser.add_argument(
+    "--max-size",
+    type=int,
+    required=True,
+    help="The maximum size to scale the input image.",
+)
+parser.add_argument(
+    "--output-file",
+    type=str,
+    required=True,
+    help="The output file containing the info for im_info blob.",
+)
 
 
 class ImInfo(object):
@@ -49,31 +72,32 @@ class ImInfo(object):
     def run(self):
         with open(self.args.dataset_file, "r") as f:
             imgs = [json.loads(s) for s in f.readlines()]
-        batch_size = self.args.batch_size \
-            if self.args.batch_size > 0 else len(imgs)
+        batch_size = self.args.batch_size if self.args.batch_size > 0 else len(imgs)
 
         num_batches = len(imgs) // batch_size
         assert len(imgs) == num_batches * batch_size
         im_infos = []
         for i in range(num_batches):
             one_batch_info = []
-            for j in range(i * batch_size, (i+1) * batch_size):
+            for j in range(i * batch_size, (i + 1) * batch_size):
                 img = imgs[j]
                 im_scale = self.getScale(img["height"], img["width"])
                 height = int(np.round(img["height"] * im_scale))
                 width = int(np.round(img["width"] * im_scale))
-                assert height <= self.args.max_size, \
-                    "height {} is more than the max_size {}".\
-                    format(height, self.args.max_size)
-                assert width <= self.args.max_size, \
-                    "width {} is more than the max_size {}".\
-                    format(width, self.args.max_size)
+                assert (
+                    height <= self.args.max_size
+                ), "height {} is more than the max_size {}".format(
+                    height, self.args.max_size
+                )
+                assert (
+                    width <= self.args.max_size
+                ), "width {} is more than the max_size {}".format(
+                    width, self.args.max_size
+                )
                 if height < self.args.min_size or width < self.args.min_size:
-                    assert height == self.args.max_size or \
-                        width == self.args.max_size
+                    assert height == self.args.max_size or width == self.args.max_size
                 else:
-                    assert height == self.args.min_size or \
-                        width == self.args.min_size
+                    assert height == self.args.min_size or width == self.args.min_size
                 im_info = [height, width, im_scale]
                 one_batch_info.append(im_info)
             im_infos.append(one_batch_info)

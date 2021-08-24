@@ -12,12 +12,14 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-import os
+
 import json
+import os
 import re
-from six import string_types
-from frameworks.framework_base import FrameworkBase
 from collections import defaultdict
+
+from frameworks.framework_base import FrameworkBase
+from six import string_types
 
 
 class GlowFramework(FrameworkBase):
@@ -30,22 +32,41 @@ class GlowFramework(FrameworkBase):
         return "glow"
 
     def runBenchmark(self, info, benchmark, platform):
-        output, output_files = \
-            super(GlowFramework, self).runBenchmark(info, benchmark,
-                                                      platform)
+        output, output_files = super(GlowFramework, self).runBenchmark(
+            info, benchmark, platform
+        )
         return output, output_files
 
-    def composeRunCommand(self, commands, platform, programs,
-                          model, test, model_files,
-                          input_files, output_files, shared_libs,
-                          preprocess_files=None, main_command=False):
-        cmds = super(GlowFramework, self).composeRunCommand(commands, platform,
-                programs, model, test, model_files, input_files, output_files,
-                shared_libs, preprocess_files, main_command)
+    def composeRunCommand(
+        self,
+        commands,
+        platform,
+        programs,
+        model,
+        test,
+        model_files,
+        input_files,
+        output_files,
+        shared_libs,
+        preprocess_files=None,
+        main_command=False,
+    ):
+        cmds = super(GlowFramework, self).composeRunCommand(
+            commands,
+            platform,
+            programs,
+            model,
+            test,
+            model_files,
+            input_files,
+            output_files,
+            shared_libs,
+            preprocess_files,
+            main_command,
+        )
         return cmds
 
-    def runOnPlatform(self, total_num, cmd, platform, platform_args,
-            converter):
+    def runOnPlatform(self, total_num, cmd, platform, platform_args, converter):
         output, meta = platform.runBenchmark(cmd, platform_args=platform_args)
         results = {}
         self._maybeAddJsonOutput(output, results)
@@ -62,57 +83,65 @@ class GlowFramework(FrameworkBase):
             return False
         rows = output
         if isinstance(output, string_types):
-            rows = output.split('\n')
+            rows = output.split("\n")
         i = 0
         while i < len(rows):
             if "Total inference duration (ms): " in rows[i]:
-                total_inferece_time = float(rows[i].split("Total inference duration (ms): ")[1])
-                self._addOrAppendResult(results,
-                            "Total inference duration",
-                            total_inferece_time, {
-                                "type": "NET",
-                                "metric": "Total inference duration",
-                                "unit": "ms",
-                                "values": []
-                            }
+                total_inferece_time = float(
+                    rows[i].split("Total inference duration (ms): ")[1]
+                )
+                self._addOrAppendResult(
+                    results,
+                    "Total inference duration",
+                    total_inferece_time,
+                    {
+                        "type": "NET",
+                        "metric": "Total inference duration",
+                        "unit": "ms",
+                        "values": [],
+                    },
                 )
             if "Avg inference duration (ms): " in rows[i]:
-                avg_inference_time = float(rows[i].split("Avg inference duration (ms): ")[1])
-                self._addOrAppendResult(results,
-                            "Avg inference duration",
-                            avg_inference_time, {
-                                "type": "NET",
-                                "metric": "Avg inference duration",
-                                "unit": "scalar",
-                                "values": []
-                            }
+                avg_inference_time = float(
+                    rows[i].split("Avg inference duration (ms): ")[1]
+                )
+                self._addOrAppendResult(
+                    results,
+                    "Avg inference duration",
+                    avg_inference_time,
+                    {
+                        "type": "NET",
+                        "metric": "Avg inference duration",
+                        "unit": "scalar",
+                        "values": [],
+                    },
                 )
             if "Avg inference per second: " in rows[i]:
-                avg_inference_per_second = float(rows[i].split("Avg inference per second: ")[1])
-                self._addOrAppendResult(results,
-                            "Avg inference per second",
-                            avg_inference_per_second, {
-                                "type": "NET",
-                                "metric": "Avg inference per second",
-                                "unit": "scalar",
-                                "values": []
-                            }
+                avg_inference_per_second = float(
+                    rows[i].split("Avg inference per second: ")[1]
+                )
+                self._addOrAppendResult(
+                    results,
+                    "Avg inference per second",
+                    avg_inference_per_second,
+                    {
+                        "type": "NET",
+                        "metric": "Avg inference per second",
+                        "unit": "scalar",
+                        "values": [],
+                    },
                 )
             i += 1
-
 
     def _maybeNetRunner(self, output, results):
         if output is None:
             return False
         rows = output
         if isinstance(output, string_types):
-            rows = output.split('\n')
+            rows = output.split("\n")
         i = 0
         while i < len(rows):
-            match = re.search(
-                r"(.*)latency per (.*) \[(.*)\]:",
-                rows[i]
-            )
+            match = re.search(r"(.*)latency per (.*) \[(.*)\]:", rows[i])
             if match:
                 if match.group(3) == "glow":
                     mtype = "NET"
@@ -126,26 +155,27 @@ class GlowFramework(FrameworkBase):
                 i += 1
                 while i < len(rows) and "latency per" not in rows[i].lower():
                     match = re.search(
-                        r".*latency\((.*)\): p(.*): (.*)",
-                        rows[i].lower()
+                        r".*latency\((.*)\): p(.*): (.*)", rows[i].lower()
                     )
                     if match:
                         unit = match.group(1)
                         percentile = "p" + match.group(2)
                         value = float(match.group(3))
 
-                        self._addOrAppendResult(results,
+                        self._addOrAppendResult(
+                            results,
                             " ".join(
                                 [mtype, name, "net_runner", latency_kind, percentile]
                             ),
-                            value, {
+                            value,
+                            {
                                 "type": mtype,
                                 "metric": " ".join(
                                     [name, "net_runner", latency_kind, percentile]
                                 ),
                                 "unit": unit,
-                                "values": []
-                            }
+                                "values": [],
+                            },
                         )
                     i += 1
             else:
@@ -153,36 +183,43 @@ class GlowFramework(FrameworkBase):
 
         i = 0
         while i < len(rows):
-            match = re.search(
-                r"(.*): (.*) vs (.*)\((.*)\)",
-                rows[i]
-            )
+            match = re.search(r"(.*): (.*) vs (.*)\((.*)\)", rows[i])
             if match:
                 test_impls1, test_impls2 = sorted([match.group(2), match.group(3)])
                 i += 1
                 while i < len(rows) and "abs error" in rows[i].lower():
-                    match = re.search(
-                        r".*abs error p(.*): (.*)",
-                        rows[i].lower()
-                    )
+                    match = re.search(r".*abs error p(.*): (.*)", rows[i].lower())
                     if match:
                         percentile = "p" + match.group(1)
                         value = float(match.group(2))
 
-                        self._addOrAppendResult(results,
+                        self._addOrAppendResult(
+                            results,
                             " ".join(
-                                ["NET", test_impls1, "vs", test_impls2,
-                                    "abs error", percentile]
+                                [
+                                    "NET",
+                                    test_impls1,
+                                    "vs",
+                                    test_impls2,
+                                    "abs error",
+                                    percentile,
+                                ]
                             ),
-                            value, {
+                            value,
+                            {
                                 "type": "NET",
                                 "metric": " ".join(
-                                    [test_impls1, "vs", test_impls2,
-                                        "abs error", percentile]
+                                    [
+                                        test_impls1,
+                                        "vs",
+                                        test_impls2,
+                                        "abs error",
+                                        percentile,
+                                    ]
                                 ),
                                 "unit": "scalar",
-                                "values": []
-                            }
+                                "values": [],
+                            },
                         )
                     i += 1
 
@@ -194,7 +231,7 @@ class GlowFramework(FrameworkBase):
             return False
         rows = output
         if isinstance(output, string_types):
-            rows = output.split('\n')
+            rows = output.split("\n")
         i = 0
         while i < len(rows):
             try:
@@ -210,12 +247,14 @@ class GlowFramework(FrameworkBase):
         results[key]["values"].append(value)
 
     def _maybeAddBenchSummary(self, output, results):
-        existingMaps = {"AddBench": (10, 11),
-                        "BatchGemmBench": (12, 13),
-                        "GemmBench": (12, 13),
-                        "GemmParallelBench": (11, 12),
-                        "SLSBench": (10, 11),
-                        "TransposeBench": (11, 12)}
+        existingMaps = {
+            "AddBench": (10, 11),
+            "BatchGemmBench": (12, 13),
+            "GemmBench": (12, 13),
+            "GemmParallelBench": (11, 12),
+            "SLSBench": (10, 11),
+            "TransposeBench": (11, 12),
+        }
 
         fieldMap = defaultdict(lambda: (10, 11))
         for k in existingMaps:
@@ -225,7 +264,7 @@ class GlowFramework(FrameworkBase):
             return False
         rows = output
         if isinstance(output, string_types):
-            rows = output.split('\n')
+            rows = output.split("\n")
         i = 0
         while i < len(rows):
             try:
@@ -237,22 +276,26 @@ class GlowFramework(FrameworkBase):
                         "type": "NET",
                         "metric": "{}:runtime".format(benchName),
                         "unit": "second",
-                        "values": []
+                        "values": [],
                     }
                     throughputRecord = {
                         "type": "SECONDARY",
                         "metric": "{}:throughput".format(benchName),
                         "unit": "Gb/second",
-                        "values": []
+                        "values": [],
                     }
 
-                    self._addOrAppendResult(results,
+                    self._addOrAppendResult(
+                        results,
                         "NET {}:runtime".format(benchName),
-                        float(fields[fieldMap[benchName][0]]), runtimeRecord
+                        float(fields[fieldMap[benchName][0]]),
+                        runtimeRecord,
                     )
-                    self._addOrAppendResult(results,
+                    self._addOrAppendResult(
+                        results,
                         "SECONDARY {}:throughput".format(benchName),
-                        float(fields[fieldMap[benchName][1]]), throughputRecord
+                        float(fields[fieldMap[benchName][1]]),
+                        throughputRecord,
                     )
 
             except IndexError:
@@ -266,24 +309,27 @@ class GlowFramework(FrameworkBase):
             return False
         rows = output
         if isinstance(output, string_types):
-            rows = output.split('\n')
+            rows = output.split("\n")
         i = 0
         while i < len(rows):
-            m = re.match(r"^individual inference latency \[(\w+)\]: ([0-9]+) us$",
-                    rows[i])
+            m = re.match(
+                r"^individual inference latency \[(\w+)\]: ([0-9]+) us$", rows[i]
+            )
             if m:
                 if m.groups()[0] == "glow":
                     mtype = "NET"
                 else:
                     mtype = "SECONDARY"
-                self._addOrAppendResult(results,
+                self._addOrAppendResult(
+                    results,
                     mtype + " " + m.groups()[0] + " net_runner inference",
-                    int(m.groups()[1]), {
+                    int(m.groups()[1]),
+                    {
                         "type": mtype,
                         "metric": m.groups()[0] + " net_runner inference",
                         "unit": "microsecond",
-                        "values": []
-                    }
+                        "values": [],
+                    },
                 )
             i += 1
 
@@ -291,7 +337,7 @@ class GlowFramework(FrameworkBase):
         traceFile = os.path.join(platform.getOutputDir(), "trace")
         if not os.path.exists(traceFile):
             return
-        with open(traceFile, 'r') as fp:
+        with open(traceFile, "r") as fp:
             line = fp.readline()
             while line:
                 try:
@@ -304,12 +350,17 @@ class GlowFramework(FrameworkBase):
                     else:
                         mtype = "SECONDARY"
                     key = mtype + " " + metric
-                    self._addOrAppendResult(results, key, parsed["dur"], {
-                        "type": mtype,
-                        "metric": metric,
-                        "unit": "microsecond",
-                        "values": []
-                    })
+                    self._addOrAppendResult(
+                        results,
+                        key,
+                        parsed["dur"],
+                        {
+                            "type": mtype,
+                            "metric": metric,
+                            "unit": "microsecond",
+                            "values": [],
+                        },
+                    )
                 except json.JSONDecodeError:
                     pass
                 except KeyError:

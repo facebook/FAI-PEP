@@ -12,14 +12,18 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from mock import patch
-import unittest
+
 import os
 import sys
+import unittest
 
-BENCHMARK_DIR = os.path.abspath(os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    os.pardir, os.pardir, os.pardir))
+from mock import patch
+
+BENCHMARK_DIR = os.path.abspath(
+    os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, os.pardir
+    )
+)
 sys.path.append(BENCHMARK_DIR)
 
 from platforms.ios.idb import IDB
@@ -39,36 +43,42 @@ class IDBTest(unittest.TestCase):
 
     def test_run(self):
         idb = IDB()
-        with patch("platforms.platform_util_base.PlatformUtilBase.run",
-                   side_effect=self._util_base_run):
+        with patch(
+            "platforms.platform_util_base.PlatformUtilBase.run",
+            side_effect=self._util_base_run,
+        ):
             idb.run()
 
     def _ios_run_for_push(self, *args, **kwargs):
         return args
 
     def test_push(self):
-        src = os.path.abspath(os.path.join(
-            BENCHMARK_DIR, os.pardir,
-            "specifications/models/caffe2/squeezenet/squeezenet.json"))
+        src = os.path.abspath(
+            os.path.join(
+                BENCHMARK_DIR,
+                os.pardir,
+                "specifications/models/caffe2/squeezenet/squeezenet.json",
+            )
+        )
         tgt = "TEST_TGT"
         idb = IDB()
 
-        with patch("platforms.ios.idb.IDB.run",
-                   side_effect=self._ios_run_for_push):
+        with patch("platforms.ios.idb.IDB.run", side_effect=self._ios_run_for_push):
             push_res = idb.push(src, tgt)
             self.assertEqual(push_res, ("--upload", src, "--to", tgt))
 
     def _ios_run_for_reboot(self, *args, **kwargs):
-        self.assertTrue(args[0] == "idevicepair"
-                        or args[0] == "idevicediagnostics")
+        self.assertTrue(args[0] == "idevicepair" or args[0] == "idevicediagnostics")
         self.assertEqual(args[1], "-u")
         self.assertEqual(args[2], "TEST_DEVICE")
         self.assertTrue(args[3] == "pair" or args[3] == "restart")
 
     def test_reboot(self):
         idb = IDB(device="TEST_DEVICE")
-        with patch("platforms.platform_util_base.PlatformUtilBase.run",
-                   side_effect=self._ios_run_for_reboot):
+        with patch(
+            "platforms.platform_util_base.PlatformUtilBase.run",
+            side_effect=self._ios_run_for_reboot,
+        ):
             push_res = idb.reboot()
             self.assertTrue(push_res)
 

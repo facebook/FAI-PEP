@@ -14,22 +14,25 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import argparse
 import copy
 import json
 import logging
-import matplotlib
-import random
 import os
+import random
 import sys
 
+import matplotlib
+
 # Use a non-interactive backend
-matplotlib.use('Agg')
+matplotlib.use("Agg")
 from pycocotools.coco import COCO
 
-FORMAT = '%(levelname)s %(asctime)s %(filename)s:%(lineno)4d: %(message)s'
-logging.basicConfig(level=logging.DEBUG, format=FORMAT,
-                    datefmt="%H:%M:%S", stream=sys.stdout)
+FORMAT = "%(levelname)s %(asctime)s %(filename)s:%(lineno)4d: %(message)s"
+logging.basicConfig(
+    level=logging.DEBUG, format=FORMAT, datefmt="%H:%M:%S", stream=sys.stdout
+)
 logger = logging.getLogger(__name__)
 
 
@@ -39,16 +42,24 @@ IM_PREFIX = "image_prefix"
 
 parser = argparse.ArgumentParser(description="Load and extract coco dataset")
 
-parser.add_argument("--dataset", type=str, required=True,
-    help="Name of the test JsonDataset")
-parser.add_argument("--dataset_dir", type=str, required=True,
-    help="Dataet image path")
-parser.add_argument("--dataset_ann", type=str, required=True,
-    help="Dataet annotation file")
-parser.add_argument("--output-file", type=str, required=True,
-    help="The file containing the loaded coco database.")
-parser.add_argument("--output-image-file", type=str,
-    help="The file containing the image paths in the database.")
+parser.add_argument(
+    "--dataset", type=str, required=True, help="Name of the test JsonDataset"
+)
+parser.add_argument("--dataset_dir", type=str, required=True, help="Dataet image path")
+parser.add_argument(
+    "--dataset_ann", type=str, required=True, help="Dataet annotation file"
+)
+parser.add_argument(
+    "--output-file",
+    type=str,
+    required=True,
+    help="The file containing the loaded coco database.",
+)
+parser.add_argument(
+    "--output-image-file",
+    type=str,
+    help="The file containing the image paths in the database.",
+)
 
 
 class JsonDataset(object):
@@ -115,7 +126,7 @@ class JsonDataset(object):
         # Make file_name an abs path
         entry["image"] = os.path.join(
             os.path.abspath(self.image_directory),
-            self.image_prefix + entry["file_name"]
+            self.image_prefix + entry["file_name"],
         )
 
         # Remove unwanted fields if they exist

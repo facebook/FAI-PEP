@@ -1,16 +1,17 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import unittest
-import logging
 import json
+import logging
+import shutil
 import sys
+import unittest
 from os.path import expanduser
 from unittest.mock import patch
-import shutil
 
 
 sys.path.append(".")
 from benchmarking.run_bench import RunBench
+
 
 class BasicFlowTest(unittest.TestCase):
     test_framework = "test/test_framework"
@@ -18,7 +19,7 @@ class BasicFlowTest(unittest.TestCase):
     test_remote_access_token = "test_token"
     test_root_model_dir = "test/test_root_model_dir"
     test_report_to_screen = "Y"
-    git_config = expanduser("~")  + '/.aibench/git'
+    git_config = expanduser("~") + "/.aibench/git"
 
     def setUp(self, *args, **kwargs):
         self.app = RunBench()
@@ -40,46 +41,41 @@ class BasicFlowTest(unittest.TestCase):
     def repo_driver_command_checker(self, command):
         commands = command.split()
         self.assertEqual(
-                commands[commands.index("--repo_dir") + 1],
-                self.test_framework)
+            commands[commands.index("--repo_dir") + 1], self.test_framework
+        )
         self.assertEqual(
-                commands[commands.index("--remote_reporter") + 1],
-                self.test_remote_reporter)
+            commands[commands.index("--remote_reporter") + 1], self.test_remote_reporter
+        )
         self.assertEqual(
-                commands[commands.index("--remote_access_token") + 1],
-                self.test_remote_access_token)
+            commands[commands.index("--remote_access_token") + 1],
+            self.test_remote_access_token,
+        )
         self.assertEqual(
-                commands[commands.index("--root_model_dir") + 1],
-                self.test_root_model_dir)
-        self.assertGreater(
-                commands.index("--screen_reporter"),
-                -1)
+            commands[commands.index("--root_model_dir") + 1], self.test_root_model_dir
+        )
+        self.assertGreater(commands.index("--screen_reporter"), -1)
+
     def save_args_checker(self):
         # git_config
-        with open(self.git_config + '/config.txt') as f:
+        with open(self.git_config + "/config.txt") as f:
             commands = json.load(f)
 
+        self.assertEqual(commands["--repo_dir"], self.test_framework)
+        self.assertEqual(commands["--remote_reporter"], self.test_remote_reporter)
         self.assertEqual(
-                commands["--repo_dir"],
-                self.test_framework)
-        self.assertEqual(
-                commands["--remote_reporter"],
-                self.test_remote_reporter)
-        self.assertEqual(
-                commands["--remote_access_token"],
-                self.test_remote_access_token)
-        self.assertEqual(
-                commands["--root_model_dir"],
-                self.test_root_model_dir)
+            commands["--remote_access_token"], self.test_remote_access_token
+        )
+        self.assertEqual(commands["--root_model_dir"], self.test_root_model_dir)
 
     def test_benchmark_repo_driver_cmd_gen(self):
-        with patch('six.moves.input', side_effect=self.mock_args_input):
-            with patch('os.system', side_effect=self.repo_driver_command_checker):
+        with patch("six.moves.input", side_effect=self.mock_args_input):
+            with patch("os.system", side_effect=self.repo_driver_command_checker):
                 self.app.run()
                 self.save_args_checker()
                 shutil.rmtree(self.git_config)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     logger = logging.getLogger("AIBench")
     logger.setLevel(logging.DEBUG)
     try:

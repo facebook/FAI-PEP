@@ -15,9 +15,9 @@ from __future__ import unicode_literals
 
 
 class ReporterBase(object):
-    DATA = 'data'
-    META = 'meta'
-    PLATFORM = 'platform'
+    DATA = "data"
+    META = "meta"
+    PLATFORM = "platform"
 
     def __init__(self):
         pass

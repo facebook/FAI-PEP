@@ -15,6 +15,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+
 import argparse
 import json
 import os
@@ -23,28 +24,37 @@ import re
 
 parser = argparse.ArgumentParser(description="Aggregate output results")
 
-parser.add_argument("--dir", required=True,
-    help="The directory of all the json data are saved.")
-parser.add_argument("--limit", required=True, type=int,
-    help="The directory of all the json data are saved.")
-parser.add_argument("--metric-keyword",
-    help="The keyword prefix each metric so that the harness can parse.")
-parser.add_argument("--prefix", required=True,
+parser.add_argument(
+    "--dir", required=True, help="The directory of all the json data are saved."
+)
+parser.add_argument(
+    "--limit",
+    required=True,
+    type=int,
+    help="The directory of all the json data are saved.",
+)
+parser.add_argument(
+    "--metric-keyword",
+    help="The keyword prefix each metric so that the harness can parse.",
+)
+parser.add_argument(
+    "--prefix",
+    required=True,
     help="The prefix of the json data. The files are suffixed with a number "
-         "and .txt")
-parser.add_argument("--result-file",
-    help="Write the prediction result to a file.")
+    "and .txt",
+)
+parser.add_argument("--result-file", help="Write the prediction result to a file.")
 
 
 class AggregateOutputs(object):
     def __init__(self):
         self.args = parser.parse_args()
-        assert os.path.isdir(self.args.dir), \
-            "Directory {} doesn't exist".format(self.args.dir)
+        assert os.path.isdir(self.args.dir), "Directory {} doesn't exist".format(
+            self.args.dir
+        )
 
     def _composeFilename(self, index):
-        return os.path.join(self.args.dir,
-                            self.args.prefix + "_" + str(index) + ".txt")
+        return os.path.join(self.args.dir, self.args.prefix + "_" + str(index) + ".txt")
 
     def _getOneOutput(self, index):
         filename = self._composeFilename(index)
@@ -95,7 +105,7 @@ class AggregateOutputs(object):
                     "MAD": 0,
                 }
             elif match.group(1) == "percent":
-                data = sum(values) * 100. / len(values)
+                data = sum(values) * 100.0 / len(values)
                 one_result["summary"] = {
                     "num_runs": len(values),
                     "p0": data,
