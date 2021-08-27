@@ -16,10 +16,12 @@ from __future__ import unicode_literals
 import copy
 import gc
 import os
+import string
 import sys
 import time
 import traceback
 
+import numpy as np
 from utils.custom_logger import getLogger
 from utils.utilities import getCommand, deepMerge, setRunStatus, getRunStatus
 
@@ -88,19 +90,7 @@ def runOneBenchmark(
         result = {"meta": {}, "data": []}
 
     if data is None or len(data) == 0:
-        name = platform.getMangledName()
-        model_name = ""
-        if "model" in benchmark and "name" in benchmark["model"]:
-            model_name = benchmark["model"]["name"]
-        commit_hash = ""
-        if "commit" in info["treatment"]:
-            commit_hash = info["treatment"]["commit"]
-        getLogger().info(
-            "No data collected for ".format(model_name)
-            + "on {}. ".format(name)
-            + "The run may be failed for "
-            + "{}".format(commit_hash)
-        )
+        _logNoData(benchmark, info, platform.getMangledName())
         return status
 
     with lock:
@@ -126,6 +116,21 @@ def runOneBenchmark(
     return status
 
 
+def _logNoData(benchmark, info, name):
+    model_name = ""
+    if "model" in benchmark and "name" in benchmark["model"]:
+        model_name = benchmark["model"]["name"]
+    commit_hash = ""
+    if "commit" in info["treatment"]:
+        commit_hash = info["treatment"]["commit"]
+    getLogger().info(
+        "No data collected for {}".format(model_name)
+        + "on {}. ".format(name)
+        + "The run may be failed for "
+        + "{}".format(commit_hash)
+    )
+
+
 def _runOnePass(info, benchmark, framework, platform):
     assert (
         len(benchmark["tests"]) == 1
@@ -142,11 +147,11 @@ def _runOnePass(info, benchmark, framework, platform):
         if getRunStatus() != 0:
             # early exit if there is an error
             break
-    data = _processDelayData(output)
+    data = _processDelayData(output, benchmark)
     return data
 
 
-def _processDelayData(input_data):
+def _processDelayData(input_data, benchmark):
     if not isinstance(input_data, dict):
         return input_data
     data = {}
@@ -156,7 +161,7 @@ def _processDelayData(input_data):
 
         if "values" in d:
             if "summary" not in d:
-                data[k]["summary"] = _getStatistics(d["values"])
+                data[k]["summary"] = _getStatistics(d["values"], benchmark)
             if "num_runs" not in d:
                 data[k]["num_runs"] = len(data[k]["values"])
     return data
@@ -203,25 +208,41 @@ def _mergeDelayData(treatment_data, control_data, bname):
             assert "summary" in treatment_value, "Summary is missing in treatment"
         # create diff of delay
         if "summary" in control_value and "summary" in treatment_value:
-            csummary = control_value["summary"]
-            tsummary = treatment_value["summary"]
-            diff_summary = {}
-            if "p0" in tsummary and "p100" in csummary:
-                diff_summary["p0"] = tsummary["p0"] - csummary["p100"]
-            if "p50" in tsummary and "p50" in csummary:
-                diff_summary["p50"] = tsummary["p50"] - csummary["p50"]
-            if "p100" in tsummary and "p0" in csummary:
-                diff_summary["p100"] = tsummary["p100"] - csummary["p0"]
-            if "p10" in tsummary and "p90" in csummary:
-                diff_summary["p10"] = tsummary["p10"] - csummary["p90"]
-            if "p90" in tsummary and "p10" in csummary:
-                diff_summary["p90"] = tsummary["p90"] - csummary["p10"]
-            if "MAD" in tsummary and "MAD" in csummary:
-                diff_summary["MAD"] = tsummary["MAD"] - csummary["MAD"]
-            if "mean" in tsummary and "mean" in csummary:
-                diff_summary["mean"] = tsummary["mean"] - csummary["mean"]
-            data[k]["diff_summary"] = diff_summary
+            data[k]["diff_summary"] = _createDiffOfDelay(
+                control_value["summary"], treatment_value["summary"]
+            )
+
     return data
+
+
+def _percentileArgVal(token) -> float:
+    index = 0
+    if token[0] == "-" or token[0] == "+":  # not currently used
+        index = 1
+    if token[index] != "p":
+        return None
+
+    number = token[index + 1 :]
+    if not number.isdecimal:
+        return None
+
+    percentile = float(number)
+    return percentile if percentile >= 0 and percentile <= 100 else None
+
+
+def _createDiffOfDelay(csummary, tsummary):
+    # create diff of delay
+    diff_summary = {}
+    for value in tsummary:
+        arg = _percentileArgVal(value)
+        if arg:
+            reflection = "p" + string(100 - arg)
+            if reflection in csummary:
+                diff_summary[value] = tsummary[value] - csummary[reflection]
+        elif value in csummary:
+            diff_summary[value] = tsummary[value] - csummary[value]
+
+    return diff_summary
 
 
 def _mergeDelayMeta(treatment_meta, control_meta, bname):
@@ -237,7 +258,7 @@ def _mergeDelayMeta(treatment_meta, control_meta, bname):
     return meta
 
 
-def _processErrorData(treatment_files, golden_files):
+def _processErrorData(treatment_files, golden_files, benchmark):
     treatment_outputs = _collectErrorData(treatment_files)
     golden_outputs = _collectErrorData(golden_files)
     data = {}
@@ -252,9 +273,9 @@ def _processErrorData(treatment_files, golden_files):
         treatment_values.sort()
         golden_values.sort()
         data[output] = {
-            "summary": _getStatistics(treatment_values),
-            "control_summary": _getStatistics(golden_values),
-            "diff_summary": _getStatistics(diff_values),
+            "summary": _getStatistics(treatment_values, benchmark),
+            "control_summary": _getStatistics(golden_values, benchmark),
+            "diff_summary": _getStatistics(diff_values, benchmark),
         }
         data[output]["type"] = output
         data[output]["num_runs"] = len(treatment_values)
@@ -272,22 +293,52 @@ def _collectErrorData(output_files):
     return data
 
 
-def _getStatistics(array):
+def _getStatisticsSet(test):
+    if "statistics" in test:
+        result = test["statistics"]
+        if "p50" not in result:
+            result.append(
+                "p50"
+            )  # always include p50 since it is needed for internal calculations
+
+        getLogger().info("Using custom statistics ({}).".format(result))
+        return result
+    else:
+        # defaults
+        # getLogger().info("Using standard statistics.")
+        return ["mean", "p0", "p10", "p50", "p90", "p100", "stdev", "MAD", "cv"]
+
+
+def _getStatistics(array, benchmark):
+    test = benchmark["tests"][0]
+    statsSet = _getStatisticsSet(test)
+
     sorted_array = sorted(array)
     median = _getMedian(sorted_array)
     mean = _getMean(array)
     stdev = _getStdev(array, mean)
-    return {
-        "p0": sorted_array[0],
-        "p100": sorted_array[-1],
-        "p50": median,
-        "p10": sorted_array[len(sorted_array) // 10],
-        "p90": sorted_array[len(sorted_array) - len(sorted_array) // 10 - 1],
-        "MAD": _getMedian(sorted(map(lambda x: abs(x - median), sorted_array))),
+
+    metaValues = {
         "mean": mean,
         "stdev": stdev,
+        "MAD": _getMedian(sorted(map(lambda x: abs(x - median), sorted_array))),
         "cv": stdev / mean if mean != 0 else None,
     }
+
+    results = {}
+    for stat in statsSet:
+        if stat in metaValues:
+            results[stat] = metaValues[stat]
+        else:
+            percentileArgVal = _percentileArgVal(stat)  # parses p0-p100
+            if percentileArgVal is None:
+                getLogger().warning(
+                    "Unsupported custom statistic '{}' ignored.".format(stat)
+                )
+            else:
+                results[stat] = np.percentile(sorted_array, percentileArgVal)
+
+    return results
 
 
 def _getMean(values):
@@ -344,6 +395,8 @@ def _retrieveMeta(info, benchmark, platform, framework, backend, user_identifier
 
     # test specific
     test = benchmark["tests"][0]
+    meta["statistics"] = _getStatisticsSet(test)
+
     meta["metric"] = test["metric"]
     if "identifier" in test:
         meta["identifier"] = test["identifier"]
