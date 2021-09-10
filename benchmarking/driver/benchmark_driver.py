@@ -88,19 +88,7 @@ def runOneBenchmark(
         result = {"meta": {}, "data": []}
 
     if data is None or len(data) == 0:
-        name = platform.getMangledName()
-        model_name = ""
-        if "model" in benchmark and "name" in benchmark["model"]:
-            model_name = benchmark["model"]["name"]
-        commit_hash = ""
-        if "commit" in info["treatment"]:
-            commit_hash = info["treatment"]["commit"]
-        getLogger().info(
-            "No data collected for ".format(model_name)
-            + "on {}. ".format(name)
-            + "The run may be failed for "
-            + "{}".format(commit_hash)
-        )
+        _logNoData(benchmark, info, platform.getMangledName())
         return status
 
     with lock:
@@ -124,6 +112,21 @@ def runOneBenchmark(
             local_reporter,
         )
     return status
+
+
+def _logNoData(benchmark, info, name):
+    model_name = ""
+    if "model" in benchmark and "name" in benchmark["model"]:
+        model_name = benchmark["model"]["name"]
+    commit_hash = ""
+    if "commit" in info["treatment"]:
+        commit_hash = info["treatment"]["commit"]
+    getLogger().info(
+        "No data collected for {}".format(model_name)
+        + "on {}. ".format(name)
+        + "The run may be failed for "
+        + "{}".format(commit_hash)
+    )
 
 
 def _runOnePass(info, benchmark, framework, platform):
@@ -160,11 +163,6 @@ def _processDelayData(input_data):
                 if "num_runs" not in d:
                     data[k]["num_runs"] = len(data[k]["values"])
 
-        if "values" in d:
-            if "summary" not in d:
-                data[k]["summary"] = _getStatistics(d["values"])
-            if "num_runs" not in d:
-                data[k]["num_runs"] = len(data[k]["values"])
     return data
 
 
@@ -209,25 +207,31 @@ def _mergeDelayData(treatment_data, control_data, bname):
             assert "summary" in treatment_value, "Summary is missing in treatment"
         # create diff of delay
         if "summary" in control_value and "summary" in treatment_value:
-            csummary = control_value["summary"]
-            tsummary = treatment_value["summary"]
-            diff_summary = {}
-            if "p0" in tsummary and "p100" in csummary:
-                diff_summary["p0"] = tsummary["p0"] - csummary["p100"]
-            if "p50" in tsummary and "p50" in csummary:
-                diff_summary["p50"] = tsummary["p50"] - csummary["p50"]
-            if "p100" in tsummary and "p0" in csummary:
-                diff_summary["p100"] = tsummary["p100"] - csummary["p0"]
-            if "p10" in tsummary and "p90" in csummary:
-                diff_summary["p10"] = tsummary["p10"] - csummary["p90"]
-            if "p90" in tsummary and "p10" in csummary:
-                diff_summary["p90"] = tsummary["p90"] - csummary["p10"]
-            if "MAD" in tsummary and "MAD" in csummary:
-                diff_summary["MAD"] = tsummary["MAD"] - csummary["MAD"]
-            if "mean" in tsummary and "mean" in csummary:
-                diff_summary["mean"] = tsummary["mean"] - csummary["mean"]
-            data[k]["diff_summary"] = diff_summary
+            data[k]["diff_summary"] = _createDiffOfDelay(
+                control_value["summary"], treatment_value["summary"]
+            )
+
     return data
+
+
+def _createDiffOfDelay(csummary, tsummary):
+    diff_summary = {}
+    if "p0" in tsummary and "p100" in csummary:
+        diff_summary["p0"] = tsummary["p0"] - csummary["p100"]
+    if "p50" in tsummary and "p50" in csummary:
+        diff_summary["p50"] = tsummary["p50"] - csummary["p50"]
+    if "p100" in tsummary and "p0" in csummary:
+        diff_summary["p100"] = tsummary["p100"] - csummary["p0"]
+    if "p10" in tsummary and "p90" in csummary:
+        diff_summary["p10"] = tsummary["p10"] - csummary["p90"]
+    if "p90" in tsummary and "p10" in csummary:
+        diff_summary["p90"] = tsummary["p90"] - csummary["p10"]
+    if "MAD" in tsummary and "MAD" in csummary:
+        diff_summary["MAD"] = tsummary["MAD"] - csummary["MAD"]
+    if "mean" in tsummary and "mean" in csummary:
+        diff_summary["mean"] = tsummary["mean"] - csummary["mean"]
+
+    return diff_summary
 
 
 def _mergeDelayMeta(treatment_meta, control_meta, bname):
@@ -278,20 +282,24 @@ def _collectErrorData(output_files):
     return data
 
 
+def _getStatisticsSet(_test):
+    return ["mean", "p0", "p10", "p50", "p90", "p100", "stdev", "MAD", "cv"]
+
+
 def _getStatistics(array):
     sorted_array = sorted(array)
     median = _getMedian(sorted_array)
     mean = _getMean(array)
     stdev = _getStdev(array, mean)
     return {
-        "p0": sorted_array[0],
-        "p100": sorted_array[-1],
-        "p50": median,
-        "p10": sorted_array[len(sorted_array) // 10],
-        "p90": sorted_array[len(sorted_array) - len(sorted_array) // 10 - 1],
-        "MAD": _getMedian(sorted(map(lambda x: abs(x - median), sorted_array))),
         "mean": mean,
+        "p0": sorted_array[0],
+        "p10": sorted_array[len(sorted_array) // 10],
+        "p50": median,
+        "p90": sorted_array[len(sorted_array) - len(sorted_array) // 10 - 1],
+        "p100": sorted_array[-1],
         "stdev": stdev,
+        "MAD": _getMedian(sorted(map(lambda x: abs(x - median), sorted_array))),
         "cv": stdev / mean if mean != 0 else None,
     }
 
@@ -350,6 +358,8 @@ def _retrieveMeta(info, benchmark, platform, framework, backend, user_identifier
 
     # test specific
     test = benchmark["tests"][0]
+    meta["statistics"] = _getStatisticsSet(test)
+
     meta["metric"] = test["metric"]
     if "identifier" in test:
         meta["identifier"] = test["identifier"]
