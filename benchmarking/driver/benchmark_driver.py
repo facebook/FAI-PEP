@@ -145,11 +145,12 @@ def _runOnePass(info, benchmark, framework, platform):
         if getRunStatus() != 0:
             # early exit if there is an error
             break
-    data = _processDelayData(output)
+    stats = _getStatisticsSet(benchmark["tests"][0])
+    data = _processDelayData(output, stats)
     return data
 
 
-def _processDelayData(input_data):
+def _processDelayData(input_data, stats):
     if not isinstance(input_data, dict):
         return input_data
     data = {}
@@ -159,7 +160,7 @@ def _processDelayData(input_data):
             data[k] = copy.deepcopy(d)
             if "values" in d:
                 if "summary" not in d:
-                    data[k]["summary"] = _getStatistics(d["values"])
+                    data[k]["summary"] = _getStatistics(d["values"], stats)
                 if "num_runs" not in d:
                     data[k]["num_runs"] = len(data[k]["values"])
 
@@ -214,22 +215,33 @@ def _mergeDelayData(treatment_data, control_data, bname):
     return data
 
 
+def _percentileArgVal(token) -> float:
+    if len(token) < 2 or token[0] != "p":
+        return None
+
+    number = token[1:]
+    if not number.isdecimal():
+        return None
+
+    percentile = float(number)
+    return percentile if percentile >= 0 and percentile <= 100 else None
+
+
 def _createDiffOfDelay(csummary, tsummary):
+    # create diff of delay
     diff_summary = {}
-    if "p0" in tsummary and "p100" in csummary:
-        diff_summary["p0"] = tsummary["p0"] - csummary["p100"]
-    if "p50" in tsummary and "p50" in csummary:
-        diff_summary["p50"] = tsummary["p50"] - csummary["p50"]
-    if "p100" in tsummary and "p0" in csummary:
-        diff_summary["p100"] = tsummary["p100"] - csummary["p0"]
-    if "p10" in tsummary and "p90" in csummary:
-        diff_summary["p10"] = tsummary["p10"] - csummary["p90"]
-    if "p90" in tsummary and "p10" in csummary:
-        diff_summary["p90"] = tsummary["p90"] - csummary["p10"]
-    if "MAD" in tsummary and "MAD" in csummary:
-        diff_summary["MAD"] = tsummary["MAD"] - csummary["MAD"]
-    if "mean" in tsummary and "mean" in csummary:
-        diff_summary["mean"] = tsummary["mean"] - csummary["mean"]
+    for value in tsummary:
+        arg = _percentileArgVal(value)
+        if arg is not None:
+            if arg == int(arg):
+                reflection = "p" + str(100 - int(arg))
+            else:
+                reflection = "p" + str(100.0 - arg)
+
+            if reflection in csummary:
+                diff_summary[value] = tsummary[value] - csummary[reflection]
+        elif value in csummary:
+            diff_summary[value] = tsummary[value] - csummary[value]
 
     return diff_summary
 
@@ -247,7 +259,7 @@ def _mergeDelayMeta(treatment_meta, control_meta, bname):
     return meta
 
 
-def _processErrorData(treatment_files, golden_files):
+def _processErrorData(treatment_files, golden_files, stats=None):
     treatment_outputs = _collectErrorData(treatment_files)
     golden_outputs = _collectErrorData(golden_files)
     data = {}
@@ -262,9 +274,9 @@ def _processErrorData(treatment_files, golden_files):
         treatment_values.sort()
         golden_values.sort()
         data[output] = {
-            "summary": _getStatistics(treatment_values),
-            "control_summary": _getStatistics(golden_values),
-            "diff_summary": _getStatistics(diff_values),
+            "summary": _getStatistics(treatment_values, stats),
+            "control_summary": _getStatistics(golden_values, stats),
+            "diff_summary": _getStatistics(diff_values, stats),
         }
         data[output]["type"] = output
         data[output]["num_runs"] = len(treatment_values)
@@ -282,26 +294,86 @@ def _collectErrorData(output_files):
     return data
 
 
-def _getStatisticsSet(_test):
-    return ["mean", "p0", "p10", "p50", "p90", "p100", "stdev", "MAD", "cv"]
+_default_statistics = ["mean", "p0", "p10", "p50", "p90", "p100", "stdev", "MAD", "cv"]
 
 
-def _getStatistics(array):
+def _getStatisticsSet(test):
+    if test is not None and "statistics" in test:
+        result = test["statistics"]
+        if "p50" not in result:
+            result.append(
+                "p50"
+            )  # always include p50 since it is needed for internal calculations
+
+        return result
+    else:
+        return _default_statistics
+
+
+def _getStatistics(array, stats=_default_statistics):
+    if len(array) == 0:
+        return {}
+
+    if "p50" not in stats:
+        stats.append(
+            "p50"
+        )  # always include p50 since it is needed for internal calculations
+
     sorted_array = sorted(array)
     median = _getMedian(sorted_array)
     mean = _getMean(array)
     stdev = _getStdev(array, mean)
-    return {
+
+    meta_values = {
         "mean": mean,
-        "p0": sorted_array[0],
-        "p10": sorted_array[len(sorted_array) // 10],
-        "p50": median,
-        "p90": sorted_array[len(sorted_array) - len(sorted_array) // 10 - 1],
-        "p100": sorted_array[-1],
+        "p50": median,  # special case for even-numbered arrays
         "stdev": stdev,
         "MAD": _getMedian(sorted(map(lambda x: abs(x - median), sorted_array))),
         "cv": stdev / mean if mean != 0 else None,
     }
+
+    results = {}
+    for stat in stats:
+        if stat in meta_values:
+            results[stat] = meta_values[stat]
+        else:
+            percentile_arg_value = _percentileArgVal(stat)  # parses p0-p100
+            if percentile_arg_value is None:
+                getLogger().error(f"Unsupported custom statistic '{stat}' ignored.")
+                assert (
+                    percentile_arg_value is not None
+                ), f"Unsupported custom statistic '{stat}'."
+            else:
+                results[stat] = _getPercentile(sorted_array, percentile_arg_value)
+
+    return results
+
+
+def _getPercentile(sorted_array, percentile: float):
+    length = len(sorted_array)
+    assert (
+        length > 0 and percentile >= 0 and percentile <= 100
+    ), f"invalid percentile value '{percentile}'."
+
+    if percentile == 100:
+        return sorted_array[-1]
+
+    if percentile == 50:
+        return _getMedian(sorted_array)
+
+    # linear interpolation: exactly matches np.percentile(sorted_array, percentile, interpolation="linear")
+    k = (length - 1) * percentile / 100.0
+    floor_index = int(k)
+    ceil_index = int(k + 1.0)  # valid only if k is not already an integer value
+
+    if (
+        floor_index == k or ceil_index >= length
+    ):  # handle the case where k is integer or max
+        return sorted_array[floor_index]
+
+    weighted_floor_value = sorted_array[floor_index] * (ceil_index - k)
+    weighted_ceil_value = sorted_array[ceil_index] * (k - floor_index)
+    return weighted_floor_value + weighted_ceil_value
 
 
 def _getMean(values):
