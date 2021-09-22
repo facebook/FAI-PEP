@@ -215,16 +215,23 @@ def _mergeDelayData(treatment_data, control_data, bname):
     return data
 
 
+def _to_float(token: str):
+    try:
+        return float(token)
+    except ValueError:
+        return None
+
+
 def _percentileArgVal(token) -> float:
     if len(token) < 2 or token[0] != "p":
         return None
 
-    number = token[1:]
-    if not number.isdecimal():
-        return None
-
-    percentile = float(number)
-    return percentile if percentile >= 0 and percentile <= 100 else None
+    percentile = _to_float(token[1:])
+    return (
+        percentile
+        if percentile is not None and percentile >= 0 and percentile <= 100
+        else None
+    )
 
 
 def _createDiffOfDelay(csummary, tsummary):
