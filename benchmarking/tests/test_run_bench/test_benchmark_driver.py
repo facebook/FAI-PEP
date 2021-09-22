@@ -133,6 +133,31 @@ class BenchmarkDriverUnitTest(unittest.TestCase):
         percentile = -1
         self.assertRaises(AssertionError, bd._getPercentile, self.array1, percentile)
 
+    def test_percentileArgVal_invalid(self):
+        self.assertEqual(bd._percentileArgVal("padf"), None)
+        self.assertEqual(bd._percentileArgVal("p101.6"), None)
+        self.assertEqual(bd._percentileArgVal("p-1"), None)
+        self.assertEqual(bd._percentileArgVal("p"), None)
+
+    def test_percentileArgVal_float(self):
+        self.assertEqual(bd._percentileArgVal("p99.9"), 99.9)
+        self.assertEqual(bd._percentileArgVal("p66.6"), 66.6)
+
+    def test_getStatisticsSet_default(self):
+        expected = ["mean", "p0", "p10", "p50", "p90", "p100", "stdev", "MAD", "cv"]
+        self.assertEqual(bd._default_statistics, expected)
+        self.assertEqual(bd._getStatisticsSet(None), expected)
+        self.assertEqual(bd._getStatisticsSet([]), expected)
+
+    def test_getStatisticsSet_fromTest(self):
+        expected = ["p10", "p90", "p50"]
+        self.assertEqual(bd._getStatisticsSet({"statistics": expected}), expected)
+
+    def test_getStatisticsSet_p50iMssing(self):
+        input = ["p10", "p90"]
+        expected = ["p10", "p90", "p50"]
+        self.assertEqual(bd._getStatisticsSet({"statistics": input}), expected)
+
 
 if __name__ == "__main__":
     unittest.main()
