@@ -130,7 +130,6 @@ class DeviceManager(object):
                             "Device {} has become unavailable.".format(offline_device)
                         )
                         self._disableDevice(offline_device)
-                        # TODO: self._sendErrorReport()
             if new_devices:
                 devices = ",".join(new_devices)
                 devices = self._getDevices(devices)

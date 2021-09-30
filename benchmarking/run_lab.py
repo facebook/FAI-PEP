@@ -558,6 +558,7 @@ class runAsync(object):
 class RunLab(object):
     def __init__(self, raw_args=None):
         self.args, self.unknowns = parser.parse_known_args(raw_args)
+        os.environ["CLAIMER"] = self.args.claimer_id
         self.benchmark_downloader = DownloadBenchmarks(self.args, getLogger())
         self.adb = ADB(None, self.args.android_dir)
         setLoggerLevel(self.args.logger_level)
