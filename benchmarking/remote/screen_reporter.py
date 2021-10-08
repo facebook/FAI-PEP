@@ -74,20 +74,44 @@ class ScreenReporter(object):
             outputs = log.split("\n")
             for o in outputs:
                 print(o)
+
+            print("\n Meta data:\n ")
+            for key, value in (json.loads(r["result"]))["0"]["meta"]:
+                print(key, ":", value)
+
         else:
             try:
                 if not os.path.exists(self.log_output_dir):
                     os.makedirs(self.log_output_dir)
-                # Use device name to create an output log file in the directory 'log_output_dir'
-                output_file_name = self.log_output_dir + "/" + r["device"] + ".txt"
-                with open(output_file_name, "w") as outfile:
-                    outfile.write(r["log"])
-                    print(
-                        "Logs written for " + r["device"] + " at " + self.log_output_dir
-                    )
+
+                # Use device name to create output log files in the directory 'log_output_dir'
+
+                # Write logs
+                self._writeToDirectory(self.log_output_dir, r["log"], r["device"])
+
+                # Write meta data
+                self._writeToDirectory(
+                    self.log_output_dir,
+                    json.dumps(json.loads(r["result"])["0"]["meta"]),
+                    r["device"],
+                    "_meta",
+                )
+
             except Exception as e:
                 print("Caught exception: " + str(e))
                 print("Could not write to file specified at " + self.log_output_dir)
+
+    def _writeToDirectory(
+        self, dir: str, data: str, output_file_name: str, suffix: str = ""
+    ):
+        """
+        Writes the given data in the specificed directory with the defined file name.
+        Option to add a suffix in the output file name
+        """
+        output_file_name = f"{dir}/{output_file_name}{suffix}.txt"
+        with open(output_file_name, "w") as outfile:
+            outfile.write(data)
+            print(f"Logs written at {output_file_name}")
 
     def _displayResult(self, s):
         if (
