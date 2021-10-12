@@ -237,18 +237,21 @@ def _percentileArgVal(token) -> float:
 def _createDiffOfDelay(csummary, tsummary):
     # create diff of delay
     diff_summary = {}
-    for value in tsummary:
-        arg = _percentileArgVal(value)
+    for key in tsummary:
+        if tsummary[key] is None:
+            continue
+
+        arg = _percentileArgVal(key)
         if arg is not None:
             if arg == int(arg):
                 reflection = "p" + str(100 - int(arg))
             else:
                 reflection = "p" + str(100.0 - arg)
 
-            if reflection in csummary:
-                diff_summary[value] = tsummary[value] - csummary[reflection]
-        elif value in csummary:
-            diff_summary[value] = tsummary[value] - csummary[value]
+            if reflection in csummary and csummary[reflection] is not None:
+                diff_summary[key] = round(tsummary[key] - csummary[reflection], 15)
+        elif key in csummary and csummary[key] is not None:
+            diff_summary[key] = round(tsummary[key] - csummary[key], 15)
 
     return diff_summary
 
