@@ -25,6 +25,8 @@ class BenchmarkDriverUnitTest(unittest.TestCase):
 
     array2 = [4.0, 3.0, 2.0, 1.0, 0.0]
 
+    array_with_zero_mean = [-2.0, -1.0, 0.0, 1.0, 2.0]
+
     expected1 = {
         "mean": 2.0,
         "p0": 0.0,
@@ -49,11 +51,28 @@ class BenchmarkDriverUnitTest(unittest.TestCase):
         "cv": 0.7071067811865476,
     }
 
+    result_with_cv_none = {
+        "mean": 0.0,
+        "p0": -2.0,
+        "p10": -1.6,
+        "p50": 0.0,
+        "p90": 1.6,
+        "p100": 2.0,
+        "stdev": 1.4142135623730951,
+        "MAD": 1.0,
+        "cv": None,
+    }
+
     def test_getStatistics1(self):
         self.assertEqual(bd._getStatistics(self.array1), self.expected1)
 
     def test_getStatistics2(self):
         self.assertEqual(bd._getStatistics(self.array2), self.expected2)
+
+    def test_getStatistics_with_zero_mean(self):
+        self.assertEqual(
+            bd._getStatistics(self.array_with_zero_mean), self.result_with_cv_none
+        )
 
     def test_getStatistics_custom_valid(self):
         stats = ["p10", "p90", "p50", "p95", "p5", "p11"]
@@ -119,6 +138,40 @@ class BenchmarkDriverUnitTest(unittest.TestCase):
 
         self.assertEqual(
             bd._createDiffOfDelay(self.expected1, self.expected1), expectedDiff
+        )
+
+    def test_createDiffOfDelay_None1(self):
+        expectedDiff = {
+            "mean": 2.0,
+            "p0": -2.0,
+            "p10": -1.2,
+            "p50": 2.0,
+            "p90": 5.2,
+            "p100": 6.0,
+            "stdev": 0.0,
+            "MAD": 0.0,
+        }
+
+        self.assertEqual(
+            bd._createDiffOfDelay(self.result_with_cv_none, self.expected1),
+            expectedDiff,
+        )
+
+    def test_createDiffOfDelay_None2(self):
+        expectedDiff = {
+            "mean": -2.0,
+            "p0": -6.0,
+            "p10": -5.2,
+            "p50": -2.0,
+            "p90": 1.2,
+            "p100": 2.0,
+            "stdev": 0.0,
+            "MAD": 0.0,
+        }
+
+        self.assertEqual(
+            bd._createDiffOfDelay(self.expected1, self.result_with_cv_none),
+            expectedDiff,
         )
 
     def test_getPercentile_EmptyError(self):
