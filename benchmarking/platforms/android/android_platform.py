@@ -15,6 +15,7 @@ import shlex
 import shutil
 import time
 
+from degrade.degrade_base import DegradeBase, getDegrade
 from platforms.platform_base import PlatformBase
 from profilers.profilers import getProfilerByUsage
 from six import string_types
@@ -55,6 +56,8 @@ class AndroidPlatform(PlatformBase):
         self.usb_controller = usb_controller
         self._setLogCatSize()
         self.app = None
+        self.degrade_constraints = None
+        self.degrade: DegradeBase = getDegrade(self.type)
         if self.args.set_freq:
             self.util.setFrequency(self.args.set_freq)
 
@@ -112,6 +115,8 @@ class AndroidPlatform(PlatformBase):
             if "app" in benchmark["model"]:
                 self.app = benchmark["model"]["app"]
 
+        self.degrade_constraints = benchmark["tests"][0].get("degrade")
+
         if not self.app:
             if "intent.txt" in programs:
                 # temporary to rename the program with adb suffix
@@ -152,16 +157,17 @@ class AndroidPlatform(PlatformBase):
         # that is not the output of the command
         meta = {}
 
-        # We know this command may fail. Avoid propogating this
-        # failure to the upstream
-        success = getRunStatus()
-        self.util.logcat("-b", "all", "-c")
-        setRunStatus(success, overwrite=True)
-        if self.app:
-            log, meta = self.runAppBenchmark(cmd, *args, **kwargs)
-        else:
-            log, meta = self.runBinaryBenchmark(cmd, *args, **kwargs)
-        return log, meta
+        with self.degrade(self.util, self.degrade_constraints):
+            # We know this command may fail. Avoid propogating this
+            # failure to the upstream
+            success = getRunStatus()
+            self.util.logcat("-b", "all", "-c")
+            setRunStatus(success, overwrite=True)
+            if self.app:
+                log, meta = self.runAppBenchmark(cmd, *args, **kwargs)
+            else:
+                log, meta = self.runBinaryBenchmark(cmd, *args, **kwargs)
+            return log, meta
 
     def runAppBenchmark(self, cmd, *args, **kwargs):
         arguments = self.getPairedArguments(cmd)
