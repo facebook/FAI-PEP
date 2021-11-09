@@ -630,18 +630,43 @@ class RunLab(object):
             if device_kind not in self.devices:
                 getLogger().error(
                     "Retrieved job for device "
-                    "{} ".format(device_kind) + "cannot be run on server "
-                    "{}".format(self.args.claimer_id)
+                    f"{device_kind} cannot be run on server "
+                    f"{self.args.claimer_id}."
+                )
+                remaining_jobs.append(job)
+            elif (
+                job.get("hash") is not None
+                and job.get("hash") not in self.devices[device_kind]
+            ):
+                getLogger().error(
+                    "Retrieved job for device with hash"
+                    f"{job.get('hash')} cannot be run on server "
+                    f"{self.args.claimer_id}."
                 )
                 remaining_jobs.append(job)
             else:
-                for hash in self.devices[device_kind]:
+                if job.get("hash") is not None:
+                    getLogger().info(
+                        f"Job {job['id']} requests device {job['device']} with hash {job['hash']}."
+                    )
+                    hashes = [job["hash"]]
+                else:
+                    hashes = self.devices[device_kind]
+                for hash in hashes:
                     device = self.devices[device_kind][hash]
                     if device["available"] is True:
+                        getLogger().info(
+                            f"Device {job['device']} with hash {hash} available for job {job['id']}"
+                        )
                         job["hash"] = hash
                         jobs_queue.append(job)
                         device["available"] = False
                         break
+                else:
+                    getLogger().critical(
+                        f"The requested device {job['device']} with hash {job.get('hash', '<unspecified>')}is not available on this server."
+                    )
+                    remaining_jobs.append(job)
         return jobs_queue, remaining_jobs
 
     def _releaseBenchmarks(self, remaining_jobs):
