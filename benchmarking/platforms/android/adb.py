@@ -47,6 +47,41 @@ class ADB(PlatformUtilBase):
             getLogger().error("Unknown exception {}".format(e))
             return False
 
+    def root(self):
+        return self.restart_adbd(root=True)
+
+    def unroot(self):
+        return self.restart_adbd(root=False)
+
+    def user_is_root(self):
+        return self.get_user() == "root"
+
+    def get_user(self):
+        return self.shell("whoami")[0]
+
+    def restart_adbd(self, root=False):
+        try:
+            getLogger().info(
+                f"Restarting adbd with {'non' if not root else ''}root privilege."
+            )
+            user = self.get_user()
+            if root and user != "root":
+                self.run(["root"], retry=1)
+            elif not root and user == "root":
+                self.run(["unroot"], retry=1)
+            else:
+                getLogger().info(
+                    f"User already in {'non' if not root else ''}root privilege."
+                )
+            user = self.get_user()
+            getLogger().info(f"adbd user is: {user}")
+            return user == "root" if root else user != "root"
+        except Exception:
+            getLogger().critical(
+                f"Error while restarting adbd with {'non' if not root else ''}root privilege."
+            )
+        return False
+
     def deleteFile(self, file):
         return self.shell(["rm", "-rf", file])
 
