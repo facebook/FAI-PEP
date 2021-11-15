@@ -138,6 +138,15 @@ class AndroidPlatform(PlatformBase):
 
         del programs["program"]
 
+    def root(self):
+        return self.util.root()
+
+    def unroot(self):
+        return self.util.unroot()
+
+    def user_is_root(self):
+        return self.util.user_is_root()
+
     def rebootDevice(self):
         self.util.reboot()
         self.waitForDevice(180)
