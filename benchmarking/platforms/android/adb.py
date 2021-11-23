@@ -12,7 +12,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import os
 import re
-import time
 
 from platforms.platform_util_base import PlatformUtilBase
 from six import string_types
@@ -57,24 +56,23 @@ class ADB(PlatformUtilBase):
         return self.get_user() == "root"
 
     def get_user(self):
-        return self.shell("whoami")[0]
+        return self.shell("whoami", silent=True)[0]
 
     def restart_adbd(self, root=False):
         try:
-            getLogger().info(
-                f"Restarting adbd with {'non' if not root else ''}root privilege."
-            )
             user = self.get_user()
             if root and user != "root":
-                self.run(["root"], retry=1)
+                getLogger().info("Restarting adbd with root privilege.")
+                self.run(["root"], retry=1, silent=True)
             elif not root and user == "root":
-                self.run(["unroot"], retry=1)
+                getLogger().info("Restarting adbd with nonroot privilege.")
+                self.run(["unroot"], retry=1, silent=True)
             else:
-                getLogger().info(
-                    f"User already in {'non' if not root else ''}root privilege."
-                )
+                return True  # no-op
+
+            # Check if change worked
             user = self.get_user()
-            getLogger().info(f"adbd user is: {user}")
+            getLogger().info(f"adbd user is now: {user}.")
             return user == "root" if root else user != "root"
         except Exception:
             getLogger().critical(
@@ -99,9 +97,22 @@ class ADB(PlatformUtilBase):
         su_cmd.extend(cmd)
         return self.shell(su_cmd, **kwargs)
 
+    def isRootedDevice(self, silent=True) -> bool:
+        try:
+            ret = self.shell(["id", "-u", "2>&1"], retry=1, silent=silent)
+            if "0" in ret:
+                return True
+
+            ret = self.shell(["which", "su", "2>&1"], retry=1, silent=silent)
+            if not silent:
+                getLogger().info(f"which su returned '{ret}'.")
+
+            return ret is not None and len(ret) > 0 and ret[0].find("not found") == -1
+        except Exception:
+            return False
+
     def setFrequency(self, target):
-        ret = self.shell(["su", "-v", "2>&1"])
-        if ret.find("not found") >= 0:
+        if not self.isRootedDevice():
             getLogger().info("Device {} is not rooted.".format(self.device))
             return
 
