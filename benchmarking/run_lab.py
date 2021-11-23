@@ -724,23 +724,28 @@ class RunLab(object):
         """Decrement running jobs count, output job log, and start device cooldown."""
         global RUNNING_JOBS
         RUNNING_JOBS -= 1
-        result = future_result_dict.result()
-        job = result["job"]
-        device = result["device"]
-        device = self.devices[device["kind"]][device["hash"]]
+        try:
+            result = future_result_dict.result()
+            job = result["job"]
+            device = result["device"]
+            device = self.devices[device["kind"]][device["hash"]]
 
-        # output benchmark log in main thread.
-        getLogger().info(
-            "\n{}\n\nBenchmark:\t\t{}\nJob:\t\t\t{}\nDevice Kind:\t\t{}\nDevice Hash:\t\t{}\n{}\n\n{}".format(
-                "#" * 80,
-                job["identifier"],
-                job["id"],
-                device["kind"],
-                device["hash"],
-                job["log"],
-                "#" * 80,
+            # output benchmark log in main thread.
+            getLogger().info(
+                "\n{}\n\nBenchmark:\t\t{}\nJob:\t\t\t{}\nDevice Kind:\t\t{}\nDevice Hash:\t\t{}\n{}\n\n{}".format(
+                    "#" * 80,
+                    job["identifier"],
+                    job["id"],
+                    device["kind"],
+                    device["hash"],
+                    job["log"],
+                    "#" * 80,
+                )
             )
-        )
+        except Exception:
+            getLogger().critical(
+                "Couldn't complete async job. Exception from subprocess:", exc_info=True
+            )
 
         with LOCK:
             self._coolDown(device, force_reboot=job["status"] != "DONE")
