@@ -206,7 +206,7 @@ parser.add_argument(
     "--benchmark_table", help="The table that will store benchmark infos"
 )
 
-LOCK = threading.RLock()
+LOCK = multiprocessing.Lock()
 
 DRAIN = False
 RUNNING_JOBS = 0
@@ -275,6 +275,9 @@ class runAsync(object):
         try:
             self._setFramework()
             with LOCK:
+                getLogger().info(
+                    f"Lock acquired by {os.getpid()} before _downloadFiles() for benchmark {self.job['identifier']} id ({self.job['id']})"
+                )
                 self._downloadFiles()
             raw_args = self._getRawArgs()
             app = BenchmarkDriver(raw_args=raw_args, usb_controller=self.usb_controller)
@@ -590,8 +593,7 @@ class RunLab(object):
     def run(self):
         hookSignals()
         while not stopRun(self.args):
-            with LOCK:
-                self._runOnce()
+            self._runOnce()
             time.sleep(1)
         self.db.updateDevices(self.args.claimer_id, "", True)
         self.device_manager.shutdown()
@@ -747,11 +749,10 @@ class RunLab(object):
                 "Couldn't complete async job. Exception from subprocess:", exc_info=True
             )
 
-        with LOCK:
-            self._coolDown(device, force_reboot=job["status"] != "DONE")
+        self._coolDown(device, force_reboot=job["status"] != "DONE")
 
     def _coolDown(self, device, force_reboot=False):
-        t = CoolDownDevice(device, self.args, self.db, force_reboot, LOCK)
+        t = CoolDownDevice(device, self.args, self.db, force_reboot)
         t.start()
 
 

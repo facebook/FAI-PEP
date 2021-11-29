@@ -16,7 +16,7 @@ from __future__ import unicode_literals
 import datetime
 import json
 import time
-from threading import Thread, RLock
+from threading import Thread
 from typing import Dict
 
 from bridge.db import DBDriver
@@ -273,13 +273,12 @@ class DeviceManager(object):
 class CoolDownDevice(Thread):
     """Used by AsyncRun to cool device down after benchmark.  Will reboot the device if required and add rebooting status to device entry."""
 
-    def __init__(self, device, args, db, force_reboot, LOCK: RLock):
+    def __init__(self, device, args, db, force_reboot):
         Thread.__init__(self)
         self.device = device
         self.args = args
         self.db = db
         self.force_reboot = force_reboot
-        self.LOCK = LOCK
 
     def run(self):
         reboot = self.args.reboot and (
@@ -303,6 +302,7 @@ class CoolDownDevice(Thread):
                     "Device {} could not be rebooted.".format(self.device)
                 )
                 success = False
+
         # sleep for device cooldown
         if self.args.platform.startswith("ios") or self.args.platform.startswith(
             "android"
@@ -312,20 +312,19 @@ class CoolDownDevice(Thread):
         else:
             getLogger().info("Sleep 20 seconds")
             time.sleep(20)
-        with self.LOCK:
-            getLogger().info("CoolDownDevice lock acquired")
-            # device should be available again, remove rebooting flag.
-            if "rebooting" in self.device:
-                del self.device["rebooting"]
-            if success:
-                self.device["available"] = True
-                device_str = getDevicesString([self.device])
-                self.db.updateDevices(self.args.claimer_id, device_str, False)
-                getLogger().info(
-                    "Device {}({}) available".format(
-                        self.device["kind"], self.device["hash"]
-                    )
+
+        # device should be available again, remove rebooting flag.
+        if "rebooting" in self.device:
+            del self.device["rebooting"]
+        if success:
+            self.device["available"] = True
+            device_str = getDevicesString([self.device])
+            self.db.updateDevices(self.args.claimer_id, device_str, False)
+            getLogger().info(
+                "Device {}({}) available".format(
+                    self.device["kind"], self.device["hash"]
                 )
-            else:
-                self.device["live"] = False
+            )
+        else:
+            self.device["live"] = False
         getLogger().info("CoolDownDevice lock released")
