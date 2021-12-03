@@ -46,11 +46,11 @@ class ADB(PlatformUtilBase):
             getLogger().error("Unknown exception {}".format(e))
             return False
 
-    def root(self):
-        return self.restart_adbd(root=True)
+    def root(self, silent=False):
+        return self.restart_adbd(root=True, silent=silent)
 
-    def unroot(self):
-        return self.restart_adbd(root=False)
+    def unroot(self, silent=False):
+        return self.restart_adbd(root=False, silent=silent)
 
     def user_is_root(self):
         return self.get_user() == "root"
@@ -58,21 +58,24 @@ class ADB(PlatformUtilBase):
     def get_user(self):
         return self.shell("whoami", silent=True)[0]
 
-    def restart_adbd(self, root=False):
+    def restart_adbd(self, root=False, silent=False):
         try:
             user = self.get_user()
             if root and user != "root":
-                getLogger().info("Restarting adbd with root privilege.")
+                if not silent:
+                    getLogger().info("Restarting adbd with root privilege.")
                 self.run(["root"], retry=1, silent=True)
             elif not root and user == "root":
-                getLogger().info("Restarting adbd with nonroot privilege.")
+                if not silent:
+                    getLogger().info("Restarting adbd with nonroot privilege.")
                 self.run(["unroot"], retry=1, silent=True)
             else:
                 return True  # no-op
 
             # Check if change worked
             user = self.get_user()
-            getLogger().info(f"adbd user is now: {user}.")
+            if not silent:
+                getLogger().info(f"adbd user is now: {user}.")
             return user == "root" if root else user != "root"
         except Exception:
             getLogger().critical(
@@ -99,21 +102,33 @@ class ADB(PlatformUtilBase):
 
     def isRootedDevice(self, silent=True) -> bool:
         try:
-            ret = self.shell(["id", "-u", "2>&1"], retry=1, silent=silent)
+            ret = self.shell(
+                ["id", "-u", "2>&1"], retry=1, silent=silent, ignore_status=silent
+            )
+            if not silent:
+                getLogger().info(f"id -u returned '{ret}'.")
             if "0" in ret:
                 return True
 
-            ret = self.shell(["which", "su", "2>&1"], retry=1, silent=silent)
+            ret = self.shell(
+                ["which", "su", "2>&1"], retry=1, silent=silent, ignore_status=silent
+            )
             if not silent:
                 getLogger().info(f"which su returned '{ret}'.")
 
-            return ret is not None and len(ret) > 0 and ret[0].find("not found") == -1
+            is_rooted = (
+                ret is not None and len(ret) > 0 and ret[0].find("not found") == -1
+            )
+            return is_rooted
+
         except Exception:
             return False
 
     def setFrequency(self, target):
         if not self.isRootedDevice():
-            getLogger().info("Device {} is not rooted.".format(self.device))
+            getLogger().warning(
+                f"Cannot set frequency on unrooted device {self.device}."
+            )
             return
 
         cpus = self._getCPUs()
