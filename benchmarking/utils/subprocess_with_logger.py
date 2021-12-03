@@ -58,9 +58,10 @@ def processRun(*args, **kwargs):
             getLogger().info("Process Failed: %s", " ".join(*args))
             break
         retryCount -= 1
-        getLogger().info(
-            "Process Failed (will retry %d more times): %s", retryCount, " ".join(*args)
-        )
+        if retryCount > 0:
+            getLogger().info(
+                f"Process Failed (will retry {retryCount} more times): {' '.join(*args)}"
+            )
     return ret
 
 
@@ -143,8 +144,8 @@ def processWait(processAndTimeout, **kwargs):
                 status = 0
         if t is not None:
             t.cancel()
-        if log_output or status != 0:
-            if status != 0:
+        if log_output or (status != 0 and not ignore_status):
+            if status != 0 and not ignore_status:
                 getLogger().info("Process exited with status: {}".format(status))
                 setRunStatus(1, key=process_key)
             if "filter" in kwargs:
@@ -195,7 +196,7 @@ def _Popen(*args, **kwargs):
         universal_newlines=True,
         preexec_fn=os.setsid,
         errors="replace",
-        **customArgs
+        **customArgs,
     )
     # We set the buffer size to system default.
     # this is not really recommended. However, we need to stream the
