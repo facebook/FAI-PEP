@@ -253,6 +253,9 @@ class runAsync(object):
         return self.run()
 
     def run(self):
+        # set env vars of this process and any subprocess for logging.
+        os.environ["JOB_IDENTIFIER"] = str(self.job["identifier"])
+        os.environ["JOB_ID"] = str(self.job["id"])
         handlers = []
         log_capture_string = StringIO()
         ch = logging.StreamHandler(log_capture_string)
