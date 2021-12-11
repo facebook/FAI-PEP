@@ -440,7 +440,6 @@ def _retrieveMeta(info, benchmark, platform, framework, backend, user_identifier
 
     # test specific
     test = benchmark["tests"][0]
-    meta["statistics"] = _getStatisticsSet(test)
 
     meta["metric"] = test["metric"]
     if "identifier" in test:
