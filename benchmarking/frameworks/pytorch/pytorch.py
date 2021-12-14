@@ -35,8 +35,7 @@ class PytorchFramework(Caffe2Framework):
         args = converter.get("args")
         results = []
         num = 0
-        # hack to ignore status for now
-        platform_args["ignore_status"] = True
+
         # emulate do...while... loop
         while True:
             output, meta = platform.runBenchmark(cmd, platform_args=platform_args)
