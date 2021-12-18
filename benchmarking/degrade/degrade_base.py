@@ -19,11 +19,12 @@ class DegradeBase(object):
     For example:
         {
             "cpu": {
-                count: "4",
+                "count": "4",
             },
             "memory": {
-                limit: "2000000KB",
-            }
+                "limit": "2000000KB",
+            },
+            "report": true,
         }
 
     This class also acts as a default no-op implementation in the case that no implementation is registered for a given platform.
