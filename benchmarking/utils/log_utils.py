@@ -35,8 +35,11 @@ def valid_interval(arg) -> int:
 
 
 def trimLog(output):
-    if sys.getsizeof(output) > LOG_LIMIT:
-        getLogger().error("Error, output is too large")
+    output_size = sys.getsizeof(output)
+    if output_size > LOG_LIMIT:
+        getLogger().warning(
+            f"Output size {output_size} is over the log limit of {LOG_LIMIT} and will be trimmed."
+        )
         output = output[-LOG_LIMIT:]
     return output
 

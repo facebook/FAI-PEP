@@ -40,7 +40,7 @@ def getPlatforms(args, tempdir="/tmp", usb_controller=None):
     elif os.name == "nt":
         platforms.append(WindowsPlatform(tempdir))
     if not platforms:
-        getLogger().error("No platform or physical device detected.")
+        getLogger().warning("No platform or physical device detected.")
     return platforms
 
 

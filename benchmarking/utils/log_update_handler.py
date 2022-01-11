@@ -70,14 +70,14 @@ class DBLogUpdateHandler(logging.Handler):
                         self.retries_left -= 1
                         if self.retries_left == 0:
                             self.running = False
-                            getLogger().error(
+                            getLogger().critical(
                                 "Max failed attempts reached for log updates. Stopping log update requests."
                             )
                     else:
                         self.retries_left = self.retries
                     self.lastreq = time.time()
-                except Exception as ex:
-                    getLogger().error(ex)
+                except Exception:
+                    getLogger().exception("Error occurred in realtime logging loop.")
                     self.running = False
             time.sleep(1)
 

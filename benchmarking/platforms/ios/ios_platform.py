@@ -131,11 +131,11 @@ class IOSPlatform(PlatformBase):
                     if not output or not meta:
                         raise RuntimeError("No data returned from XCTrace profiler.")
                     return output, meta
-            except Exception as ex:
-                getLogger().exception(
-                    f"An error occurred when running XCTrace profiler. {ex}"
+            except Exception:
+                getLogger().critical(
+                    f"An error occurred when running XCTrace profiler on device {self.platform} {self.platform_hash}.",
+                    exc_info=True,
                 )
-
         # meta is used to store any data about the benchmark run
         # that is not the output of the command
         meta = {}

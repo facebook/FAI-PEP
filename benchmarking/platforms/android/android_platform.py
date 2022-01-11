@@ -264,9 +264,10 @@ class AndroidPlatform(PlatformBase):
                             log_logcat = self.util.logcat("-d")
                         return output + log_logcat, meta
                 # if this has not succeeded for some reason reset run status and run without profiling.
-                except Exception as ex:
-                    getLogger().exception(
-                        f"An error has occurred when running Simpleperf profiler. {ex}"
+                except Exception:
+                    getLogger().critical(
+                        f"An error has occurred when running Simpleperf profiler on device {self.platform}  {self.platform_hash}.",
+                        exc_info=True,
                     )
         log_screen = self.util.shell(cmd, **platform_args)
         log_logcat = []
@@ -305,10 +306,8 @@ class AndroidPlatform(PlatformBase):
             ls = self.util.shell(["ls", self.tgt_dir])
             time.sleep(period)
         if len(ls) == 0:
-            getLogger().error(
-                "Cannot reach device {} ({}) after {}.".format(
-                    self.platform, self.platform_hash, timeout
-                )
+            getLogger().critical(
+                f"Cannot reach device {self.platform} {self.platform_hash} after {timeout}s."
             )
 
     def currentPower(self):
@@ -319,7 +318,10 @@ class AndroidPlatform(PlatformBase):
                     result_line = line
             return int(result_line.split(": ")[-1])
         except Exception:
-            getLogger().exception("Could not read battery level")
+            getLogger().critical(
+                f"Could not read battery level for device {self.platform}  {self.platform_hash}",
+                exc_info=True,
+            )
             return -1
 
     @property

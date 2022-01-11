@@ -77,7 +77,7 @@ def getBuildScript(framework, frameworks_dir, platform, dst):
     if not frameworks_dir:
         try:
             build_script = _readFromBinary(framework, frameworks_dir, platform, dst)
-        except BaseException as e:
+        except Exception as e:
             getLogger().info("We will load from old default path due to {}.".format(e))
             frameworks_dir = str(
                 os.path.dirname(os.path.realpath(__file__))
@@ -87,7 +87,7 @@ def getBuildScript(framework, frameworks_dir, platform, dst):
     else:
         try:
             build_script = _readFromPath(framework, frameworks_dir, platform, dst)
-        except BaseException as e:
+        except Exception as e:
             getLogger().info("We will load from binary due to {}.".format(e))
             build_script = _readFromBinary(framework, frameworks_dir, platform, dst)
 

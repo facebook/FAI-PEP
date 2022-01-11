@@ -136,9 +136,7 @@ def _getLatestRun(dir):
     if last_run >= 0:
         return os.path.join(dir, str(last_run))
     else:
-        getLogger().error(
-            "Latest run in directory %s doesn't exist. " "This should not happen." % dir
-        )
+        getLogger().critical(f"Latest run in directory {dir} doesn't exist.")
         return None
 
 

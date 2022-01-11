@@ -172,7 +172,7 @@ class ExecutablesBuilder(threading.Thread):
                 self._buildExecutables()
         except Exception:
             setRunStatus(2)
-            getLogger().error(traceback.format_exc())
+            getLogger().exception("Error building executable.")
 
     def _buildExecutables(self):
         platforms = self.args.platforms.split(",")
