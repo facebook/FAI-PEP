@@ -454,7 +454,7 @@ class RunRemote(object):
                     shutil.rmtree(f, True)
                 if os.path.isfile(f):
                     os.remove(f)
-        except BaseException:
+        except Exception:
             pass
 
     def _updateBenchmarksWithArgs(self, benchmarks, args):

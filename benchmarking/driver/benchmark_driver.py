@@ -73,15 +73,16 @@ def runOneBenchmark(
         )
         data = _retrieveInfo(info, data)
         result = {"meta": meta, "data": data}
-    except Exception as e:
+    except Exception:
         # Catch all exceptions so that failure in one test does not
         # affect other tests
-        getLogger().info("Exception caught when running benchmark")
-        getLogger().info(e)
+        getLogger().critical(
+            "Exception caught when running benchmark.",
+            exc_info=True,
+        )
         data = None
         status = 2
         setRunStatus(status)
-        getLogger().error(traceback.format_exc())
 
         # Set result meta and data to default values to that
         # the reporter will not try to key into a None
@@ -177,8 +178,7 @@ def _mergeDelayData(treatment_data, control_data, bname):
             continue
         if k not in control_data:
             getLogger().error(
-                "Value {} existed in treatment but not ".format(k)
-                + "control for benchmark {}".format(bname)
+                f"Value {k} existed in treatment but not control for benchmark {bname}.",
             )
             continue
         control_value = control_data[k]
@@ -260,9 +260,8 @@ def _mergeDelayMeta(treatment_meta, control_meta, bname):
     meta = copy.deepcopy(treatment_meta)
     for k in treatment_meta:
         if k not in control_meta:
-            getLogger().error(
-                "Value {} existed in treatment but not ".format(k)
-                + "control for benchmark {}".format(bname)
+            getLogger().critical(
+                f"Value {k} existed in treatment but not control for benchmark {bname}."
             )
             continue
         meta["control_{}".format(k)] = control_meta[k]

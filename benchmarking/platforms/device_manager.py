@@ -77,6 +77,7 @@ class DeviceManager(object):
         self.online_devices = None
         self._initializeDevices()
         self.running = True
+        self.failed_device_checks = 0
         self.device_monitor_interval = self.args.device_monitor_interval
         self.device_monitor = Thread(target=self._runDeviceMonitor)
         self.device_monitor.start()
@@ -126,8 +127,8 @@ class DeviceManager(object):
                     ):
                         usb_disabled = True
                     if "rebooting" not in lab_device and not usb_disabled:
-                        getLogger().error(
-                            "Device {} has become unavailable.".format(offline_device)
+                        getLogger().critical(
+                            f"Device {offline_device} has become unavailable.",
                         )
                         self._disableDevice(offline_device)
             if new_devices:
@@ -141,8 +142,15 @@ class DeviceManager(object):
                         ]:
                             self.online_devices.append(d)
                         getLogger().info("New device added: {}".format(d))
-        except BaseException:
+            self.failed_device_checks = 0
+        except Exception:
             getLogger().exception("Error while checking devices.")
+            self.failed_device_checks += 1
+            # If 3 device checks have failed, critically log failure.
+            if self.failed_device_checks == 3:
+                getLogger().critical(
+                    "Persistant error while checking devices.", exc_info=True
+                )
 
     def _updateHeartbeats(self):
         """Update device heartbeats for all devices which are marked "live" in lab devices."""
@@ -261,10 +269,6 @@ class DeviceManager(object):
             False,
         )
 
-    def _sendErrorReport(self, emsg):
-        # TODO: send alert to support team to troubleshoot
-        raise NotImplementedError
-
     def shutdown(self):
         self.db.updateDevices(self.args.claimer_id, "", True)
         self.running = False
@@ -299,9 +303,7 @@ class CoolDownDevice(Thread):
                 self.device["reboot_time"] = datetime.datetime.now()
             else:
                 self.device.pop("rebooting")
-                getLogger().error(
-                    "Device {} could not be rebooted.".format(self.device)
-                )
+                getLogger().critical(f"Device {self.device} could not be rebooted.")
                 success = False
         # sleep for device cooldown
         if self.args.platform.startswith("ios") or self.args.platform.startswith(

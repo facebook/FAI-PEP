@@ -285,19 +285,22 @@ class runAsync(object):
                 f"Running BenchmarkDriver for benchmark {self.job['identifier']} id ({self.job['id']})"
             )
             status = app.run()
+
         except DownloadException:
-            getLogger().exception(
-                f"An error occurred while running benchmark {self.job['identifier']} id ({self.job['id']})"
+            getLogger().critical(
+                f"An error occurred while downloading files for benchmark {self.job['identifier']} id ({self.job['id']}",
+                exc_info=True,
             )
             status = HARNESS_ERROR
         except BenchmarkArgParseException:
             getLogger().exception(
-                f"An error occurred while running benchmark {self.job['identifier']} id ({self.job['id']})"
+                f"An error occurred while parsing arguments for benchmark {self.job['identifier']} id ({self.job['id']})"
             )
             status = USER_ERROR
         except Exception:
-            getLogger().exception(
-                f"An error occurred while running benchmark {self.job['identifier']} id ({self.job['id']})"
+            getLogger().critical(
+                f"An error occurred while running benchmark {self.job['identifier']} id ({self.job['id']}",
+                exc_info=True,
             )
             status = HARNESS_ERROR
         finally:
@@ -323,7 +326,9 @@ class runAsync(object):
             elif "model" in content and "framework" in content["model"]:
                 self.job["framework"] = content["model"]["framework"]
             else:
-                getLogger().error("Framework is not specified, use Caffe2 as default")
+                getLogger().warning(
+                    "Framework is not specified, using Caffe2 as default"
+                )
                 self.job["framework"] = "caffe2"
         except Exception:
             raise BenchmarkArgParseException("Error parsing raw args from job.")
@@ -493,7 +498,7 @@ class runAsync(object):
         else:
             self.job["status"] = "FAILED"
         if not output:
-            getLogger().error("Error, output are None")
+            getLogger().critical("No output was captured.")
         else:
             output = trimLog(output)
             self.job["log"] = output
@@ -524,7 +529,9 @@ class runAsync(object):
         for d in dirs:
             f = os.path.join(*[output_dir, d, "data.txt"])
             if not os.path.isfile(f):
-                getLogger().error("The output {} doesn't exist".format(f))
+                getLogger().critical(
+                    f"The output file {f} doesn't exist for benchmark."
+                )
                 continue
             with open(f, "r") as file:
                 content = json.load(file)
@@ -539,7 +546,7 @@ class runAsync(object):
 
     def _handlePowerData(self, filename):
         if not os.path.isfile(filename):
-            getLogger().error("Power data file " "{} doesn't exist".format(filename))
+            getLogger().critical(f"Power data file '{filename}' doesn't exist.")
             return
         app = UploadDownloadFiles(self.args)
         file_link = app.upload(file=filename, permanent=False)

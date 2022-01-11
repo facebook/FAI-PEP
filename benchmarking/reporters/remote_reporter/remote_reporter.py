@@ -118,7 +118,7 @@ class RemoteReporter(ReporterBase):
                 value = int(meta[key])
                 meta.pop(key, None)
                 summary[key] = value
-            except BaseException:
+            except Exception:
                 getLogger().warning("{} cannot be converted into int".format(meta[key]))
                 pass
 

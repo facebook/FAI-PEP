@@ -69,8 +69,10 @@ class IDB(PlatformUtilBase):
             super(IDB, self).run("idevicediagnostics", "-u", self.device, "restart")
             return True
         except Exception:
-            getLogger().error("Rebooting failure...")
-            getLogger().error("Unknown exception {}".format(sys.exc_info()[0]))
+            getLogger().critical(
+                f"Rebooting failure for device {self.device_kind} {self.device_hash}.",
+                exc_info=True,
+            )
             return False
 
     def deleteFile(self, file):
@@ -88,5 +90,8 @@ class IDB(PlatformUtilBase):
             getLogger().info("Result {}".format(level))
             return level
         except Exception:
-            getLogger().exception("Could not read battery level")
+            getLogger().critical(
+                f"Could not read battery level for device {self.device_kind} {self.device_hash}.",
+                exc_info=True,
+            )
             return -1

@@ -41,9 +41,11 @@ class ADB(PlatformUtilBase):
         try:
             self.run("reboot")
             return True
-        except Exception as e:
-            getLogger().error("Rebooting failure...")
-            getLogger().error("Unknown exception {}".format(e))
+        except Exception:
+            getLogger().critical(
+                f"Rebooting failure for device {self.device_kind} {self.device_hash}.",
+                exc_info=True,
+            )
             return False
 
     def root(self, silent=False):

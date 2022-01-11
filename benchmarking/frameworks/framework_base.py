@@ -580,7 +580,7 @@ class FrameworkBase(object):
             info_string_map = (
                 json.loads(stringmap_from_info) if stringmap_from_info else {}
             )
-        except BaseException:
+        except Exception:
             string_map = (
                 ast.literal_eval(self.args.string_map) if self.args.string_map else {}
             )

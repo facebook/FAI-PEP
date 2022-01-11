@@ -59,7 +59,7 @@ class PlatformBase(object):
                 )
 
                 self.hash_platform_mapping = hash_platform_mapping
-            except BaseException:
+            except Exception:
                 pass
 
         if isinstance(device_name_mapping, string_types):
@@ -79,7 +79,7 @@ class PlatformBase(object):
                 )
 
                 self.device_name_mapping = device_name_mapping
-            except BaseException:
+            except Exception:
                 pass
 
     def getType(self):
