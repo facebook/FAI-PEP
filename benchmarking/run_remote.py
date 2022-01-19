@@ -274,7 +274,12 @@ class BuildProgram(threading.Thread):
             if self.prebuilt_binary:
                 allfiles = [program]
             else:
-                allfiles = [os.path.join(filedir, f) for f in os.listdir(filedir)]
+                allfiles = [
+                    os.path.join(filedir, f)
+                    for f in os.listdir(filedir)
+                    if os.path.isfile(os.path.join(filedir, f))
+                ]
+
             for fn in allfiles:
                 filename, _ = self.file_handler.uploadFile(fn, None, None, False)
                 getLogger().info("program: {}".format(filename))
