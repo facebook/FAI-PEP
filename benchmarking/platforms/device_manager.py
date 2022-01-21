@@ -16,6 +16,7 @@ from __future__ import unicode_literals
 import datetime
 import json
 import time
+from collections import defaultdict
 from threading import Thread, RLock
 from typing import Dict
 
@@ -75,6 +76,8 @@ class DeviceManager(object):
         self.db: DBDriver = db
         self.lab_devices = {}
         self.online_devices = None
+        self.device_dc_count = defaultdict(int)
+        self.dc_threshold = 3
         self._initializeDevices()
         self.running = True
         self.failed_device_checks = 0
@@ -106,42 +109,8 @@ class DeviceManager(object):
         """Run any device health checks, e.g. connectivity, battery, etc."""
         try:
             online_hashes = getDeviceList(self.args, silent=True)
-            offline_devices = [
-                device
-                for device in self.online_devices
-                if device["hash"] not in online_hashes
-            ]
-            new_devices = [
-                h
-                for h in online_hashes
-                if h not in [p["hash"] for p in self.online_devices]
-            ]
-            if offline_devices:
-                for offline_device in offline_devices:
-                    lab_device = self.lab_devices[offline_device["kind"]][
-                        offline_device["hash"]
-                    ]
-                    usb_disabled = False
-                    if self.usb_controller and not self.usb_controller.active.get(
-                        lab_device["hash"], True
-                    ):
-                        usb_disabled = True
-                    if "rebooting" not in lab_device and not usb_disabled:
-                        getLogger().critical(
-                            f"Device {offline_device} has become unavailable.",
-                        )
-                        self._disableDevice(offline_device)
-            if new_devices:
-                devices = ",".join(new_devices)
-                devices = self._getDevices(devices)
-                if devices:
-                    for d in devices:
-                        self._enableDevice(d)
-                        if d["hash"] not in [
-                            device["hash"] for device in self.online_devices
-                        ]:
-                            self.online_devices.append(d)
-                        getLogger().info("New device added: {}".format(d))
+            self._handleDCDevices(online_hashes)
+            self._handleNewDevices(online_hashes)
             self.failed_device_checks = 0
         except Exception:
             getLogger().exception("Error while checking devices.")
@@ -151,6 +120,72 @@ class DeviceManager(object):
                 getLogger().critical(
                     "Persistent error while checking devices.", exc_info=True
                 )
+
+    def _handleDCDevices(self, online_hashes):
+        """
+        If there are devices we expect to be connected to the host,
+        check if they are rebooting or have been put offline by the USBController,
+        else mark the device as unavailable and offline. After dc_threshold times
+        that the device is not seen, remove it completely and critically log.
+        """
+        for h in online_hashes:
+            if h in self.device_dc_count:
+                device = [d for d in self.online_devices if d["hash"] == h][0]
+                getLogger().info(f"Device {device} has reconnected.")
+                self.device_dc_count.pop(h)
+        dc_devices = [
+            device
+            for device in self.online_devices
+            if device["hash"] not in online_hashes
+        ]
+        for dc_device in dc_devices:
+            kind = dc_device["kind"]
+            hash = dc_device["hash"]
+            lab_device = self.lab_devices[kind][hash]
+            usb_disabled = False
+            if self.usb_controller and not self.usb_controller.active.get(hash, True):
+                usb_disabled = True
+            if "rebooting" not in lab_device and not usb_disabled:
+                if hash not in self.device_dc_count:
+                    getLogger().error(
+                        f"Device {dc_device} is disconnected and has been marked unavailable.",
+                    )
+                    self._disableDevice(dc_device)
+                self.device_dc_count[hash] += 1
+                if self.device_dc_count[hash] < self.dc_threshold:
+                    getLogger().error(
+                        f"Device {dc_device} has shown as disconnected {self.device_dc_count[hash]} time(s).",
+                    )
+                elif self.device_dc_count[hash] == self.dc_threshold:
+                    getLogger().error(
+                        f"Device {dc_device} has shown as disconnected {self.device_dc_count[hash]} time(s) and has become unavailable.",
+                    )
+                    self.online_devices.remove(dc_device)
+                    self.device_dc_count.pop(hash)
+
+    def _handleNewDevices(self, online_hashes):
+        """
+        Check if there are newly detected devices connected
+        to the host and add them to the device list.
+        """
+        new_devices = [
+            h
+            for h in online_hashes
+            if h not in [p["hash"] for p in self.online_devices]
+        ]
+        if new_devices:
+            devices = ",".join(new_devices)
+            devices = self._getDevices(devices)
+            if devices:
+                for d in devices:
+                    self._enableDevice(d)
+                    if d["hash"] not in [
+                        device["hash"] for device in self.online_devices
+                    ]:
+                        self.online_devices.append(d)
+                    if d["hash"] in self.device_dc_count:
+                        self.device_dc_count.pop(d["hash"])
+                    getLogger().info("New device added: {}".format(d))
 
     def _updateHeartbeats(self):
         """Update device heartbeats for all devices which are marked "live" in lab devices."""
@@ -231,7 +266,6 @@ class DeviceManager(object):
         entry = self.lab_devices[kind][hash]
         entry["available"] = False
         entry["live"] = False
-        self.online_devices.remove(device)
         self.db.updateDevices(
             self.args.claimer_id,
             getDevicesString([self.lab_devices[kind][hash]]),
