@@ -58,31 +58,40 @@ class ADB(PlatformUtilBase):
         return self.get_user() == "root"
 
     def get_user(self):
-        return self.shell("whoami", silent=True)[0]
+        try:
+            return self.shell("whoami", retry=1, silent=True)[0]
+        except Exception:
+            getLogger().exception("whoami failed.")
+            return None  # could fail on unrooted device
 
     def restart_adbd(self, root=False, silent=False):
-        try:
-            user = self.get_user()
-            if root and user != "root":
-                if not silent:
-                    getLogger().info("Restarting adbd with root privilege.")
-                self.run(["root"], retry=1, silent=True)
-            elif not root and user == "root":
-                if not silent:
-                    getLogger().info("Restarting adbd with nonroot privilege.")
-                self.run(["unroot"], retry=1, silent=True)
-            else:
-                return True  # no-op
+        user = self.get_user()
+        if user is not None:
+            try:
+                if root and user != "root":
+                    if not silent:
+                        getLogger().info("Restarting adbd with root privilege.")
+                    self.run(["root"], retry=1, silent=True)
+                elif not root and user == "root":
+                    if not silent:
+                        getLogger().info("Restarting adbd with nonroot privilege.")
+                    self.run(["unroot"], retry=1, silent=True)
+                else:
+                    return True  # no-op
 
-            # Check if change worked
-            user = self.get_user()
-            if not silent:
-                getLogger().info(f"adbd user is now: {user}.")
-            return user == "root" if root else user != "root"
-        except Exception:
-            getLogger().critical(
-                f"Error while restarting adbd with {'non' if not root else ''}root privilege."
-            )
+                # Check if change worked
+                user = self.get_user()
+                if not silent:
+                    getLogger().info(f"adbd user is now: {user}.")
+                return user == "root" if root else user != "root"
+            except Exception:
+                err_text = f"Error while restarting adbd with {'non' if not root else ''}root privilege."
+                if silent:
+                    # still log error but no alert if in silent mode
+                    getLogger().error(err_text, exc_info=True)
+
+                else:
+                    getLogger().critical(err_text, exc_info=True)
         return False
 
     def deleteFile(self, file):
