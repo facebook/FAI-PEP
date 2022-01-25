@@ -133,6 +133,7 @@ class DeviceManager(object):
                 device = [d for d in self.online_devices if d["hash"] == h][0]
                 getLogger().info(f"Device {device} has reconnected.")
                 self.device_dc_count.pop(h)
+                self._enableDevice(device)
         dc_devices = [
             device
             for device in self.online_devices
@@ -148,17 +149,18 @@ class DeviceManager(object):
             if "rebooting" not in lab_device and not usb_disabled:
                 if hash not in self.device_dc_count:
                     getLogger().error(
-                        f"Device {dc_device} is disconnected and has been marked unavailable.",
+                        f"Device {dc_device} is disconnected and has been marked unavailable for benchmarking.",
                     )
                     self._disableDevice(dc_device)
                 self.device_dc_count[hash] += 1
-                if self.device_dc_count[hash] < self.dc_threshold:
+                dc_count = self.device_dc_count[hash]
+                if dc_count < self.dc_threshold:
                     getLogger().error(
-                        f"Device {dc_device} has shown as disconnected {self.device_dc_count[hash]} time(s).",
+                        f"Device {dc_device} has shown as disconnected {dc_count} time(s) ({dc_count * self.device_monitor_interval}s)",
                     )
-                elif self.device_dc_count[hash] == self.dc_threshold:
-                    getLogger().error(
-                        f"Device {dc_device} has shown as disconnected {self.device_dc_count[hash]} time(s) and has become unavailable.",
+                elif dc_count == self.dc_threshold:
+                    getLogger().critical(
+                        f"Device {dc_device} has shown as disconnected {dc_count} time(s) ({dc_count * self.device_monitor_interval}s) and is offline.",
                     )
                     self.online_devices.remove(dc_device)
                     self.device_dc_count.pop(hash)
