@@ -315,7 +315,7 @@ class runAsync(object):
             del handlers
             self._setStatusOutput(status, output)
             self._submitDone()
-            self._removeBenchmarkFiles()
+            #self._removeBenchmarkFiles()
             time.sleep(1)
 
         return {"device": self.device, "job": self.job}
