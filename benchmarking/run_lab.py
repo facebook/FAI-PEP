@@ -515,9 +515,12 @@ class runAsync(object):
     def _removeBenchmarkFiles(self):
         """Attempt to remove temporary files, ignore errors."""
         shutil.rmtree(self.tempdir, True)
-        programs_location = self.job.get("programs_location", [])
-        for program_location in programs_location:
-            shutil.rmtree(os.path.dirname(program_location), True)
+
+        # Do not remove programs or model files here. Files can be removed
+        # by access time with a service.
+        # programs_location = self.job.get("programs_location", [])
+        # for program_location in programs_location:
+        #     shutil.rmtree(os.path.dirname(program_location), True)
 
         # We don't delete files from models_location because after each run
         # to save model re-download time. This might be a problem to have
