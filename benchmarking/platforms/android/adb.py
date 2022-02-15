@@ -43,7 +43,7 @@ class ADB(PlatformUtilBase):
             return True
         except Exception:
             getLogger().critical(
-                f"Rebooting failure for device {self.device_kind} {self.device_hash}.",
+                f"Rebooting failure for device {self.device}.",
                 exc_info=True,
             )
             return False
