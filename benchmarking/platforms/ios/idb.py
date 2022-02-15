@@ -70,7 +70,7 @@ class IDB(PlatformUtilBase):
             return True
         except Exception:
             getLogger().critical(
-                f"Rebooting failure for device {self.device_kind} {self.device_hash}.",
+                f"Rebooting failure for device {self.device}.",
                 exc_info=True,
             )
             return False
@@ -91,7 +91,7 @@ class IDB(PlatformUtilBase):
             return level
         except Exception:
             getLogger().critical(
-                f"Could not read battery level for device {self.device_kind} {self.device_hash}.",
+                f"Could not read battery level for device {self.device}.",
                 exc_info=True,
             )
             return -1
