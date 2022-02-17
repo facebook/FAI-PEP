@@ -14,7 +14,7 @@ import argparse
 import json
 import os
 
-from download_benchmarks.download_benchmarks import DownloadBenchmarks
+from bridge.file_storage.downloaders.download_benchmarks import DownloadBenchmarks
 from harness import BenchmarkDriver
 from repo_driver import RepoDriver as OSS_RepoDriver
 from run_lab import RunLab

@@ -1,10 +1,18 @@
+##############################################################################
+# Copyright 2017-present, Facebook, Inc.
+# All rights reserved.
+#
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+##############################################################################
+
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
 
 import requests
-from download_benchmarks.file_downloader_base import FileDownloaderBase
-from download_benchmarks.file_downloader_base import registerFileDownloader
+from bridge.file_storage.downloaders.file_downloader_base import FileDownloaderBase
+from bridge.file_storage.downloaders.file_downloader_base import registerFileDownloader
 from utils.custom_logger import getLogger
 
 

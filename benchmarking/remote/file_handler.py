@@ -20,7 +20,7 @@ import os
 import tempfile
 
 import pkg_resources
-from bridge.file_storages import UploadDownloadFiles
+from bridge.file_storage.file_storages import UploadDownloadFiles
 from utils.custom_logger import getLogger
 
 

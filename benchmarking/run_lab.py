@@ -30,8 +30,10 @@ from concurrent.futures import ProcessPoolExecutor as Pool
 from io import StringIO
 
 from bridge.db import DBDriver
-from bridge.file_storages import UploadDownloadFiles
-from download_benchmarks.download_benchmarks import DownloadBenchmarks
+from bridge.file_storage.downloaders.download_benchmarks import (
+    DownloadBenchmarks,
+)
+from bridge.file_storage.file_storages import UploadDownloadFiles
 from harness import BenchmarkDriver
 from platforms.android.adb import ADB
 from platforms.device_manager import CoolDownDevice, DeviceManager
