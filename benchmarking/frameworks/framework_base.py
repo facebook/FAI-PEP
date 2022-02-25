@@ -591,6 +591,7 @@ class FrameworkBase(object):
         string_map["TGTDIR"] = platform.getOutputDir()
         string_map["HOSTDIR"] = self._createHostDir()
         string_map["FAIPEPROOT"] = getFAIPEPROOT()
+        string_map["DEVICEHASH"] = platform.platform_hash
         if program_path:
             string_map["BUILDDIR"] = program_path
 
