@@ -71,7 +71,7 @@ class AndroidPlatform(PlatformBase):
             # We know this command may fail. Avoid propogating this
             # failure to the upstream
             success = getRunStatus()
-            ret = self.util.logcat("-G", str(size) + "K")
+            ret = self.util.run(["logcat", "-G", str(size) + "K"], timeout=2, retry=1)
             setRunStatus(success, overwrite=True)
             if len(ret) > 0 and ret[0].find("failed to") >= 0:
                 repeat = True
