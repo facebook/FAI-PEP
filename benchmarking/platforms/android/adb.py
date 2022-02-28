@@ -111,6 +111,14 @@ class ADB(PlatformUtilBase):
         su_cmd.extend(cmd)
         return self.shell(su_cmd, **kwargs)
 
+    def getprop(self, property: str, **kwargs):
+        if "default" not in kwargs:
+            kwargs["default"] = [""]
+        return self.shell(["getprop", property], **kwargs)[0].strip()
+
+    def setprop(self, property, value, **kwargs):
+        self.adb.shell(["setprop", property, value], **kwargs)
+
     def isRootedDevice(self, silent=True) -> bool:
         try:
             ret = self.shell(
