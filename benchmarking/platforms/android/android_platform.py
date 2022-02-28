@@ -33,22 +33,16 @@ class AndroidPlatform(PlatformBase):
             args.device_name_mapping,
         )
         self.args = args
-        self.rel_version = adb.shell(
-            ["getprop", "ro.build.version.release"], default=""
-        )[0].strip()
-        self.build_version = adb.shell(["getprop", "ro.build.version.sdk"], default="")[
-            0
-        ].strip()
+        self.rel_version = adb.getprop("ro.build.version.release")
+        self.build_version = adb.getprop("ro.build.version.sdk")
         platform = (
-            adb.shell(["getprop", "ro.product.model"], default="")[0].strip()
+            adb.getprop("ro.product.model")
             + "-"
             + self.rel_version
             + "-"
             + self.build_version
         )
-        self.platform_abi = adb.shell(["getprop ro.product.cpu.abi"], default="")[
-            0
-        ].strip()
+        self.platform_abi = adb.getprop("ro.product.cpu.abi")
         self.os_version = "{}-{}".format(self.rel_version, self.build_version)
         self.type = "android"
         self.setPlatform(platform)
