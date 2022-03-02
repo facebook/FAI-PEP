@@ -238,7 +238,9 @@ def stopRun(args):
 
 
 class runAsync(object):
-    def __init__(self, args, device, db, job, benchmark_downloader, usb_controller):
+    def __init__(
+        self, args, device, db, job, benchmark_downloader, file_storage, usb_controller
+    ):
         self.args = args
         self.device = device
         self.db = db
@@ -247,6 +249,7 @@ class runAsync(object):
             prefix="_".join(["aibench", str(job.get("identifier")), ""])
         )
         self.benchmark_downloader = benchmark_downloader
+        self.file_storage = file_storage
         self.usb_controller = usb_controller
 
     def __call__(self):
@@ -554,8 +557,7 @@ class runAsync(object):
         if not os.path.isfile(filename):
             getLogger().critical(f"Power data file '{filename}' doesn't exist.")
             return
-        app = UploadDownloadFiles(self.args)
-        file_link = app.upload(file=filename, permanent=False)
+        file_link = self.file_storage.upload(file=filename, permanent=False)
         # remove the temporary file
         os.remove(filename)
         return file_link
@@ -576,6 +578,7 @@ class RunLab(object):
         self.args, self.unknowns = parser.parse_known_args(raw_args)
         os.environ["CLAIMER"] = self.args.claimer_id
         self.benchmark_downloader = DownloadBenchmarks(self.args, getLogger())
+        self.file_storage = UploadDownloadFiles(self.args)
         self.adb = ADB(None, self.args.android_dir)
         setLoggerLevel(self.args.logger_level)
         if not self.args.benchmark_db_entry:
@@ -712,6 +715,7 @@ class RunLab(object):
                 self.db,
                 job,
                 self.benchmark_downloader,
+                self.file_storage,
                 self.device_manager.usb_controller,
             )
 
