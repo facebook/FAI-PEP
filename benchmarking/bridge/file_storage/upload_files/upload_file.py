@@ -13,10 +13,14 @@ from bridge.file_storage.upload_files.file_uploader_base import getUploadHandles
 class UploadFile:
     def __init__(self):
         self.upload_handles = getUploadHandles()
-        self.uploaders = {}
 
     def upload_file(self, file, context: str, **kwargs):
         if context not in self.upload_handles:
             raise RuntimeError(f"No configuration found for {context}")
-        uploader = self.uploaders.get(context, self.upload_handles[context]())
+        uploader = self.upload_handles[context]()
         return uploader.upload_file(file, context=context, **kwargs)
+
+    def get_uploader(self, context, **kwargs):
+        if context not in self.upload_handles:
+            raise RuntimeError(f"No configuration found for {context}")
+        return self.upload_handles[context](context=context)
