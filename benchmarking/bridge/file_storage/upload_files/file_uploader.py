@@ -6,17 +6,27 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+upload_handles = {}
 
-from bridge.file_storage.upload_files.file_uploader_base import getUploadHandles
 
-
-class UploadFile:
-    def __init__(self):
+class FileUploader:
+    def __init__(self, context: str = "default"):
         self.upload_handles = getUploadHandles()
-        self.uploaders = {}
-
-    def upload_file(self, file, context: str, **kwargs):
         if context not in self.upload_handles:
             raise RuntimeError(f"No configuration found for {context}")
-        uploader = self.uploaders.get(context, self.upload_handles[context]())
-        return uploader.upload_file(file, context=context, **kwargs)
+        self.uploader = self.upload_handles[context]()
+
+    def upload_file(self, file):
+        return self.uploader.upload_file(file)
+
+    def get_uploader(self):
+        return self.uploader
+
+
+def registerFileUploader(name, obj):
+    global upload_handles
+    upload_handles[name] = obj
+
+
+def getUploadHandles():
+    return upload_handles
