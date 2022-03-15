@@ -21,10 +21,12 @@ import random
 import re
 import shutil
 
+from bridge.file_storage.upload_files.file_uploader import FileUploader
 from data_converters.data_converters import getConverters
 from platforms.platforms import getHostPlatform
 from six import string_types
 from utils import software_power
+from utils.custom_logger import getLogger
 from utils.utilities import (
     deepMerge,
     deepReplace,
@@ -374,9 +376,15 @@ class FrameworkBase(object):
         # field converter, and specify which convert to use to
         # convert the metrics
         if output_files:
+            to_upload = {}
             for filename in output_files:
                 file = output_files[filename]
-                converter = test["output_files"][filename].get("converter")
+                output_file_spec = test["output_files"][filename]
+                # if files should be uploaded, upload and add location to meta data.
+                if output_file_spec.get("upload", False):
+                    to_upload.update({filename: file})
+                # if output_file can be converted for data, convert and merge output.
+                converter = output_file_spec.get("converter")
                 if not converter:
                     continue
                 assert "name" in converter, "converter field must have a name"
@@ -391,6 +399,20 @@ class FrameworkBase(object):
                 results, _ = convert.collect(content, args)
                 one_output = convert.convert(results)
                 deepMerge(output, one_output)
+            if to_upload:
+                output["meta"]["output_files"] = {}
+                output_file_uploader = FileUploader("output_files").get_uploader()
+                for filename, file in to_upload.items():
+                    try:
+                        getLogger().info(f"Uploading {filename} ({file}) to manifold")
+                        url = output_file_uploader.upload_file(file)
+                        output["meta"]["output_files"].update({filename: url})
+                        getLogger().info(f"{file} uploaded to {url}")
+                    except Exception:
+                        getLogger().exception(
+                            f"Could not upload output file {file}. Skipping."
+                        )
+
         return output, output_files
 
     @abc.abstractmethod
