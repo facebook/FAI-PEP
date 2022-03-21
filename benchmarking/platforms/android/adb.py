@@ -34,8 +34,9 @@ class ADB(PlatformUtilBase):
     def pull(self, src, tgt):
         return self.run("pull", src, tgt)
 
-    def logcat(self, *args):
-        return self.run("logcat", *args)
+    def logcat(self, *args, timeout=30, retry=1):
+        # logcat can hang if a device becomes unavailable
+        return self.run("logcat", *args, timeout=timeout, retry=retry)
 
     def reboot(self):
         try:
@@ -111,10 +112,22 @@ class ADB(PlatformUtilBase):
         su_cmd.extend(cmd)
         return self.shell(su_cmd, **kwargs)
 
-    def getprop(self, property: str, **kwargs):
+    def getprop(self, property: str, **kwargs) -> str:
         if "default" not in kwargs:
             kwargs["default"] = [""]
-        return self.shell(["getprop", property], **kwargs)[0].strip()
+        result = self.run(["shell", "getprop", property], **kwargs)
+        if type(result) is not list:
+            getLogger().error(
+                f"adb.getprop(\"{property}\") unexpectedly returned {type(result)} '{result}'."
+            )
+            return ""
+        if len(result) == 0:
+            getLogger().error(f'adb.getprop("{property}") returned an empty list.')
+            return ""
+
+        retval = result[0].strip()
+        getLogger().info(f"adb.getprop(\"{property}\") returned '{retval}'.")
+        return retval
 
     def setprop(self, property, value, **kwargs):
         self.adb.shell(["setprop", property, value], **kwargs)
