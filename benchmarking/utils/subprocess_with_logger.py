@@ -108,6 +108,7 @@ def _processRun(*args, **kwargs):
 
 
 def processWait(processAndTimeout, **kwargs):
+    silent = kwargs.get("silent", False)
     try:
         ps, t = processAndTimeout
         process_key = ""
@@ -146,15 +147,17 @@ def processWait(processAndTimeout, **kwargs):
             t.cancel()
         if log_output or (status != 0 and not ignore_status):
             if status != 0 and not ignore_status:
-                getLogger().info("Process exited with status: {}".format(status))
+                if not silent:
+                    getLogger().info("Process exited with status: {}".format(status))
                 setRunStatus(1, key=process_key)
             if "filter" in kwargs:
                 output = _filterOutput(output, kwargs["filter"])
-            getLogger().info(
-                "\n\nProgram Output:\n{}\n{}\n{}\n".format(
-                    "=" * 80, "\n".join(output), "=" * 80
+            if not silent:
+                getLogger().info(
+                    "\n\nProgram Output:\n{}\n{}\n{}\n".format(
+                        "=" * 80, "\n".join(output), "=" * 80
+                    )
                 )
-            )
         if status == 0 or ignore_status:
             setRunStatus(0, key=process_key)
             return output, None
