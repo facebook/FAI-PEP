@@ -400,18 +400,20 @@ class FrameworkBase(object):
                 one_output = convert.convert(results)
                 deepMerge(output, one_output)
             if to_upload:
-                output["meta"]["output_files"] = {}
                 output_file_uploader = FileUploader("output_files").get_uploader()
+                output_file_meta = {}
                 for filename, file in to_upload.items():
                     try:
                         getLogger().info(f"Uploading {filename} ({file}) to manifold")
                         url = output_file_uploader.upload_file(file)
-                        output["meta"]["output_files"].update({filename: url})
+                        output_file_meta.update({filename: url})
                         getLogger().info(f"{file} uploaded to {url}")
                     except Exception:
                         getLogger().exception(
                             f"Could not upload output file {file}. Skipping."
                         )
+                if output_file_meta:
+                    output["meta"].update({"output_files": output_file_meta})
 
         return output, output_files
 
