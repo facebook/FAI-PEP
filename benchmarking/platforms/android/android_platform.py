@@ -17,6 +17,7 @@ import time
 
 from degrade.degrade_base import DegradeBase, getDegrade
 from platforms.platform_base import PlatformBase
+from profilers.perfetto.perfetto import Perfetto
 from profilers.profilers import getProfilerByUsage
 from six import string_types
 from utils.custom_logger import getLogger
@@ -213,7 +214,6 @@ class AndroidPlatform(PlatformBase):
             "log_to_screen_only" in kwargs and kwargs["log_to_screen_only"]
         )
         platform_args = {}
-        meta = {}
         if "platform_args" in kwargs:
             platform_args = kwargs["platform_args"]
             if "taskset" in platform_args:
@@ -236,38 +236,96 @@ class AndroidPlatform(PlatformBase):
                 )
                 platform_args["non_blocking"] = True
                 del platform_args["power"]
-            if platform_args.get("enable_profiling", False):
-                # attempt to run with profiling, else fallback to standard run
-                try:
-                    simpleperf = getProfilerByUsage(
-                        "android",
-                        None,
-                        platform=self,
-                        model_name=platform_args.get("model_name", None),
-                        cmd=cmd,
+            enable_profiling = platform_args.get("profiling_args", {}).get(
+                "enabled", False
+            )
+            if enable_profiling:
+                profiler = platform_args["profiling_args"]["profiler"]
+                profiling_types = platform_args["profiling_args"]["types"]
+                if profiler == "simpleperf":
+                    assert profiling_types == [
+                        "cpu"
+                    ], "Only cpu profiling is supported for SimplePerf"
+                    try:
+                        # attempt to run with cpu profiling, else fallback to standard run
+                        return self._runBenchmarkWithSimpleperf(
+                            cmd, log_to_screen_only, **platform_args
+                        )
+                    except Exception:
+                        # if this has not succeeded for some reason reset run status and run without profiling.
+                        getLogger().critical(
+                            f"An error has occurred when running Simpleperf profiler on device {self.platform} {self.platform_hash}.",
+                            exc_info=True,
+                        )
+                elif profiler == "perfetto":
+                    assert (
+                        "cpu" not in profiling_types
+                    ), "cpu profiling is not yet implemented for Perfetto"
+                    try:
+                        # attempt Perfetto profiling
+                        return self._runBenchmarkWithPerfetto(
+                            cmd, log_to_screen_only, **platform_args
+                        )
+                    except Exception:
+                        # if this has not succeeded for some reason reset run status and run without profiling.
+                        getLogger().critical(
+                            f"An error has occurred when running Perfetto profiler on device {self.platform} {self.platform_hash}.",
+                            exc_info=True,
+                        )
+                else:
+                    getLogger().error(
+                        f"Ignoring unsupported profiler setting: {profiler}: {profiling_types}.",
                     )
-                    if simpleperf:
-                        f = simpleperf.start()
-                        output, meta = f.result()
-                        if not output or not meta:
-                            raise RuntimeError(
-                                "No data returned from Simpleperf profiler."
-                            )
-                        log_logcat = []
-                        if not log_to_screen_only:
-                            log_logcat = self.util.logcat("-d")
-                        return output + log_logcat, meta
-                # if this has not succeeded for some reason reset run status and run without profiling.
-                except Exception:
-                    getLogger().critical(
-                        f"An error has occurred when running Simpleperf profiler on device {self.platform}  {self.platform_hash}.",
-                        exc_info=True,
-                    )
+
+        # Run without profiling
+        return self._runBinaryBenchmark(cmd, log_to_screen_only, **platform_args)
+
+    def _runBinaryBenchmark(self, cmd, log_to_screen_only: bool, **platform_args):
         log_screen = self.util.shell(cmd, **platform_args)
         log_logcat = []
         if not log_to_screen_only:
             log_logcat = self.util.logcat("-d")
-        return log_screen + log_logcat, meta
+        return log_screen + log_logcat, {}
+
+    def _runBenchmarkWithSimpleperf(
+        self, cmd, log_to_screen_only: bool, **platform_args
+    ):
+        simpleperf = getProfilerByUsage(
+            "android",
+            None,
+            platform=self,
+            model_name=platform_args.get("model_name", None),
+            cmd=cmd,
+        )
+        if simpleperf:
+            f = simpleperf.start()
+            output, meta = f.result()
+            if not output or not meta:
+                raise RuntimeError("No data returned from Simpleperf profiler.")
+            log_logcat = []
+            if not log_to_screen_only:
+                log_logcat = self.util.logcat("-d")
+            return output + log_logcat, meta
+
+    def _runBenchmarkWithPerfetto(self, cmd, log_to_screen_only: bool, **platform_args):
+        # attempt Perfetto profiling
+        if not self.util.isRootedDevice(silent=True):
+            raise RuntimeError(
+                "Attempted to perform Perfetto profiling on unrooted device {self.util.device}."
+            )
+
+        with Perfetto(
+            platform=self,
+            types=platform_args["profiling_args"]["types"],
+            options=platform_args["profiling_args"]["options"],
+        ) as perfetto:
+            getLogger().info("Invoked with Perfetto.")
+            log_screen = self.util.shell(cmd, **platform_args)
+            log_logcat = []
+            if not log_to_screen_only:
+                log_logcat = self.util.logcat("-d")
+            meta = perfetto.getResults()
+            return log_screen + log_logcat, meta
 
     def collectMetaData(self, info):
         meta = super(AndroidPlatform, self).collectMetaData(info)
