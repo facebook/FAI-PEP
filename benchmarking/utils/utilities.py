@@ -19,6 +19,7 @@ import socket
 import sys
 import tempfile
 import uuid
+import zipfile
 from time import sleep
 
 import certifi
@@ -369,3 +370,27 @@ def unpackAdhocFile(configName="generic"):
             f.write(stream.read())
 
     return path, True
+
+
+def zip_files(input, output: str):
+    """
+    Archive files or folder for uploading.
+    Input can be file/folder path or list of paths.
+    Folder hierarchy will be preserved at the folder basename level.
+    """
+    if not isinstance(input, list):
+        input = [input]
+    with zipfile.ZipFile(output, "w") as zf:
+        for path in input:
+            if os.path.isfile(path):
+                zf.write(path, os.path.basename(path))
+            elif os.path.isdir(path):
+                for directory, _, files in os.walk(path):
+                    arcdir = directory[directory.find(os.path.basename(path)) :]
+                    zf.write(directory, arcdir)
+                    for f in files:
+                        fpath = os.path.join(directory, f)
+                        arcfpath = os.path.join(arcdir, f)
+                        zf.write(fpath, arcfpath)
+            else:
+                raise IOError(f"Could not zip files. {path} is not a valid path.")

@@ -20,6 +20,7 @@ import os
 import random
 import re
 import shutil
+from copy import deepcopy
 
 from bridge.file_storage.upload_files.file_uploader import FileUploader
 from data_converters.data_converters import getConverters
@@ -547,16 +548,30 @@ class FrameworkBase(object):
             main_command,
         )
         profiling_enabled = False
+        profiling_args = {}
         if "profiler" in test:
-            profiling_enabled = test.get("profiler", {}).get("enabled", False)
+            profiling_enabled = test["profiler"].get("enabled", False)
         if profiling_enabled:
-            platform_args["profiler_args"] = test.get("profiler", {})
+            # test[] is potentially raw user input so we need to ensure
+            # ensure all fields are populated so we don't have to check elsewhere
+            profiling_args = deepcopy(test["profiler"])
+            default_profiler = (
+                "perfetto"
+                if "cpu" not in profiling_args.get("types", ["cpu"])
+                else "simpleperf"
+            )
+            profiler = profiling_args.setdefault("profiler", default_profiler)
+            default_type = "memory" if profiler == "perfetto" else "cpu"
+            profiling_args.setdefault("types", [default_type])
+            profiling_args.setdefault("options", {})
             platform_args["model_name"] = getModelName(model)
         for idx, cmd in enumerate(cmds):
             # note that we only enable profiling for the last command
             # of the main commands.
-            platform_args["enable_profiling"] = (
-                profiling_enabled and main_command and idx == len(cmds) - 1
+            platform_args["profiling_args"] = (
+                profiling_args
+                if (profiling_enabled and main_command and idx == len(cmds) - 1)
+                else {"enabled": False}
             )
             one_output = self.runOnPlatform(
                 total_num, cmd, platform, platform_args, converter
