@@ -18,9 +18,14 @@ from utils.custom_logger import getLogger
 
 def generate_perf_filename(model_name="benchmark", hash=None):
     """Given the provided model name and optional hash, generate a unique base filename."""
-    if hash is None:
-        hash = uuid4()
-    return f"{model_name}_perf_{hash}"
+    unique_name = os.getenv("JOB_IDENTIFIER", None)
+    if unique_name is None:
+        unique_name = uuid4()
+    elif hash is None:
+        hash = os.getenv("JOB_ID", None)
+    if hash is not None:
+        unique_name += "_{hash}"
+    return f"{model_name}_perf_{unique_name}"
 
 
 def upload_profiling_reports(files: Mapping[str, str]) -> Dict:
