@@ -53,7 +53,9 @@ class Perfetto(ProfilerBase):
     DEFAULT_TIMEOUT = 5
     BUFFER_SIZE_KB_DEFAULT = 256 * 1024  # 256 megabytes
     BUFFER_SIZE2_KB_DEFAULT = 2 * 1024  # 2 megabytes
-    SHMEM_SIZE_BYTES_DEFAULT = 8388608
+    SHMEM_SIZE_BYTES_DEFAULT = (
+        8192 * 4096
+    )  # Shared memory buffer must be a large multiple of 4096
     SAMPLING_INTERVAL_BYTES_DEFAULT = 4096
     BATTERY_POLL_MS_DEFAULT = 1000
     MAX_FILE_SIZE_BYTES_DEFAULT = 100000000
