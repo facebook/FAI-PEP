@@ -45,6 +45,16 @@ and the urls are returned as a meta dict which can be updated in the benchmark's
 
 logger = logging.getLogger(__name__)
 
+perfetto_types_supported: set = {"memory", "battery"}
+
+
+def PerfettoAnySupported(types) -> bool:
+    return perfetto_types_supported.intersection(types)
+
+
+def PerfettoAllSupported(types) -> bool:
+    return perfetto_types_supported.issuperset(types)
+
 
 class Perfetto(ProfilerBase):
 
