@@ -25,6 +25,7 @@ from copy import deepcopy
 from bridge.file_storage.upload_files.file_uploader import FileUploader
 from data_converters.data_converters import getConverters
 from platforms.platforms import getHostPlatform
+from profilers.perfetto.perfetto import PerfettoAnySupported
 from six import string_types
 from utils import software_power
 from utils.custom_logger import getLogger
@@ -555,10 +556,13 @@ class FrameworkBase(object):
             # test[] is potentially raw user input so we need to ensure
             # ensure all fields are populated so we don't have to check elsewhere
             profiling_args = deepcopy(test["profiler"])
+            types = profiling_args.get("types", ["cpu"])
             default_profiler = (
-                "perfetto"
-                if "cpu" not in profiling_args.get("types", ["cpu"])
-                else "simpleperf"
+                "simpleperf"
+                if ["cpu"] == types
+                else "perfetto"
+                if PerfettoAnySupported(types)
+                else "<unspecified>"
             )
             profiler = profiling_args.setdefault("profiler", default_profiler)
             default_type = "memory" if profiler == "perfetto" else "cpu"
