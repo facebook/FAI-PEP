@@ -24,7 +24,6 @@ import shutil
 import signal
 import stat
 import tempfile
-import threading
 import time
 from concurrent.futures import ProcessPoolExecutor as Pool
 from io import StringIO

@@ -39,14 +39,26 @@ KILLED_FLAG = 1 << 9
 EXTERNAL_STATUS_MASK = 0xFF
 
 
-class DownloadException(Exception):
+class BenchmarkException(Exception):
+    """Base class for all benchmark exceptions."""
+
+    pass
+
+
+class DownloadException(BenchmarkException):
     """Raised where exception occurs when downloading benchmark files."""
 
     pass
 
 
-class BenchmarkArgParseException(Exception):
+class BenchmarkArgParseException(BenchmarkException):
     """Raised where benchmark arguments could not be parsed or are invalid."""
+
+    pass
+
+
+class BenchmarkUnsupportedDeviceException(BenchmarkException):
+    """Raised where benchmark arguments specify an invalid device."""
 
     pass
 

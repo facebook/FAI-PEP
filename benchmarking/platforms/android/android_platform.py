@@ -21,7 +21,12 @@ from profilers.perfetto.perfetto import Perfetto
 from profilers.profilers import getProfilerByUsage
 from six import string_types
 from utils.custom_logger import getLogger
-from utils.utilities import getRunStatus, setRunStatus
+from utils.utilities import (
+    getRunStatus,
+    setRunStatus,
+    BenchmarkArgParseException,
+    BenchmarkUnsupportedDeviceException,
+)
 
 
 class AndroidPlatform(PlatformBase):
@@ -48,6 +53,7 @@ class AndroidPlatform(PlatformBase):
         self.type = "android"
         self.setPlatform(platform)
         self.setPlatformHash(adb.device)
+        self.device_label = self.getMangledName()
         self.usb_controller = usb_controller
         self._setLogCatSize()
         self.app = None
@@ -242,39 +248,41 @@ class AndroidPlatform(PlatformBase):
             if enable_profiling:
                 profiler = platform_args["profiling_args"]["profiler"]
                 profiling_types = platform_args["profiling_args"]["types"]
-                if profiler == "simpleperf":
-                    assert profiling_types == [
-                        "cpu"
-                    ], "Only cpu profiling is supported for SimplePerf"
-                    try:
+                profiler_exception_message = f"An error has occurred when running {profiler} profiler on device {self.device_label}."
+                try:
+                    if profiler == "simpleperf":
+                        assert profiling_types == [
+                            "cpu"
+                        ], "Only cpu profiling is supported for SimplePerf"
                         # attempt to run with cpu profiling, else fallback to standard run
                         return self._runBenchmarkWithSimpleperf(
                             cmd, log_to_screen_only, **platform_args
                         )
-                    except Exception:
-                        # if this has not succeeded for some reason reset run status and run without profiling.
-                        getLogger().critical(
-                            f"An error has occurred when running Simpleperf profiler on device {self.platform} {self.platform_hash}.",
-                            exc_info=True,
-                        )
-                elif profiler == "perfetto":
-                    assert (
-                        "cpu" not in profiling_types
-                    ), "cpu profiling is not yet implemented for Perfetto"
-                    try:
-                        # attempt Perfetto profiling
+                    elif profiler == "perfetto":
+                        assert (
+                            "cpu" not in profiling_types
+                        ), "cpu profiling is not yet implemented for Perfetto"
+                        # attempt Perfetto profiling, else fallback to standard run
                         return self._runBenchmarkWithPerfetto(
                             cmd, log_to_screen_only, **platform_args
                         )
-                    except Exception:
-                        # if this has not succeeded for some reason reset run status and run without profiling.
-                        getLogger().critical(
-                            f"An error has occurred when running Perfetto profiler on device {self.platform} {self.platform_hash}.",
-                            exc_info=True,
+                    else:
+                        raise BenchmarkArgParseException(
+                            f"Ignoring unsupported profiler setting: {profiler}: {profiling_types}.",
                         )
-                else:
-                    getLogger().error(
-                        f"Ignoring unsupported profiler setting: {profiler}: {profiling_types}.",
+                except BenchmarkUnsupportedDeviceException:
+                    getLogger().exception(
+                        profiler_exception_message,
+                    )
+                except BenchmarkArgParseException:
+                    getLogger().exception(
+                        "An error occurred while parsing profiler arguments.",
+                    )
+                except Exception:
+                    # if this has not succeeded for some reason reset run status and run without profiling.
+                    getLogger().critical(
+                        profiler_exception_message,
+                        exc_info=True,
                     )
 
         # Run without profiling
@@ -310,8 +318,8 @@ class AndroidPlatform(PlatformBase):
     def _runBenchmarkWithPerfetto(self, cmd, log_to_screen_only: bool, **platform_args):
         # attempt Perfetto profiling
         if not self.util.isRootedDevice(silent=True):
-            raise RuntimeError(
-                "Attempted to perform Perfetto profiling on unrooted device {self.util.device}."
+            raise BenchmarkUnsupportedDeviceException(
+                f"Attempted to perform perfetto profiling on unrooted device {self.device_label}."
             )
 
         with Perfetto(
@@ -371,7 +379,7 @@ class AndroidPlatform(PlatformBase):
             return int(result_line.split(": ")[-1])
         except Exception:
             getLogger().critical(
-                f"Could not read battery level for device {self.platform}  {self.platform_hash}",
+                f"Could not read battery level for device {self.device_label}.",
                 exc_info=True,
             )
             return -1

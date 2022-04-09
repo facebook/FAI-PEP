@@ -28,6 +28,7 @@ from profilers.perfetto.perfetto_config import (
 from profilers.profiler_base import ProfilerBase
 from profilers.utilities import generate_perf_filename, upload_profiling_reports
 from utils.custom_logger import getLogger
+from utils.utilities import BenchmarkUnsupportedDeviceException
 
 PROCESS_KEY = "perfetto"
 
@@ -73,14 +74,14 @@ class Perfetto(ProfilerBase):
         self.options = options or {}
         self.android_version: int = int(platform.rel_version.split(".")[0])
         self.adb = platform.util
-        self.valid = True
+        self.valid = False
         self.perfetto_pid = None
         self.all_heaps = (
             f"all_heaps: {self.options.get('all_heaps', 'false')}"
             if self.android_version >= 12
             else ""
         )
-        self.basename = generate_perf_filename(model_name, self.adb.device)
+        self.basename = generate_perf_filename(model_name, self.platform.platform_hash)
         self.trace_file_name = f"{self.basename}.perfetto-trace"
         self.trace_file_device = f"{self.DEVICE_DIRECTORY}/{self.trace_file_name}"
         self.config_file = f"{self.basename}.{self.CONFIG_FILE}"
@@ -124,22 +125,20 @@ class Perfetto(ProfilerBase):
 
     def _start(self):
         """Begin Perfetto profiling on platform."""
+        self.valid = False
+        if self.android_version < 10:
+            raise BenchmarkUnsupportedDeviceException(
+                f"Attempt to run perfetto on {self.platform.type} {self.platform.rel_version} device {self.platform.device_label} ignored."
+            )
+        if not self.is_rooted_device:
+            raise BenchmarkUnsupportedDeviceException(
+                f"Attempt to run perfetto on unrooted device {self.platform.device_label} ignored."
+            )
+
         try:
-            if self.android_version < 10:
-                getLogger().error(
-                    f"Attempt to run Perfetto on {self.platform.type} {self.platform.rel_version} device {self.adb.device} ignored."
-                )
-                self.valid = False
-                return None
-
-            if not self.is_rooted_device:
-                getLogger().error(
-                    f"Attempt to run Perfetto on unrooted device {self.adb.device} ignored."
-                )
-                self.valid = False
-                return None
-
-            getLogger().info(f"Collect Perfetto data on device {self.adb.device}")
+            getLogger().info(
+                f"Collect perfetto data on device {self.platform.device_label}."
+            )
             self._enablePerfetto()
 
             # Generate and upload custom config file
@@ -155,13 +154,15 @@ class Perfetto(ProfilerBase):
 
             # call Perfetto
             output = self._perfetto()
-            if output != 1 and output[0] != "1":
-                self.perfetto_pid = output[0]
+        except Exception as e:
+            raise RuntimeError(f"Perfetto profiling failed to start:\n{e}.")
+        else:
+            if output == 1 or output == [] or output[0] == "1":
+                raise RuntimeError("Perfetto profiling could not be started.")
+
+            self.perfetto_pid = output[0]
+            self.valid = True
             return output
-        except Exception:
-            self.valid = False
-            getLogger().exception("Perfetto profiling could not be started.")
-            return None
 
     def getResults(self):
         if self.valid:
@@ -181,7 +182,7 @@ class Perfetto(ProfilerBase):
             # if we ran perfetto, signal it to stop profiling
             if self._signalPerfetto():
                 getLogger().info(
-                    f"Looking for Perfetto data on device {self.adb.device}"
+                    f"Looking for Perfetto data on device {self.platform.device_label}."
                 )
                 self._copyPerfDataToHost()
                 self._generateReport()
@@ -236,7 +237,7 @@ class Perfetto(ProfilerBase):
 
     def _signalPerfetto(self) -> bool:
         # signal perfetto to stop profiling and await results
-        getLogger().info("Stopping Perfetto profiling.")
+        getLogger().info("Stopping perfetto profiling.")
         result = None
         if self.perfetto_pid is not None:
             sigint_cmd = [
@@ -290,7 +291,7 @@ class Perfetto(ProfilerBase):
                 retry=1,
             )
 
-        # Enable Perfetto if not enabled yet.
+        # Enable Perfetto if not yet enabled.
         getprop_tracing_enabled = self.adb.getprop(
             self.TRACING_PROPERTY,
             default=["0"],
@@ -390,7 +391,7 @@ class Perfetto(ProfilerBase):
 
     def _perfetto(self):
         """Run perfetto on platform with benchmark process id."""
-        getLogger().info(f"Calling Perfetto: {self.perfetto_cmd}")
+        getLogger().info(f"Calling perfetto: {self.perfetto_cmd}")
         output = self.platform.util.shell(self.perfetto_cmd)
         getLogger().info(f"Perfetto returned: {output}.")
         startup_time: float = 2.0 if self.all_heaps != "false" else 0.2
