@@ -85,6 +85,7 @@ class Perfetto(ProfilerBase):
         self.android_version: int = int(platform.rel_version.split(".")[0])
         self.adb = platform.util
         self.valid = False
+        self.restoreState = False
         self.perfetto_pid = None
         self.all_heaps = (
             f"all_heaps: {self.options.get('all_heaps', 'false')}"
@@ -96,6 +97,7 @@ class Perfetto(ProfilerBase):
         self.trace_file_device = f"{self.DEVICE_DIRECTORY}/{self.trace_file_name}"
         self.config_file = f"{self.basename}.{self.CONFIG_FILE}"
         self.config_file_device = f"{self.DEVICE_DIRECTORY}/{self.config_file}"
+        self.config_file_host = None
         self.data_file = f"{self.basename}.data.json"
         self.report_file = f"{self.basename}.txt"  # f"{self.basename}.html"
         self.user_home = str(Path.home())
@@ -130,8 +132,7 @@ class Perfetto(ProfilerBase):
         return self
 
     def __exit__(self, type, value, traceback):
-        if self.meta == {}:
-            self.meta = self._finish()
+        self._finish()
 
     def _start(self):
         """Begin Perfetto profiling on platform."""
@@ -149,10 +150,10 @@ class Perfetto(ProfilerBase):
             getLogger().info(
                 f"Collect perfetto data on device {self.platform.device_label}."
             )
-            self._enablePerfetto()
+            self._setStateForPerfetto()
 
             # Generate and upload custom config file
-            getLogger().info(f"Perfetto profile type(s) = {','.join(self.types)}.")
+            getLogger().info(f"Perfetto profile type(s) = {', '.join(self.types)}.")
             self._setup_perfetto_config()
             """
             # Ensure no old instances of perfetto are running on the device
@@ -176,19 +177,17 @@ class Perfetto(ProfilerBase):
 
     def getResults(self):
         if self.valid:
-            self.meta = self._finish()
+            self._finish()
 
         return self.meta
 
     def _finish(self):
         no_report_str = "Perfetto profiling reporting could not be completed."
-        if not self.valid:
-            self._restoreState()
-            return {}
 
-        meta = {}
-        self.host_output_dir = tempfile.mkdtemp()
         try:
+            if not self.valid:
+                return
+
             # if we ran perfetto, signal it to stop profiling
             if self._signalPerfetto():
                 getLogger().info(
@@ -196,7 +195,7 @@ class Perfetto(ProfilerBase):
                 )
                 self._copyPerfDataToHost()
                 self._generateReport()
-                meta = self._uploadResults()
+                self.meta.update(self._uploadResults())
             else:
                 getLogger().error(
                     no_report_str,
@@ -210,18 +209,24 @@ class Perfetto(ProfilerBase):
             # TODO: remove reboot + sleep once this is done in device manager
             self.adb.reboot()
             time.sleep(10)
-            meta = {}
         finally:
             self._restoreState()
-            shutil.rmtree(self.host_output_dir)
+            shutil.rmtree(self.host_output_dir, ignore_errors=True)
             self.valid = False  # prevent additional calls
 
-        return meta
+    def _upload_config(self, config_file):
+        self.meta = upload_profiling_reports(
+            {
+                "perfetto_config": config_file,
+            }
+        )
+        getLogger().info(
+            f"Perfetto config file uploaded.\nPerfetto Config:\t{self.meta['perfetto_config']}"
+        )
 
     def _uploadResults(self):
         meta = upload_profiling_reports(
             {
-                "perfetto_config": os.path.join(self.host_output_dir, self.config_file),
                 "perfetto_data": os.path.join(
                     self.host_output_dir, self.trace_file_name
                 ),
@@ -230,20 +235,24 @@ class Perfetto(ProfilerBase):
             }
         )
         getLogger().info(
-            f"Perfetto profiling data uploaded.\nPerfetto Config:\t{meta['perfetto_config']}\nPerfetto Data:  \t{meta['perfetto_data']}\nPerfetto Report:\t{meta['perfetto_report']}"
+            f"Perfetto profiling data uploaded.\nPerfetto Data:  \t{meta['perfetto_data']}\nPerfetto Report:\t{meta['perfetto_report']}"
         )
 
         return meta
 
     def _restoreState(self):
-        if self.original_SELinux_policy == "enforcing":
-            self.adb.shell(
-                ["setenforce", "1"],
-                timeout=self.DEFAULT_TIMEOUT,
-                retry=1,
-            )
+        """Restore original device state if necessary"""
+        if self.restoreState:
+            if self.original_SELinux_policy == "enforcing":
+                self.adb.shell(
+                    ["setenforce", "1"],
+                    timeout=self.DEFAULT_TIMEOUT,
+                    retry=1,
+                )
         if (not self.user_was_root) and self.adb.user_is_root():
             self.adb.unroot()  # unroot only if it was not rooted to start
+
+        self.restoreState = False
 
     def _signalPerfetto(self) -> bool:
         # signal perfetto to stop profiling and await results
@@ -289,7 +298,7 @@ class Perfetto(ProfilerBase):
         finally:
             getLogger().info(f"Running '{' '.join(cmd)}' returned {result}.")
 
-    def _enablePerfetto(self):
+    def _setStateForPerfetto(self):
         if not self.user_was_root:
             self.adb.root()
 
@@ -300,6 +309,7 @@ class Perfetto(ProfilerBase):
                 timeout=self.DEFAULT_TIMEOUT,
                 retry=1,
             )
+            self.restoreState = True
 
         # Enable Perfetto if not yet enabled.
         getprop_tracing_enabled = self.adb.getprop(
@@ -390,11 +400,17 @@ class Perfetto(ProfilerBase):
                 f.write(config_str.encode("utf-8"))
                 f.flush()
 
+            # Save away the config file for reference
+            self.host_output_dir = tempfile.mkdtemp()
+            self.config_file_host = os.path.join(self.host_output_dir, self.config_file)
+            shutil.copy(config_file_host, self.config_file_host)
+            self._upload_config(self.config_file_host)
+
             # Push perfetto config to device
             getLogger().info(
-                f"Host config file = {config_file_host},\nDevice config file = {self.config_file_device}."
+                f"Host config file = {self.config_file_host},\nDevice config file = {self.config_file_device}."
             )
-            self.adb.push(config_file_host, self.config_file_device)
+            self.adb.push(self.config_file_host, self.config_file_device)
 
             # Setup permissions for it, to avoid perfetto call failure
             self.adb.shell(["chmod", "777", self.config_file_device])
