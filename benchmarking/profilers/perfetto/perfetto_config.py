@@ -17,6 +17,7 @@ buffers: {{
 {power_config}\
 {heapprofd_config}\
 {linux_process_stats_config}\
+{gpu_memory_config}\
 {linux_ftrace_config}\
 {android_log_config}\
 {track_event_config}\
@@ -91,18 +92,44 @@ data_sources: {
 }
 """
 
+GPU_MEMORY_CONFIG = """\
+data_sources: {
+    config {
+        name: "android.gpu.memory"
+    }
+}
+"""
+
+GPU_MEM_TOTAL_FTRACE_CONFIG = """\
+            ftrace_events: "gpu_mem/gpu_mem_total"
+"""
+
+GPU_FTRACE_CONFIG = """\
+            ftrace_events: "gpu_frequency"
+{gpu_mem_total_frace_config}\
+"""
+
+POWER_FTRACE_CONFIG = """\
+            ftrace_events: "regulator/regulator_set_voltage"
+            ftrace_events: "regulator/regulator_set_voltage_complete"
+            ftrace_events: "power/clock_enable"
+            ftrace_events: "power/clock_disable"
+            ftrace_events: "power/clock_set_rate"
+"""
+
+POWER_SUSPEND_RESUME_CONFIG = """\
+            ftrace_events: "power/suspend_resume"
+"""
+
 LINUX_FTRACE_CONFIG = """\
 data_sources: {{
     config {{
         name: "linux.ftrace"
         ftrace_config {{
             atrace_apps: "{app_name}"
-            ftrace_events: "regulator/regulator_set_voltage"
-            ftrace_events: "regulator/regulator_set_voltage_complete"
-            ftrace_events: "power/clock_enable"
-            ftrace_events: "power/clock_disable"
-            ftrace_events: "power/clock_set_rate"
-            ftrace_events: "power/suspend_resume"
+{gpu_ftrace_config}\
+{power_ftrace_config}\
+{power_suspend_resume_config}\
         }}
     }}
 }}
