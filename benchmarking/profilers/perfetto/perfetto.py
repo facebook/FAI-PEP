@@ -19,11 +19,11 @@ from typing import Optional
 
 # from platforms.android.android_platform import AndroidPlatform
 from profilers.perfetto.perfetto_config import (
-    CONFIG_TEMPLATE,
-    POWER_CONFIG,
-    HEAPPROFD_CONFIG,
     ANDROID_LOG_CONFIG,
+    HEAPPROFD_CONFIG,
     LINUX_FTRACE_CONFIG,
+    PERFETTO_CONFIG_TEMPLATE,
+    POWER_CONFIG,
 )
 from profilers.profiler_base import ProfilerBase
 from profilers.utilities import generate_perf_filename, upload_profiling_reports
@@ -87,8 +87,8 @@ class Perfetto(ProfilerBase):
         self.valid = False
         self.restoreState = False
         self.perfetto_pid = None
-        self.all_heaps = (
-            f"all_heaps: {self.options.get('all_heaps', 'false')}"
+        self.all_heaps_config = (
+            f"\t\t\tall_heaps: {self.options.get('all_heaps', 'false')}"
             if self.android_version >= 12
             else ""
         )
@@ -337,12 +337,13 @@ class Perfetto(ProfilerBase):
             if config_file_host is None:
                 # Write custom perfetto config
                 config_file_host = f.name
-                heapprofd_config = ""
-                power_config = ""
-                linux_process_stats_config = ""
-                linux_ftrace_config = ""
                 android_log_config = ""
+                heapprofd_config = ""
+                linux_ftrace_config = ""
+                linux_process_stats_config = ""
+                power_config = ""
                 track_event_config = ""
+
                 buffer_size_kb = self.options.get(
                     "buffer_size_kb", self.BUFFER_SIZE_KB_DEFAULT
                 )
@@ -360,7 +361,7 @@ class Perfetto(ProfilerBase):
                         "sampling_interval_bytes", self.SAMPLING_INTERVAL_BYTES_DEFAULT
                     )
                     heapprofd_config = HEAPPROFD_CONFIG.format(
-                        all_heaps=self.all_heaps,
+                        all_heaps_config=self.all_heaps_config,
                         shmem_size_bytes=shmem_size_bytes,
                         sampling_interval_bytes=sampling_interval_bytes,
                         app_name=app_name,
@@ -385,15 +386,15 @@ class Perfetto(ProfilerBase):
                     android_log_config = ANDROID_LOG_CONFIG
 
                 # Generate config file
-                config_str = CONFIG_TEMPLATE.format(
+                config_str = PERFETTO_CONFIG_TEMPLATE.format(
                     max_file_size_bytes=max_file_size_bytes,
                     buffer_size_kb=buffer_size_kb,
                     buffer_size2_kb=buffer_size2_kb,
                     android_log_config=android_log_config,
-                    power_config=power_config,
                     heapprofd_config=heapprofd_config,
-                    linux_process_stats_config=linux_process_stats_config,
                     linux_ftrace_config=linux_ftrace_config,
+                    linux_process_stats_config=linux_process_stats_config,
+                    power_config=power_config,
                     track_event_config=track_event_config,
                 )
                 f.write(config_str.encode("utf-8"))
@@ -419,7 +420,7 @@ class Perfetto(ProfilerBase):
         getLogger().info(f"Calling perfetto: {self.perfetto_cmd}")
         output = self.platform.util.shell(self.perfetto_cmd)
         getLogger().info(f"Perfetto returned: {output}.")
-        startup_time: float = 2.0 if self.all_heaps != "false" else 0.2
+        startup_time: float = 2.0 if self.all_heaps_config != "" else 0.2
         time.sleep(startup_time)  # give it time to spin up
         return output
 
