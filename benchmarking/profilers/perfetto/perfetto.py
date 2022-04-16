@@ -20,10 +20,15 @@ from typing import Optional
 # from platforms.android.android_platform import AndroidPlatform
 from profilers.perfetto.perfetto_config import (
     ANDROID_LOG_CONFIG,
+    GPU_FTRACE_CONFIG,
+    GPU_MEMORY_CONFIG,
+    GPU_MEM_TOTAL_FTRACE_CONFIG,
     HEAPPROFD_CONFIG,
     LINUX_FTRACE_CONFIG,
     PERFETTO_CONFIG_TEMPLATE,
     POWER_CONFIG,
+    POWER_FTRACE_CONFIG,
+    POWER_SUSPEND_RESUME_CONFIG,
 )
 from profilers.profiler_base import ProfilerBase
 from profilers.utilities import generate_perf_filename, upload_profiling_reports
@@ -45,7 +50,7 @@ and the urls are returned as a meta dict which can be updated in the benchmark's
 
 logger = logging.getLogger(__name__)
 
-perfetto_types_supported: set = {"memory", "battery"}
+perfetto_types_supported: set = {"memory", "battery", "gpu"}
 
 
 def PerfettoAnySupported(types) -> bool:
@@ -339,10 +344,15 @@ class Perfetto(ProfilerBase):
                 # Write custom perfetto config
                 config_file_host = f.name
                 android_log_config = ""
+                gpu_ftrace_config = ""
+                gpu_mem_total_frace_config = ""
+                gpu_memory_config = ""
                 heapprofd_config = ""
                 linux_ftrace_config = ""
                 linux_process_stats_config = ""
                 power_config = ""
+                power_ftrace_config = ""
+                power_suspend_resume_config = ""
                 track_event_config = ""
 
                 buffer_size_kb = self.options.get(
@@ -374,8 +384,25 @@ class Perfetto(ProfilerBase):
                     power_config = POWER_CONFIG.format(
                         battery_poll_ms=battery_poll_ms,
                     )
+                    power_ftrace_config = POWER_FTRACE_CONFIG
+                    power_suspend_resume_config = POWER_SUSPEND_RESUME_CONFIG
+
+                if "gpu" in self.types:
+                    getLogger().info(
+                        "Applying GPU profiling with perfetto.",
+                    )
+                    gpu_mem_total_frace_config = GPU_MEM_TOTAL_FTRACE_CONFIG
+                    gpu_memory_config = GPU_MEMORY_CONFIG
+                    gpu_ftrace_config = GPU_FTRACE_CONFIG.format(
+                        gpu_mem_total_frace_config=gpu_mem_total_frace_config,
+                    )
+
+                if {"battery", "gpu"}.intersection(self.types):
                     linux_ftrace_config = LINUX_FTRACE_CONFIG.format(
                         app_name=app_name,
+                        gpu_ftrace_config=gpu_ftrace_config,
+                        power_ftrace_config=power_ftrace_config,
+                        power_suspend_resume_config=power_suspend_resume_config,
                     )
 
                 if "cpu" in self.types:
@@ -392,6 +419,7 @@ class Perfetto(ProfilerBase):
                     buffer_size_kb=buffer_size_kb,
                     buffer_size2_kb=buffer_size2_kb,
                     android_log_config=android_log_config,
+                    gpu_memory_config=gpu_memory_config,
                     heapprofd_config=heapprofd_config,
                     linux_ftrace_config=linux_ftrace_config,
                     linux_process_stats_config=linux_process_stats_config,
