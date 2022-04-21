@@ -35,7 +35,13 @@ from remote.screen_reporter import ScreenReporter
 from tabulate import tabulate
 from utils.build_program import buildProgramPlatform, buildUsingBuck
 from utils.custom_logger import getLogger, setLoggerLevel
-from utils.utilities import getBenchmarks, getMeta, parse_kwarg, unpackAdhocFile
+from utils.utilities import (
+    BenchmarkArgParseException,
+    getBenchmarks,
+    getMeta,
+    parse_kwarg,
+    unpackAdhocFile,
+)
 
 parser = argparse.ArgumentParser(description="Run the benchmark remotely")
 parser.add_argument(
@@ -171,6 +177,13 @@ parser.add_argument(
     help="Enable profiling regardless of the setting in the benchmark.",
 )
 parser.add_argument(
+    "--profile",
+    nargs="*",
+    default=None,
+    action="store",
+    help="Enable profiling, overriding any profiling settings in the benchmark config.",
+)
+parser.add_argument(
     "--query_num_devices",
     help="Return the counter of user specified device name under different condition",
 )
@@ -226,6 +239,11 @@ parser.add_argument(
 parser.add_argument(
     "--buck_target", default="", help="The buck command to build the custom binary"
 )
+
+
+def _requote(match) -> str:
+    input = match.group(0)
+    return input if input == "true" or input == "false" else f'"{input}"'
 
 
 class BuildProgram(threading.Thread):
@@ -469,10 +487,32 @@ class RunRemote(object):
             if "tests" in content:
                 tests = content["tests"]
             for test in tests:
-                if args.force_profile:
+                if args.force_profile:  # deprecated
                     if "profiler" not in test:
                         test["profiler"] = {}
                     test["profiler"]["enabled"] = True
+                elif args.profile is not None:
+                    if args.profile != [] and args.profile[0].startswith("{"):
+                        # Specified in json format on the command line for full profiling options
+                        try:
+                            val = " ".join(args.profile)
+                            test["profiler"] = json.loads(
+                                re.sub(
+                                    "[a-zA-Z0-9_]+",
+                                    _requote,
+                                    val,
+                                )
+                            )
+                        except Exception as e:
+                            raise BenchmarkArgParseException(
+                                f"Invalid --profile arguments: {args.profile}\n{e}"
+                            )
+                    else:
+                        # only a list of "types" can be specified directly
+                        test["profiler"] = {}
+                        test["profiler"]["enabled"] = True
+                        if args.profile != []:
+                            test["profiler"]["types"] = args.profile
 
     def _uploadOneBenchmark(self, benchmark):
         filename = benchmark["filename"]
