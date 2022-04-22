@@ -1,7 +1,14 @@
+##############################################################################
+# Copyright 2017-present, Facebook, Inc.
+# All rights reserved.
+#
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+##############################################################################
+
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import download_benchmarks.django_file_downloader
-from download_benchmarks.file_downloader_base import getDownloadHandles
+from bridge.file_storage.downloaders.file_downloader_base import getDownloadHandles
 
 
 class DownloadFile(object):

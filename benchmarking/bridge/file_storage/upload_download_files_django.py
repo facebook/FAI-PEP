@@ -1,10 +1,17 @@
+##############################################################################
+# Copyright 2017-present, Facebook, Inc.
+# All rights reserved.
+#
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+##############################################################################
+
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
 
-import requests
-from bridge.upload_download_files_base import UploadDownloadFilesBase
-from bridge.upload_download_files_base import registerUploadDownloadFiles
+from bridge.file_storage.upload_download_files_base import UploadDownloadFilesBase
+from bridge.file_storage.upload_download_files_base import registerUploadDownloadFiles
 from utils.custom_logger import getLogger
 from utils.utilities import requestsJson
 
