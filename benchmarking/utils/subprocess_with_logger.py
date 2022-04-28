@@ -24,7 +24,6 @@ from threading import Timer
 from .custom_logger import getLogger
 from .utilities import (
     setRunStatus,
-    getRunStatus,
     setRunTimeout,
     getRunTimeout,
     getRunKilled,
@@ -40,15 +39,18 @@ def processRun(*args, **kwargs):
     while retryCount > 0:
         # reset run status overwritting error
         # from prior run
-        setRunStatus(0, overwrite=True, key=kwargs["process_key"])
+        # Use temporary process key for each retry to avoid overwriting global status where process_key=""
+        setRunStatus(0, overwrite=True, key=kwargs["process_key"] + "_retry")
         sleep = kwargs.get("retry_sleep")
         if sleep:
             getLogger().info("Sleeping for {}".format(sleep))
             time.sleep(sleep)
-
-        ret = _processRun(*args, **kwargs)
+        processRunRetryKwargs = kwargs
+        processRunRetryKwargs["process_key"] = kwargs["process_key"] + "_retry"
+        ret = _processRun(*args, **processRunRetryKwargs)
         # break out if the run succeeded
-        if getRunStatus(key=kwargs["process_key"]) == 0:
+        if ret[1] is None:
+            setRunStatus(0, key=kwargs["process_key"])
             if not kwargs.get("silent", False):
                 getLogger().info("Process Succeeded: %s", " ".join(*args))
             break
@@ -62,6 +64,12 @@ def processRun(*args, **kwargs):
             getLogger().info(
                 f"Process Failed (will retry {retryCount} more times): {' '.join(*args)}"
             )
+        else:
+            # TODO: Early stopping -- stop job after a subprocess fails multiple times.
+            # fail the whole job
+            if not kwargs.get("silent", False):
+                getLogger().info("Process Failed after multiple retries.")
+            setRunStatus(1)
     return ret
 
 
@@ -103,7 +111,6 @@ def _processRun(*args, **kwargs):
             "Unknown exception {}: {}".format(sys.exc_info()[0], " ".join(*args))
         )
         err_output = "{}".format(sys.exc_info()[0])
-    setRunStatus(1, key=kwargs["process_key"])
     return [], err_output
 
 
