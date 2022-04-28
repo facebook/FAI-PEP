@@ -492,17 +492,25 @@ class RunRemote(object):
                         test["profiler"] = {}
                     test["profiler"]["enabled"] = True
                 elif args.profile is not None:
-                    if args.profile != [] and args.profile[0].startswith("{"):
+                    # first check for boolean values
+                    if args.profile == [] or (
+                        len(args.profile) == 1 and args.profile[0].lower() == "true"
+                    ):
+                        test["profiler"] = {"enabled": True}
+                    elif len(args.profile) == 1 and args.profile[0].lower() == "false":
+                        test["profiler"] = {"enabled": False}
+                    elif args.profile[0].startswith("{"):
                         # Specified in json format on the command line for full profiling options
                         try:
                             val = " ".join(args.profile)
-                            test["profiler"] = json.loads(
-                                re.sub(
+                            if '"' not in val:
+                                # ensure text substrings are quoted
+                                val = re.sub(
                                     "[a-zA-Z0-9_]+",
                                     _requote,
                                     val,
                                 )
-                            )
+                            test["profiler"] = json.loads(val)
                         except Exception as e:
                             raise BenchmarkArgParseException(
                                 f"Invalid --profile arguments: {args.profile}\n{e}"
