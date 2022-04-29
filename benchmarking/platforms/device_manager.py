@@ -121,6 +121,27 @@ class DeviceManager(object):
                     "Persistent error while checking devices.", exc_info=True
                 )
 
+    def _attempt_device_reconnect(self, hash):
+        getLogger().info(f"Attempting reconnect of device with hash {hash}.")
+        if not self.usb_controller:
+            return False
+        try:
+            self.usb_controller.disconnect(hash)
+            time.sleep(2)
+            self.usb_controller.connect(hash)
+            getLogger().info(f"USB connection for {hash} was reset.")
+            time.sleep(5)
+            online_hashes = getDeviceList(self.args, silent=True)
+            device_online = hash in online_hashes
+            if device_online:
+                getLogger().info(f"Device with hash {hash} is ONLINE after reconnect.")
+            else:
+                getLogger().info(f"Device with hash {hash} is OFFLINE after reconnect.")
+            return device_online
+        except Exception:
+            getLogger().exception(f"Device reconnect failed for {hash}")
+            return False
+
     def _handleDCDevices(self, online_hashes):
         """
         If there are devices we expect to be connected to the host,
@@ -159,10 +180,16 @@ class DeviceManager(object):
                         f"Device {dc_device} has shown as disconnected {dc_count} time(s) ({dc_count * self.device_monitor_interval}s)",
                     )
                 elif dc_count == self.dc_threshold:
-                    getLogger().critical(
-                        f"Device {dc_device} has shown as disconnected {dc_count} time(s) ({dc_count * self.device_monitor_interval}s) and is offline.",
-                    )
-                    self.online_devices.remove(dc_device)
+                    reconnect = self._attempt_device_reconnect(hash)
+                    if reconnect:
+                        getLogger().warning(
+                            f"Device {dc_device} has shown as disconnected {dc_count} time(s) and was able to be reconnected."
+                        )
+                    else:
+                        getLogger().critical(
+                            f"Device {dc_device} has shown as disconnected {dc_count} time(s) ({dc_count * self.device_monitor_interval}s) and is offline.",
+                        )
+                        self.online_devices.remove(dc_device)
                     self.device_dc_count.pop(hash)
 
     def _handleNewDevices(self, online_hashes):
