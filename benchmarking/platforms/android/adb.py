@@ -130,7 +130,7 @@ class ADB(PlatformUtilBase):
         return retval
 
     def setprop(self, property, value, **kwargs):
-        self.adb.shell(["setprop", property, value], **kwargs)
+        self.shell(["setprop", property, value], **kwargs)
 
     def isRootedDevice(self, silent=True) -> bool:
         try:
