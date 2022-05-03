@@ -25,6 +25,7 @@ import threading
 from collections import defaultdict
 from getpass import getuser
 from random import randint
+from threading import Lock
 
 import pkg_resources
 from bridge.db import DBDriver
@@ -240,6 +241,8 @@ parser.add_argument(
     "--buck_target", default="", help="The buck command to build the custom binary"
 )
 
+LOCK = Lock()
+
 
 def _requote(match) -> str:
     input = match.group(0)
@@ -299,7 +302,8 @@ class BuildProgram(threading.Thread):
                 ]
 
             for fn in allfiles:
-                filename, _ = self.file_handler.uploadFile(fn, None, None, False)
+                with LOCK:
+                    filename, _ = self.file_handler.uploadFile(fn, None, None, False)
                 getLogger().info("program: {}".format(filename))
                 self.filenames[os.path.basename(fn)] = filename
             # main program needs to be in
@@ -604,9 +608,10 @@ class RunRemote(object):
                 if "commit" in value:
                     commit_hash = value["commit"] or "master"
                 tgt_file = self._downloadRepoFile(location, self.tempdir, commit_hash)
-                f["location"], f["md5"] = self.file_handler.uploadFile(
-                    tgt_file, md5, basefilename, cache_file
-                )
+                with LOCK:
+                    f["location"], f["md5"] = self.file_handler.uploadFile(
+                        tgt_file, md5, basefilename, cache_file
+                    )
                 # add to info
                 assert len(ref_path), "ref_path must be a path to target file"
                 value["programs"][".".join(ref_path)] = {"location": f["location"]}
@@ -616,9 +621,10 @@ class RunRemote(object):
                 ), "benchmark must be passed into _uploadFile"
             return True
         else:
-            f["location"], f["md5"] = self.file_handler.uploadFile(
-                location, md5, basefilename, cache_file
-            )
+            with LOCK:
+                f["location"], f["md5"] = self.file_handler.uploadFile(
+                    location, md5, basefilename, cache_file
+                )
             return False
 
     def _downloadRepoFile(self, location, tgt_dir, commit_hash):
