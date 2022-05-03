@@ -194,6 +194,11 @@ parser.add_argument(
     help="Specify the usb hub hash, port mapping to devices",
 )
 parser.add_argument(
+    "--suppress_dc_critical_mapping",
+    default=None,
+    help="Suppress critical logs for device dc by hash.",
+)
+parser.add_argument(
     "--file_storage", help="The storage engine for uploading and downloading files"
 )
 parser.add_argument("--benchmark_db_entry", help="The entry point of server's database")
