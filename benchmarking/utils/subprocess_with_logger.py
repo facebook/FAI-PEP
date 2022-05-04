@@ -68,8 +68,9 @@ def processRun(*args, **kwargs):
             # TODO: Early stopping -- stop job after a subprocess fails multiple times.
             # fail the whole job
             if not kwargs.get("silent", False):
-                getLogger().info("Process Failed after multiple retries.")
-            setRunStatus(1)
+                getLogger().info("Process Failed.")
+                if not kwargs.get("ignore_status", False):
+                    setRunStatus(1)
     return ret
 
 
