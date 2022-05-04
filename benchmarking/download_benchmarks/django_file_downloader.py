@@ -14,6 +14,9 @@ class DjangoFileDownloader(FileDownloaderBase):
         self.root_model_dir = kwargs["args"].root_model_dir
 
     def download_file(self, location, path):
+        # Assume the file is the same
+        if os.path.exists(location):
+            return
         getLogger().info("Downloading from {} to {}".format(location, path))
         basedir = os.path.dirname(path)
         if not os.path.exists(basedir):
@@ -22,6 +25,7 @@ class DjangoFileDownloader(FileDownloaderBase):
         r = requests.get(location)
         if r.status_code == 200:
             with open(path, "wb") as f:
+                f.truncate(0)
                 f.write(r.content)
 
 
