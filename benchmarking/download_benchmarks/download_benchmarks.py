@@ -123,9 +123,7 @@ class DownloadBenchmarks(object):
                         + " is cached, skip downloading"
                     )
                     return path
-            else:
-                # assume the file is the same
-                return path
+            # If file exists, but we don't have an md5, allow each downloader to handle this.
         downloader_controller = DownloadFile(
             dirs=dirs, logger=self.logger, args=self.args
         )
