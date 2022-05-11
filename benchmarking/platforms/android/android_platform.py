@@ -317,11 +317,6 @@ class AndroidPlatform(PlatformBase):
 
     def _runBenchmarkWithPerfetto(self, cmd, log_to_screen_only: bool, **platform_args):
         # attempt Perfetto profiling
-        if not self.util.isRootedDevice(silent=True):
-            raise BenchmarkUnsupportedDeviceException(
-                f"Attempted to perform perfetto profiling on unrooted device {self.device_label}."
-            )
-
         with Perfetto(
             platform=self,
             types=platform_args["profiling_args"]["types"],
