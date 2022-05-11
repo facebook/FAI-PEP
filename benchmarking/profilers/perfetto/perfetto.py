@@ -94,8 +94,8 @@ class Perfetto(ProfilerBase):
         self.restoreState = False
         self.perfetto_pid = None
         self.all_heaps_config = (
-            f"\t\t\tall_heaps: {self.options.get('all_heaps', 'false')}"
-            if self.android_version >= 12
+            "            all_heaps: true\n"
+            if self.android_version >= 12 and self.options.get("all_heaps", False)
             else ""
         )
         self.basename = generate_perf_filename(model_name, self.platform.platform_hash)
@@ -444,8 +444,10 @@ class Perfetto(ProfilerBase):
             self.perfetto_cmd, retry=1
         )  # Don't retry due to risk of leaving 2 copies running
         getLogger().info(f"Perfetto returned: {output}.")
+
+        # longer delay if all_heaps is specified
         startup_time: float = 2.0 if self.all_heaps_config != "" else 0.2
-        time.sleep(startup_time)  # give it time to spin up
+        time.sleep(startup_time)  # give perfetto time to spin up
         return output
 
     def _copyPerfDataToHost(self):
