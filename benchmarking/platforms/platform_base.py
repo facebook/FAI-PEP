@@ -163,7 +163,9 @@ class PlatformBase(object):
             basename = os.path.basename(files)
             target_file = os.path.join(target_dir, basename)
             self.util.pull(files, target_file)
-            self.util.deleteFile(files)
+            self.util.deleteFile(
+                files, silent=True, retry=1
+            )  # this may fail on certain unrooted devices
             return target_file
         elif isinstance(files, list):
             output_files = []

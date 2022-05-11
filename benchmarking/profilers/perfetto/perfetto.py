@@ -65,6 +65,7 @@ class Perfetto(ProfilerBase):
 
     CONFIG_FILE = "perfetto.conf"
     DEVICE_DIRECTORY = "/data/local/tmp/perf"
+    DEVICE_TRACE_DIRECTORY = "/data/misc/perfetto-traces"
     TRACING_PROPERTY = "persist.traced.enable"
     DEFAULT_TIMEOUT = 5
     BUFFER_SIZE_KB_DEFAULT = 256 * 1024  # 256 megabytes
@@ -99,7 +100,7 @@ class Perfetto(ProfilerBase):
         )
         self.basename = generate_perf_filename(model_name, self.platform.platform_hash)
         self.trace_file_name = f"{self.basename}.perfetto-trace"
-        self.trace_file_device = f"{self.DEVICE_DIRECTORY}/{self.trace_file_name}"
+        self.trace_file_device = f"{self.DEVICE_TRACE_DIRECTORY}/{self.trace_file_name}"
         self.config_file = f"{self.basename}.{self.CONFIG_FILE}"
         self.config_file_device = f"{self.DEVICE_DIRECTORY}/{self.config_file}"
         self.config_file_host = None
@@ -121,11 +122,14 @@ class Perfetto(ProfilerBase):
             .lower()
         )
         self.perfetto_cmd = [
+            "cat",
+            self.config_file_device,
+            "|",
             "perfetto",
             "-d",
             "--txt",
             "-c",
-            self.config_file_device,
+            "-",
             "-o",
             self.trace_file_device,
         ]
@@ -146,10 +150,6 @@ class Perfetto(ProfilerBase):
             raise BenchmarkUnsupportedDeviceException(
                 f"Attempt to run perfetto on {self.platform.type} {self.platform.rel_version} device {self.platform.device_label} ignored."
             )
-        if not self.is_rooted_device:
-            raise BenchmarkUnsupportedDeviceException(
-                f"Attempt to run perfetto on unrooted device {self.platform.device_label} ignored."
-            )
 
         try:
             getLogger().info(
@@ -160,13 +160,6 @@ class Perfetto(ProfilerBase):
             # Generate and upload custom config file
             getLogger().info(f"Perfetto profile type(s) = {', '.join(self.types)}.")
             self._setup_perfetto_config()
-            """
-            # Ensure no old instances of perfetto are running on the device
-            self.adb.shell(
-                ["killall", "perfetto"],
-                timeout=DEFAULT_TIMEOUT,
-            )
-            """
 
             # call Perfetto
             output = self._perfetto()
@@ -303,17 +296,18 @@ class Perfetto(ProfilerBase):
             getLogger().info(f"Running '{' '.join(cmd)}' returned {result}.")
 
     def _setStateForPerfetto(self):
-        if not self.user_was_root:
-            self.adb.root()
+        if self.is_rooted_device:
+            if not self.user_was_root:
+                self.adb.root()
 
-        # Set SELinux to permissive mode if not already
-        if self.original_SELinux_policy == "enforcing":
-            self.adb.shell(
-                ["setenforce", "0"],
-                timeout=self.DEFAULT_TIMEOUT,
-                retry=1,
-            )
-            self.restoreState = True
+            # Set SELinux to permissive mode if not already
+            if self.is_rooted_device and self.original_SELinux_policy == "enforcing":
+                self.adb.shell(
+                    ["setenforce", "0"],
+                    timeout=self.DEFAULT_TIMEOUT,
+                    retry=1,
+                )
+                self.restoreState = True
 
         # Enable Perfetto if not yet enabled.
         getprop_tracing_enabled = self.adb.getprop(
@@ -446,7 +440,9 @@ class Perfetto(ProfilerBase):
     def _perfetto(self):
         """Run perfetto on platform with benchmark process id."""
         getLogger().info(f"Calling perfetto: {self.perfetto_cmd}")
-        output = self.platform.util.shell(self.perfetto_cmd)
+        output = self.platform.util.shell(
+            self.perfetto_cmd, retry=1
+        )  # Don't retry due to risk of leaving 2 copies running
         getLogger().info(f"Perfetto returned: {output}.")
         startup_time: float = 2.0 if self.all_heaps_config != "" else 0.2
         time.sleep(startup_time)  # give it time to spin up

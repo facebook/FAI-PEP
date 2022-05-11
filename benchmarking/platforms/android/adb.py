@@ -95,8 +95,8 @@ class ADB(PlatformUtilBase):
                     getLogger().critical(err_text, exc_info=True)
         return False
 
-    def deleteFile(self, file):
-        return self.shell(["rm", "-rf", file])
+    def deleteFile(self, file, **kwargs):
+        return self.shell(["rm", "-rf", file], **kwargs)
 
     def shell(self, cmd, **kwargs):
         dft = None
