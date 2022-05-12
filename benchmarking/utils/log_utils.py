@@ -14,7 +14,7 @@ import sys
 
 from utils.custom_logger import getLogger
 
-LOG_LIMIT = 16 * (10 ** 6)
+LOG_LIMIT = 16 * (10**6)
 DEFAULT_INTERVAL = 10
 MINIMUM_INTERVAL = 5
 
