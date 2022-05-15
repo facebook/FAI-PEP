@@ -20,7 +20,7 @@ BENCHMARK_DIR = os.path.abspath(
 )
 sys.path.append(BENCHMARK_DIR)
 
-from utils.build_program import buildUsingBuck, _setUpTempDirectory, _isBuildSuccessful
+from utils.build_program import _isBuildSuccessful, _setUpTempDirectory, buildUsingBuck
 
 
 class BuildProgramTest(unittest.TestCase):

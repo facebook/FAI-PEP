@@ -8,18 +8,14 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 import os
 
 from regression_detectors.delay_detector.delay_detector import DelayRegressionDetector
 from utils.custom_logger import getLogger
-from utils.utilities import getDirectory
-from utils.utilities import getFilename
+from utils.utilities import getDirectory, getFilename
 
 detectors = {
     "delay": DelayRegressionDetector,

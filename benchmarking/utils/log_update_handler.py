@@ -17,8 +17,7 @@ import time
 
 from bridge.db import DBDriver
 from utils.custom_logger import getLogger
-from utils.log_utils import DEFAULT_INTERVAL
-from utils.log_utils import trimLog, LOG_LIMIT
+from utils.log_utils import DEFAULT_INTERVAL, LOG_LIMIT, trimLog
 
 
 class DBLogUpdateHandler(logging.Handler):

@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import call, MagicMock, patch
 
 from utils import subprocess_with_logger
 from utils.subprocess_with_logger import processRun

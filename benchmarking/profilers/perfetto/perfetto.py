@@ -21,8 +21,8 @@ from typing import Optional
 from profilers.perfetto.perfetto_config import (
     ANDROID_LOG_CONFIG,
     GPU_FTRACE_CONFIG,
-    GPU_MEMORY_CONFIG,
     GPU_MEM_TOTAL_FTRACE_CONFIG,
+    GPU_MEMORY_CONFIG,
     HEAPPROFD_CONFIG,
     LINUX_FTRACE_CONFIG,
     PERFETTO_CONFIG_TEMPLATE,

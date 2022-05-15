@@ -6,16 +6,16 @@ from django.conf import settings
 from django.template.defaultfilters import register
 from django.utils.safestring import mark_safe
 from nvd3 import (
-    lineWithFocusChart,
-    lineChart,
-    multiBarChart,
-    pieChart,
-    stackedAreaChart,
-    multiBarHorizontalChart,
-    linePlusBarChart,
     cumulativeLineChart,
     discreteBarChart,
+    lineChart,
+    linePlusBarChart,
+    lineWithFocusChart,
+    multiBarChart,
+    multiBarHorizontalChart,
+    pieChart,
     scatterChart,
+    stackedAreaChart,
 )
 from nvd3.NVD3Chart import NVD3Chart
 

@@ -8,10 +8,7 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from regression_detectors.regression_detector_base import RegressionDetectorBase
 from utils.custom_logger import getLogger

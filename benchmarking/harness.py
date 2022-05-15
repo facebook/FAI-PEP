@@ -8,10 +8,7 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import argparse
 import copy
@@ -29,14 +26,14 @@ from frameworks.frameworks import getFrameworks
 from platforms.platforms import getPlatforms
 from reporters.reporters import getReporters
 from utils.custom_logger import getLogger
-from utils.utilities import KILLED_FLAG as RUN_KILLED
-from utils.utilities import TIMEOUT_FLAG as RUN_TIMEOUT
 from utils.utilities import (
-    parse_kwarg,
-    getRunStatus,
-    setRunStatus,
     getRunKilled,
+    getRunStatus,
     getRunTimeout,
+    KILLED_FLAG as RUN_KILLED,
+    parse_kwarg,
+    setRunStatus,
+    TIMEOUT_FLAG as RUN_TIMEOUT,
 )
 
 parser = argparse.ArgumentParser()

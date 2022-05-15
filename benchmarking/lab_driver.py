@@ -20,8 +20,7 @@ from repo_driver import RepoDriver as OSS_RepoDriver
 from run_lab import RunLab
 from run_remote import RunRemote
 from utils.custom_logger import getLogger, setLoggerLevel
-from utils.log_utils import DEFAULT_INTERVAL as default_interval
-from utils.log_utils import valid_interval
+from utils.log_utils import DEFAULT_INTERVAL as default_interval, valid_interval
 
 parser = argparse.ArgumentParser(description="Download models from dewey")
 parser.add_argument(

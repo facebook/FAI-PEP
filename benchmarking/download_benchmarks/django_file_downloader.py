@@ -3,8 +3,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import os
 
 import requests
-from download_benchmarks.file_downloader_base import FileDownloaderBase
-from download_benchmarks.file_downloader_base import registerFileDownloader
+from download_benchmarks.file_downloader_base import (
+    FileDownloaderBase,
+    registerFileDownloader,
+)
 from utils.custom_logger import getLogger
 
 

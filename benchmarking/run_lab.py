@@ -9,10 +9,7 @@
 ##############################################################################
 
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import argparse
 import gc
@@ -33,23 +30,35 @@ from bridge.file_storages import UploadDownloadFiles
 from download_benchmarks.download_benchmarks import DownloadBenchmarks
 from harness import BenchmarkDriver
 from platforms.android.adb import ADB
-from platforms.device_manager import CoolDownDevice, DeviceManager
-from platforms.device_manager import DEFAULT_DM_INTERVAL as default_dm_interval
-from platforms.device_manager import MINIMUM_DM_INTERVAL as minimum_dm_interval
-from platforms.device_manager import getDevicesString
-from platforms.device_manager import valid_dm_interval
+from platforms.device_manager import (
+    CoolDownDevice,
+    DEFAULT_DM_INTERVAL as default_dm_interval,
+    DeviceManager,
+    getDevicesString,
+    MINIMUM_DM_INTERVAL as minimum_dm_interval,
+    valid_dm_interval,
+)
 from utils.check_argparse import claimer_id_type
 from utils.custom_logger import getLogger, setLoggerLevel
 from utils.log_update_handler import DBLogUpdateHandler
-from utils.log_utils import DEFAULT_INTERVAL as default_interval
-from utils.log_utils import trimLog, collectLogData, valid_interval
-from utils.utilities import DownloadException, BenchmarkArgParseException
-from utils.utilities import HARNESS_ERROR_FLAG as HARNESS_ERROR
-from utils.utilities import KILLED_FLAG as RUN_KILLED
-from utils.utilities import SUCCESS_FLAG as SUCCESS
-from utils.utilities import TIMEOUT_FLAG as RUN_TIMEOUT
-from utils.utilities import USER_ERROR_FLAG as USER_ERROR
-from utils.utilities import getFilename, getMachineId, setRunKilled
+from utils.log_utils import (
+    collectLogData,
+    DEFAULT_INTERVAL as default_interval,
+    trimLog,
+    valid_interval,
+)
+from utils.utilities import (
+    BenchmarkArgParseException,
+    DownloadException,
+    getFilename,
+    getMachineId,
+    HARNESS_ERROR_FLAG as HARNESS_ERROR,
+    KILLED_FLAG as RUN_KILLED,
+    setRunKilled,
+    SUCCESS_FLAG as SUCCESS,
+    TIMEOUT_FLAG as RUN_TIMEOUT,
+    USER_ERROR_FLAG as USER_ERROR,
+)
 from utils.watchdog import WatchDog
 
 parser = argparse.ArgumentParser(description="Run the benchmark remotely")

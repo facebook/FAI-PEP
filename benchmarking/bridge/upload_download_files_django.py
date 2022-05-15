@@ -3,8 +3,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import os
 
 import requests
-from bridge.upload_download_files_base import UploadDownloadFilesBase
-from bridge.upload_download_files_base import registerUploadDownloadFiles
+from bridge.upload_download_files_base import (
+    registerUploadDownloadFiles,
+    UploadDownloadFilesBase,
+)
 from utils.custom_logger import getLogger
 from utils.utilities import requestsJson
 

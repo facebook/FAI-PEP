@@ -11,10 +11,7 @@
 # This script aggregates test results from multiple runs and form
 # the final result
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import argparse
 import json

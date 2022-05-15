@@ -3,8 +3,7 @@ from __future__ import unicode_literals
 
 import json
 
-from django.http import HttpResponse
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from django_tables2 import RequestConfig

@@ -4,8 +4,7 @@ import json
 import os
 import urllib
 
-from remote.url_printer_base import URLPrinterBase
-from remote.url_printer_base import registerResultURL
+from remote.url_printer_base import registerResultURL, URLPrinterBase
 
 
 DJANGO_SUB_URL = "benchmark/visualize"
