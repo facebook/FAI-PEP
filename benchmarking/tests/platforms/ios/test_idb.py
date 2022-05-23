@@ -14,7 +14,7 @@ import os
 import sys
 import unittest
 
-from mock import patch
+from unittest.mock import patch
 
 BENCHMARK_DIR = os.path.abspath(
     os.path.join(

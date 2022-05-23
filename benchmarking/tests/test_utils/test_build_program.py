@@ -13,7 +13,7 @@ import sys
 import unittest
 from tempfile import gettempdir
 
-from mock import patch
+from unittest.mock import patch
 
 BENCHMARK_DIR = os.path.abspath(
     os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
