@@ -39,20 +39,22 @@ class AndroidPlatform(PlatformBase):
             args.device_name_mapping,
         )
         self.args = args
+        self.setPlatformHash(adb.device)
         self.rel_version = adb.getprop("ro.build.version.release")
         self.build_version = adb.getprop("ro.build.version.sdk")
-        platform = (
-            adb.getprop("ro.product.model")
-            + "-"
-            + self.rel_version
-            + "-"
-            + self.build_version
-        )
+        if self.platform:
+            self.platform_model = (
+                re.findall("(.*)-[0-9]*-[0-9]*", self.platform) or [self.platform]
+            )[0]
+        else:
+            self.platform_model = adb.getprop("ro.product.model").replace(" ", "-")
+            self.platform = (
+                self.platform_model + "-" + self.rel_version + "-" + self.build_version
+            )
         self.platform_abi = adb.getprop("ro.product.cpu.abi")
         self.os_version = "{}-{}".format(self.rel_version, self.build_version)
         self.type = "android"
-        self.setPlatform(platform)
-        self.setPlatformHash(adb.device)
+        self.setPlatform(self.platform)
         self.device_label = self.getMangledName()
         self.usb_controller = usb_controller
         self._setLogCatSize()
@@ -63,8 +65,6 @@ class AndroidPlatform(PlatformBase):
             self.util.setFrequency(self.args.set_freq)
 
     def getKind(self):
-        if self.platform_model and self.platform_os_version:
-            return "{}-{}".format(self.platform_model, self.platform_os_version)
         return self.platform
 
     def getOS(self):
