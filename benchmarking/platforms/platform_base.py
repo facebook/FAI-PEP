@@ -107,8 +107,8 @@ class PlatformBase(object):
 
     @abc.abstractmethod
     def getName(self):
-        if self.device_name_mapping and self.getKind() in self.device_name_mapping:
-            return self.device_name_mapping[self.getKind()]
+        if self.device_name_mapping and self.platform_model in self.device_name_mapping:
+            return self.device_name_mapping[self.platform_model]
         else:
             return "null"
 
