@@ -74,6 +74,7 @@ class Perfetto(ProfilerBase):
         8192 * 4096
     )  # Shared memory buffer must be a large multiple of 4096
     SAMPLING_INTERVAL_BYTES_DEFAULT = 4096
+    DUMP_INTERVAL_MS_DEFAULT = 1000
     BATTERY_POLL_MS_DEFAULT = 1000
     MAX_FILE_SIZE_BYTES_DEFAULT = 100000000
 
@@ -330,7 +331,6 @@ class Perfetto(ProfilerBase):
         *,
         app_name: str = "program",
         config_file_host: Optional[str] = None,
-        android_logcat: bool = False,
     ):
         with NamedTemporaryFile() as f:
             if config_file_host is None:
@@ -358,16 +358,23 @@ class Perfetto(ProfilerBase):
                     "max_file_size_bytes", self.MAX_FILE_SIZE_BYTES_DEFAULT
                 )
                 if "memory" in self.types:
+                    android_log_config = ANDROID_LOG_CONFIG
                     shmem_size_bytes = self.options.get(
                         "shmem_size_bytes", self.SHMEM_SIZE_BYTES_DEFAULT
                     )
                     sampling_interval_bytes = self.options.get(
                         "sampling_interval_bytes", self.SAMPLING_INTERVAL_BYTES_DEFAULT
                     )
+                    dump_interval_ms = self.options.get(
+                        "dump_interval_ms", self.DUMP_INTERVAL_MS_DEFAULT
+                    )
+                    dump_phase_ms = self.options.get("dump_phase_ms", dump_interval_ms)
                     heapprofd_config = HEAPPROFD_CONFIG.format(
                         all_heaps_config=self.all_heaps_config,
                         shmem_size_bytes=shmem_size_bytes,
                         sampling_interval_bytes=sampling_interval_bytes,
+                        dump_interval_ms=dump_interval_ms,
+                        dump_phase_ms=dump_phase_ms,
                         app_name=app_name,
                     )
                 if "battery" in self.types:
@@ -402,9 +409,6 @@ class Perfetto(ProfilerBase):
                     getLogger().error(
                         "Error: CPU profiling with perfetto is Not Yet Implemented.",
                     )
-
-                if android_logcat:
-                    android_log_config = ANDROID_LOG_CONFIG
 
                 # Generate config file
                 config_str = PERFETTO_CONFIG_TEMPLATE.format(
