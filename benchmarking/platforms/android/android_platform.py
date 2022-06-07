@@ -44,7 +44,7 @@ class AndroidPlatform(PlatformBase):
         self.build_version = adb.getprop("ro.build.version.sdk")
         if self.platform:
             self.platform_model = (
-                re.findall("(.*)-[0-9]*-[0-9]*", self.platform) or [self.platform]
+                re.findall(r"(.*)-[0-9.]*-[0-9.]*", self.platform) or [self.platform]
             )[0]
         else:
             self.platform_model = adb.getprop("ro.product.model").replace(" ", "-")
