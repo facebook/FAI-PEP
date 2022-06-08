@@ -82,6 +82,8 @@ class DegradeEntries(TypedDict):
 
 default_degrade = DegradeBase
 
+# pyre-fixme[55]: Missing required field `degrade` for TypedDict `DegradeEntries`.
+# pyre-fixme[55]: Missing required field `platform` for TypedDict `DegradeEntries`.
 degrade_table: DegradeEntries = {}
 
 
@@ -93,6 +95,7 @@ def registerDegrade(platform: str, degrade: DegradeBase):
         degrade (DegradeBase):  Implementaton drived from DegradeBase.
     """
     global degrade_table
+    # pyre-fixme[26]: TypedDict key must be a string literal.
     degrade_table[platform] = degrade
 
 
@@ -108,6 +111,8 @@ def getDegrade(platform: str) -> DegradeBase:
     global degrade_table
     global default_degrade
     if platform in degrade_table:
+        # pyre-fixme[26]: TypedDict key must be a string literal.
         return degrade_table[platform]
 
+    # pyre-fixme[7]: Expected `DegradeBase` but got `Type[DegradeBase]`.
     return default_degrade

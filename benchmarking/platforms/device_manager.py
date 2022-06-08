@@ -78,9 +78,11 @@ class DeviceManager(object):
         self._initializeDevices()
         self.running = True
         self.failed_device_checks = 0
+        # pyre-fixme[16]: `Dict` has no attribute `device_monitor_interval`.
         self.device_monitor_interval = self.args.device_monitor_interval
         self.device_monitor = Thread(target=self._runDeviceMonitor)
         self.device_monitor.start()
+        # pyre-fixme[16]: `Dict` has no attribute `usb_hub_device_mapping`.
         if self.args.usb_hub_device_mapping:
             from utils.usb_controller import USBController
 
@@ -89,11 +91,13 @@ class DeviceManager(object):
             self.usb_controller = None
         # specify device hashes to suppress critical logging for when d/c occurs.
         self.suppress_dc_critical_mapping = {}
+        # pyre-fixme[16]: `Dict` has no attribute `suppress_dc_critical_mapping`.
         if self.args.suppress_dc_critical_mapping:
             try:
                 with open(self.args.suppress_dc_critical_mapping) as f:
                     self.suppress_dc_critical_mapping = set(json.load(f)["hashes"])
             except Exception:
+                # pyre-fixme[16]: Callable `getLogger` has no attribute `exception`.
                 getLogger.exception("suppress_dc_critical_mapping was not loaded.")
 
     def getLabDevices(self):

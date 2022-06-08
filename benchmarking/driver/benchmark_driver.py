@@ -221,6 +221,7 @@ def _to_float(token: str):
 
 def _percentileArgVal(token) -> float:
     if len(token) < 2 or token[0] != "p":
+        # pyre-fixme[7]: Expected `float` but got `None`.
         return None
 
     percentile = _to_float(token[1:])

@@ -15,7 +15,10 @@ import re
 import tempfile
 from time import sleep
 
+# pyre-fixme[21]: Could not find module `Monsoon.HVPM`.
 import Monsoon.HVPM as HVPM
+
+# pyre-fixme[21]: Could not find module `Monsoon.sampleEngine`.
 import Monsoon.sampleEngine as sampleEngine
 from utils.custom_logger import getLogger
 

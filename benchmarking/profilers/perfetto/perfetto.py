@@ -54,6 +54,7 @@ perfetto_types_supported: set = {"memory", "battery", "gpu"}
 
 
 def PerfettoAnySupported(types) -> bool:
+    # pyre-fixme[7]: Expected `bool` but got `Set[typing.Any]`.
     return perfetto_types_supported.intersection(types)
 
 
