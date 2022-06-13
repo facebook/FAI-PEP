@@ -20,11 +20,16 @@ from typing import Optional
 # from platforms.android.android_platform import AndroidPlatform
 from profilers.perfetto.perfetto_config import (
     ANDROID_LOG_CONFIG,
+    CPU_FTRACE_CONFIG,
+    CPU_SCHEDULING_DETAILS_FTRACE_CONFIG,
+    CPU_SYS_STATS_CONFIG,
+    CPU_SYSCALLS_FTRACE_CONFIG,
     GPU_FTRACE_CONFIG,
     GPU_MEM_TOTAL_FTRACE_CONFIG,
     GPU_MEMORY_CONFIG,
     HEAPPROFD_CONFIG,
     LINUX_FTRACE_CONFIG,
+    LINUX_PROCESS_STATS_CONFIG,
     PERFETTO_CONFIG_TEMPLATE,
     POWER_CONFIG,
     POWER_FTRACE_CONFIG,
@@ -50,7 +55,7 @@ and the urls are returned as a meta dict which can be updated in the benchmark's
 
 logger = logging.getLogger(__name__)
 
-perfetto_types_supported: set = {"memory", "battery", "gpu"}
+perfetto_types_supported: set = {"memory", "battery", "gpu", "cpu"}
 
 
 def PerfettoAnySupported(types) -> bool:
@@ -77,6 +82,7 @@ class Perfetto(ProfilerBase):
     SAMPLING_INTERVAL_BYTES_DEFAULT = 4096
     DUMP_INTERVAL_MS_DEFAULT = 1000
     BATTERY_POLL_MS_DEFAULT = 1000
+    CPU_POLL_MS_DEFAULT = 1000
     MAX_FILE_SIZE_BYTES_DEFAULT = 100000000
 
     def __init__(
@@ -338,6 +344,10 @@ class Perfetto(ProfilerBase):
                 # Write custom perfetto config
                 config_file_host = f.name
                 android_log_config = ""
+                cpu_scheduling_details_ftrace_config = ""
+                cpu_ftrace_config = ""
+                cpu_sys_stats_config = ""
+                cpu_syscalls_ftrace_config = ""
                 gpu_ftrace_config = ""
                 gpu_mem_total_frace_config = ""
                 gpu_memory_config = ""
@@ -398,17 +408,38 @@ class Perfetto(ProfilerBase):
                         gpu_mem_total_frace_config=gpu_mem_total_frace_config,
                     )
 
-                if {"battery", "gpu"}.intersection(self.types):
+                if "cpu" in self.types:
+                    cpu_poll_ms = max(
+                        self.options.get("cpu_poll_ms", self.CPU_POLL_MS_DEFAULT), 100
+                    )  # minimum is 100ms or error
+                    log_cpu_scheduling_details = self.options.get(
+                        "log_cpu_scheduling_details", True
+                    )
+                    if self.options.get("log_coarse_cpu_usage", False):
+                        cpu_sys_stats_config = CPU_SYS_STATS_CONFIG.format(
+                            cpu_poll_ms=cpu_poll_ms,
+                        )
+                    if self.options.get("log_cpu_sys_calls", False):
+                        cpu_syscalls_ftrace_config = CPU_SYSCALLS_FTRACE_CONFIG
+                    if log_cpu_scheduling_details:
+                        cpu_scheduling_details_ftrace_config = (
+                            CPU_SCHEDULING_DETAILS_FTRACE_CONFIG
+                        )
+                        linux_process_stats_config = LINUX_PROCESS_STATS_CONFIG.format(
+                            cpu_poll_ms=cpu_poll_ms,
+                        )
+                    cpu_ftrace_config = CPU_FTRACE_CONFIG
+                    power_suspend_resume_config = POWER_SUSPEND_RESUME_CONFIG
+
+                if {"battery", "gpu", "cpu"}.intersection(self.types):
                     linux_ftrace_config = LINUX_FTRACE_CONFIG.format(
                         app_name=app_name,
+                        cpu_ftrace_config=cpu_ftrace_config,
+                        cpu_scheduling_details_ftrace_config=cpu_scheduling_details_ftrace_config,
+                        cpu_syscalls_ftrace_config=cpu_syscalls_ftrace_config,
                         gpu_ftrace_config=gpu_ftrace_config,
                         power_ftrace_config=power_ftrace_config,
                         power_suspend_resume_config=power_suspend_resume_config,
-                    )
-
-                if "cpu" in self.types:
-                    getLogger().error(
-                        "Error: CPU profiling with perfetto is Not Yet Implemented.",
                     )
 
                 # Generate config file
@@ -417,6 +448,7 @@ class Perfetto(ProfilerBase):
                     buffer_size_kb=buffer_size_kb,
                     buffer_size2_kb=buffer_size2_kb,
                     android_log_config=android_log_config,
+                    cpu_sys_stats_config=cpu_sys_stats_config,
                     gpu_memory_config=gpu_memory_config,
                     heapprofd_config=heapprofd_config,
                     linux_ftrace_config=linux_ftrace_config,
