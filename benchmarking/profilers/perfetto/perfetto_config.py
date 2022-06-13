@@ -14,6 +14,7 @@ buffers: {{
     size_kb: {buffer_size2_kb}
     fill_policy: RING_BUFFER
 }}
+{cpu_sys_stats_config}
 {power_config}\
 {heapprofd_config}\
 {linux_process_stats_config}\
@@ -21,7 +22,6 @@ buffers: {{
 {linux_ftrace_config}\
 {android_log_config}\
 {track_event_config}\
-duration_ms: 3600000
 write_into_file: true
 file_write_period_ms: 2500
 max_file_size_bytes: {max_file_size_bytes}
@@ -53,10 +53,6 @@ data_sources: {{
         target_buffer: 0
         heapprofd_config {{
             sampling_interval_bytes: {sampling_interval_bytes}
-            continuous_dump_config {{
-                dump_phase_ms: {dump_phase_ms}
-                dump_interval_ms: {dump_interval_ms}
-            }}
             process_cmdline: "{app_name}"
             shmem_size_bytes: {shmem_size_bytes}
             block_client: true
@@ -85,16 +81,29 @@ data_sources: {
 """
 
 LINUX_PROCESS_STATS_CONFIG = """\
-data_sources: {
-    config {
+data_sources: {{
+    config {{
         name: "linux.process_stats"
         target_buffer: 0
-        process_stats_config {
-            scan_all_processes_on_start: true
-            proc_stats_poll_ms: 1000
-        }
-    }
-}
+        process_stats_config {{
+            scan_all_processes_on_start: false
+            proc_stats_poll_ms: {cpu_poll_ms}
+        }}
+    }}
+}}
+"""
+
+CPU_SYS_STATS_CONFIG = """\
+data_sources: {{
+    config {{
+        name: "linux.sys_stats"
+        sys_stats_config {{
+            stat_period_ms: {cpu_poll_ms}
+            stat_counters: STAT_CPU_TIMES
+            stat_counters: STAT_FORK_COUNT
+        }}
+    }}
+}}
 """
 
 GPU_MEMORY_CONFIG = """\
@@ -112,6 +121,29 @@ GPU_MEM_TOTAL_FTRACE_CONFIG = """\
 GPU_FTRACE_CONFIG = """\
             ftrace_events: "gpu_frequency"
 {gpu_mem_total_frace_config}\
+"""
+
+CPU_FTRACE_CONFIG = """\
+            ftrace_events: "power/cpu_frequency"
+            ftrace_events: "power/cpu_idle"
+"""
+
+CPU_SYSCALLS_FTRACE_CONFIG = """\
+            ftrace_events: "raw_syscalls/sys_enter"
+            ftrace_events: "raw_syscalls/sys_exit"
+"""
+
+CPU_SCHEDULING_DETAILS_FTRACE_CONFIG = """\
+            ftrace_events: "sched/sched_switch"
+            ftrace_events: "sched/sched_wakeup"
+            ftrace_events: "sched/sched_wakeup_new"
+            ftrace_events: "sched/sched_waking"
+            ftrace_events: "sched/sched_process_exit"
+            ftrace_events: "sched/sched_process_free"
+            ftrace_events: "task/task_newtask"
+            ftrace_events: "task/task_rename"
+            buffer_size_kb: 2048
+            drain_period_ms: 250
 """
 
 POWER_FTRACE_CONFIG = """\
@@ -135,6 +167,9 @@ data_sources: {{
 {gpu_ftrace_config}\
 {power_ftrace_config}\
 {power_suspend_resume_config}\
+{cpu_ftrace_config}\
+{cpu_syscalls_ftrace_config}\
+{cpu_scheduling_details_ftrace_config}\
         }}
     }}
 }}

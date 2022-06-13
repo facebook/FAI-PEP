@@ -17,7 +17,11 @@ import time
 
 from degrade.degrade_base import DegradeBase, getDegrade
 from platforms.platform_base import PlatformBase
-from profilers.perfetto.perfetto import Perfetto
+from profilers.perfetto.perfetto import (
+    Perfetto,
+    perfetto_types_supported,
+    PerfettoAllSupported,
+)
 from profilers.profilers import getProfilerByUsage
 from six import string_types
 from utils.custom_logger import getLogger
@@ -251,17 +255,19 @@ class AndroidPlatform(PlatformBase):
                 profiler_exception_message = f"An error has occurred when running {profiler} profiler on device {self.device_label}."
                 try:
                     if profiler == "simpleperf":
-                        assert profiling_types == [
-                            "cpu"
-                        ], "Only cpu profiling is supported for SimplePerf"
+                        if profiling_types != ["cpu"]:
+                            raise BenchmarkArgParseException(
+                                "Only cpu profiling is supported for simplePerf"
+                            )
                         # attempt to run with cpu profiling, else fallback to standard run
                         return self._runBenchmarkWithSimpleperf(
                             cmd, log_to_screen_only, **platform_args
                         )
                     elif profiler == "perfetto":
-                        assert (
-                            "cpu" not in profiling_types
-                        ), "cpu profiling is not yet implemented for Perfetto"
+                        if not PerfettoAllSupported(profiling_types):
+                            raise BenchmarkArgParseException(
+                                f"Only [{' ,'.join(perfetto_types_supported)}] are supported types for perfetto profiling."
+                            )
                         # attempt Perfetto profiling, else fallback to standard run
                         return self._runBenchmarkWithPerfetto(
                             cmd, log_to_screen_only, **platform_args
