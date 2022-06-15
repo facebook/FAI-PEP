@@ -15,7 +15,7 @@ import gc
 import os
 import sys
 import time
-import traceback
+from typing import Optional
 
 from utils.custom_logger import getLogger
 from utils.utilities import deepMerge, getCommand, getRunStatus, setRunStatus
@@ -219,9 +219,8 @@ def _to_float(token: str):
         return None
 
 
-def _percentileArgVal(token) -> float:
+def _percentileArgVal(token) -> Optional[float]:
     if len(token) < 2 or token[0] != "p":
-        # pyre-fixme[7]: Expected `float` but got `None`.
         return None
 
     percentile = _to_float(token[1:])
