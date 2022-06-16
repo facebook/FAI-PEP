@@ -13,6 +13,7 @@ import os
 import shutil
 import tempfile
 import time
+from enum import Enum
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Optional
@@ -64,6 +65,11 @@ def PerfettoAnySupported(types) -> bool:
 
 def PerfettoAllSupported(types) -> bool:
     return perfetto_types_supported.issuperset(types)
+
+
+class BatteryState(Enum):
+    connected = 0
+    disconnected = 1
 
 
 class Perfetto(ProfilerBase):
@@ -140,6 +146,12 @@ class Perfetto(ProfilerBase):
             "-o",
             self.trace_file_device,
         ]
+
+        # This is a generic path to disconnect battery charing on many Android devices.
+        # Going forward, it may be necessary to override this default mechanism on some devices.
+        self.battery_state_path = "/sys/class/power_supply/battery/input_suspend"
+        self.battery_state: BatteryState = BatteryState.connected
+
         super(Perfetto, self).__init__(None)
 
     def __enter__(self):
@@ -218,6 +230,25 @@ class Perfetto(ProfilerBase):
             shutil.rmtree(self.host_output_dir, ignore_errors=True)
             self.valid = False  # prevent additional calls
 
+    def _setBatteryState(self, state: BatteryState, path: str):
+        cmd_exists = ["ls", path]
+        cmd_update = ["echo", str(state.value), ">", path]
+        try:
+            if self.adb.shell(cmd_exists, retry=1, silent=True) == [path]:
+                self.adb.shell(cmd_update, retry=1, silent=True)
+                getLogger().info(
+                    f"Battery {state.name} for charging on device {self.platform.device_label}."
+                )
+                self.battery_state = state
+            else:
+                getLogger().info(
+                    f"Battery disconnect not supported for device {self.platform.device_label}."
+                )
+        except Exception as e:
+            getLogger().warning(
+                f"Battery not {state.name} for charging on device {self.platform.device_label}, exception {e}."
+            )
+
     def _upload_config(self, config_file):
         self.meta = upload_profiling_reports(
             {
@@ -246,6 +277,10 @@ class Perfetto(ProfilerBase):
 
     def _restoreState(self):
         """Restore original device state if necessary"""
+        if self.battery_state == BatteryState.disconnected:
+            # restore battery charging
+            self._setBatteryState(BatteryState.connected, self.battery_state_path)
+
         if self.restoreState:
             if self.original_SELinux_policy == "enforcing":
                 self.adb.shell(
@@ -253,6 +288,7 @@ class Perfetto(ProfilerBase):
                     timeout=self.DEFAULT_TIMEOUT,
                     retry=1,
                 )
+
         if (not self.user_was_root) and self.adb.user_is_root():
             self.adb.unroot()  # unroot only if it was not rooted to start
 
@@ -315,6 +351,12 @@ class Perfetto(ProfilerBase):
                     retry=1,
                 )
                 self.restoreState = True
+
+            if "battery" in self.types:
+                # disable battery charging, if possible
+                self._setBatteryState(
+                    BatteryState.disconnected, self.battery_state_path
+                )
 
         # Enable Perfetto if not yet enabled.
         getprop_tracing_enabled = self.adb.getprop(
