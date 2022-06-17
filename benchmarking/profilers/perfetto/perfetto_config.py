@@ -22,6 +22,7 @@ buffers: {{
 {linux_ftrace_config}\
 {android_log_config}\
 {track_event_config}\
+duration_ms: 3600000
 write_into_file: true
 file_write_period_ms: 2500
 max_file_size_bytes: {max_file_size_bytes}
@@ -53,6 +54,10 @@ data_sources: {{
         target_buffer: 0
         heapprofd_config {{
             sampling_interval_bytes: {sampling_interval_bytes}
+            continuous_dump_config {{
+                dump_phase_ms: {dump_phase_ms}
+                dump_interval_ms: {dump_interval_ms}
+            }}
             process_cmdline: "{app_name}"
             shmem_size_bytes: {shmem_size_bytes}
             block_client: true
