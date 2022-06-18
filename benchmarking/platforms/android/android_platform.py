@@ -252,7 +252,7 @@ class AndroidPlatform(PlatformBase):
             if enable_profiling:
                 profiler = platform_args["profiling_args"]["profiler"]
                 profiling_types = platform_args["profiling_args"]["types"]
-                profiler_exception_message = f"An error has occurred when running {profiler} profiler on device {self.device_label}."
+                profiler_exception_message = f"An error has occurred while running {profiler} profiler on device {self.device_label}."
                 try:
                     if profiler == "simpleperf":
                         if profiling_types != ["cpu"]:
