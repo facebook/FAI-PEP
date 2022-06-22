@@ -82,7 +82,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--cooldown",
-    default=0,
+    default=180,
     type=float,
     help="Specify the time interval between two test runs.",
 )
@@ -779,10 +779,19 @@ class RunLab(object):
                 "Couldn't complete async job. Exception from subprocess:", exc_info=True
             )
 
-        self._coolDown(device, force_reboot=job["status"] != "DONE")
+        content = job.get("benchmarks", {}).get("benchmark", {}).get("content", {})
+        if isinstance(content, str) and os.path.isfile(content):
+            with open(content, "r") as content_file:
+                content = json.load(content_file)
+        job_cooldown = content.get("model", {}).get("cooldown", None)
+        self._coolDown(
+            device,
+            force_reboot=job["status"] != "DONE",
+            job_cooldown=job_cooldown,
+        )
 
-    def _coolDown(self, device, force_reboot=False):
-        t = CoolDownDevice(device, self.args, self.db, force_reboot)
+    def _coolDown(self, device, force_reboot=False, job_cooldown=None):
+        t = CoolDownDevice(device, self.args, self.db, force_reboot, job_cooldown)
         t.start()
 
 

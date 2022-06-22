@@ -351,12 +351,16 @@ class DeviceManager(object):
 class CoolDownDevice(Thread):
     """Used by AsyncRun to cool device down after benchmark.  Will reboot the device if required and add rebooting status to device entry."""
 
-    def __init__(self, device, args, db, force_reboot):
+    def __init__(self, device, args, db, force_reboot, job_cooldown=None):
         Thread.__init__(self)
         self.device = device
         self.args = args
         self.db = db
         self.force_reboot = force_reboot
+        if job_cooldown is not None and job_cooldown >= 0:
+            self.cooldown = job_cooldown
+        else:
+            self.cooldown = self.args.cooldown
 
     def run(self):
         reboot = self.args.reboot and (
@@ -380,14 +384,8 @@ class CoolDownDevice(Thread):
                 success = False
 
         # sleep for device cooldown
-        if self.args.platform.startswith("ios") or self.args.platform.startswith(
-            "android"
-        ):
-            getLogger().info("Sleep 180 seconds")
-            time.sleep(180)
-        else:
-            getLogger().info("Sleep 20 seconds")
-            time.sleep(20)
+        getLogger().info(f"Sleep {self.cooldown} seconds")
+        time.sleep(self.cooldown)
 
         # device should be available again, remove rebooting flag.
         if "rebooting" in self.device:
