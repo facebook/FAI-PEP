@@ -16,26 +16,9 @@ import time
 from enum import Enum
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Optional
 
 # from platforms.android.android_platform import AndroidPlatform
-from profilers.perfetto.perfetto_config import (
-    ANDROID_LOG_CONFIG,
-    CPU_FTRACE_CONFIG,
-    CPU_SCHEDULING_DETAILS_FTRACE_CONFIG,
-    CPU_SYS_STATS_CONFIG,
-    CPU_SYSCALLS_FTRACE_CONFIG,
-    GPU_FTRACE_CONFIG,
-    GPU_MEM_TOTAL_FTRACE_CONFIG,
-    GPU_MEMORY_CONFIG,
-    HEAPPROFD_CONFIG,
-    LINUX_FTRACE_CONFIG,
-    LINUX_PROCESS_STATS_CONFIG,
-    PERFETTO_CONFIG_TEMPLATE,
-    POWER_CONFIG,
-    POWER_FTRACE_CONFIG,
-    POWER_SUSPEND_RESUME_CONFIG,
-)
+from profilers.perfetto.perfetto_config import PerfettoConfig
 from profilers.profiler_base import ProfilerBase
 from profilers.utilities import generate_perf_filename, upload_profiling_reports
 from utils.custom_logger import getLogger
@@ -106,11 +89,10 @@ class Perfetto(ProfilerBase):
         self.valid = False
         self.restoreState = False
         self.perfetto_pid = None
-        self.all_heaps_config = (
-            "            all_heaps: true\n"
-            if self.android_version >= 12 and self.options.get("all_heaps", False)
-            else ""
-        )
+
+        if self.android_version < 12 and self.options.get("all_heaps", False):
+            self.options.all_heaps = False
+        self.perfetto_config = PerfettoConfig(self.types, self.options)
         self.basename = generate_perf_filename(model_name, self.platform.platform_hash)
         self.trace_file_name = f"{self.basename}.perfetto-trace"
         self.trace_file_device = f"{self.DEVICE_TRACE_DIRECTORY}/{self.trace_file_name}"
@@ -195,7 +177,7 @@ class Perfetto(ProfilerBase):
 
             # Generate and upload custom config file
             getLogger().info(f"Perfetto profile type(s) = {', '.join(self.types)}.")
-            self._setup_perfetto_config()
+            self._setupPerfettoConfig()
 
             # call Perfetto
             output = self._perfetto()
@@ -227,7 +209,7 @@ class Perfetto(ProfilerBase):
                 getLogger().info(
                     f"Looking for Perfetto data on device {self.platform.device_label}."
                 )
-                self._copyPerfDataToHost()
+                self._copyPerfettoDataToHost()
                 self._generateReport()
                 self.meta.update(self._uploadResults())
             else:
@@ -276,7 +258,7 @@ class Perfetto(ProfilerBase):
             else:
                 getLogger().exception(error)
 
-    def _upload_config(self, config_file):
+    def _uploadConfig(self, config_file):
         self.meta = upload_profiling_reports(
             {
                 "perfetto_config": config_file,
@@ -396,146 +378,31 @@ class Perfetto(ProfilerBase):
                 timeout=self.DEFAULT_TIMEOUT,
             )
 
-    def _setup_perfetto_config(
+    def _setupPerfettoConfig(
         self,
         *,
         app_name: str = "program",
-        config_file_host: Optional[str] = None,
     ):
+        config_str = self.perfetto_config.GeneratePerfettoConfig()
         with NamedTemporaryFile() as f:
-            if config_file_host is None:
-                # Write custom perfetto config
-                config_file_host = f.name
-                android_log_config = ""
-                cpu_scheduling_details_ftrace_config = ""
-                cpu_ftrace_config = ""
-                cpu_sys_stats_config = ""
-                cpu_syscalls_ftrace_config = ""
-                gpu_ftrace_config = ""
-                gpu_mem_total_frace_config = ""
-                gpu_memory_config = ""
-                heapprofd_config = ""
-                linux_ftrace_config = ""
-                linux_process_stats_config = ""
-                power_config = ""
-                power_ftrace_config = ""
-                power_suspend_resume_config = ""
-                track_event_config = ""
+            # Write custom perfetto config
+            f.write(config_str.encode("utf-8"))
+            f.flush()
 
-                buffer_size_kb = self.options.get(
-                    "buffer_size_kb", self.BUFFER_SIZE_KB_DEFAULT
-                )
-                buffer_size2_kb = self.options.get(
-                    "buffer_size2_kb", self.BUFFER_SIZE2_KB_DEFAULT
-                )
-                max_file_size_bytes = self.options.get(
-                    "max_file_size_bytes", self.MAX_FILE_SIZE_BYTES_DEFAULT
-                )
-                if "memory" in self.types:
-                    android_log_config = ANDROID_LOG_CONFIG
-                    shmem_size_bytes = self.options.get(
-                        "shmem_size_bytes", self.SHMEM_SIZE_BYTES_DEFAULT
-                    )
-                    sampling_interval_bytes = self.options.get(
-                        "sampling_interval_bytes", self.SAMPLING_INTERVAL_BYTES_DEFAULT
-                    )
-                    dump_interval_ms = self.options.get(
-                        "dump_interval_ms", self.DUMP_INTERVAL_MS_DEFAULT
-                    )
-                    dump_phase_ms = self.options.get("dump_phase_ms", dump_interval_ms)
-                    heapprofd_config = HEAPPROFD_CONFIG.format(
-                        all_heaps_config=self.all_heaps_config,
-                        shmem_size_bytes=shmem_size_bytes,
-                        sampling_interval_bytes=sampling_interval_bytes,
-                        dump_interval_ms=dump_interval_ms,
-                        dump_phase_ms=dump_phase_ms,
-                        app_name=app_name,
-                    )
-                if "battery" in self.types:
-                    battery_poll_ms = self.options.get(
-                        "battery_poll_ms", self.BATTERY_POLL_MS_DEFAULT
-                    )
-                    power_config = POWER_CONFIG.format(
-                        battery_poll_ms=battery_poll_ms,
-                    )
-                    power_ftrace_config = POWER_FTRACE_CONFIG
-                    power_suspend_resume_config = POWER_SUSPEND_RESUME_CONFIG
-
-                if "gpu" in self.types:
-                    getLogger().info(
-                        "Applying GPU profiling with perfetto.",
-                    )
-                    gpu_mem_total_frace_config = GPU_MEM_TOTAL_FTRACE_CONFIG
-                    gpu_memory_config = GPU_MEMORY_CONFIG
-                    gpu_ftrace_config = GPU_FTRACE_CONFIG.format(
-                        gpu_mem_total_frace_config=gpu_mem_total_frace_config,
-                    )
-
-                if "cpu" in self.types:
-                    cpu_poll_ms = max(
-                        self.options.get("cpu_poll_ms", self.CPU_POLL_MS_DEFAULT), 100
-                    )  # minimum is 100ms or error
-                    log_cpu_scheduling_details = self.options.get(
-                        "log_cpu_scheduling_details", True
-                    )
-                    if self.options.get("log_coarse_cpu_usage", False):
-                        cpu_sys_stats_config = CPU_SYS_STATS_CONFIG.format(
-                            cpu_poll_ms=cpu_poll_ms,
-                        )
-                    if self.options.get("log_cpu_sys_calls", False):
-                        cpu_syscalls_ftrace_config = CPU_SYSCALLS_FTRACE_CONFIG
-                    if log_cpu_scheduling_details:
-                        cpu_scheduling_details_ftrace_config = (
-                            CPU_SCHEDULING_DETAILS_FTRACE_CONFIG
-                        )
-                        linux_process_stats_config = LINUX_PROCESS_STATS_CONFIG.format(
-                            cpu_poll_ms=cpu_poll_ms,
-                        )
-                    cpu_ftrace_config = CPU_FTRACE_CONFIG
-                    power_suspend_resume_config = POWER_SUSPEND_RESUME_CONFIG
-
-                if {"battery", "gpu", "cpu"}.intersection(self.types):
-                    linux_ftrace_config = LINUX_FTRACE_CONFIG.format(
-                        app_name=app_name,
-                        cpu_ftrace_config=cpu_ftrace_config,
-                        cpu_scheduling_details_ftrace_config=cpu_scheduling_details_ftrace_config,
-                        cpu_syscalls_ftrace_config=cpu_syscalls_ftrace_config,
-                        gpu_ftrace_config=gpu_ftrace_config,
-                        power_ftrace_config=power_ftrace_config,
-                        power_suspend_resume_config=power_suspend_resume_config,
-                    )
-
-                # Generate config file
-                config_str = PERFETTO_CONFIG_TEMPLATE.format(
-                    max_file_size_bytes=max_file_size_bytes,
-                    buffer_size_kb=buffer_size_kb,
-                    buffer_size2_kb=buffer_size2_kb,
-                    android_log_config=android_log_config,
-                    cpu_sys_stats_config=cpu_sys_stats_config,
-                    gpu_memory_config=gpu_memory_config,
-                    heapprofd_config=heapprofd_config,
-                    linux_ftrace_config=linux_ftrace_config,
-                    linux_process_stats_config=linux_process_stats_config,
-                    power_config=power_config,
-                    track_event_config=track_event_config,
-                )
-                f.write(config_str.encode("utf-8"))
-                f.flush()
-
-            # Save away the config file for reference
+            # Save away the config file
             self.host_output_dir = tempfile.mkdtemp()
             self.config_file_host = os.path.join(self.host_output_dir, self.config_file)
-            shutil.copy(config_file_host, self.config_file_host)
-            self._upload_config(self.config_file_host)
+            shutil.copy(f.name, self.config_file_host)
+            self._uploadConfig(self.config_file_host)
 
-            # Push perfetto config to device
-            getLogger().info(
-                f"Host config file = {self.config_file_host},\nDevice config file = {self.config_file_device}."
-            )
-            self.adb.push(self.config_file_host, self.config_file_device)
+        # Push perfetto config to device
+        getLogger().info(
+            f"Host config file = {self.config_file_host},\nDevice config file = {self.config_file_device}."
+        )
+        self.adb.push(self.config_file_host, self.config_file_device)
 
-            # Setup permissions for it, to avoid perfetto call failure
-            self.adb.shell(["chmod", "777", self.config_file_device])
+        # Setup permissions for it, to avoid perfetto call failure
+        self.adb.shell(["chmod", "777", self.config_file_device])
 
     def _perfetto(self):
         """Run perfetto on platform with benchmark process id."""
@@ -546,11 +413,11 @@ class Perfetto(ProfilerBase):
         getLogger().info(f"Perfetto returned: {output}.")
 
         # longer delay if all_heaps is specified
-        startup_time: float = 2.0 if self.all_heaps_config != "" else 0.2
+        startup_time: float = 2.0 if self.options.get("all_heaps", False) else 0.2
         time.sleep(startup_time)  # give perfetto time to spin up
         return output
 
-    def _copyPerfDataToHost(self):
+    def _copyPerfettoDataToHost(self):
         self.platform.moveFilesFromPlatform(
             os.path.join(self.trace_file_device),
             os.path.join(self.host_output_dir),
