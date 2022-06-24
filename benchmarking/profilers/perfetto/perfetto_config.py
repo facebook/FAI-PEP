@@ -1,6 +1,153 @@
 #!/usr/bin/env python3
 # Copyright 2004-present Facebook. All Rights Reserved.
 
+from typing import Any, Dict, List, Optional
+
+from utils.custom_logger import getLogger
+
+
+class PerfettoConfig:
+    BUFFER_SIZE_KB_DEFAULT = 256 * 1024  # 256 megabytes
+    BUFFER_SIZE2_KB_DEFAULT = 2 * 1024  # 2 megabytes
+    SHMEM_SIZE_BYTES_DEFAULT = (
+        8192 * 4096
+    )  # Shared memory buffer must be a large multiple of 4096
+    SAMPLING_INTERVAL_BYTES_DEFAULT = 4096
+    DUMP_INTERVAL_MS_DEFAULT = 1000
+    BATTERY_POLL_MS_DEFAULT = 1000
+    CPU_POLL_MS_DEFAULT = 1000
+    MAX_FILE_SIZE_BYTES_DEFAULT = 100000000
+
+    def __init__(
+        self,
+        types: List[str],
+        options: Dict[str, Any],
+        *,
+        app_name: Optional[str] = "program",
+    ):
+        self.types = types
+        self.options = options
+        self.app_name = app_name
+
+    def GeneratePerfettoConfig(self) -> str:
+        # Write custom perfetto config
+        android_log_config = ""
+        cpu_scheduling_details_ftrace_config = ""
+        cpu_ftrace_config = ""
+        cpu_sys_stats_config = ""
+        cpu_syscalls_ftrace_config = ""
+        gpu_ftrace_config = ""
+        gpu_mem_total_frace_config = ""
+        gpu_memory_config = ""
+        heapprofd_config = ""
+        linux_ftrace_config = ""
+        linux_process_stats_config = ""
+        power_config = ""
+        power_ftrace_config = ""
+        power_suspend_resume_config = ""
+        track_event_config = ""
+        all_heaps_config = (
+            "            all_heaps: true\n"
+            if self.options.get("all_heaps", False)
+            else ""
+        )
+        buffer_size_kb = self.options.get("buffer_size_kb", self.BUFFER_SIZE_KB_DEFAULT)
+        buffer_size2_kb = self.options.get(
+            "buffer_size2_kb", self.BUFFER_SIZE2_KB_DEFAULT
+        )
+        max_file_size_bytes = self.options.get(
+            "max_file_size_bytes", self.MAX_FILE_SIZE_BYTES_DEFAULT
+        )
+        if self.options.get("include_android_log", False):
+            android_log_config = ANDROID_LOG_CONFIG
+        if "memory" in self.types:
+            shmem_size_bytes = self.options.get(
+                "shmem_size_bytes", self.SHMEM_SIZE_BYTES_DEFAULT
+            )
+            sampling_interval_bytes = self.options.get(
+                "sampling_interval_bytes", self.SAMPLING_INTERVAL_BYTES_DEFAULT
+            )
+            dump_interval_ms = self.options.get(
+                "dump_interval_ms", self.DUMP_INTERVAL_MS_DEFAULT
+            )
+            dump_phase_ms = self.options.get("dump_phase_ms", dump_interval_ms)
+            heapprofd_config = HEAPPROFD_CONFIG.format(
+                all_heaps_config=all_heaps_config,
+                shmem_size_bytes=shmem_size_bytes,
+                sampling_interval_bytes=sampling_interval_bytes,
+                dump_interval_ms=dump_interval_ms,
+                dump_phase_ms=dump_phase_ms,
+                app_name=self.app_name,
+            )
+        if "battery" in self.types:
+            battery_poll_ms = self.options.get(
+                "battery_poll_ms", self.BATTERY_POLL_MS_DEFAULT
+            )
+            power_config = POWER_CONFIG.format(
+                battery_poll_ms=battery_poll_ms,
+            )
+            power_ftrace_config = POWER_FTRACE_CONFIG
+            power_suspend_resume_config = POWER_SUSPEND_RESUME_CONFIG
+
+        if "gpu" in self.types:
+            getLogger().info(
+                "Applying GPU profiling with perfetto.",
+            )
+            gpu_mem_total_frace_config = GPU_MEM_TOTAL_FTRACE_CONFIG
+            gpu_memory_config = GPU_MEMORY_CONFIG
+            gpu_ftrace_config = GPU_FTRACE_CONFIG.format(
+                gpu_mem_total_frace_config=gpu_mem_total_frace_config,
+            )
+
+        if "cpu" in self.types:
+            cpu_poll_ms = max(
+                self.options.get("cpu_poll_ms", self.CPU_POLL_MS_DEFAULT), 100
+            )  # minimum is 100ms or error
+            log_cpu_scheduling_details = self.options.get(
+                "log_cpu_scheduling_details", True
+            )
+            if self.options.get("log_coarse_cpu_usage", False):
+                cpu_sys_stats_config = CPU_SYS_STATS_CONFIG.format(
+                    cpu_poll_ms=cpu_poll_ms,
+                )
+            if self.options.get("log_cpu_sys_calls", False):
+                cpu_syscalls_ftrace_config = CPU_SYSCALLS_FTRACE_CONFIG
+            if log_cpu_scheduling_details:
+                cpu_scheduling_details_ftrace_config = (
+                    CPU_SCHEDULING_DETAILS_FTRACE_CONFIG
+                )
+                linux_process_stats_config = LINUX_PROCESS_STATS_CONFIG.format(
+                    cpu_poll_ms=cpu_poll_ms,
+                )
+            cpu_ftrace_config = CPU_FTRACE_CONFIG
+            power_suspend_resume_config = POWER_SUSPEND_RESUME_CONFIG
+
+        if {"battery", "gpu", "cpu"}.intersection(self.types):
+            linux_ftrace_config = LINUX_FTRACE_CONFIG.format(
+                app_name=self.app_name,
+                cpu_ftrace_config=cpu_ftrace_config,
+                cpu_scheduling_details_ftrace_config=cpu_scheduling_details_ftrace_config,
+                cpu_syscalls_ftrace_config=cpu_syscalls_ftrace_config,
+                gpu_ftrace_config=gpu_ftrace_config,
+                power_ftrace_config=power_ftrace_config,
+                power_suspend_resume_config=power_suspend_resume_config,
+            )
+
+        # Generate config file
+        return PERFETTO_CONFIG_TEMPLATE.format(
+            max_file_size_bytes=max_file_size_bytes,
+            buffer_size_kb=buffer_size_kb,
+            buffer_size2_kb=buffer_size2_kb,
+            android_log_config=android_log_config,
+            cpu_sys_stats_config=cpu_sys_stats_config,
+            gpu_memory_config=gpu_memory_config,
+            heapprofd_config=heapprofd_config,
+            linux_ftrace_config=linux_ftrace_config,
+            linux_process_stats_config=linux_process_stats_config,
+            power_config=power_config,
+            track_event_config=track_event_config,
+        )
+
 
 # duration_ms: {duration_ms}
 # max_file_size_bytes: 10000000000
