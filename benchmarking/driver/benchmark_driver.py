@@ -447,7 +447,7 @@ def _retrieveMeta(info, benchmark, platform, framework, backend, user_identifier
     if "commit" in info["treatment"]:
         meta["commit"] = info["treatment"]["commit"]
         meta["commit_time"] = info["treatment"]["commit_time"]
-    if "control" in info:
+    if "control" in info and "commit" in info["control"]:
         meta["control_commit"] = info["control"]["commit"]
         meta["control_commit_time"] = info["control"]["commit_time"]
     if "run_type" in info:
