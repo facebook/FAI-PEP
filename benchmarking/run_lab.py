@@ -160,6 +160,11 @@ parser.add_argument(
     ),
 )
 parser.add_argument(
+    "--device_counters",
+    action="store_true",
+    help="Post device counter information from device monitor.",
+)
+parser.add_argument(
     "--shared_libs",
     help="Pass the shared libs that the framework depends on, "
     "in a comma separated list.",

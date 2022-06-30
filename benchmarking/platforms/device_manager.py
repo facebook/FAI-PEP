@@ -20,6 +20,7 @@ from threading import Thread
 
 from bridge.db import DBDriver
 from get_connected_devices import GetConnectedDevices
+from metrics.counters import Counter
 from platforms.android.adb import ADB
 from platforms.platforms import getDeviceList
 from reboot_device import reboot as reboot_device
@@ -79,6 +80,14 @@ class DeviceManager(object):
         self._initializeDevices()
         self.running = True
         self.failed_device_checks = 0
+        self.counter = None
+        if self.args.device_counters:
+            try:
+                self.counter = Counter().get_counter()
+            except Exception:
+                getLogger().exception(
+                    "Could not load device counter!  Counters will not be updated for this server!"
+                )
         self.device_monitor_interval = self.args.device_monitor_interval
         self.device_monitor = Thread(target=self._runDeviceMonitor)
         self.device_monitor.start()
@@ -102,6 +111,7 @@ class DeviceManager(object):
         return self.lab_devices
 
     def _runDeviceMonitor(self):
+        self._initCounters()
         while self.running:
             # if the lab is hosting mobile devices, thread will monitor connectivity of devices.
             if self.args.platform.startswith(
@@ -109,6 +119,7 @@ class DeviceManager(object):
             ) or self.args.platform.startswith("ios"):
                 self._checkDevices()
             self._updateHeartbeats()
+            self._updateCounters()
             time.sleep(self.device_monitor_interval)
 
     def _checkDevices(self):
@@ -234,6 +245,34 @@ class DeviceManager(object):
                     hashes.append(hash)
         hashes = ",".join(hashes)
         self.db.updateHeartbeats(claimer_id, hashes)
+
+    def _initCounters(self):
+        """Update counters data for devices."""
+        if self.args.device_counters:
+            data = []
+            for k in self.lab_devices:
+                for hash in self.lab_devices[k]:
+                    data.append(
+                        {
+                            "key": f"{hash}.connected",
+                            "value": 0.0,
+                        }
+                    )
+            self.counter.update_counters(data)
+
+    def _updateCounters(self):
+        """Update counters data for devices."""
+        if self.args.device_counters:
+            data = []
+            for k in self.lab_devices:
+                for hash in self.lab_devices[k]:
+                    data.append(
+                        {
+                            "key": f"{hash}.connected",
+                            "value": 1.0 if self.lab_devices[k][hash]["live"] else 0.0,
+                        }
+                    )
+            self.counter.update_counters(data)
 
     def _getDevices(self, devices=None):
         """Get list of device meta data for available devices."""
