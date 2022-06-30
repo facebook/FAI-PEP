@@ -13,9 +13,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import datetime
 import json
 import time
+
+from argparse import Namespace
 from collections import defaultdict
 from threading import Thread
-from typing import Dict
 
 from bridge.db import DBDriver
 from get_connected_devices import GetConnectedDevices
@@ -68,7 +69,7 @@ class DeviceManager(object):
     Provides devices metadata to the lab instance. For mobile platforms, checks connectivity of devices and performs updates to lab devices and db.
     """
 
-    def __init__(self, args: Dict, db: DBDriver):
+    def __init__(self, args: Namespace, db: DBDriver):
         self.args = args
         self.db: DBDriver = db
         self.lab_devices = {}
@@ -78,11 +79,9 @@ class DeviceManager(object):
         self._initializeDevices()
         self.running = True
         self.failed_device_checks = 0
-        # pyre-fixme[16]: `Dict` has no attribute `device_monitor_interval`.
         self.device_monitor_interval = self.args.device_monitor_interval
         self.device_monitor = Thread(target=self._runDeviceMonitor)
         self.device_monitor.start()
-        # pyre-fixme[16]: `Dict` has no attribute `usb_hub_device_mapping`.
         if self.args.usb_hub_device_mapping:
             from utils.usb_controller import USBController
 
@@ -91,14 +90,12 @@ class DeviceManager(object):
             self.usb_controller = None
         # specify device hashes to suppress critical logging for when d/c occurs.
         self.suppress_dc_critical_mapping = {}
-        # pyre-fixme[16]: `Dict` has no attribute `suppress_dc_critical_mapping`.
         if self.args.suppress_dc_critical_mapping:
             try:
                 with open(self.args.suppress_dc_critical_mapping) as f:
                     self.suppress_dc_critical_mapping = set(json.load(f)["hashes"])
             except Exception:
-                # pyre-fixme[16]: Callable `getLogger` has no attribute `exception`.
-                getLogger.exception("suppress_dc_critical_mapping was not loaded.")
+                getLogger().exception("suppress_dc_critical_mapping was not loaded.")
 
     def getLabDevices(self):
         """Return a reference to the lab's device meta data."""
