@@ -14,7 +14,7 @@ import json
 
 from bridge.auth import Auth
 from utils.custom_logger import getLogger
-from utils.utilities import requestsJson
+from utils.utilities import asyncRequestsJson, requestsJson
 
 NETWORK_TIMEOUT = 150
 
@@ -59,14 +59,14 @@ class DBDriver(object):
         result_json = self._requestData(params)
         return self._processBenchmarkResults(result_json["values"])
 
-    def updateHeartbeats(self, server_id, hashes):
+    async def updateHeartbeats(self, loop, server_id, hashes):
         params = {
             "table": self.table,
             "action": "heartbeat",
             "claimer": server_id,
             "hashes": hashes,
         }
-        self._requestData(params)
+        await self._asyncRequestData(loop, params)
 
     def releaseBenchmarks(self, server_id, ids):
         params = {
@@ -165,6 +165,31 @@ class DBDriver(object):
         params.update(self.auth_params)
         result_json = requestsJson(
             self.benchmark_db_entry, data=params, timeout=NETWORK_TIMEOUT, retry=retry
+        )
+        if "status" not in result_json or result_json["status"] != "success":
+            getLogger().warning(
+                "DB post failed.\tbenchmark_db_entry: {}\t params: {}".format(
+                    self.benchmark_db_entry, json.dumps(params)
+                )
+            )
+            for key in result_json:
+                getLogger().error("{}: {}".format(key, result_json[key]))
+            return {
+                "status": "fail",
+                "values": [],
+            }
+        else:
+            return result_json
+
+    async def _asyncRequestData(self, loop, params, retry=False):
+        """Async request data function.  May need to wrap this in a task that can be cancelled if retry=True"""
+        params.update(self.auth_params)
+        result_json = await asyncRequestsJson(
+            loop,
+            self.benchmark_db_entry,
+            data=params,
+            timeout=NETWORK_TIMEOUT,
+            retry=retry,
         )
         if "status" not in result_json or result_json["status"] != "success":
             getLogger().warning(
