@@ -22,6 +22,7 @@ import uuid
 import zipfile
 from time import sleep
 
+import aiohttp
 import certifi
 import pkg_resources
 import requests
@@ -248,12 +249,66 @@ def requestsData(url, **kwargs):
     return result
 
 
+async def asyncRequestsData(loop, url, **kwargs):
+    delay = 0
+    total_delay = 0
+    timeout = -1
+    if "timeout" in kwargs:
+        timeout = kwargs["timeout"]
+    retry = kwargs.pop("retry", True)
+    result = None
+    while True:
+        try:
+            async with aiohttp.ClientSession(loop=loop) as session:
+                async with session.post(url, **kwargs) as result:
+                    text = await result.text()
+                    if result.status != 200:
+                        text = json.loads(text)
+                        getLogger().error(
+                            f"Async post request returned status code {result.status}. Reason: {result.reason} Message: {text.get('error',{})}"
+                        )
+                    else:
+                        # getLogger().info(result.status)
+                        if delay > 0:
+                            getLogger().info("Async post request successful")
+                        return result
+        except Exception:
+            getLogger().exception("Exception occured during async request!")
+        if not retry:
+            break
+        delay = delay + 1 if delay <= 5 else delay
+        sleep_time = 1 << delay
+        getLogger().info("wait {} seconds. Retrying...".format(sleep_time))
+        sleep(sleep_time)
+        total_delay += sleep_time
+        if timeout > 0 and total_delay > timeout:
+            break
+    getLogger().error(
+        "Failed to post to {}, retrying after {} seconds...".format(url, total_delay)
+    )
+    return result
+
+
 def requestsJson(url, **kwargs):
     try:
         result = requestsData(url, **kwargs)
         if result and result.status_code == 200:
             result_json = result.json()
             return result_json
+    except ValueError as e:
+        getLogger().error("Cannot decode json {}".format(e.output))
+
+    getLogger().error("Failed to retrieve json from {}".format(url))
+    return {}
+
+
+async def asyncRequestsJson(loop, url, **kwargs):
+    try:
+        result = await asyncRequestsData(loop, url, **kwargs)
+        if result and result.status == 200:
+            async with result:
+                result_json = await result.text()
+                return json.loads(result_json)
     except ValueError as e:
         getLogger().error("Cannot decode json {}".format(e.output))
 

@@ -10,8 +10,10 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import asyncio
 import datetime
 import json
+import os
 import time
 
 from argparse import Namespace
@@ -89,6 +91,7 @@ class DeviceManager(object):
                     "Could not load device counter!  Counters will not be updated for this server!"
                 )
         self.device_monitor_interval = self.args.device_monitor_interval
+        self.async_event_loop = None
         self.device_monitor = Thread(target=self._runDeviceMonitor)
         self.device_monitor.start()
         if self.args.usb_hub_device_mapping:
@@ -110,24 +113,34 @@ class DeviceManager(object):
         """Return a reference to the lab's device meta data."""
         return self.lab_devices
 
-    def _runDeviceMonitor(self):
-        self._initCounters()
+    async def _asyncRunDeviceMonitor(self):
+        """Async function with device monitoring loop.  Heartbeats and counters are updated with non-blocking aiohttp calls."""
+        await self._initCounters()
         while self.running:
             # if the lab is hosting mobile devices, thread will monitor connectivity of devices.
             if self.args.platform.startswith(
                 "android"
             ) or self.args.platform.startswith("ios"):
-                self._checkDevices()
-            self._updateHeartbeats()
-            self._updateCounters()
+                # mobile-only logic
+                await self._checkDevices()
+                await self._updateCounters()
+            await self._updateHeartbeats()
+            # await asyncio.sleep(self.device_monitor_interval)
             time.sleep(self.device_monitor_interval)
+        await self._initCounters()
 
-    def _checkDevices(self):
+    def _runDeviceMonitor(self):
+        self.async_event_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.async_event_loop)
+        self.async_event_loop.run_until_complete(self._asyncRunDeviceMonitor())
+        self.async_event_loop.close()
+
+    async def _checkDevices(self):
         """Run any device health checks, e.g. connectivity, battery, etc."""
         try:
             online_hashes = getDeviceList(self.args, silent=True)
             self._handleDCDevices(online_hashes)
-            self._handleNewDevices(online_hashes)
+            await self._handleNewDevices(online_hashes)
             self.failed_device_checks = 0
         except Exception:
             getLogger().exception("Error while checking devices.")
@@ -211,7 +224,7 @@ class DeviceManager(object):
                         self.online_devices.remove(dc_device)
                     self.device_dc_count.pop(hash)
 
-    def _handleNewDevices(self, online_hashes):
+    async def _handleNewDevices(self, online_hashes):
         """
         Check if there are newly detected devices connected
         to the host and add them to the device list.
@@ -234,8 +247,9 @@ class DeviceManager(object):
                     if d["hash"] in self.device_dc_count:
                         self.device_dc_count.pop(d["hash"])
                     getLogger().info("New device added: {}".format(d))
+            await self._initCounters(devices=new_devices)
 
-    def _updateHeartbeats(self):
+    async def _updateHeartbeats(self):
         """Update device heartbeats for all devices which are marked "live" in lab devices."""
         claimer_id = self.args.claimer_id
         hashes = []
@@ -244,9 +258,25 @@ class DeviceManager(object):
                 if self.lab_devices[k][hash]["live"]:
                     hashes.append(hash)
         hashes = ",".join(hashes)
-        self.db.updateHeartbeats(claimer_id, hashes)
+        await self.db.updateHeartbeats(self.async_event_loop, claimer_id, hashes)
 
-    def _initCounters(self):
+    async def _initCounters(self, devices=None):
+        """Update counters data for devices. If devices is None, initialize all."""
+        if self.args.device_counters:
+            data = []
+            for k in self.lab_devices:
+                for hash in self.lab_devices[k]:
+                    if devices is None or hash in devices:
+                        data.append(
+                            {
+                                "key": f"aibench_devices.{os.environ.get('CLAIMER','')}.{k}.{hash}.connected",
+                                "value": 0.0,
+                            }
+                        )
+            if data:
+                await self.counter.update_counters(self.async_event_loop, data)
+
+    async def _updateCounters(self):
         """Update counters data for devices."""
         if self.args.device_counters:
             data = []
@@ -254,25 +284,12 @@ class DeviceManager(object):
                 for hash in self.lab_devices[k]:
                     data.append(
                         {
-                            "key": f"{hash}.connected",
-                            "value": 0.0,
-                        }
-                    )
-            self.counter.update_counters(data)
-
-    def _updateCounters(self):
-        """Update counters data for devices."""
-        if self.args.device_counters:
-            data = []
-            for k in self.lab_devices:
-                for hash in self.lab_devices[k]:
-                    data.append(
-                        {
-                            "key": f"{hash}.connected",
+                            "key": f"aibench_devices.{os.environ.get('CLAIMER','')}.{k}.{hash}.connected",
                             "value": 1.0 if self.lab_devices[k][hash]["live"] else 0.0,
                         }
                     )
-            self.counter.update_counters(data)
+            if data:
+                await self.counter.update_counters(self.async_event_loop, data)
 
     def _getDevices(self, devices=None):
         """Get list of device meta data for available devices."""
