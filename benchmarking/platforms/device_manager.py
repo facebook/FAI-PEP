@@ -24,6 +24,7 @@ from bridge.db import DBDriver
 from get_connected_devices import GetConnectedDevices
 from metrics.counters import Counter
 from platforms.android.adb import ADB
+from platforms.battery_state import getBatteryState
 from platforms.platforms import getDeviceList
 from reboot_device import reboot as reboot_device
 from utils.custom_logger import getLogger
@@ -421,6 +422,22 @@ class CoolDownDevice(Thread):
             or self.device["reboot_time"] + REBOOT_INTERVAL < datetime.datetime.now()
         )
         success = True
+
+        battery_state = getBatteryState(
+            self.device["hash"], self.args.platform, self.args.android_dir
+        )
+        if battery_state["supported"]:
+            getLogger().info(
+                f"\nBattery status: {battery_state['status']}"
+                + f"\nBattery charge level: {battery_state['charge_level']}%"
+                + f"\nBattery temperature: {battery_state['temperature']}\xB0C"
+            )
+            if battery_state["disconnected"]:
+                getLogger().warning(
+                    f"Battery for {self.device} was left in a disconnected state; rebooting to restore charging."
+                )
+                reboot = True
+
         # reboot mobile devices if required
         if reboot:
             raw_args = []
@@ -436,9 +453,25 @@ class CoolDownDevice(Thread):
                 getLogger().critical(f"Device {self.device} could not be rebooted.")
                 success = False
 
-        # sleep for device cooldown
-        getLogger().info(f"Sleep {self.cooldown} seconds")
-        time.sleep(self.cooldown)
+        not_ready = True
+        charge_threshold = 30  # REVIEW
+        getLogger().info(f"Sleep {self.cooldown} seconds.")
+        while not_ready:
+            # sleep for device cooldown
+            time.sleep(self.cooldown)
+
+            battery_state = getBatteryState(
+                self.device["hash"], self.args.platform, self.args.android_dir
+            )
+            if (battery_state["supported"]) and battery_state[
+                "charge_level"
+            ] < charge_threshold:
+                getLogger().info(
+                    f"Battery charge of {battery_state['charge_level']}% is below threshold of {charge_threshold}%; Sleep another {self.cooldown} seconds."
+                )
+                continue
+
+            not_ready = False
 
         # device should be available again, remove rebooting flag.
         if "rebooting" in self.device:

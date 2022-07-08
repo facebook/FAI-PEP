@@ -131,7 +131,6 @@ class Perfetto(ProfilerBase):
 
         # This is a generic path to disconnect battery charing on many Android devices.
         # Going forward, it may be necessary to override this default mechanism on some devices.
-        self.battery_present_path = "/sys/class/power_supply/battery/present"
         self.battery_disconnected_path = "/sys/class/power_supply/battery/input_suspend"
         self.battery_state: BatteryState = BatteryState.connected
 
@@ -230,8 +229,7 @@ class Perfetto(ProfilerBase):
             self.valid = False  # prevent additional calls
 
     def _hasBattery(self):
-        cmd_has_battery = ["cat", self.battery_present_path]
-        return self.adb.shell(cmd_has_battery, retry=1, silent=True) == ["1"]
+        return self.adb.getBatteryProp("present") == "1"
 
     def _setBatteryState(self, state: BatteryState):
         cmd_exists = ["ls", self.battery_disconnected_path]
