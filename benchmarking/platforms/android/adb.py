@@ -132,6 +132,24 @@ class ADB(PlatformUtilBase):
     def setprop(self, property, value, **kwargs):
         self.shell(["setprop", property, value], **kwargs)
 
+    def getBatteryProp(self, property: str, silent=True) -> str:
+        """
+        For rooted devices, you should already establish "user is root" before calling
+        """
+        if self.user_is_root():
+            path = "/sys/class/power_supply/battery/" + property
+            # Make sure path exists before trying to get it
+            if not (
+                self.shell(["[", "-f", '"' + path + '"', "]"], retry=1, silent=silent)
+            ):
+                return self.shell(
+                    ["cat", path],
+                    retry=1,
+                    silent=silent,
+                )[0]
+
+        return ""
+
     def isRootedDevice(self, silent=True) -> bool:
         try:
             ret = self.shell(
