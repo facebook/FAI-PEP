@@ -310,6 +310,9 @@ class AndroidPlatform(PlatformBase):
             platform=self,
             model_name=platform_args.get("model_name", None),
             cmd=cmd,
+            extra_args=platform_args["profiling_args"]
+            .get("options", {})
+            .get("extra_args", ""),
         )
         if simpleperf:
             f = simpleperf.start()
