@@ -34,7 +34,4 @@ def getBatteryState(device, platform: str, android_dir: str) -> Dict[str, Any]:
             state["charge_level"] = int(util.getBatteryProp("capacity"))
             state["temperature"] = int(util.getBatteryProp("temp"))
 
-    else:
-        raise AssertionError("Platform {} not recognized".format(platform))
-
     return state
