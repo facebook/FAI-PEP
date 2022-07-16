@@ -20,6 +20,7 @@ import os
 import shutil
 import signal
 import stat
+import subprocess
 import tempfile
 import time
 from concurrent.futures import ProcessPoolExecutor as Pool
@@ -593,6 +594,7 @@ class runAsync(object):
 
 class RunLab(object):
     def __init__(self, raw_args=None):
+        self._detectServiceInstances()
         self.args, self.unknowns = parser.parse_known_args(raw_args)
         os.environ["CLAIMER"] = self.args.claimer_id
         self.benchmark_downloader = DownloadBenchmarks(self.args, getLogger())
@@ -623,6 +625,15 @@ class RunLab(object):
         else:
             numProcesses = multiprocessing.cpu_count() - 1
         self.pool = Pool(max_workers=numProcesses, initializer=hookSignals)
+
+    def _detectServiceInstances(self):
+        """check if run_bench service is already running. Prevents multiple servers from running simultaneously."""
+        procs = subprocess.check_output(["pgrep", "-f", "run_bench"])
+        if len(procs.decode().split()) > 1:
+            raise Exception(
+                f"Server processes with PID {procs.decode().split()} running. Please run only one server instance at a time"
+            )
+            exit()
 
     def run(self):
         hookSignals()
