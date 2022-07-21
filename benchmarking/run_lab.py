@@ -50,6 +50,7 @@ from utils.log_utils import (
 from utils.utilities import (
     BenchmarkArgParseException,
     DownloadException,
+    DownloadNotFoundException,
     getFilename,
     getMachineId,
     HARNESS_ERROR_FLAG as HARNESS_ERROR,
@@ -309,7 +310,11 @@ class runAsync(object):
                 f"Running BenchmarkDriver for benchmark {self.job['identifier']} id ({self.job['id']})"
             )
             status = app.run()
-
+        except DownloadNotFoundException:
+            getLogger().exception(
+                f"An file could not be found when downloading files for benchmark {self.job['identifier']} id ({self.job['id']})"
+            )
+            status = USER_ERROR
         except DownloadException:
             getLogger().critical(
                 f"An error occurred while downloading files for benchmark {self.job['identifier']} id ({self.job['id']}",
@@ -502,6 +507,10 @@ class runAsync(object):
                         getLogger().info("Downloading control binary")
                         control_locations = self._downloadBinaries(control_info)
                         self.job["programs_location"].extend(control_locations)
+        except FileNotFoundError:
+            raise DownloadNotFoundException(
+                f"Failed to download files for benchmark {self.job['identifier']} id {self.job['id']}"
+            )
         except Exception:
             raise DownloadException(
                 f"Failed to download files for benchmark {self.job['identifier']} id {self.job['id']}"

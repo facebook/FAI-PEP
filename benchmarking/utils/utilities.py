@@ -52,6 +52,12 @@ class DownloadException(BenchmarkException):
     pass
 
 
+class DownloadNotFoundException(BenchmarkException):
+    """Raised where exception occurs when downloading benchmark files."""
+
+    pass
+
+
 class BenchmarkArgParseException(BenchmarkException):
     """Raised where benchmark arguments could not be parsed or are invalid."""
 
