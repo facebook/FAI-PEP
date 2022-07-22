@@ -214,13 +214,19 @@ class PlatformBase(object):
             entry = cmd[i]
             if entry[:2] == "--":
                 key = entry[2:]
-                value = cmd[i + 1] if i < len(cmd) - 1 else "true"
-                if value[:2] == "--":
-                    value = "true"
+                if key.find("=") > -1:
+                    k, v = key.split("=")
+                    arguments[k] = v
                 else:
-                    i = i + 1
-                arguments[key] = value
+                    value = cmd[i + 1] if i < len(cmd) - 1 else "true"
+                    if value[:2] == "--":
+                        value = "true"
+                    else:
+                        i = i + 1
+                    arguments[key] = value
             elif entry != "{program}":
-                getLogger().warning("Failed to get argument {}".format(entry[i]))
+                raise RuntimeError(
+                    f"Argument '{cmd[i]}' could not be parsed from the command '{' '.join(cmd)}'."
+                )
             i = i + 1
         return arguments
