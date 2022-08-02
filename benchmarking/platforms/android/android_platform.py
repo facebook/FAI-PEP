@@ -328,6 +328,8 @@ class AndroidPlatform(PlatformBase):
         # attempt Perfetto profiling
         with Perfetto(
             platform=self,
+            cmd=cmd,
+            model_name=platform_args.get("model_name", "benchmark"),
             types=platform_args["profiling_args"]["types"],
             options=platform_args["profiling_args"]["options"],
         ) as perfetto:
