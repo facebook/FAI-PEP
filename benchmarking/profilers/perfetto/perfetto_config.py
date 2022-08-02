@@ -49,6 +49,7 @@ class PerfettoConfig:
             if self.options.get("all_heaps", False)
             else ""
         )
+        app_name = self.options.get("app_name", self.app_name)
         buffer_size_kb = self.options.get("buffer_size_kb", self.BUFFER_SIZE_KB_DEFAULT)
         buffer_size2_kb = self.options.get(
             "buffer_size2_kb", self.BUFFER_SIZE2_KB_DEFAULT
@@ -75,7 +76,7 @@ class PerfettoConfig:
                 sampling_interval_bytes=sampling_interval_bytes,
                 dump_interval_ms=dump_interval_ms,
                 dump_phase_ms=dump_phase_ms,
-                app_name=self.app_name,
+                app_name=app_name,
             )
         if "battery" in self.types:
             battery_poll_ms = self.options.get(
@@ -119,7 +120,7 @@ class PerfettoConfig:
 
         if {"battery", "gpu", "cpu"}.intersection(self.types):
             linux_ftrace_config = LINUX_FTRACE_CONFIG.format(
-                app_name=self.app_name,
+                app_name=app_name,
                 cpu_ftrace_config=cpu_ftrace_config,
                 cpu_scheduling_details_ftrace_config=cpu_scheduling_details_ftrace_config,
                 cpu_syscalls_ftrace_config=cpu_syscalls_ftrace_config,

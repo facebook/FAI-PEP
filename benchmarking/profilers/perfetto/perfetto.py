@@ -16,6 +16,7 @@ import time
 from enum import Enum
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from typing import List
 
 # from platforms.android.android_platform import AndroidPlatform
 from profilers.perfetto.perfetto_config import PerfettoConfig
@@ -76,10 +77,11 @@ class Perfetto(ProfilerBase):
     def __init__(
         self,
         platform,
+        cmd: List,
         *,
+        model_name="benchmark",
         types=None,
         options=None,
-        model_name="benchmark",
     ):
         self.platform = platform
         self.types = types or ["memory"]
@@ -92,7 +94,9 @@ class Perfetto(ProfilerBase):
 
         if self.android_version < 12 and self.options.get("all_heaps", False):
             self.options.all_heaps = False
-        self.perfetto_config = PerfettoConfig(self.types, self.options)
+        self.perfetto_config = PerfettoConfig(
+            self.types, self.options, app_name=os.path.basename(cmd[0])
+        )
         self.basename = generate_perf_filename(model_name, self.platform.platform_hash)
         self.trace_file_name = f"{self.basename}.perfetto-trace"
         self.trace_file_device = f"{self.DEVICE_TRACE_DIRECTORY}/{self.trace_file_name}"
@@ -378,8 +382,6 @@ class Perfetto(ProfilerBase):
 
     def _setupPerfettoConfig(
         self,
-        *,
-        app_name: str = "program",
     ):
         config_str = self.perfetto_config.GeneratePerfettoConfig()
         with NamedTemporaryFile() as f:
