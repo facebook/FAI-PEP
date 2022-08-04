@@ -18,12 +18,14 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import List
 
-# from platforms.android.android_platform import AndroidPlatform
 from profilers.perfetto.perfetto_config import PerfettoConfig
 from profilers.profiler_base import ProfilerBase
 from profilers.utilities import generate_perf_filename, upload_profiling_reports
 from utils.custom_logger import getLogger
-from utils.utilities import BenchmarkUnsupportedDeviceException
+from utils.utilities import (
+    BenchmarkInvalidBinaryException,
+    BenchmarkUnsupportedDeviceException,
+)
 
 PROCESS_KEY = "perfetto"
 
@@ -84,6 +86,7 @@ class Perfetto(ProfilerBase):
         options=None,
     ):
         self.platform = platform
+        self.cmd = cmd
         self.types = types or ["memory"]
         self.options = options or {}
         self.android_version: int = int(platform.rel_version.split(".")[0])
@@ -161,6 +164,14 @@ class Perfetto(ProfilerBase):
         if self.is_rooted_device:
             if not self.user_was_root:
                 self.adb.root()
+
+        if "memory" in self.types:
+            output = self.adb.shell(["file", self.cmd[0]])
+            getLogger().error(f"file {self.cmd[0]} returned '{output}'.")
+            if output and "not stripped" not in output[0]:
+                raise BenchmarkInvalidBinaryException(
+                    f"Cannot run perfetto memory profiling on non-debuggable binary {self.cmd[0]}."
+                )
 
         if "battery" in self.types:
             if self.is_rooted_device:
