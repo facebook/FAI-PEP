@@ -70,6 +70,12 @@ class BenchmarkUnsupportedDeviceException(BenchmarkException):
     pass
 
 
+class BenchmarkInvalidBinaryException(BenchmarkException):
+    """Raised where benchmark arguments specify an invalid binary."""
+
+    pass
+
+
 def check_is_json(json_str):
     try:
         json.loads(json_str)
