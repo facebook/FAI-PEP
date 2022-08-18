@@ -30,9 +30,9 @@ def generate_perf_filename(model_name="benchmark", hash=None):
 
 def upload_profiling_reports(files: Mapping[str, str]) -> Dict:
     """
-    Upload to aibench profiling reports manifold bucket.
+    Upload to aibench profiling reports.
     Accepts dict of key -> local file path, uploads using file basename
-    and returns meta dict of key -> manifold_url.
+    and returns meta dict of key -> url.
     """
     meta = {}
     profiling_reports_uploader = FileUploader("profiling_reports").get_uploader()
@@ -46,4 +46,23 @@ def upload_profiling_reports(files: Mapping[str, str]) -> Dict:
             getLogger().exception(
                 f"Warning: could not upload {key}: {file}. Skipping.\nException: {e}"
             )
+    return meta
+
+
+def upload_output_files(files: Mapping[str, str]) -> Dict:
+    """
+    Upload to aibench profiling reports.
+    Accepts dict of key -> local file path, uploads using file basename
+    and returns meta dict of key -> url.
+    """
+    meta = {}
+    profiling_reports_uploader = FileUploader("output_files").get_uploader()
+    for key, file in files.items():
+        if not os.path.isfile(file):
+            raise FileNotFoundError(f"File {file} does not exist.")
+        try:
+            url = profiling_reports_uploader.upload_file(file)
+            meta.update({key: url})
+        except Exception:
+            getLogger().exception(f"Warning: could not upload {key}: {file}. Skipping.")
     return meta
