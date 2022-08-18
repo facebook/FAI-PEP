@@ -507,14 +507,14 @@ class RunRemote(object):
                             if '"' not in val:
                                 # ensure text substrings are quoted
                                 val = re.sub(
-                                    "[a-zA-Z0-9_]+",
+                                    r"[a-zA-Z0-9_\-]*\:*[a-zA-Z0-9_\-]+",
                                     _requote,
                                     val,
                                 )
                             test["profiler"] = json.loads(val)
                         except Exception as e:
                             raise BenchmarkArgParseException(
-                                f"Invalid --profile arguments: {args.profile}\n{e}"
+                                f"Invalid --profile arguments: {val}\n{e}"
                             )
                     else:
                         # only a list of "types" can be specified directly
