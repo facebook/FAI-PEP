@@ -412,7 +412,10 @@ class FrameworkBase(object):
                             f"Could not upload output file {file}. Skipping."
                         )
                 if output_file_meta:
-                    output["meta"].update({"output_files": output_file_meta})
+                    if "output_files" in output["meta"]:
+                        output["meta"]["output_files"].update(output_file_meta)
+                    else:
+                        output["meta"].update({"output_files": output_file_meta})
 
         return output, output_files
 

@@ -304,15 +304,16 @@ class AndroidPlatform(PlatformBase):
     def _runBenchmarkWithSimpleperf(
         self, cmd, log_to_screen_only: bool, **platform_args
     ):
+        stat = platform_args["profiling_args"].get("stat", None)
+        options = platform_args["profiling_args"].get("options", {})
         simpleperf = getProfilerByUsage(
             "android",
             None,
             platform=self,
-            model_name=platform_args.get("model_name", None),
             cmd=cmd,
-            extra_args=platform_args["profiling_args"]
-            .get("options", {})
-            .get("extra_args", ""),
+            stat=stat,
+            model_name=platform_args.get("model_name", None),
+            options=options,
         )
         if simpleperf:
             f = simpleperf.start()
