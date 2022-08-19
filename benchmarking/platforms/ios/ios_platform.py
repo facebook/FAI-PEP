@@ -12,6 +12,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import json
 import os
+import re
 import shlex
 import time
 
@@ -31,10 +32,15 @@ class IOSPlatform(PlatformBase):
             args.hash_platform_mapping,
             args.device_name_mapping,
         )
-        self.platform_os_version = platform_meta.get("os_version")
-        self.platform_model = platform_meta.get("model")
-        self.platform_abi = platform_meta.get("abi")
         self.setPlatformHash(idb.device)
+        if self.platform:
+            self.platform_model = (
+                re.findall(r"(.*)-[0-9.]+", self.platform) or [self.platform]
+            )[0]
+        else:
+            self.platform_model = platform_meta.get("model")
+        self.platform_os_version = platform_meta.get("os_version")
+        self.platform_abi = platform_meta.get("abi")
         self.usb_controller = usb_controller
         self.type = "ios"
         self.app = None

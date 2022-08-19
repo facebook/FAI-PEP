@@ -88,7 +88,7 @@ class IOSDriver(object):
                 "abi": self.devices[device]["abi"],
             }
             platform = IOSPlatform(tempdir, idb, self.args, platform_meta)
-            platform.setPlatform(self.devices[device]["model"])
+            # platform.setPlatform(self.devices[device]["platform"])
             platforms.append(platform)
 
         return platforms
