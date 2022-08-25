@@ -458,7 +458,16 @@ class runAsync(object):
                 and not program_location.endswith(".ipa")
             ):
                 new_location = program_location + ".ipa"
-                os.rename(program_location, new_location)
+                # This is a fix to resolve FileNotFound errors
+                # caused by renaming the program to its .ipa filename.
+                # TODO: Improve benchmark file handling with either
+                # temp directories per device / id or using file locks.
+                if (
+                    not os.path.exists(new_location)
+                    or os.stat(program_location).st_mtime
+                    != os.stat(new_location).st_mtime
+                ):
+                    shutil.copyfile(program_location, new_location)
                 program_location = new_location
             os.chmod(program_location, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
             programs[bin_name]["location"] = program_location
