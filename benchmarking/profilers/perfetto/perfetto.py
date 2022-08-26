@@ -79,7 +79,7 @@ class Perfetto(ProfilerBase):
     def __init__(
         self,
         platform,
-        cmd: List,
+        cmd: List[str],
         *,
         model_name="benchmark",
         types=None,
@@ -97,8 +97,9 @@ class Perfetto(ProfilerBase):
 
         if self.android_version < 12 and self.options.get("all_heaps", False):
             self.options.all_heaps = False
+        self.app_path = _getAppPath(cmd, "program")
         self.perfetto_config = PerfettoConfig(
-            self.types, self.options, app_name=os.path.basename(cmd[0])
+            self.types, self.options, app_name=self.app_path
         )
         self.basename = generate_perf_filename(model_name, self.platform.platform_hash)
         self.trace_file_name = f"{self.basename}.perfetto-trace"
@@ -151,26 +152,23 @@ class Perfetto(ProfilerBase):
     def __exit__(self, type, value, traceback):
         self._finish()
 
-    def _start(self):
-        """Begin Perfetto profiling on platform."""
-        self.valid = False
-
-        # Validation
+    def _validate(self):
         if self.android_version < 10:
             raise BenchmarkUnsupportedDeviceException(
                 f"Attempt to run perfetto on {self.platform.type} {self.platform.rel_version} device {self.platform.device_label} ignored."
             )
 
-        if self.is_rooted_device:
-            if not self.user_was_root:
-                self.adb.root()
-
         if "memory" in self.types:
-            output = self.adb.shell(["file", self.cmd[0]])
-            getLogger().error(f"file {self.cmd[0]} returned '{output}'.")
+            filename = os.path.basename(self.app_path)
+            if "#" in filename:
+                raise BenchmarkInvalidBinaryException(
+                    f"Cannot run perfetto memory profiling on binary filename '{filename}' containing '#'."
+                )
+            output = self.adb.shell(["file", self.app_path])
+            getLogger().error(f"file {self.app_path} returned '{output}'.")
             if output and "not stripped" not in output[0]:
                 raise BenchmarkInvalidBinaryException(
-                    f"Cannot run perfetto memory profiling on non-debuggable binary {self.cmd[0]}."
+                    f"Cannot run perfetto memory profiling on non-debuggable binary {self.app_path}."
                 )
 
         if "battery" in self.types:
@@ -183,6 +181,15 @@ class Perfetto(ProfilerBase):
                 raise BenchmarkUnsupportedDeviceException(
                     f"Perfetto battery profiling is unsupported on unrooted device {self.platform.device_label}."
                 )
+
+    def _start(self):
+        """Begin Perfetto profiling on platform."""
+        self.valid = False
+
+        if self.is_rooted_device and not self.user_was_root:
+            self.adb.root()
+
+        self._validate()
         try:
             getLogger().info(
                 f"Collect perfetto data on device {self.platform.device_label}."
@@ -441,3 +448,15 @@ class Perfetto(ProfilerBase):
     def _generateReport(self):
         """Generate an html report from perfetto data."""
         # TODO: implement
+
+
+def _getAppPath(args: List[str], default: str) -> str:
+    """App path will be the first non env-setting string."""
+    # TODO: externalize this method so it can be used elsewhere
+    app_path = default
+    for arg in args:
+        if "=" not in arg:
+            app_path = arg
+            break
+
+    return app_path
