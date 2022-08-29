@@ -437,6 +437,10 @@ class runAsync(object):
         program_locations = []
         for bin_name in programs:
             program_location = programs[bin_name]["location"]
+            if os.path.isfile(program_location):
+                getLogger().info(f"File {program_location} is local")
+                program_locations.append(program_location)
+                continue
             self.benchmark_downloader.downloadFile(program_location, None)
             if program_location.startswith("//"):
                 program_location = self.args.root_model_dir + program_location[1:]
