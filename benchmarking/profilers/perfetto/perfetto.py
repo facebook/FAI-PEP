@@ -20,7 +20,7 @@ from typing import List
 
 from profilers.perfetto.perfetto_config import PerfettoConfig
 from profilers.profiler_base import ProfilerBase
-from profilers.utilities import generate_perf_filename, upload_profiling_reports
+from profilers.utilities import generate_perf_filename, upload_output_files
 from utils.custom_logger import getLogger
 from utils.utilities import (
     BenchmarkInvalidBinaryException,
@@ -165,11 +165,7 @@ class Perfetto(ProfilerBase):
                     f"Cannot run perfetto memory profiling on binary filename '{filename}' containing '#'."
                 )
             output = self.adb.shell(["file", self.app_path])
-            getLogger().error(f"file {self.app_path} returned '{output}'.")
-            if output and "not stripped" not in output[0]:
-                raise BenchmarkInvalidBinaryException(
-                    f"Cannot run perfetto memory profiling on non-debuggable binary {self.app_path}."
-                )
+            getLogger().info(f"file {self.app_path} returned '{output}'.")
 
         if "battery" in self.types:
             if self.is_rooted_device:
@@ -232,7 +228,7 @@ class Perfetto(ProfilerBase):
                 )
                 self._copyPerfettoDataToHost()
                 self._generateReport()
-                self.meta.update(self._uploadResults())
+                self.meta["output_files"].update(self._uploadResults())
             else:
                 getLogger().error(
                     no_report_str,
@@ -279,27 +275,23 @@ class Perfetto(ProfilerBase):
                 getLogger().exception(error)
 
     def _uploadConfig(self, config_file):
-        self.meta = upload_profiling_reports(
-            {
-                "perfetto_config": config_file,
-            }
-        )
+        meta = upload_output_files({"Perfetto Config": config_file})
         getLogger().info(
-            f"Perfetto config file uploaded.\nPerfetto Config:\t{self.meta['perfetto_config']}"
+            f"Perfetto config file uploaded.\nPerfetto Config:\t{meta['Perfetto Config']}"
         )
+        self.meta = {"output_files": meta}
 
     def _uploadResults(self):
-        meta = upload_profiling_reports(
+        meta = upload_output_files(
             {
-                "perfetto_data": os.path.join(
+                "Perfetto Data": os.path.join(
                     self.host_output_dir, self.trace_file_name
-                ),
+                )
                 # TODO: generate flamegraph here
-                "perfetto_report": os.path.join(self.host_output_dir, self.config_file),
             }
         )
         getLogger().info(
-            f"Perfetto profiling data uploaded.\nPerfetto Data:  \t{meta['perfetto_data']}\nPerfetto Report:\t{meta['perfetto_report']}"
+            f"Perfetto profiling data uploaded.\nPerfetto Data:  \t{meta['Perfetto Data']}"
         )
 
         return meta
