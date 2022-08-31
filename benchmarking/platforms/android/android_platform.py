@@ -199,7 +199,7 @@ class AndroidPlatform(PlatformBase):
                 platform_args["non_blocking"] = True
                 self.util.shell(["am", "start", "-S", activity])
                 return []
-            if platform_args.get("enable_profiling", False):
+            if platform_args.get("profiling_args", {}).get("enabled", False):
                 getLogger().warn("Profiling for app benchmarks is not implemented.")
 
         patterns = []
