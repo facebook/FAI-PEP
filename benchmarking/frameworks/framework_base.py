@@ -557,8 +557,11 @@ class FrameworkBase(object):
             # ensure all fields are populated so we don't have to check elsewhere
             profiling_args = deepcopy(test["profiler"])
             types = profiling_args.get("types", ["cpu"])
+            getLogger().info(f"platform = '{platform}', type(platform) = {type(platform)}.")
             default_profiler = (
-                "simpleperf"
+                "xctrace"
+                if platform == "ios"
+                else "simpleperf"
                 if ["cpu"] == types
                 else "perfetto"
                 if PerfettoAnySupported(types)

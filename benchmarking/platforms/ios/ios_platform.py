@@ -117,28 +117,30 @@ class IOSPlatform(PlatformBase):
             if "power" in platform_args and platform_args["power"]:
                 platform_args["timeout"] = 10
                 run_cmd += ["--justlaunch"]
-        if platform_args.get("enable_profiling", False):
-            # attempt to run with profiling, else fallback to standard run
-            try:
-                args = " ".join(["--" + x + " " + arguments[x] for x in arguments])
-                xctrace = getProfilerByUsage(
-                    "ios",
-                    None,
-                    platform=self,
-                    model_name=platform_args.get("model_name", None),
-                    args=args,
-                )
-                if xctrace:
-                    f = xctrace.start()
-                    output, meta = f.result()
-                    if not output or not meta:
-                        raise RuntimeError("No data returned from XCTrace profiler.")
-                    return output, meta
-            except Exception:
-                getLogger().critical(
-                    f"An error occurred when running XCTrace profiler on device {self.platform} {self.platform_hash}.",
-                    exc_info=True,
-                )
+            if platform_args.get("profiling_args", {}).get("enabled", False):
+                # attempt to run with profiling, else fallback to standard run
+                try:
+                    args = " ".join(["--" + x + " " + arguments[x] for x in arguments])
+                    xctrace = getProfilerByUsage(
+                        "ios",
+                        None,
+                        platform=self,
+                        model_name=platform_args.get("model_name", None),
+                        args=args,
+                    )
+                    if xctrace:
+                        f = xctrace.start()
+                        output, meta = f.result()
+                        if not output or not meta:
+                            raise RuntimeError(
+                                "No data returned from XCTrace profiler."
+                            )
+                        return output, meta
+                except Exception:
+                    getLogger().critical(
+                        f"An error occurred when running XCTrace profiler on device {self.platform} {self.platform_hash}.",
+                        exc_info=True,
+                    )
         # meta is used to store any data about the benchmark run
         # that is not the output of the command
         meta = {}
