@@ -154,15 +154,16 @@ class PlatformBase(object):
             raise AssertionError("Cannot reach here")
         return None
 
-    def moveFilesFromPlatform(self, files, target_dir=None):
+    def moveFilesFromPlatform(self, files, target_dir=None, delete=True):
         assert target_dir is not None, "Target directory must be specified."
         if isinstance(files, string_types):
             basename = os.path.basename(files)
             target_file = os.path.join(target_dir, basename)
             self.util.pull(files, target_file)
-            self.util.deleteFile(
-                files, silent=True, retry=1
-            )  # this may fail on certain unrooted devices
+            if delete:
+                self.util.deleteFile(
+                    files, silent=True, retry=1
+                )  # this may fail on certain unrooted devices
             return target_file
         elif isinstance(files, list):
             output_files = []

@@ -88,7 +88,7 @@ parser.add_argument(
 parser.add_argument(
     "--framework",
     required=True,
-    choices=["caffe2", "generic", "oculus", "pytorch", "tflite", "glow"],
+    default="pytorch",
     help="Specify the framework to benchmark on.",
 )
 parser.add_argument(

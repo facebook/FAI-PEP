@@ -579,6 +579,7 @@ class FrameworkBase(object):
                 if (profiling_enabled and main_command and idx == len(cmds) - 1)
                 else {"enabled": False}
             )
+            platform_args["model_files"] = model_files
             one_output = self.runOnPlatform(
                 total_num, cmd, platform, platform_args, converter
             )
