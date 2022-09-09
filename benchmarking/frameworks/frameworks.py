@@ -11,6 +11,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from .caffe2.caffe2 import Caffe2Framework
+from .framework_base import FrameworkBase
 from .generic.generic import GenericFramework
 from .glow.glow import GlowFramework
 from .oculus.oculus import OculusFramework
@@ -30,3 +31,9 @@ frameworks = {
 def getFrameworks():
     global frameworks
     return frameworks
+
+
+def registerFramework(name, framework_class):
+    global frameworks
+    assert issubclass(framework_class, FrameworkBase)
+    frameworks[name] = framework_class
