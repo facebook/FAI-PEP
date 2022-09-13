@@ -266,7 +266,7 @@ class AndroidPlatform(PlatformBase):
                     elif profiler == "perfetto":
                         if not PerfettoAllSupported(profiling_types):
                             raise BenchmarkArgParseException(
-                                f"Only [{' ,'.join(perfetto_types_supported)}] are supported types for perfetto profiling."
+                                f"Only [{', '.join(perfetto_types_supported)}] are supported types for perfetto profiling."
                             )
                         # attempt Perfetto profiling, else fallback to standard run
                         return self._runBenchmarkWithPerfetto(

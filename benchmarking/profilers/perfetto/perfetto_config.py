@@ -5,11 +5,12 @@ from typing import Any, Dict, List, Optional
 
 
 class PerfettoConfig:
+    ADAPTIVE_SAMPLING_SHMEM_THRESHOLD_DEFAULT = 32746
     BUFFER_SIZE_KB_DEFAULT = 256 * 1024  # 256 megabytes
     BUFFER_SIZE2_KB_DEFAULT = 2 * 1024  # 2 megabytes
     SHMEM_SIZE_BYTES_DEFAULT = (
-        8192 * 4096
-    )  # Shared memory buffer must be a large multiple of 4096
+        16384 * 4096
+    )  # Shared memory buffer value must be a large POWER of 2 of at least 4096
     SAMPLING_INTERVAL_BYTES_DEFAULT = 4096
     DUMP_INTERVAL_MS_DEFAULT = 1000
     BATTERY_POLL_MS_DEFAULT = 1000
@@ -27,7 +28,8 @@ class PerfettoConfig:
         self.options = options
         self.app_name = app_name
 
-    def GeneratePerfettoConfig(self) -> str:
+    def GeneratePerfettoConfig(self, *, advanced_support: bool = False) -> str:
+        """advanced support:   Running at least OS 12 version of Perffeto binary"""
         # Write custom perfetto config
         android_log_config = ""
         cpu_scheduling_details_ftrace_config = ""
@@ -44,11 +46,6 @@ class PerfettoConfig:
         power_ftrace_config = ""
         power_suspend_resume_config = ""
         track_event_config = ""
-        all_heaps_config = (
-            "            all_heaps: true\n"
-            if self.options.get("all_heaps", False)
-            else ""
-        )
         app_name = self.options.get("app_name", self.app_name)
         buffer_size_kb = self.options.get("buffer_size_kb", self.BUFFER_SIZE_KB_DEFAULT)
         buffer_size2_kb = self.options.get(
@@ -63,6 +60,20 @@ class PerfettoConfig:
             shmem_size_bytes = self.options.get(
                 "shmem_size_bytes", self.SHMEM_SIZE_BYTES_DEFAULT
             )
+            adaptive_sampling_shmem_threshold = self.options.get(
+                "adaptive_sampling_shmem_threshold",
+                self.ADAPTIVE_SAMPLING_SHMEM_THRESHOLD_DEFAULT,
+            )
+            adaptive_sampling_shmem_threshold_config = (
+                f"            adaptive_sampling_shmem_threshold: {adaptive_sampling_shmem_threshold}\n"
+                if advanced_support
+                else ""
+            )
+            all_heaps_config = (
+                "            all_heaps: true\n"
+                if self.options.get("all_heaps", False)
+                else ""
+            )
             sampling_interval_bytes = self.options.get(
                 "sampling_interval_bytes", self.SAMPLING_INTERVAL_BYTES_DEFAULT
             )
@@ -73,6 +84,7 @@ class PerfettoConfig:
             heapprofd_config = HEAPPROFD_CONFIG.format(
                 all_heaps_config=all_heaps_config,
                 shmem_size_bytes=shmem_size_bytes,
+                adaptive_sampling_shmem_threshold_config=adaptive_sampling_shmem_threshold_config,
                 sampling_interval_bytes=sampling_interval_bytes,
                 dump_interval_ms=dump_interval_ms,
                 dump_phase_ms=dump_phase_ms,
@@ -203,6 +215,7 @@ data_sources: {{
             }}
             process_cmdline: "{app_name}"
             shmem_size_bytes: {shmem_size_bytes}
+{adaptive_sampling_shmem_threshold_config}\
             block_client: true
 {all_heaps_config}\
         }}

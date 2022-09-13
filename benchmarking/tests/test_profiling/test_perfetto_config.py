@@ -84,7 +84,7 @@ data_sources: {
                 dump_interval_ms: 1000
             }
             process_cmdline: "program"
-            shmem_size_bytes: 33554432
+            shmem_size_bytes: 67108864
             block_client: true
         }
     }
@@ -120,7 +120,7 @@ data_sources: {
                 dump_interval_ms: 1000
             }
             process_cmdline: "program"
-            shmem_size_bytes: 33554432
+            shmem_size_bytes: 67108864
             block_client: true
         }
     }
@@ -303,7 +303,7 @@ data_sources: {
                 dump_interval_ms: 1000
             }
             process_cmdline: "program"
-            shmem_size_bytes: 33554432
+            shmem_size_bytes: 67108864
             block_client: true
         }
     }
