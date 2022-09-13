@@ -18,10 +18,12 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import List
 
+from bridge.file_storage.download_files.file_downloader import FileDownloader
 from profilers.perfetto.perfetto_config import PerfettoConfig
 from profilers.profiler_base import ProfilerBase
 from profilers.utilities import generate_perf_filename, upload_output_files
 from utils.custom_logger import getLogger
+from utils.subprocess_with_logger import processRun
 from utils.utilities import (
     BenchmarkInvalidBinaryException,
     BenchmarkUnsupportedDeviceException,
@@ -34,10 +36,9 @@ Perfetto is a native memory and battery profiling tool for Android OS 10 or bett
 It can be used to profile both Android applications and native
 processes running on Android. It can profile both Java and C++ code on Android.
 
-Perfetto can be used to profile Android benchmarks as both applications and
-binaries. The resulting perf data is used to generate an html report
-including a flamegraph (TODO). Both perf data and the report are uploaded to manifold
-and the urls are returned as a meta dict which can be updated in the benchmark's meta data.
+Perfetto can be used to profile Android benchmarks of binaries. The resulting perf data can be opened and interactively viewed using
+//https://ui.perfetto.dev/, including a flamegraph (TODO: generate an html report directly). The config file and resulting perfetto
+data are uploaded to the cloud. The urls are returned as a dict and added to the benchmark's meta data.
 """
 
 logger = logging.getLogger(__name__)
@@ -94,9 +95,6 @@ class Perfetto(ProfilerBase):
         self.valid = False
         self.restoreState = False
         self.perfetto_pid = None
-
-        if self.android_version < 12 and self.options.get("all_heaps", False):
-            self.options.all_heaps = False
         self.app_path = _getAppPath(cmd, "program")
         self.perfetto_config = PerfettoConfig(
             self.types, self.options, app_name=self.app_path
@@ -124,11 +122,26 @@ class Perfetto(ProfilerBase):
             .strip()
             .lower()
         )
+
+        self.perfetto_path = "perfetto"
+        self.advanced_support = self.android_version >= 12
+        self.min_ver = int(self.options.get("min_ver", 11))
+        if self.android_version < self.min_ver:
+            self._init_sideloaded_binary()  # updates self.perfetto_path and self.advanced_support if successful
+
+        self.options["all_heaps"] = self.advanced_support and self.options.get(
+            "all_heaps", False
+        )
+        self.all_heaps_config = (
+            "            all_heaps: true\n"
+            if self.options.get("all_heaps", False)
+            else ""
+        )
         self.perfetto_cmd = [
             "cat",
             self.config_file_device,
             "|",
-            "perfetto",
+            self.perfetto_path,
             "-d",
             "--txt",
             "-c",
@@ -144,6 +157,107 @@ class Perfetto(ProfilerBase):
 
         super(Perfetto, self).__init__(None)
 
+    def _init_sideloaded_binary(self):
+        """
+        Verify that perfetto is available on the host, or download it, then copy perfetto onto the mobile device.
+        This can throw an exception if the perfetto binary is unexpectedly not found on the host machine
+        and must be caught and logged here. We will then default to the OS installed perfetto or give a version
+        error if OS version < 10.
+
+        Updates self.perfetto_path and sets self.advanced_support if successful.
+        """
+        binary_folders = {
+            "armeabi-v7a": "arm",
+            "arm64-v8a": "arm64",
+            "x86": "x86",
+            "x86_64": "x86_64",
+        }
+        self.binary_folder = binary_folders[self.platform.platform_abi]
+        self.user_home = str(Path.home())
+        self.host_perfetto_folder = os.path.join(self.user_home, "android/perfetto")
+        self.host_perfetto_location = os.path.join(
+            self.host_perfetto_folder, self.binary_folder, "perfetto"
+        )
+
+        try:
+            if self._existsOrDownloadPerfetto():
+                self._copyPerfetto()
+                self.advanced_support = True
+        except Exception:
+            getLogger().exception("Perfetto binary could not be copied to the device.")
+
+    def _existsOrDownloadPerfetto(self):
+        """
+        Using an advanced version of the perfetto binary (built from Android OS 12-based sources or better)
+        via "sideloading" allows us to take advantage of the latest advanced features and bug fixes.
+
+        If a suitable built version of the perfetto OS 12 binary already exists on the host server, use it.
+
+        Otherwise, attempt to download it if possible.
+
+            1. Only suuported platforms are attempted (currently arm or arm64)
+            2. FileDownloader class must have a "default" implementation
+
+        Otherwise, return False and just use the native perfetto binary from the installed device OS.
+
+        An exception will be raised if this should work (i.e., valid platform and implementation) but doesn't.
+        """
+        if not os.path.exists(self.host_perfetto_location):
+            if self.binary_folder not in ("arm", "arm64"):
+                # Currently these are the only flavors we support
+                getLogger().info(
+                    "Cannot download Perfetto.zip: Perfetto.zip doesn't support {self.binary_folder}."
+                )
+                return False
+
+            try:
+                profiling_files_downloader = FileDownloader("default").getDownloader()
+            except Exception:
+                getLogger().exception(
+                    "Cannot download Perfetto.zip: FileDownloader not implemented."
+                )
+                return False
+
+            getLogger().info(
+                "Perfetto binary cannot be found on the host machine. Attempting to download."
+            )
+            tmpdir = tempfile.mkdtemp()
+            filename = os.path.join(tmpdir, "perfetto.zip")
+            profiling_files_downloader.downloadFile(file=filename)
+
+            if not os.path.isdir(self.host_perfetto_folder):
+                os.makedirs(self.host_perfetto_folder)
+            output, err = processRun(
+                ["unzip", "-o", filename, "-d", self.host_perfetto_folder]
+            )
+            if err:
+                raise RuntimeError(
+                    f"perfetto archive {filename} was not able to be extracted to {self.host_perfetto_folder}"
+                )
+            if not os.path.exists(self.host_perfetto_location):
+                raise RuntimeError(
+                    f"Perfetto was not extracted to the expected location {self.host_perfetto_location}."
+                    f"Please confirm that it is available for {self.binary_folder}."
+                )
+
+        return True
+
+    def _copyPerfetto(self):
+        """Check if perfetto binary is on device, if not, copy."""
+        remote_binary = os.path.join(self.platform.tgt_dir, "perfetto")
+        if not (self.platform.fileExistsOnPlatform(remote_binary)):
+            getLogger().info("Copying perfetto to device")
+            self.platform.copyFilesToPlatform(
+                self.host_perfetto_location,
+                target_dir=self.platform.tgt_dir,
+                copy_files=True,
+            )
+
+            # Setup permissions for it, to avoid perfetto call failure
+            self.adb.shell(["chmod", "777", remote_binary])
+
+        self.perfetto_path = remote_binary
+
     def __enter__(self):
         self._start()
 
@@ -153,17 +267,24 @@ class Perfetto(ProfilerBase):
         self._finish()
 
     def _validate(self):
-        if self.android_version < 10:
+        if self.android_version < 10 and not self.advanced_support:
             raise BenchmarkUnsupportedDeviceException(
                 f"Attempt to run perfetto on {self.platform.type} {self.platform.rel_version} device {self.platform.device_label} ignored."
             )
 
         if "memory" in self.types:
+            # perfetto has stopped supporting Android 10 for memory profiling!
+            if self.android_version < 11 and not self.advanced_support:
+                raise BenchmarkUnsupportedDeviceException(
+                    f"Attempt to run perfetto memory profiling on {self.platform.type} {self.platform.rel_version} device {self.platform.device_label} ignored."
+                )
+
             filename = os.path.basename(self.app_path)
             if "#" in filename:
                 raise BenchmarkInvalidBinaryException(
                     f"Cannot run perfetto memory profiling on binary filename '{filename}' containing '#'."
                 )
+
             output = self.adb.shell(["file", self.app_path])
             getLogger().info(f"file {self.app_path} returned '{output}'.")
 
@@ -201,10 +322,11 @@ class Perfetto(ProfilerBase):
         except Exception as e:
             raise RuntimeError(f"Perfetto profiling failed to start:\n{e}.")
         else:
-            if output == 1 or output == [] or output[0] == "1":
+            if output == 1 or output == [] or output[-1] == "1":
                 raise RuntimeError("Perfetto profiling could not be started.")
 
-            self.perfetto_pid = output[0]
+            # pid is the last "line" of perfetto output (the only line in release builds)
+            self.perfetto_pid = output[-1]
             self.valid = True
             return output
 
@@ -393,7 +515,9 @@ class Perfetto(ProfilerBase):
     def _setupPerfettoConfig(
         self,
     ):
-        config_str = self.perfetto_config.GeneratePerfettoConfig()
+        config_str = self.perfetto_config.GeneratePerfettoConfig(
+            advanced_support=self.advanced_support
+        )
         with NamedTemporaryFile() as f:
             # Write custom perfetto config
             f.write(config_str.encode("utf-8"))
