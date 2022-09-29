@@ -274,7 +274,7 @@ class Perfetto(ProfilerBase):
 
         if "memory" in self.types:
             # perfetto has stopped supporting Android 10 for memory profiling!
-            if self.android_version < 11 and not self.advanced_support:
+            if self.android_version < 10:  # TODO: < 11 and not self.advanced_support:
                 raise BenchmarkUnsupportedDeviceException(
                     f"Attempt to run perfetto memory profiling on {self.platform.type} {self.platform.rel_version} device {self.platform.device_label} ignored."
                 )
