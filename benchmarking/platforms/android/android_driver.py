@@ -14,10 +14,13 @@ import json
 
 from platforms.android.adb import ADB
 from platforms.android.android_platform import AndroidPlatform
+
+from platforms.driver_base import DriverBase, registerDriver
+
 from six import string_types
 
 
-class AndroidDriver:
+class AndroidDriver(DriverBase):
     def __init__(self, args, devices=None):
         self.args = args
         if devices:
@@ -25,6 +28,10 @@ class AndroidDriver:
                 devices = [devices]
         self.devices = devices
         self.type = "android"
+
+    @staticmethod
+    def matchPlatformArg(*args):
+        return args.platform[:7] == "android"
 
     def getDevices(self, silent=False, retry=1):
         adb = ADB()
@@ -38,7 +45,7 @@ class AndroidDriver:
                 devices.add(device_id)
         return devices
 
-    def getAndroidPlatforms(self, tempdir, usb_controller):
+    def getPlatforms(self, tempdir, usb_controller):
         platforms = []
         if self.args.device:
             device = None
@@ -70,3 +77,10 @@ class AndroidDriver:
             adb = ADB(device, tempdir)
             platforms.append(AndroidPlatform(tempdir, adb, self.args))
         return platforms
+
+    @staticmethod
+    def matchPlatformArgs(args):
+        return args.platform[:7] == "android"
+
+
+registerDriver("AndroidDriver", AndroidDriver)

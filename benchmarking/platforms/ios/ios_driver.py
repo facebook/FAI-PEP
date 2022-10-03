@@ -13,12 +13,15 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import json
 import re
 
+from platforms.driver_base import DriverBase, registerDriver
+
 from platforms.ios.idb import IDB
 from platforms.ios.ios_platform import IOSPlatform
+
 from six import string_types
 
 
-class IOSDriver(object):
+class IOSDriver(DriverBase):
     def __init__(self, args, devices=None):
         self.args = args
         self.devices = self.getDevices()
@@ -48,7 +51,7 @@ class IOSDriver(object):
                 devices[hash] = {"model": model, "abi": abi, "os_version": os_version}
         return devices
 
-    def getIOSPlatforms(self, tempdir, usb_controller):
+    def getPlatforms(self, tempdir, usb_controller):
         platforms = []
         if self.args.device:
             device_str = self.args.device
@@ -92,3 +95,10 @@ class IOSDriver(object):
             platforms.append(platform)
 
         return platforms
+
+    @staticmethod
+    def matchPlatformArgs(args):
+        return args.platform.startswith("ios")
+
+
+registerDriver("IOSDriver", IOSDriver)
