@@ -1,12 +1,11 @@
 # (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 import abc
 
-
 driverHandles = {}
 
 
 class DriverBase(object):
-    def __init__(self, *args):
+    def __init__(self, *args, devices=None):
         self.platform = args.platform
 
     @abc.abstractmethod
@@ -22,7 +21,7 @@ class DriverBase(object):
         raise AssertionError("matchPlatformArgs not implemented for DriverBase")
 
 
-def registerDriver(name, obj):
+def registerDriver(name: str, obj: type):
     global driverHandles
     driverHandles[name] = obj
 
