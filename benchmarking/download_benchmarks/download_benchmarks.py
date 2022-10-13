@@ -63,7 +63,7 @@ class DownloadBenchmarks(object):
                         "location" in value
                     ), "location field is missing in benchmark " "{}".format(filename)
                     location = value["location"]
-                    md5 = value["md5"]
+                    md5 = value.get("md5")
                     path = self.downloadFile(location, md5)
                     locations.append(path)
 
