@@ -121,14 +121,9 @@ class BenchmarkCollector(object):
                 + "Please update the meta json file."
             )
 
-        # update the file field with the absolute path
-        # needs to be after the file is updated
-        # only update files with md5, which means those files are not
-        # temporary files
         for file in collected_files:
-            if "md5" in file:
-                cached_filename = self._getDestFilename(file, model_dir)
-                file["location"] = cached_filename
+            cached_filename = self._getDestFilename(file, model_dir)
+            file["location"] = cached_filename
 
         tmp_dir = tempfile.mkdtemp(
             prefix="_".join(["aibench", str(user_identifier), ""])
