@@ -122,8 +122,9 @@ class BenchmarkCollector(object):
             )
 
         for file in collected_files:
-            cached_filename = self._getDestFilename(file, model_dir)
-            file["location"] = cached_filename
+            if "md5" in file:
+                cached_filename = self._getDestFilename(file, model_dir)
+                file["location"] = cached_filename
 
         tmp_dir = tempfile.mkdtemp(
             prefix="_".join(["aibench", str(user_identifier), ""])
