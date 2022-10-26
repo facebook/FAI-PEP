@@ -120,6 +120,8 @@ class IOSPlatform(PlatformBase):
             if platform_args.get("profiling_args", {}).get("enabled", False):
                 # attempt to run with profiling, else fallback to standard run
                 try:
+                    profiling_types = platform_args["profiling_args"]["types"]
+                    options = platform_args["profiling_args"]["options"]
                     args = " ".join(["--" + x + " " + arguments[x] for x in arguments])
                     xctrace = getProfilerByUsage(
                         "ios",
@@ -127,6 +129,8 @@ class IOSPlatform(PlatformBase):
                         platform=self,
                         model_name=platform_args.get("model_name", None),
                         args=args,
+                        types=profiling_types,
+                        options=options,
                     )
                     if xctrace:
                         f = xctrace.start()
@@ -137,9 +141,8 @@ class IOSPlatform(PlatformBase):
                             )
                         return output, meta
                 except Exception:
-                    getLogger().critical(
-                        f"An error occurred when running XCTrace profiler on device {self.platform} {self.platform_hash}.",
-                        exc_info=True,
+                    getLogger().exception(
+                        f"An error occurred when running XCTrace profiler on device {self.platform} {self.platform_hash}."
                     )
         # meta is used to store any data about the benchmark run
         # that is not the output of the command
