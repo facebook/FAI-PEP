@@ -237,10 +237,13 @@ class BenchmarkCollector(object):
                             )
                         )
                         os.symlink(abs_name, destination_name)
-            else:
+            elif os.path.isdir(abs_name):
                 import distutils.dir_util
 
                 distutils.dir_util.copy_tree(abs_name, destination_name)
+            else:
+                raise AssertionError(f"Path {abs_name} cannot be retrieved.")
+                return False
         if os.path.isdir(destination_name) and field["md5"] == "directory":
             return False
         assert os.path.isfile(destination_name), "File {} cannot be retrieved".format(

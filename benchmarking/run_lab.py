@@ -312,7 +312,7 @@ class runAsync(object):
             status = app.run()
         except DownloadNotFoundException:
             getLogger().exception(
-                f"An file could not be found when downloading files for benchmark {self.job['identifier']} id ({self.job['id']})"
+                f"A file could not be found when downloading files for benchmark {self.job['identifier']} id ({self.job['id']})"
             )
             status = USER_ERROR
         except DownloadException:
