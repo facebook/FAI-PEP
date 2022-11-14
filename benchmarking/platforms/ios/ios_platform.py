@@ -74,6 +74,8 @@ class IOSPlatform(PlatformBase):
         assert len(dirs) == 1, "Only one app in the Payload directory"
         app_name = dirs[0]
         self.app = os.path.join(app_dir, app_name)
+        (base_name, _) = os.path.splitext(app_name)
+        self.dsym = os.path.join(self.app, base_name + ".dSYM")
         del programs["program"]
 
         bundle_id, _ = processRun(["osascript", "-e", 'id of app "' + self.app + '"'])
