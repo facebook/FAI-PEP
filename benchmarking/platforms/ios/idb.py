@@ -51,6 +51,8 @@ class IDB(PlatformUtilBase):
         # it is better to remove all uncessary files before we dump the
         # result
         assert self.cached_tree is not None, "cached_tree is None."
+        if src[0] == "/":
+            src = src[1:]
         src_filename = os.path.join(self.cached_tree, src)
         if not os.path.isfile(src_filename):
             self.run("--download", "--to", self.cached_tree)
@@ -72,7 +74,7 @@ class IDB(PlatformUtilBase):
             )
             return False
 
-    def deleteFile(self, file):
+    def deleteFile(self, file, **kwargs):
         # need to make sure the file exists
         # return self.run("--rm", file)
         # no need to delete file since files are added to a bundle
