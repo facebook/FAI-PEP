@@ -714,7 +714,7 @@ class RunLab(object):
                     device = self.devices[device_kind][hash]
                     if device["available"] is True:
                         getLogger().info(
-                            f"Device {job['device']} with hash {hash} available for job {job['id']}"
+                            f"Device {job['device']} with hash {hash} is available for job {job['id']} on server {self.args.claimer_id}."
                         )
                         job["hash"] = hash
                         jobs_queue.append(job)
@@ -722,7 +722,7 @@ class RunLab(object):
                         break
                 else:
                     getLogger().critical(
-                        f"The requested device {job['device']} with hash {job.get('hash', '<unspecified>')}is not available on this server."
+                        f"The requested device {job['device']} with hash {job.get('hash', '<unspecified>')} is not available on server {self.args.claimer_id}."
                     )
                     remaining_jobs.append(job)
         return jobs_queue, remaining_jobs
