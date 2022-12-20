@@ -72,6 +72,7 @@ class JsonConverter(DataConverterBase):
                             )
                     else:
                         details[key]["info_string"] = d["info_string"]
+
                 if "value" in d:
                     details[key]["values"].append(float(d["value"]))
                 if "num_runs" in d:
@@ -81,6 +82,12 @@ class JsonConverter(DataConverterBase):
                 self._updateOneEntry(details[key], d, "type")
                 self._updateOneEntry(details[key], d, "metric")
                 self._updateOneEntry(details[key], d, "unit")
+
+            elif "custom_output" in d:
+                if "table_name" in d:
+                    details["custom_output"][d["table_name"]] = d["custom_output"]
+                else:
+                    details["custom_output"]["Custom Output"] = d["custom_output"]
             else:
                 # for backward compatibility purpose
                 # will remove after some time
