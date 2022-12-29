@@ -32,9 +32,9 @@ class JsonConverter(DataConverterBase):
             try:
                 result = json.loads(row)
                 if (
-                    "type" in result and result["type"] == "NET" and "value" in result
-                ) or (
-                    "NET" in result
+                    ("type" in result and result["type"] == "NET" and "value" in result)
+                    or ("NET" in result)
+                    or ("custom_output" in result)
                 ):  # for backward compatibility
                     valid_run_idxs.append(len(results))
                 results.append(result)
@@ -52,7 +52,11 @@ class JsonConverter(DataConverterBase):
     def convert(self, data):
         details = collections.defaultdict(lambda: collections.defaultdict(list))
         for d in data:
-            if "type" in d and "metric" in d and "unit" in d:
+            if "custom_output" in d:
+                table_name = d["table_name"] if "table_name" in d else "Custom Output"
+                details["custom_output"][table_name].append(d["custom_output"])
+
+            elif "type" in d and "metric" in d and "unit" in d:
                 # new format
                 key = d["type"] + " " + d["metric"]
                 if "info_string" in d:
@@ -83,11 +87,6 @@ class JsonConverter(DataConverterBase):
                 self._updateOneEntry(details[key], d, "metric")
                 self._updateOneEntry(details[key], d, "unit")
 
-            elif "custom_output" in d:
-                if "table_name" in d:
-                    details["custom_output"][d["table_name"]] = d["custom_output"]
-                else:
-                    details["custom_output"]["Custom Output"] = d["custom_output"]
             else:
                 # for backward compatibility purpose
                 # will remove after some time
