@@ -19,7 +19,13 @@ from utils.custom_logger import getLogger
 
 
 def getBatteryState(device, platform: str, android_dir: str) -> Dict[str, Any]:
-    state: Dict[str, Any] = {"supported": False}
+    state: Dict[str, Any] = {
+        "supported": False,
+        "disconnected": None,
+        "status": None,
+        "charge_level": None,
+        "temperature": None,
+    }
     try:
         if platform.startswith("ios"):
             util = IDB(device)
@@ -37,6 +43,9 @@ def getBatteryState(device, platform: str, android_dir: str) -> Dict[str, Any]:
                 state["charge_level"] = int(util.getBatteryProp("capacity"))
                 state["temperature"] = int(util.getBatteryProp("temp"))
     except Exception:
+        # If error occured, change supported state to false to allow
+        # downstream logic not to examine individual fields.
+        state["supported"] = False
         getLogger().exception("Failed to get battery state")
 
     return state
