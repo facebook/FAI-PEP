@@ -46,6 +46,8 @@ class AndroidPlatform(PlatformBase):
         self.setPlatformHash(adb.device)
         self.rel_version = adb.getprop("ro.build.version.release")
         self.build_version = adb.getprop("ro.build.version.sdk")
+        # Build number to look up using https://www.internalfb.com/arwrist/release_infra/build_info
+        self.platform_os_version = adb.getprop("ro.build.version.incremental")
         if self.platform:
             self.platform_model = (
                 re.findall(r"(.*)-[0-9.]*-[0-9.]*", self.platform) or [self.platform]
