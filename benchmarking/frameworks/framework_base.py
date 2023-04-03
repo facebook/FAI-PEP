@@ -78,6 +78,7 @@ class FrameworkBase(object):
 
         # better to be before target program files separation.
         # this way, in ios, the platform may not be copied to the target.
+
         platform.preprocess(programs=program_files, benchmark=benchmark)
 
         tgt_program_files, host_program_files = self._separatePrograms(
@@ -127,6 +128,7 @@ class FrameworkBase(object):
                 None,
                 -1,
                 converter,
+                platform_args=model["preprocess"].get("platform_args", None),
             )
 
         input_files = (
@@ -350,6 +352,7 @@ class FrameworkBase(object):
                 test_files,
                 -1,
                 converter,
+                platform_args=model["postprocess"].get("platform_args", None),
             )
 
         if "postprocess" in model and last_iteration:
