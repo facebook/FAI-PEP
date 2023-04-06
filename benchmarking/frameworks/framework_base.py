@@ -128,7 +128,7 @@ class FrameworkBase(object):
                 None,
                 -1,
                 converter,
-                platform_args=model["preprocess"].get("platform_args", None),
+                platform_args=model.get("preprocess", {}).get("platform_args", None),
             )
 
         input_files = (
@@ -352,7 +352,7 @@ class FrameworkBase(object):
                 test_files,
                 -1,
                 converter,
-                platform_args=model["postprocess"].get("platform_args", None),
+                platform_args=model.get("postprocess", {}).get("platform_args", None),
             )
 
         if "postprocess" in model and last_iteration:
