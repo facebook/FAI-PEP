@@ -420,6 +420,8 @@ class FrameworkBase(object):
                     else:
                         output["meta"].update({"output_files": output_file_meta})
 
+        platform.cleanup()
+
         return output, output_files
 
     @abc.abstractmethod

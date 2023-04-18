@@ -396,3 +396,6 @@ class AndroidPlatform(PlatformBase):
     @property
     def powerInfo(self):
         return {"unit": "mAh", "metric": "batteryLevel"}
+
+    def cleanup(self):
+        self.util.shell(["rm", "-rf", self.tgt_dir + "*"])

@@ -231,3 +231,7 @@ class PlatformBase(object):
                 )
             i = i + 1
         return arguments
+
+    @abc.abstractmethod
+    def cleanup(self):
+        pass
