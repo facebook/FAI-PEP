@@ -186,7 +186,7 @@ def _filterOutput(output, match_list):
 def _Popen(*args, **kwargs):
     # only allow allowlisted args to be passed into popen
     customArgs = {}
-    allowlist = ["env"]
+    allowlist = ["env", "shell"]
     for arg in allowlist:
         if arg in kwargs:
             customArgs[arg] = kwargs[arg]

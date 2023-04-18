@@ -113,23 +113,26 @@ class FrameworkBase(object):
 
         # overall preprocess
         if "preprocess" in model and first_iteration:
-            commands = model["preprocess"]["commands"]
-            self._runCommands(
-                output,
-                commands,
-                self.host_platform,
-                programs,
-                model,
-                None,
-                model_files,
-                None,
-                None,
-                None,
-                None,
-                -1,
-                converter,
-                platform_args=model.get("preprocess", {}).get("platform_args", None),
-            )
+            commands = model["preprocess"].get("commands", None)
+            if commands:
+                self._runCommands(
+                    output,
+                    commands,
+                    self.host_platform,
+                    programs,
+                    model,
+                    None,
+                    model_files,
+                    None,
+                    None,
+                    None,
+                    None,
+                    -1,
+                    converter,
+                    platform_args=model.get("preprocess", {}).get(
+                        "platform_args", None
+                    ),
+                )
 
         input_files = (
             {
@@ -166,25 +169,28 @@ class FrameworkBase(object):
                 }
                 deepMerge(test_files, preprocess_files)
 
+            commands = []
             if "commands" in test["preprocess"]:
                 commands = test["preprocess"]["commands"]
             elif "command" in test["preprocess"]:
                 commands = [test["preprocess"]["command"]]
-            self._runCommands(
-                output,
-                commands,
-                self.host_platform,
-                programs,
-                model,
-                test,
-                model_files,
-                input_files,
-                None,
-                None,
-                test_files,
-                -1,
-                converter,
-            )
+
+            if len(commands) > 0:
+                self._runCommands(
+                    output,
+                    commands,
+                    self.host_platform,
+                    programs,
+                    model,
+                    test,
+                    model_files,
+                    input_files,
+                    None,
+                    None,
+                    test_files,
+                    -1,
+                    converter,
+                )
 
         tgt_input_files = (
             platform.copyFilesToPlatform(input_files) if input_files else None
@@ -314,7 +320,7 @@ class FrameworkBase(object):
             os.makedirs(target_dir)
             output_files = platform.moveFilesFromPlatform(tgt_result_files, target_dir)
 
-        platform.postprocess()
+        platform.postprocess(programs=program_files, benchmark=benchmark)
 
         if "postprocess" in test:
             if (
@@ -332,46 +338,53 @@ class FrameworkBase(object):
                 }
                 deepMerge(test_files, postprocess_files)
 
-            commands = None
+            commands = []
             if "commands" in test["postprocess"]:
                 commands = test["postprocess"]["commands"]
             elif "command" in test["postprocess"]:
                 commands = [test["postprocess"]["command"]]
 
-            self._runCommands(
-                output,
-                commands,
-                self.host_platform,
-                programs,
-                model,
-                test,
-                model_files,
-                input_files,
-                output_files,
-                None,
-                test_files,
-                -1,
-                converter,
-                platform_args=model.get("postprocess", {}).get("platform_args", None),
-            )
+            if len(commands) > 0:
+                self._runCommands(
+                    output,
+                    commands,
+                    self.host_platform,
+                    programs,
+                    model,
+                    test,
+                    model_files,
+                    input_files,
+                    output_files,
+                    None,
+                    test_files,
+                    -1,
+                    converter,
+                    platform_args=model.get("postprocess", {}).get(
+                        "platform_args", None
+                    ),
+                )
 
         if "postprocess" in model and last_iteration:
-            commands = model["postprocess"]["commands"]
-            self._runCommands(
-                output,
-                commands,
-                self.host_platform,
-                programs,
-                model,
-                test,
-                model_files,
-                None,
-                None,
-                None,
-                None,
-                -1,
-                converter,
-            )
+            commands = model["postprocess"].get("commands", None)
+            if commands:
+                self._runCommands(
+                    output,
+                    commands,
+                    self.host_platform,
+                    programs,
+                    model,
+                    test,
+                    model_files,
+                    None,
+                    None,
+                    None,
+                    None,
+                    -1,
+                    converter,
+                    platform_args=model.get("postprocess", {}).get(
+                        "platform_args", None
+                    ),
+                )
 
         # after everything is done, some of the output files may
         # contain metrics that can be processed. Those files have
