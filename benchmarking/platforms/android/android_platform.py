@@ -197,8 +197,7 @@ class AndroidPlatform(PlatformBase):
         platform_args = {}
         if "platform_args" in kwargs:
             platform_args = kwargs["platform_args"]
-            if "power" in platform_args and platform_args["power"]:
-                platform_args["non_blocking"] = True
+            if "non_blocking" in platform_args and platform_args["non_blocking"]:
                 self.util.shell(["am", "start", "-S", activity])
                 return []
             if platform_args.get("profiling_args", {}).get("enabled", False):
@@ -236,18 +235,19 @@ class AndroidPlatform(PlatformBase):
                 sleep_before_run = str(platform_args["sleep_before_run"])
                 cmd = ["sleep", sleep_before_run, "&&"] + cmd
                 del platform_args["sleep_before_run"]
-            if "power" in platform_args and platform_args["power"]:
+            if "non_blocking" in platform_args and platform_args["non_blocking"]:
                 # launch settings page to prevent the phone
                 # to go into sleep mode
-                self.util.shell(["am", "start", "-a", "android.settings.SETTINGS"])
+                self.util.shell(
+                    ["am", "start", "-a", "android.settings.SETTINGS"],
+                    ignore_status=True,
+                )
                 time.sleep(1)
                 cmd = (
                     ["nohup"]
                     + ["sh", "-c", "'" + " ".join(cmd) + "'"]
                     + [">", "/dev/null", "2>&1"]
                 )
-                platform_args["non_blocking"] = True
-                del platform_args["power"]
             enable_profiling = platform_args.get("profiling_args", {}).get(
                 "enabled", False
             )
@@ -354,7 +354,7 @@ class AndroidPlatform(PlatformBase):
         # if the program doesn't exist, the grep may fail
         # do not update status code
         success = getRunStatus()
-        res = self.util.shell(["ps", "|", "grep", basename])
+        res = self.util.shell(["ps", "|", "grep", basename], ignore_status=True)
         setRunStatus(success, overwrite=True)
         if len(res) == 0:
             return
