@@ -228,7 +228,7 @@ class FrameworkBase(object):
 
         program = programs["program"] if "program" in programs else ""
         if test["metric"] == "power":
-            platform_args["power"] = True
+            platform_args["non_blocking"] = True
             method = test.get("method")
             platform_args["method"] = method
 
@@ -237,8 +237,17 @@ class FrameworkBase(object):
                     platform, test.get("collection_time", 300)
                 )
             else:
-                # FIXME "Monsoon" was unimportable
                 from utils.monsoon_power import collectPowerData
+
+                if method == "monsoon_with_usb":
+                    monsoon_args = test["monsoon"]
+                    # enter root mode in case we need to disable usb access
+                    if hasattr(platform, "root"):
+                        platform.root()
+                        platform.util.run("wait-for-device")
+                    # disable usb power line if test desires
+                    if "disable_usb" in monsoon_args:
+                        platform.util.shell(f"echo 1 > {monsoon_args['disable_usb']}")
 
             # in power metric, the output is ignored
             total_num = 0
@@ -285,21 +294,50 @@ class FrameworkBase(object):
         if test["metric"] == "power":
             if test.get("method") == "software":
                 output = power_util.collect()
-            else:
+            elif "monsoon" in test:
+                monsoon_args = test["monsoon"]
                 collection_time = (
-                    test["collection_time"] if "collection_time" in test else 180
+                    monsoon_args["collection_time"]
+                    if "collection_time" in monsoon_args
+                    else 180
                 )
-                voltage = float(test["voltage"]) if "voltage" in test else 4.0
+                voltage = (
+                    float(monsoon_args["voltage"]) if "voltage" in monsoon_args else 4.0
+                )
+                threshold = float(
+                    monsoon_args["threshold"] if "threshold" in monsoon_args else 300
+                )
+                window_size_in_ms = float(
+                    monsoon_args["window_size"]
+                    if "window_size" in monsoon_args
+                    else 1000
+                )
+                # each sample is 200us
+                window_size = int(window_size_in_ms / 0.2)
                 output = collectPowerData(
                     platform.platform_hash,
                     collection_time,
                     voltage,
                     test["iter"],
-                    self.args.monsoon_map,
+                    method=test["method"] if "method" in test else "monsoon",
+                    monsoon_map=self.args.monsoon_map,
+                    threshold=threshold,
+                    window_size=window_size,
                 )
                 platform.waitForDevice(20)
                 # kill the process if exists
                 platform.killProgram(program)
+
+                if method == "monsoon_with_usb":
+                    # re-enable usb power line
+                    if "disable_usb" in monsoon_args:
+                        platform.util.shell(f"echo 0 > {monsoon_args['disable_usb']}")
+                    # exit root mode in case we need to disable usb access
+                    if hasattr(platform, "unroot"):
+                        platform.unroot()
+                        platform.util.run("wait-for-device")
+            else:
+                raise AssertionError("Field 'monsoon' is missing in the test")
 
         # remove the files before copying out the output files
         # this will save some time in ios platform, since in ios
@@ -589,6 +627,11 @@ class FrameworkBase(object):
             profiling_args.setdefault("types", [default_type])
             profiling_args.setdefault("options", {})
             platform_args["model_name"] = getModelName(model)
+        # we only run non_blocking on the last command. Previous commands
+        # may be set ups for the last command, and should be blocking.
+        non_blocking = platform_args.get("non_blocking", False)
+        if non_blocking:
+            del platform_args["non_blocking"]
         for idx, cmd in enumerate(cmds):
             # note that we only enable profiling for the last command
             # of the main commands.
@@ -598,6 +641,8 @@ class FrameworkBase(object):
                 else {"enabled": False}
             )
             platform_args["model_files"] = model_files
+            if non_blocking and idx == len(cmds) - 1:
+                platform_args["non_blocking"] = True
             one_output = self.runOnPlatform(
                 total_num, cmd, platform, platform_args, converter
             )
