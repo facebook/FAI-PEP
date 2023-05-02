@@ -12,6 +12,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import collections
 import json
+import re
 
 from data_converters.data_converter_base import DataConverterBase
 from utils.custom_logger import getLogger
@@ -30,7 +31,9 @@ class JsonConverter(DataConverterBase):
         valid_run_idxs = []
         for row in rows:
             try:
-                result = json.loads(row)
+                pattern = r"\{.*\}"
+                match = re.findall(pattern, row)
+                result = json.loads(match[0])
                 if (
                     ("type" in result and result["type"] == "NET" and "value" in result)
                     or ("NET" in result)
