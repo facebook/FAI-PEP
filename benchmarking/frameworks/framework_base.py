@@ -272,6 +272,8 @@ class FrameworkBase(object):
                 test["commands"][-1] = " ".join(
                     ["taskset", "--cpu-list", str(cpu_core), test["commands"][-1]]
                 )
+            if "aibench_env" in info:
+                platform_args["env"].update(info["aibench_env"])
 
         self._runCommands(
             output,

@@ -45,6 +45,8 @@ def runOneBenchmark(
         # invalidate CPU cache
         [1.0 for _ in range(20 << 20)]
         gc.collect()
+        minfo["aibench_env"] = {}
+        minfo["aibench_env"]["AIBENCH_TREATMENT_GROUP"] = "1"
         data = _runOnePass(minfo, mbenchmark, framework, platform)
         status = status | getRunStatus()
         meta = None
@@ -59,6 +61,8 @@ def runOneBenchmark(
             # invalidate CPU cache
             [1.0 for _ in range(20 << 20)]
             gc.collect()
+            cinfo["aibench_env"] = {}
+            cinfo["aibench_env"]["AIBENCH_CONTROL_GROUP"] = "1"
             control = _runOnePass(cinfo, benchmark, framework, platform)
             status = status | getRunStatus()
             bname = benchmark["model"]["name"]
