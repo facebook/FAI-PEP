@@ -89,8 +89,20 @@ def collectPowerData(
 
     samples = engine.getSamples()
 
-    getLogger().info("Closing device")
-    Mon.closeDevice()
+    # device may not be available,
+    # try reconnect 5 times before fail
+    repeat = 0
+    while repeat < 5:
+        try:
+            getLogger().info("Closing device")
+            Mon.closeDevice()
+            break
+        except Exception:
+            repeat = repeat + 1
+            sleep(2)
+    if repeat >= 5:
+        getLogger().info("Failed to close device")
+        return {}
 
     power_data, url = _extract_samples(samples, has_usb)
 
