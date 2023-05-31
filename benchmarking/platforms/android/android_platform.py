@@ -15,8 +15,10 @@ import shlex
 import shutil
 import time
 
+import pkg_resources
 from degrade.degrade_base import DegradeBase, getDegrade
 from platforms.platform_base import PlatformBase
+from platforms.thermal_monitor import ThermalMonitor
 from profilers.perfetto.perfetto import (
     Perfetto,
     perfetto_types_supported,
@@ -69,6 +71,28 @@ class AndroidPlatform(PlatformBase):
         self.degrade: DegradeBase = getDegrade(self.type)
         if self.args.set_freq:
             self.util.setFrequency(self.args.set_freq)
+        self.thermal_monitor_config = {}
+        try:
+            thermal_monitor_mapping_path = (
+                "specifications/device_thermal_monitor_mapping.json"
+            )
+            thermal_monitor_mapping = json.loads(
+                pkg_resources.resource_string("aibench", thermal_monitor_mapping_path)
+            )
+            if self.platform_model in thermal_monitor_mapping:
+                getLogger().info(
+                    f"Thermal monitoring:\tThermal mapping found for '{self.platform_model}'."
+                )
+                self.thermal_monitor_config.update(
+                    thermal_monitor_mapping.get(self.platform_model, {})
+                )
+                getLogger().info(f"Thermal monitoring:\t{self.thermal_monitor_config=}")
+            else:
+                getLogger().info(
+                    f"Thermal monitoring:\tNo thermal mapping found for {self.platform_model}."
+                )
+        except Exception:
+            getLogger().exception("Could not load thermal mapping")
 
     def getKind(self):
         return self.platform
@@ -182,7 +206,12 @@ class AndroidPlatform(PlatformBase):
             if self.app:
                 log, meta = self.runAppBenchmark(cmd, *args, **kwargs)
             else:
-                log, meta = self.runBinaryBenchmark(cmd, *args, **kwargs)
+                thermal_logs = []
+                with ThermalMonitor(
+                    thermal_logs, self.util, self.thermal_monitor_config, " ".join(cmd)
+                ):
+                    log, meta = self.runBinaryBenchmark(cmd, *args, **kwargs)
+                log += thermal_logs
             return log, meta
 
     def runAppBenchmark(self, cmd, *args, **kwargs):
