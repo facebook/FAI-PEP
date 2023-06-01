@@ -62,7 +62,7 @@ def runOneBenchmark(
             [1.0 for _ in range(20 << 20)]
             gc.collect()
             cinfo["aibench_env"] = {}
-            cinfo["aibench_env"]["AIBENCH_CONTROL_GROUP"] = "1"
+            cinfo["aibench_env"]["AIBENCH_TREATMENT_GROUP"] = "0"
             control = _runOnePass(cinfo, benchmark, framework, platform)
             status = status | getRunStatus()
             bname = benchmark["model"]["name"]
