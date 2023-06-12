@@ -48,6 +48,7 @@ class AndroidPlatformTest(unittest.TestCase):
 
         self.adb.getprop = Mock(side_effect=mock_getprop)
         self.adb.logcat = Mock(return_value="success")
+        self.adb.shell = Mock()
         self.args = argparse.Namespace(
             android_dir=self.tempdir,
             device_name_mapping=None,
