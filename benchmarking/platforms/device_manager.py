@@ -101,14 +101,6 @@ class DeviceManager(object):
             self.usb_controller = USBController(self.args.usb_hub_device_mapping)
         else:
             self.usb_controller = None
-        # specify device hashes to suppress critical logging for when d/c occurs.
-        self.suppress_dc_critical_mapping = {}
-        if self.args.suppress_dc_critical_mapping:
-            try:
-                with open(self.args.suppress_dc_critical_mapping) as f:
-                    self.suppress_dc_critical_mapping = set(json.load(f)["hashes"])
-            except Exception:
-                getLogger().exception("suppress_dc_critical_mapping was not loaded.")
 
     def getLabDevices(self):
         """Return a reference to the lab's device meta data."""
@@ -218,10 +210,7 @@ class DeviceManager(object):
                         )
                     else:
                         device_offline_message = f"Device {dc_device} has shown as disconnected {dc_count} time(s) ({dc_count * self.device_monitor_interval}s) and is offline."
-                        if hash in self.suppress_dc_critical_mapping:
-                            getLogger().error(device_offline_message)
-                        else:
-                            getLogger().critical(device_offline_message)
+                        getLogger().error(device_offline_message)
                         self.online_devices.remove(dc_device)
                     self.device_dc_count.pop(hash)
 
