@@ -103,7 +103,7 @@ def _cocoSegmsResultsOneCategory(json_dataset, boxes, segms, cat_id):
         if isinstance(dets, list) and len(dets) == 0:
             continue
 
-        dets = dets.astype(np.float)
+        dets = dets.astype(float)
         scores = dets[:, -1]
 
         results.extend(
@@ -200,7 +200,7 @@ def _cocoBboxEesultsOneCategory(json_dataset, boxes, cat_id):
         dets = boxes[i]
         if isinstance(dets, list) and len(dets) == 0:
             continue
-        dets = dets.astype(np.float)
+        dets = dets.astype(float)
         scores = dets[:, -1]
         xywh_dets = xyxy_to_xywh(dets[:, 0:4])
         xs = xywh_dets[:, 0]
