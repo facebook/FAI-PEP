@@ -195,15 +195,7 @@ class BenchmarkCollector(object):
             return self._copyFile(field, cached_filename, filename)
         return False
 
-    def _calculateMD5(self, model_name, old_md5, filename):
-        if os.stat(filename).st_size >= COPY_THRESHOLD or os.path.islink(model_name):
-            if not os.path.isfile(model_name):
-                getLogger().info(
-                    "Create symlink between {} and {}".format(filename, model_name)
-                )
-                os.symlink(filename, model_name)
-            return old_md5
-        getLogger().info("Calculate md5 of {}".format(model_name))
+    def _calcalateFileMD5(self, model_name: str) -> str:
         with open(model_name, "rb") as f:
             file_hash = hashlib.md5()
             for chunk in iter(lambda: f.read(8192), b""):
@@ -212,6 +204,36 @@ class BenchmarkCollector(object):
         del file_hash
         gc.collect()
         return md5
+
+    def _calcalateDirMD5(self, dir_path: str) -> str:
+        """
+        Calculate md5 for given directory by summation all md5s of the files in that directory.
+        """
+        file_hashes = []
+        for root, _, filenames in os.walk(dir_path):
+            for filename in filenames:
+                filepath = os.path.join(root, filename)
+                file_hash = self._calcalateFileMD5(filepath)
+                file_hashes.append(file_hash)
+        return hashlib.md5("".join(file_hashes).encode("utf-8")).hexdigest()
+
+    def _calculateMD5(self, model_name: str, old_md5: str, filename: str) -> str:
+        if os.stat(filename).st_size >= COPY_THRESHOLD or os.path.islink(model_name):
+            if not os.path.isfile(model_name):
+                getLogger().info(
+                    "Create symlink between {} and {}".format(filename, model_name)
+                )
+                os.symlink(filename, model_name)
+            return old_md5
+        getLogger().info("Calculate md5 of {}".format(model_name))
+        if os.path.isdir(model_name):
+            return self._calcalateDirMD5(model_name)
+        elif os.path.isfile(model_name):
+            return self._calcalateFileMD5(model_name)
+        else:
+            raise ValueError(
+                f"`{model_name}` needs to be a path to a existing file or directory"
+            )
 
     def _copyFile(self, field, destination_name, source):
         if "location" not in field:
@@ -246,9 +268,6 @@ class BenchmarkCollector(object):
                 return False
         if os.path.isdir(destination_name) and field["md5"] == "directory":
             return False
-        assert os.path.isfile(destination_name), "File {} cannot be retrieved".format(
-            destination_name
-        )
         # verify the md5 matches the file downloaded
         md5 = self._calculateMD5(destination_name, field["md5"], abs_name)
         if md5 != field["md5"]:
