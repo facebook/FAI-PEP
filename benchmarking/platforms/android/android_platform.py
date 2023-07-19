@@ -95,7 +95,8 @@ class AndroidPlatform(PlatformBase):
             getLogger().exception("Could not load thermal mapping")
         # Silently set time if possible.
         date_time_string = time.strftime("%m%d%H%M%Y.%S")
-        adb.shell(f'su 0 date "{date_time_string}"', silent=True)
+        if adb.isRootedDevice(silent=True):
+            adb.shell(f'su 0 date "{date_time_string}"', silent=True)
 
     def getKind(self):
         return self.platform
