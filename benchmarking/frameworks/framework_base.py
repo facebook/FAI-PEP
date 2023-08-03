@@ -709,3 +709,22 @@ class FrameworkBase(object):
         for name in string_map:
             value = string_map[name]
             deepReplace(root, "{" + name + "}", value)
+
+    def _detect_fetch_files(self, platform, grep, retry=1, silent=False):
+        """
+        Detects and fetches files ending containing "grep" from the device.
+        """
+        cmd = ["ls", platform.getOutputDir(), "|", "grep", grep]
+        if "android" in platform.getOS().lower():
+            cmd = ["shell"] + cmd
+
+        matched_files = platform.util.run(cmd, retry=retry, silent=silent)
+
+        for f in matched_files:
+            platform.moveFilesFromPlatform(
+                files=os.path.join(platform.getOutputDir(), f),
+                target_dir=self.tempdir,
+                delete=False,
+            )
+
+        return [os.path.join(self.tempdir, f) for f in matched_files]
