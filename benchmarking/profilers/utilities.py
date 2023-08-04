@@ -43,7 +43,7 @@ def upload_output_files(files: Mapping[str, str]) -> Dict:
             raise FileNotFoundError(f"File {file} does not exist.")
         try:
             url = profiling_reports_uploader.upload_file(file)
-            meta.update({key: url})
+            meta.update({os.path.basename(key): url})
         except Exception:
             getLogger().exception(f"Warning: could not upload {key}: {file}. Skipping.")
     return meta
