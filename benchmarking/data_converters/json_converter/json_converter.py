@@ -33,14 +33,21 @@ class JsonConverter(DataConverterBase):
             try:
                 pattern = r"\{.*\}"
                 match = re.findall(pattern, row)
-                result = json.loads(match[0])
-                if (
-                    ("type" in result and result["type"] == "NET" and "value" in result)
-                    or ("NET" in result)
-                    or ("custom_output" in result)
-                ):  # for backward compatibility
-                    valid_run_idxs.append(len(results))
-                results.append(result)
+                if match is None or len(match) == 0:
+                    getLogger().debug("Format not correct, skip one row %s \n" % (row))
+                else:
+                    result = json.loads(match[0])
+                    if (
+                        (
+                            "type" in result
+                            and result["type"] == "NET"
+                            and "value" in result
+                        )
+                        or ("NET" in result)
+                        or ("custom_output" in result)
+                    ):  # for backward compatibility
+                        valid_run_idxs.append(len(results))
+                    results.append(result)
             except Exception as e:
                 # bypass one line
                 getLogger().info("Skip one row %s \n Exception: %s" % (row, str(e)))
