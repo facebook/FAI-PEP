@@ -360,8 +360,6 @@ class FrameworkBase(object):
             os.makedirs(target_dir)
             output_files = platform.moveFilesFromPlatform(tgt_result_files, target_dir)
 
-        platform.postprocess(programs=program_files, benchmark=benchmark)
-
         if "postprocess" in test:
             if (
                 "files" in test["postprocess"]
@@ -425,6 +423,8 @@ class FrameworkBase(object):
                         "platform_args", None
                     ),
                 )
+
+        platform.postprocess(programs=program_files, benchmark=benchmark)
 
         # after everything is done, some of the output files may
         # contain metrics that can be processed. Those files have
