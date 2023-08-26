@@ -251,7 +251,7 @@ def stopRun(args):
     return False
 
 
-class runAsync(object):
+class runAsync:
     def __init__(
         self, args, device, db, job, benchmark_downloader, file_storage, usb_controller
     ):
@@ -608,7 +608,7 @@ class runAsync(object):
         setRunKilled(True)
 
 
-class RunLab(object):
+class RunLab:
     def __init__(self, raw_args=None):
         self.args, self.unknowns = parser.parse_known_args(raw_args)
         os.environ["CLAIMER"] = self.args.claimer_id

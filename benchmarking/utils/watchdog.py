@@ -14,7 +14,7 @@ import threading
 import time
 
 
-class WatchDog(object):
+class WatchDog:
     def __init__(self, main, condition, action, delay=15.0, once=True):
         self.main = main
         self.condition = condition

@@ -4,7 +4,7 @@ import remote.django_url_printer
 from remote.url_printer_base import getResultURLHandles
 
 
-class PrintResultURL(object):
+class PrintResultURL:
     def __init__(self, args):
         self.args = args
         self.result_url_handles = getResultURLHandles()

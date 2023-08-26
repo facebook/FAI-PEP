@@ -309,7 +309,7 @@ class BuildProgram(threading.Thread):
             self.filenames["program"] = program
 
 
-class RunRemote(object):
+class RunRemote:
     def __init__(self, raw_args=None):
         self.args, self.unknowns = parser.parse_known_args(raw_args)
         self._updateArgs(self.args)

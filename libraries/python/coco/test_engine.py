@@ -58,7 +58,7 @@ parser.add_argument(
 )
 
 
-class TestEngine(object):
+class TestEngine:
     def __init__(self, args):
         self.args = args
         self.ds = JsonDataset(args)

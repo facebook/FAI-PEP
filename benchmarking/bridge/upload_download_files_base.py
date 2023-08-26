@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 file_handles = {}
 
 
-class UploadDownloadFilesBase(object):
+class UploadDownloadFilesBase:
     def __init__(self, args):
         self.args = args
         pass

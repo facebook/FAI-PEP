@@ -21,7 +21,7 @@ from bridge.file_storages import UploadDownloadFiles
 from utils.custom_logger import getLogger
 
 
-class FileHandler(object):
+class FileHandler:
     def __init__(self, args):
         self.config_filename = args.cache_config
         self.root_dir = args.root_model_dir

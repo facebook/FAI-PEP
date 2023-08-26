@@ -79,7 +79,7 @@ parser.add_argument(
 )
 
 
-class LabDriver(object):
+class LabDriver:
     def __init__(self, raw_args=None):
         self.args, self.unknowns = parser.parse_known_args(raw_args)
         setLoggerLevel(self.args.logger_level)

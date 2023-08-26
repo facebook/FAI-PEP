@@ -19,7 +19,7 @@ from utils.custom_logger import getLogger
 from utils.utilities import getFilename
 
 
-class PlatformBase(object):
+class PlatformBase:
     def __init__(
         self,
         tempdir,

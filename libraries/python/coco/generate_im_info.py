@@ -62,7 +62,7 @@ parser.add_argument(
 )
 
 
-class ImInfo(object):
+class ImInfo:
     def __init__(self, args):
         self.args = args
 

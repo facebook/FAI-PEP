@@ -225,7 +225,7 @@ parser.add_argument(
 )
 
 
-class BenchmarkDriver(object):
+class BenchmarkDriver:
     def __init__(self, **kwargs):
         setRunStatus(0, overwrite=True)
         self.status = 0

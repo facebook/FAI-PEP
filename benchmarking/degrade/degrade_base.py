@@ -11,7 +11,7 @@
 from typing import TypedDict
 
 
-class DegradeBase(object):
+class DegradeBase:
     """Base class for platform-specific "degrade" tools to be used to apply cpu or memory device constraints to a benchmark run.
 
     The implementation-specific constraints are specified by a dictionary containing a "cpu" and / or "memory" dictionary entry.

@@ -20,7 +20,7 @@ from utils.utilities import getBenchmarks, getFilename
 from .download_file import DownloadFile
 
 
-class DownloadBenchmarks(object):
+class DownloadBenchmarks:
     def __init__(self, args, logger):
         self.args = args
         self.root_model_dir = self.args.root_model_dir

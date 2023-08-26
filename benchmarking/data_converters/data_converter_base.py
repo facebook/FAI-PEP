@@ -15,7 +15,7 @@ import abc
 from six import string_types
 
 
-class DataConverterBase(object):
+class DataConverterBase:
     def __init__(self):
         pass
 

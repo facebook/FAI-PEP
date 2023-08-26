@@ -17,7 +17,7 @@ import os
 from utils.devices import devices as devices_dict
 
 
-class Devices(object):
+class Devices:
     def __init__(self, filename=None):
         if filename:
             # if the user provides filename, we will load it.

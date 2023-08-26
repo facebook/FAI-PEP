@@ -19,7 +19,7 @@ import threading
 # special atomic operations.
 
 
-class Future(object):
+class Future:
     def __init__(self, func):
         self.func = func
         self.thread = None

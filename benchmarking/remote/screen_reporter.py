@@ -15,7 +15,7 @@ import os
 import time
 
 
-class ScreenReporter(object):
+class ScreenReporter:
     def __init__(self, xdb, devices, debug=False, log_output_dir=None):
         self.xdb = xdb
         self.devices = devices

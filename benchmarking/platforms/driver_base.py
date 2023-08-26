@@ -4,7 +4,7 @@ import abc
 driverHandles = {}
 
 
-class DriverBase(object):
+class DriverBase:
     def __init__(self, *args, devices=None):
         self.platform = args.platform
 

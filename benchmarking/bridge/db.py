@@ -19,7 +19,7 @@ from utils.utilities import asyncRequestsJson, requestsJson
 NETWORK_TIMEOUT = 150
 
 
-class DBDriver(object):
+class DBDriver:
     def __init__(
         self, db, app_id, token, table, job_queue, is_test, benchmark_db_entry
     ):

@@ -59,7 +59,7 @@ parser.add_argument(
 )
 
 
-class JsonDataset(object):
+class JsonDataset:
     def __init__(self, args):
         self.args = args
         name = args.dataset

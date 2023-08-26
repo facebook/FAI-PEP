@@ -41,7 +41,7 @@ parser.add_argument(
 )
 
 
-class RunBench(object):
+class RunBench:
     def __init__(self, raw_args=None):
         self.args, self.unknowns = parser.parse_known_args(raw_args)
         self.root_dir = self.args.config_dir

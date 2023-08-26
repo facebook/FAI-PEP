@@ -4,7 +4,7 @@ import bridge.django_auth
 from bridge.auth_base import getAuthHandles
 
 
-class Auth(object):
+class Auth:
     def __init__(self, benchmark_db, app_id, token, is_test):
         self.app_id = app_id
         self.token = token

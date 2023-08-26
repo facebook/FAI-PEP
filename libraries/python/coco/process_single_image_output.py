@@ -48,7 +48,7 @@ parser.add_argument(
 )
 
 
-class ProcessSingleImageOutput(object):
+class ProcessSingleImageOutput:
     def __init__(self, args):
         self.args = args
 

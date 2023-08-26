@@ -13,7 +13,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import abc
 
 
-class RepoBase(object):
+class RepoBase:
     def __init__(self, dir):
         self.dir = dir
 

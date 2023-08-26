@@ -68,7 +68,7 @@ def valid_dm_interval(arg) -> int:
     return value
 
 
-class DeviceManager(object):
+class DeviceManager:
     """
     Provides devices metadata to the lab instance. For mobile platforms, checks connectivity of devices and performs updates to lab devices and db.
     """

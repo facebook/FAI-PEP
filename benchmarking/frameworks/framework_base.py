@@ -35,7 +35,7 @@ from utils.utilities import (
 )
 
 
-class FrameworkBase(object):
+class FrameworkBase:
     def __init__(self, args):
         self.converters = getConverters()
         self.tmpdir = None

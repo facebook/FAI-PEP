@@ -15,7 +15,7 @@ import abc
 from utils.subprocess_with_logger import processRun
 
 
-class PlatformUtilBase(object):
+class PlatformUtilBase:
     def __init__(self, device=None, tempdir=None):
         self.device = device
         self.tempdir = tempdir

@@ -15,7 +15,7 @@ import abc
 from utils.future import Future
 
 
-class ProfilerBase(object):
+class ProfilerBase:
     def __init__(self, id=None):
         self.id = id
 

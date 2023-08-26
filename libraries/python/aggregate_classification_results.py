@@ -43,7 +43,7 @@ parser.add_argument(
 parser.add_argument("--result-file", help="Write the prediction result to a file.")
 
 
-class AggregateOutputs(object):
+class AggregateOutputs:
     def __init__(self):
         self.args = parser.parse_args()
         assert os.path.isdir(self.args.dir), "Directory {} doesn't exist".format(

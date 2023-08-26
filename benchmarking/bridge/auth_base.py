@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 auth_handles = {}
 
 
-class AuthBase(object):
+class AuthBase:
     def __init__(self, app_id, token, is_test):
         pass
 

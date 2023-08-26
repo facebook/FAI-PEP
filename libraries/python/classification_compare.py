@@ -41,7 +41,7 @@ parser.add_argument(
 parser.add_argument("--name", required=True, help="Specify the type of the metric.")
 
 
-class OutputCompare(object):
+class OutputCompare:
     def __init__(self):
         self.args = parser.parse_args()
         assert os.path.isfile(

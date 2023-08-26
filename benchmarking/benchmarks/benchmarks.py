@@ -26,7 +26,7 @@ from utils.utilities import deepMerge, deepReplace
 COPY_THRESHOLD = 6442450944  # 6 GB
 
 
-class BenchmarkCollector(object):
+class BenchmarkCollector:
     def __init__(self, framework, model_cache, **kwargs):
 
         self.args = kwargs.get("args", None)

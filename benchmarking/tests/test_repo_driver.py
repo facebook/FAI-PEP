@@ -51,7 +51,7 @@ class RepoDriverTest(unittest.TestCase):
         )
 
     def test_run(self):
-        class mock_thread(object):
+        class mock_thread:
             def is_alive(self):
                 return False
 

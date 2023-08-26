@@ -4,7 +4,7 @@ import bridge.upload_download_files_django
 from bridge.upload_download_files_base import getFileHandles
 
 
-class UploadDownloadFiles(object):
+class UploadDownloadFiles:
     def __init__(self, args):
         self.args = args
         self.file_handles = getFileHandles()

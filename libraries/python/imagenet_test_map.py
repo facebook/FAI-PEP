@@ -52,7 +52,7 @@ parser.add_argument(
 )
 
 
-class ImageLableMap(object):
+class ImageLableMap:
     def __init__(self):
         self.args = parser.parse_args()
         assert os.path.isfile(

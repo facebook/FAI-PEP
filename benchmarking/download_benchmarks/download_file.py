@@ -4,7 +4,7 @@ import download_benchmarks.django_file_downloader
 from download_benchmarks.file_downloader_base import getDownloadHandles
 
 
-class DownloadFile(object):
+class DownloadFile:
     def __init__(self, dirs, logger, args):
         self.args = args
         self.dirs = dirs

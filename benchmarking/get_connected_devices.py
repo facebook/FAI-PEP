@@ -66,7 +66,7 @@ parser.add_argument(
 )
 
 
-class GetConnectedDevices(object):
+class GetConnectedDevices:
     def __init__(self, **kwargs):
         raw_args = kwargs.get("raw_args", None)
         self.args, self.unknowns = parser.parse_known_args(raw_args)
