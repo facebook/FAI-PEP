@@ -47,7 +47,7 @@ class HDB(PlatformUtilBase):
             shutil.copyfile(src, tgt)
             os.chmod(tgt, 0o777)
 
-    def deleteFile(self, file):
+    def deleteFile(self, file, *args, **kwargs):
         getLogger().info("delete {}".format(file))
         if os.path.isdir(file):
             shutil.rmtree(file)
