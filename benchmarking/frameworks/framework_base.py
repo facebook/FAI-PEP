@@ -699,7 +699,8 @@ class FrameworkBase:
 
         deepMerge(string_map, info_string_map)
 
-        string_map["TGTDIR"] = platform.getOutputDir()
+        tgtdir = platform.getOutputDir()
+        string_map["TGTDIR"] = tgtdir + ("" if tgtdir.endswith("/") else "/")
         string_map["HOSTDIR"] = self._createHostDir()
         string_map["FAIPEPROOT"] = getFAIPEPROOT()
         string_map["DEVICEHASH"] = platform.platform_hash
@@ -710,15 +711,19 @@ class FrameworkBase:
             value = string_map[name]
             deepReplace(root, "{" + name + "}", value)
 
-    def _detect_fetch_files(self, platform, grep, retry=1, silent=False):
+    def _detect_fetch_files(self, platform, grep, retry=1, silent=False, shell=True):
         """
         Detects and fetches files ending containing "grep" from the device.
         """
-        cmd = ["ls", platform.getOutputDir(), "|", "grep", grep]
+        cmd = ["ls", platform.getOutputDir()]
         if "android" in platform.getOS().lower():
             cmd = ["shell"] + cmd
 
-        matched_files = platform.util.run(cmd, retry=retry, silent=silent)
+        files = platform.util.run(cmd, shell=False, retry=retry, silent=silent)
+        matched_files = [f for f in files if grep in f]
+
+        if not silent:
+            getLogger().info(f"Matched files: {matched_files}.")
 
         for f in matched_files:
             platform.moveFilesFromPlatform(
