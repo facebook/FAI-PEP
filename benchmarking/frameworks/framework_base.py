@@ -448,8 +448,12 @@ class FrameworkBase:
                 ), "Unknown converter {}".format(converter["name"])
                 converter_class = self.converters[converter["name"]]
                 args = converter.get("args")
-                with open(file, "r") as f:
-                    content = f.read()
+                if file.endswith(".bin"):
+                    with open(file, "rb") as f:
+                        content = f.read()
+                else:
+                    with open(file, "r") as f:
+                        content = f.read()
                 convert = converter_class()
                 results, _ = convert.collect(content, args)
                 one_output = convert.convert(results)
@@ -710,26 +714,3 @@ class FrameworkBase:
         for name in string_map:
             value = string_map[name]
             deepReplace(root, "{" + name + "}", value)
-
-    def _detect_fetch_files(self, platform, grep, retry=1, silent=False, shell=True):
-        """
-        Detects and fetches files ending containing "grep" from the device.
-        """
-        cmd = ["ls", platform.getOutputDir()]
-        if "android" in platform.getOS().lower():
-            cmd = ["shell"] + cmd
-
-        files = platform.util.run(cmd, shell=False, retry=retry, silent=silent)
-        matched_files = [f for f in files if grep in f]
-
-        if not silent:
-            getLogger().info(f"Matched files: {matched_files}.")
-
-        for f in matched_files:
-            platform.moveFilesFromPlatform(
-                files=os.path.join(platform.getOutputDir(), f),
-                target_dir=self.tempdir,
-                delete=False,
-            )
-
-        return [os.path.join(self.tempdir, f) for f in matched_files]

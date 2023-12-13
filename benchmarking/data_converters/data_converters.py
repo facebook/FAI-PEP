@@ -10,15 +10,11 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from .json_converter.json_converter import JsonConverter
-from .json_with_identifier_converter.json_with_identifier_converter import (
-    JsonWithIdentifierConverter,
-)
+converters = {}
 
-converters = {
-    "json_converter": JsonConverter,
-    "json_with_identifier_converter": JsonWithIdentifierConverter,
-}
+
+def registerConverter(converter):
+    converters[converter.getName()] = converter
 
 
 def getConverters():

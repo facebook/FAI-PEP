@@ -15,6 +15,7 @@ import json
 import re
 
 from data_converters.data_converter_base import DataConverterBase
+from data_converters.data_converters import registerConverter
 from utils.custom_logger import getLogger
 
 
@@ -22,7 +23,8 @@ class JsonConverter(DataConverterBase):
     def __init__(self):
         super(JsonConverter, self).__init__()
 
-    def getName(self):
+    @staticmethod
+    def getName():
         return "json_converter"
 
     def collect(self, data, args=None):
@@ -137,3 +139,6 @@ class JsonConverter(DataConverterBase):
             ), "Field {} does not match in different entries".format(k)
         else:
             detail[k] = d[k]
+
+
+registerConverter(JsonConverter)

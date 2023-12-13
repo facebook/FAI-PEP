@@ -19,8 +19,8 @@ class DataConverterBase:
     def __init__(self):
         pass
 
-    @abc.abstractmethod
-    def getName(self):
+    @staticmethod
+    def getName():
         return "Error"
 
     # collect data from the binary
