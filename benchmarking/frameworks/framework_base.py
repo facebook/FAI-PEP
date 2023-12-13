@@ -21,6 +21,12 @@ from copy import deepcopy
 
 from bridge.file_storage.upload_files.file_uploader import FileUploader
 from data_converters.data_converters import getConverters
+
+# Import these two converters so that they are registered and available to all frameworks.
+from data_converters.json_converter.json_converter import JsonConverter  # noqa
+from data_converters.json_with_identifier_converter.json_with_identifier_converter import (  # noqa
+    JsonWithIdentifierConverter,  # noqa
+)
 from platforms.platforms import getHostPlatform
 from profilers.perfetto.perfetto import PerfettoAnySupported
 from six import string_types
