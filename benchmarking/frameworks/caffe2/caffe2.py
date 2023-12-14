@@ -65,7 +65,6 @@ class Caffe2Framework(FrameworkBase):
                 )
                 if "md5" not in field:
                     assert not field["location"].startswith("//") or field[
-
                         "location"
                     ].startswith(
                         "//fbpkg"
