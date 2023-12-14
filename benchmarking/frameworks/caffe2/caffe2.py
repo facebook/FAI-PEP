@@ -64,8 +64,11 @@ class Caffe2Framework(FrameworkBase):
                     f, filename
                 )
                 if "md5" not in field:
-                    assert not field["location"].startswith(
-                        "//"
+                    assert not field["location"].startswith("//") or field[
+
+                        "location"
+                    ].startswith(
+                        "//fbpkg"
                     ), "MD5 is missing in file" + " {} of benchmark {}".format(
                         f, filename
                     )
