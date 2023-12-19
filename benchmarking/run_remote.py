@@ -782,19 +782,30 @@ class RunRemote:
 
     def _killJob(self):
         user_identifier = self.args.user_identifier
-        assert user_identifier, (
-            "User identifier must be specified for " "killing submitted jobs."
-        )
-        statuses = self.db.statusBenchmarks(user_identifier)
-        result = json.dumps(statuses)
-        status = json.loads(result)[-1]["status"]
-        if status in ["RUNNING", "QUEUE"]:
-            self.db.killBenchmarks(user_identifier)
-            getLogger().info("The job has been killed")
+        assert (
+            user_identifier
+        ), "User identifier must be specified for killing submitted jobs."
+        # If the provided user identifier is a file path
+        # read list of user identifiers from the file
+        if os.path.isfile(user_identifier):
+            with open(user_identifier, "r") as f:
+                user_identifiers = f.readlines()
+                user_identifiers = [
+                    user_identifier.strip() for user_identifier in user_identifiers
+                ]
         else:
-            getLogger().info(
-                "The job cannot be killed since its status is {}".format(status)
-            )
+            user_identifiers = [user_identifier]
+        for user_identifier in user_identifiers:
+            statuses = self.db.statusBenchmarks(user_identifier)
+            result = json.dumps(statuses)
+            status = json.loads(result)[-1]["status"]
+            if status in ["RUNNING", "QUEUE"]:
+                self.db.killBenchmarks(user_identifier)
+                getLogger().info(f"The job {user_identifier} has been killed")
+            else:
+                getLogger().info(
+                    f"The job {user_identifier} cannot be killed since its status is {status}"
+                )
 
     def _mobilelabResult(self, output):
         # always get the last result
