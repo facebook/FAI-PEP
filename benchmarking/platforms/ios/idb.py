@@ -94,3 +94,6 @@ class IDB(PlatformUtilBase):
                 exc_info=True,
             )
             return -1
+
+    def uninstallApp(self, bundle):
+        self.run(["--bundle", bundle, "--uninstall", "--justlaunch"])

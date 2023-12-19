@@ -17,6 +17,7 @@ from platforms.driver_base import DriverBase, registerDriver
 
 from platforms.ios.idb import IDB
 from platforms.ios.ios_platform import IOSPlatform
+from platforms.ios.xcrun import xcrun
 
 from six import string_types
 
@@ -58,14 +59,17 @@ class IOSDriver(DriverBase):
             assert device_str[0] == "{", "device must be a json string"
             device = json.loads(device_str)
             hash = device["hash"]
-            idb = IDB(hash, tempdir)
             platform_meta = {
                 "os_version": self.devices[hash]["os_version"],
                 "model": self.devices[hash]["model"],
                 "abi": self.devices[hash]["abi"],
             }
+            os_major_version = int(platform_meta.get("os_version", None).split(".")[0])
+            platform_util = (
+                IDB(hash, tempdir) if os_major_version < 17 else xcrun(hash, tempdir)
+            )
             platform = IOSPlatform(
-                tempdir, idb, self.args, platform_meta, usb_controller
+                tempdir, platform_util, self.args, platform_meta, usb_controller
             )
             platform.setPlatform(self.devices[hash]["model"])
             platforms.append(platform)
@@ -84,13 +88,18 @@ class IOSDriver(DriverBase):
             }
 
         for device in self.devices:
-            idb = IDB(device, tempdir)
             platform_meta = {
                 "os_version": self.devices[device]["os_version"],
                 "model": self.devices[device]["model"],
                 "abi": self.devices[device]["abi"],
             }
-            platform = IOSPlatform(tempdir, idb, self.args, platform_meta)
+            os_major_version = int(platform_meta.get("os_version", None).split(".")[0])
+            platform_util = (
+                IDB(device, tempdir)
+                if os_major_version < 17
+                else xcrun(device, tempdir)
+            )
+            platform = IOSPlatform(tempdir, platform_util, self.args, platform_meta)
             # platform.setPlatform(self.devices[device]["platform"])
             platforms.append(platform)
 
