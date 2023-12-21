@@ -437,51 +437,7 @@ class FrameworkBase:
         # field converter, and specify which convert to use to
         # convert the metrics
         if output_files:
-            to_upload = {}
-            for filename in output_files:
-                file = output_files[filename]
-                output_file_spec = test["output_files"][filename]
-                # if files should be uploaded, upload and add location to meta data.
-                if output_file_spec.get("upload", False):
-                    to_upload.update({filename: file})
-                # if output_file can be converted for data, convert and merge output.
-                converter = output_file_spec.get("converter")
-                if not converter:
-                    continue
-                assert "name" in converter, "converter field must have a name"
-                assert (
-                    converter["name"] in self.converters
-                ), "Unknown converter {}".format(converter["name"])
-                converter_class = self.converters[converter["name"]]
-                args = converter.get("args")
-                if file.endswith(".bin"):
-                    with open(file, "rb") as f:
-                        content = f.read()
-                else:
-                    with open(file, "r") as f:
-                        content = f.read()
-                convert = converter_class()
-                results, _ = convert.collect(content, args)
-                one_output = convert.convert(results)
-                deepMerge(output, one_output)
-            if to_upload:
-                output_file_uploader = FileUploader("output_files").get_uploader()
-                output_file_meta = {}
-                for filename, file in to_upload.items():
-                    try:
-                        getLogger().info(f"Uploading {filename} ({file}) to manifold")
-                        url = output_file_uploader.upload_file(file)
-                        output_file_meta.update({filename: url})
-                        getLogger().info(f"{file} uploaded to {url}")
-                    except Exception:
-                        getLogger().exception(
-                            f"Could not upload output file {file}. Skipping."
-                        )
-                if output_file_meta:
-                    if "output_files" in output["meta"]:
-                        output["meta"]["output_files"].update(output_file_meta)
-                    else:
-                        output["meta"].update({"output_files": output_file_meta})
+            self._handle_output_files(output_files, test["output_files"], output)
 
         platform.cleanup()
 
@@ -720,3 +676,54 @@ class FrameworkBase:
         for name in string_map:
             value = string_map[name]
             deepReplace(root, "{" + name + "}", value)
+
+    # Mutates the output dict with updated paths
+    # Avoid overriding this function - instead, create & register a custom converter for any files that need processing
+    def _handle_output_files(
+        self, output_files: dict, output_file_specs: dict, output: dict
+    ) -> None:
+        to_upload = {}
+        for filename in output_files:
+            file = output_files[filename]
+            output_file_spec = output_file_specs[filename]
+            # if files should be uploaded, upload and add location to meta data.
+            if output_file_spec.get("upload", False):
+                to_upload.update({filename: file})
+            # if output_file can be converted for data, convert and merge output.
+            converter = output_file_spec.get("converter")
+            if not converter:
+                continue
+            assert "name" in converter, "converter field must have a name"
+            assert converter["name"] in self.converters, "Unknown converter {}".format(
+                converter["name"]
+            )
+            converter_class = self.converters[converter["name"]]
+            args = converter.get("args")
+            if file.endswith(".bin"):
+                with open(file, "rb") as f:
+                    content = f.read()
+            else:
+                with open(file, "r") as f:
+                    content = f.read()
+            convert = converter_class()
+            results, _ = convert.collect(content, args)
+            one_output = convert.convert(results)
+            deepMerge(output, one_output)
+        if to_upload:
+            output_file_uploader = FileUploader("output_files").get_uploader()
+            output_file_meta = {}
+            for filename, file in to_upload.items():
+                try:
+                    getLogger().info(f"Uploading {filename} ({file}) to manifold")
+                    url = output_file_uploader.upload_file(file)
+                    output_file_meta.update({filename: url})
+                    getLogger().info(f"{file} uploaded to {url}")
+                except Exception:
+                    getLogger().exception(
+                        f"Could not upload output file {file}. Skipping."
+                    )
+            if output_file_meta:
+                if "output_files" in output["meta"]:
+                    output["meta"]["output_files"].update(output_file_meta)
+                else:
+                    output["meta"].update({"output_files": output_file_meta})
