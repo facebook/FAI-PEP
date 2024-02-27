@@ -125,6 +125,8 @@ class BenchmarkCollector:
             if "md5" in file:
                 cached_filename = self._getDestFilename(file, model_dir)
                 file["location"] = cached_filename
+            elif file.get("location", "").startswith("//fbpkg"):
+                file["location"] = self.args.root_model_dir + file["location"][1:]
 
         tmp_dir = tempfile.mkdtemp(
             prefix="_".join(["aibench", str(user_identifier), ""])
