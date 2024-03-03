@@ -135,11 +135,11 @@ def get_payload(req):
             data = {
                 "device": d[0],
                 "hash": d[1],
-                "status": "OCCUPIED"
-                if d[2] == "0"
-                else "AVAILABLE"
-                if d[2] == "1"
-                else "OFFLINE",
+                "status": (
+                    "OCCUPIED"
+                    if d[2] == "0"
+                    else "AVAILABLE" if d[2] == "1" else "OFFLINE"
+                ),
                 "claimer": claimer,
                 "job_queue": job_queue,
             }

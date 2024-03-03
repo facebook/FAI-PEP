@@ -395,9 +395,11 @@ class RunRemote:
                 "programs" in self.info["treatment"]
                 and "program" in self.info["treatment"]["programs"]
             )
-            else self.args.custom_binary
-            if self.args.custom_binary
-            else self.args.pre_built_binary
+            else (
+                self.args.custom_binary
+                if self.args.custom_binary
+                else self.args.pre_built_binary
+            )
         )
         t = BuildProgram(
             self.args, self.file_handler, self.tempdir, program_filenames, binary

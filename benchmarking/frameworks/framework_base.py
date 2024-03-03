@@ -584,11 +584,11 @@ class FrameworkBase:
             default_profiler = (
                 "xctrace"
                 if platform.type == "ios"
-                else "simpleperf"
-                if ["cpu"] == types
-                else "perfetto"
-                if PerfettoAnySupported(types)
-                else "<unspecified>"
+                else (
+                    "simpleperf"
+                    if ["cpu"] == types
+                    else "perfetto" if PerfettoAnySupported(types) else "<unspecified>"
+                )
             )
             profiler = profiling_args.setdefault("profiler", default_profiler)
             default_type = "memory" if profiler == "perfetto" else "cpu"
