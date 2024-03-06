@@ -1,14 +1,15 @@
+import argparse
+
 import Monsoon.HVPM as HVPM
 import Monsoon.pmapi as pmapi
 import Monsoon.sampleEngine as sampleEngine
 
 
-def testHVPM(serialno, Protocol):
-    HVMON = HVPM.Monsoon()
+def testHVPM(HVMON, serialno, Protocol, power_up_current_limit, runtime_current_limit):
     HVMON.setup_usb(serialno, Protocol)
     print("HVPM Serial Number: " + repr(HVMON.getSerialNumber()))
-    HVMON.setPowerUpCurrentLimit(13)
-    HVMON.setRunTimeCurrentLimit(13)
+    HVMON.setPowerUpCurrentLimit(power_up_current_limit)
+    HVMON.setRunTimeCurrentLimit(runtime_current_limit)
     HVMON.fillStatusPacket()
     HVMON.setVout(4)
     HVengine = sampleEngine.SampleEngine(HVMON)
@@ -40,9 +41,54 @@ def testHVPM(serialno, Protocol):
 
 
 def main():
+    HVMON = HVPM.Monsoon()
+    available_devices = HVMON.enumerateDevices()
+    parser = argparse.ArgumentParser(description="Test HVPM")
+    parser.add_argument(
+        "-s",
+        "--serial",
+        help=f"Serial number of HVPM. Available serial numbers: {available_devices}. Defaults to the first available device in this list.",
+    )
+    parser.add_argument(
+        "-P",
+        "--power_up_current_limit",
+        help="Call setPowerUpCurrentLimit on the HVPM in amps. Defaults to 14",
+        default=14,
+        type=float,
+    )
+    parser.add_argument(
+        "-R",
+        "--runtime_current_limit",
+        help="Call setRunTimeCurrentLimit on the HVPM. Defaults to 14",
+        default=14,
+        type=float,
+    )
+    parser.add_argument(
+        "-l",
+        "--list_devices",
+        help="List available Monsoon devices by serial number",
+        action="store_true",
+    )
+    args = parser.parse_args()
+    if args.list_devices:
+        print(f"Available Monsoon devices: {available_devices}")
+        return
+
     HVPMSerialNo = None
-    testHVPM(HVPMSerialNo, pmapi.USB_protocol())
+    if args.serial is None:
+        HVPMSerialNo = available_devices[0]
+    elif args.serial in available_devices:
+        HVPMSerialNo = args.serial
+    else:
+        print(
+            f"Serial number {args.serial} not found. Available serial numbers: {available_devices}"
+        )
+        return
 
-
-if __name__ == "__main__":
-    main()
+    testHVPM(
+        HVMON,
+        HVPMSerialNo,
+        pmapi.USB_protocol(),
+        args.power_up_current_limit,
+        args.runtime_current_limit,
+    )
