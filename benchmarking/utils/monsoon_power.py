@@ -34,14 +34,16 @@ def collectPowerData(
     window_size=1000,
 ):
     has_usb = method == "monsoon_with_usb"
-    serialno = _getSerialno(hash, monsoon_map)
+    Mon = HVPM.Monsoon()
+    serialno = _getMonsoonSerialno(
+        device_hash=hash, monsoon_map=monsoon_map, Monsoon=Mon
+    )
     if serialno is not None:
         getLogger().info(
             "Collecting current from monsoon {} for {}".format(str(serialno), hash)
         )
     # wait till all actions are performed
     sleep(1)
-    Mon = HVPM.Monsoon()
     Mon.setup_usb(serialno)
     # Need to sleep to be functional correctly
     # there may have some race condition, so need to sleep sufficiently long.
@@ -410,10 +412,12 @@ def _composeStructuredData(data, metric, unit):
     }
 
 
-def _getSerialno(hash, monsoon_map=None):
-    serialno = None
+def _getMonsoonSerialno(device_hash, monsoon_map=None, Monsoon=None):
     if monsoon_map:
-        map = json.loads(monsoon_map)
-        if hash in map:
-            serialno = map[hash]
+        mapping = json.loads(monsoon_map)
+        serialno = mapping.get(device_hash, None)
+    if not serialno and len(Monsoon.enumerateDevices()) > 1:
+        getLogger().info(
+            f"Device {device_hash} is not associated with a specific power monitor, but there are {len(Monsoon.enumerateDevices())} Monsoon monitors connected ({Monsoon.enumerateDevices()}). Please add --monsoon_map to specify the mapping between device hash and Monsoon serial number"
+        )
     return serialno
