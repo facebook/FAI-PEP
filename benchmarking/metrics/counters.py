@@ -6,6 +6,8 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+# pyre-unsafe
+
 counter_handles = {}
 
 from typing import Dict, List

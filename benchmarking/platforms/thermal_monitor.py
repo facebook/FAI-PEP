@@ -6,6 +6,8 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
+# pyre-unsafe
+
 import logging
 import threading
 import time

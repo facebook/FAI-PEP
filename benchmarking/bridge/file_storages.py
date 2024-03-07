@@ -1,3 +1,4 @@
+# pyre-unsafe
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import bridge.upload_download_files_django

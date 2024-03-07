@@ -1,3 +1,4 @@
+# pyre-unsafe
 import unittest
 from unittest.mock import call, MagicMock, patch
 

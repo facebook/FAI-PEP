@@ -1,3 +1,4 @@
+# pyre-unsafe
 import unittest
 
 from profilers.perfetto.perfetto_config import PerfettoConfig
