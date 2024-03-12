@@ -314,16 +314,6 @@ class FrameworkBase:
                 voltage = (
                     float(monsoon_args["voltage"]) if "voltage" in monsoon_args else 4.0
                 )
-                threshold = float(
-                    monsoon_args["threshold"] if "threshold" in monsoon_args else 300
-                )
-                window_size_in_ms = float(
-                    monsoon_args["window_size"]
-                    if "window_size" in monsoon_args
-                    else 1000
-                )
-                # each sample is 200us
-                window_size = int(window_size_in_ms / 0.2)
                 output = collectPowerData(
                     platform.platform_hash,
                     collection_time,
@@ -331,8 +321,6 @@ class FrameworkBase:
                     test["iter"],
                     method=test["method"] if "method" in test else "monsoon",
                     monsoon_map=self.args.monsoon_map,
-                    threshold=threshold,
-                    window_size=window_size,
                 )
                 platform.waitForDevice(20)
                 # kill the process if exists
