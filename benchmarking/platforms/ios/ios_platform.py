@@ -195,6 +195,29 @@ class IOSPlatform(PlatformBase):
             with open(logfile, "r") as f:
                 getLogger().info(f.read())
 
+        if self.use_xcrun:
+            # Since XCRun doesn't provide logs, we generate a file with the logs on the device (for ExecuTorch benchmark) at /tmp/BENCH_LOG. Once the benchmark completes, /tmp/BENCH_DONE will be created.
+            # The xcrun command to detect fiels takes a while. 15 seconds should be enough for the commandto complete.
+            timeout = kwargs.get("platform_args", {}).get("timeout", 1200)
+            while "tmp/BENCH_DONE" not in self.util.listFiles() and timeout >= 0:
+                time.sleep(15)
+                timeout -= 15
+            if "tmp/BENCH_DONE" not in self.util.listFiles():
+                getLogger().info(
+                    f"Benchmark did not complete within the timeout period ({timeout} seconds)."
+                )
+
+            self.util.pull("/tmp/BENCH_LOG", logfile)
+
+            if os.path.isfile(logfile):
+                logfile_reader = open(logfile, "r")
+                logfile_contents = logfile_reader.read()
+                getLogger().info("\n\t[ ======= Benchmark Logs ======= ]")
+                getLogger().info(logfile_contents)
+                getLogger().info("\t[ ===== End Benchmark Logs ===== ]\n")
+                log_screen += logfile_contents
+                logfile_reader.close()
+
         return log_screen, meta
 
     def rebootDevice(self):

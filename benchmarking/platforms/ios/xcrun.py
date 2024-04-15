@@ -87,11 +87,35 @@ class xcrun(IDB):
             "--device",
             self.device,
         ]
-        self.run(cmd)
+        return self.run(cmd)
 
     def reboot(self):
         cmd = ["reboot", "--device", self.device]
-        self.run(cmd)
+        return self.run(cmd)
+
+    def listFiles(self):
+        list_files_cmd = [
+            "info",
+            "files",
+            "--domain-type",
+            "appDataContainer",
+            "--domain-identifier",
+            self.bundle_id,
+            "--username",
+            "mobile",
+            "--device",
+            self.device,
+        ]
+
+        rows = self.run(list_files_cmd)
+        # All of the files are listed below a line of dashes ----
+        line_row_idx = 0
+        for i in range(0, len(rows)):
+            if rows[i].startswith("----"):
+                line_row_idx = i
+                break
+
+        return rows[line_row_idx + 1 :]
 
     def deleteFile(self, file, **kwargs):
         # files will be deleted when the app is uninstalled
@@ -102,4 +126,4 @@ class xcrun(IDB):
         return super().batteryLevel()
 
     def uninstallApp(self, bundle):
-        self.run(["uninstall", "app", bundle, "--device", self.device])
+        return self.run(["uninstall", "app", bundle, "--device", self.device])
