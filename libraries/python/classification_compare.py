@@ -55,15 +55,15 @@ class OutputCompare:
         num_entries = 0
         content_list = []
         with open(filename, "r") as f:
-            line = f.readline()
+            line = f.readline(5_000_000)
             dim_str = line
             while line != "":
                 assert dim_str == line, "The dimensions do not match"
                 num_entries = num_entries + 1
                 dims_list = [int(dim.strip()) for dim in line.strip().split(",")]
-                line = f.readline().strip()
+                line = f.readline(5_000_000).strip()
                 content_list.extend([float(entry.strip()) for entry in line.split(",")])
-                line = f.readline()
+                line = f.readline(5_000_000)
 
         dims_list.insert(0, num_entries)
         dims = np.asarray(dims_list)

@@ -55,14 +55,14 @@ class ProcessSingleImageOutput:
     def getData(self, filename):
         result = []
         with open(filename, "r") as f:
-            line = f.readline()
+            line = f.readline(5_000_000)
             while line != "":
                 content_list = []
                 dims_list = [int(dim.strip()) for dim in line.strip().split(",")]
-                line = f.readline().strip()
+                line = f.readline(5_000_000).strip()
                 if len(line) > 0:
                     content_list = [float(entry.strip()) for entry in line.split(",")]
-                line = f.readline()
+                line = f.readline(5_000_000)
                 dims = np.asarray(dims_list)
                 content = np.asarray(content_list)
                 data = np.reshape(content, dims)
