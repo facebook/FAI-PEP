@@ -196,6 +196,6 @@ def visualize(request):
             "graph": rendered_graph,
             "table": rendered_table,
         }
-        return HttpResponse(json.dumps(response))
+        return HttpResponse(json.dumps(response), content_type="application/json")
     rendered = render_to_string("result_visualization.html", data, request)
     return HttpResponse(rendered)
