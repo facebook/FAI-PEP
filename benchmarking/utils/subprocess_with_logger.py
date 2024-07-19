@@ -22,6 +22,7 @@ from threading import Timer
 
 from .custom_logger import getLogger
 from .utilities import getRunKilled, getRunTimeout, setRunStatus, setRunTimeout
+from security import safe_command
 
 
 def processRun(*args, **kwargs):
@@ -193,8 +194,7 @@ def _Popen(*args, **kwargs):
         if arg in kwargs:
             customArgs[arg] = kwargs[arg]
 
-    ps = subprocess.Popen(
-        *args,
+    ps = safe_command.run(subprocess.Popen, *args,
         bufsize=-1,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
