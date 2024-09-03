@@ -215,7 +215,7 @@ class IOSPlatform(PlatformBase):
                 getLogger().info("\n\t[ ======= Benchmark Logs ======= ]")
                 getLogger().info(logfile_contents)
                 getLogger().info("\t[ ===== End Benchmark Logs ===== ]\n")
-                log_screen += logfile_contents
+                log_screen = logfile_contents
                 logfile_reader.close()
 
         return log_screen, meta
