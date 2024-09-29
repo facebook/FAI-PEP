@@ -337,7 +337,7 @@ class GlowFramework(FrameworkBase):
         if not os.path.exists(traceFile):
             return
         with open(traceFile, "r") as fp:
-            line = fp.readline()
+            line = fp.readline(5_000_000)
             while line:
                 try:
                     parsed = json.loads(line.rstrip(", \n\t"))
@@ -366,4 +366,4 @@ class GlowFramework(FrameworkBase):
                     pass
                 except ValueError:
                     pass
-                line = fp.readline()
+                line = fp.readline(5_000_000)
