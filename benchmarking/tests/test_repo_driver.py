@@ -64,9 +64,7 @@ class RepoDriverTest(unittest.TestCase):
         ), patch(
             "repo_driver.ExecutablesBuilder._setupRepoStep",
             return_value={"commit": "123"},
-        ), patch(
-            "os.system", return_value=1
-        ):
+        ), patch("os.system", return_value=1):
             app = RepoDriver()
             app.run()
 

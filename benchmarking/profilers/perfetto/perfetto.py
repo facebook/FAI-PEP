@@ -62,7 +62,6 @@ class BatteryState(Enum):
 
 
 class Perfetto(ProfilerBase):
-
     CONFIG_FILE = "perfetto.conf"
     DEVICE_DIRECTORY = "/data/local/tmp/perf"
     DEVICE_TRACE_DIRECTORY = "/data/misc/perfetto-traces"

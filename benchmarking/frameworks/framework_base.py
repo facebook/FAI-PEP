@@ -577,7 +577,9 @@ class FrameworkBase:
                 else (
                     "simpleperf"
                     if ["cpu"] == types
-                    else "perfetto" if PerfettoAnySupported(types) else "<unspecified>"
+                    else "perfetto"
+                    if PerfettoAnySupported(types)
+                    else "<unspecified>"
                 )
             )
             profiler = profiling_args.setdefault("profiler", default_profiler)

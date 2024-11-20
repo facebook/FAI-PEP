@@ -423,7 +423,7 @@ class CoolDownDevice(Thread):
             getLogger().info(
                 f"\nBattery status: {battery_state['status']}"
                 + f"\nBattery charge level: {battery_state['charge_level']}%"
-                + f"\nBattery temperature: {battery_state['temperature']}\xB0C"
+                + f"\nBattery temperature: {battery_state['temperature']}\xb0C"
             )
             if battery_state["disconnected"]:
                 getLogger().warning(
@@ -456,9 +456,10 @@ class CoolDownDevice(Thread):
             battery_state = getBatteryState(
                 self.device["hash"], self.args.platform, self.args.android_dir
             )
-            if (battery_state["supported"]) and battery_state[
-                "charge_level"
-            ] < charge_threshold:
+            if (
+                (battery_state["supported"])
+                and battery_state["charge_level"] < charge_threshold
+            ):
                 getLogger().info(
                     f"Battery charge of {battery_state['charge_level']}% is below threshold of {charge_threshold}%; Sleep another {self.cooldown} seconds."
                 )

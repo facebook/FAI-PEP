@@ -85,10 +85,10 @@ class TestEngine:
         boxes, classids = box_ids
         for j, classid in enumerate(classids):
             classid = int(classid)
-            assert classid <= len(
-                all_boxes
-            ), "{} classid out of range!" "class id: {}, boxes: {}".format(
-                j, classid, boxes
+            assert classid <= len(all_boxes), (
+                "{} classid out of range!" "class id: {}, boxes: {}".format(
+                    j, classid, boxes
+                )
             )
             if type(all_boxes[classid][index]) is np.ndarray:
                 all_boxes[classid][index] = np.vstack(
@@ -101,10 +101,10 @@ class TestEngine:
         im_masks_rle, classids = segs_ids
         for j, classid in enumerate(classids):
             classid = int(classid)
-            assert classid <= len(
-                all_segms
-            ), "{} classid out of range!" "class id: {}, segms: {}".format(
-                j, classid, im_masks_rle
+            assert classid <= len(all_segms), (
+                "{} classid out of range!" "class id: {}, segms: {}".format(
+                    j, classid, im_masks_rle
+                )
             )
             all_segms[classid][index].append(im_masks_rle[j])
 

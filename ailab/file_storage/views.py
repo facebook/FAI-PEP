@@ -9,7 +9,6 @@ from .models import ModelFile
 
 @csrf_exempt
 def upload(request):
-
     # Handle file upload
     if request.method == "POST" and "file" in request.FILES:
         file = request.FILES["file"]

@@ -55,23 +55,20 @@ class Caffe2Framework(FrameworkBase):
 
             for f in model["files"]:
                 field = model["files"][f]
-                assert (
-                    "filename" in field
-                ), "Filename is missing in file" + " {} of benchmark {}".format(
-                    f, filename
+                assert "filename" in field, (
+                    "Filename is missing in file"
+                    + " {} of benchmark {}".format(f, filename)
                 )
-                assert (
-                    "location" in field
-                ), "Location is missing in file" + " {} of benchmark {}".format(
-                    f, filename
+                assert "location" in field, (
+                    "Location is missing in file"
+                    + " {} of benchmark {}".format(f, filename)
                 )
                 if "md5" not in field:
                     assert not field["location"].startswith("//") or field[
                         "location"
-                    ].startswith(
-                        "//fbpkg"
-                    ), "MD5 is missing in file" + " {} of benchmark {}".format(
-                        f, filename
+                    ].startswith("//fbpkg"), (
+                        "MD5 is missing in file"
+                        + " {} of benchmark {}".format(f, filename)
                     )
 
         # tests is mandatory
@@ -90,9 +87,9 @@ class Caffe2Framework(FrameworkBase):
         is_generic_test = tests[0]["metric"] == "generic"
 
         for test in tests:
-            assert (
-                "metric" in test
-            ), "Metric field is missing in " + "benchmark {}".format(filename)
+            assert "metric" in test, (
+                "Metric field is missing in " + "benchmark {}".format(filename)
+            )
 
             # no check is needed if the metric is generic
             if is_generic_test:
@@ -104,16 +101,16 @@ class Caffe2Framework(FrameworkBase):
             if "warmup" not in test:
                 test["warmup"] = -1
 
-            assert (
-                "identifier" in test
-            ), "Identifier field is missing in " + "benchmark {}".format(filename)
+            assert "identifier" in test, (
+                "Identifier field is missing in " + "benchmark {}".format(filename)
+            )
 
             if "commands" in test or "command" in test or "arguments" in test:
                 continue
             # for backward compatibility purpose
-            assert (
-                "inputs" in test
-            ), "Inputs field is missing in " + "benchmark {}".format(filename)
+            assert "inputs" in test, (
+                "Inputs field is missing in " + "benchmark {}".format(filename)
+            )
 
             num = -1
             for ip_name in test["inputs"]:

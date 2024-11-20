@@ -44,7 +44,6 @@ class IOSPlatformTest(unittest.TestCase):
             "platforms.platform_base.getArgs",
             return_value=argparse.Namespace(hash_platform_mapping=None),
         ):
-
             self.platform = IOSPlatform(self.tempdir, idb)
 
     def _list_dir_for_preprocess(self, app_dir):

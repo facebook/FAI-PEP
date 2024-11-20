@@ -253,10 +253,12 @@ class BenchmarkDriver:
             # check the framework matches
             if "model" in benchmark and "framework" in benchmark["model"]:
                 assert benchmark["model"]["framework"] == self.args.framework, (
-                    "Framework specified in the json file "
-                    "{} ".format(benchmark["model"]["framework"])
-                    + "does not match the command line argument "
-                    "{}".format(self.args.framework)
+                    "Framework specified in the json file " "{} ".format(
+                        benchmark["model"]["framework"]
+                    )
+                    + "does not match the command line argument " "{}".format(
+                        self.args.framework
+                    )
                 )
             if self.args.debug:
                 for test in benchmark["tests"]:

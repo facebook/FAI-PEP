@@ -536,17 +536,17 @@ class RunRemote:
             if "files" in one_benchmark["model"]:
                 for field in one_benchmark["model"]["files"]:
                     value = one_benchmark["model"]["files"][field]
-                    assert (
-                        "location" in value
-                    ), "location field is missing in benchmark " "{}".format(filename)
+                    assert "location" in value, (
+                        "location field is missing in benchmark " "{}".format(filename)
+                    )
                     ref_path = ["files", field]
                     if self._uploadFile(value, filename, benchmark, ref_path):
                         del_paths.append(ref_path)
             if "libraries" in one_benchmark["model"]:
                 for value in one_benchmark["model"]["libraries"]:
-                    assert (
-                        "location" in value
-                    ), "location field is missing in benchmark " "{}".format(filename)
+                    assert "location" in value, (
+                        "location field is missing in benchmark " "{}".format(filename)
+                    )
                     self._uploadFile(value, filename, benchmark)
 
         for del_path in del_paths:
@@ -595,12 +595,8 @@ class RunRemote:
         Note: Support the file in model first
         """
         if location.startswith("//repo"):
-            assert (
-                ref_path is not None
-            ), "repo is not yet \
-                supported for {}".format(
-                location
-            )
+            assert ref_path is not None, "repo is not yet \
+                supported for {}".format(location)
             for side in self.info:
                 if side == "extra":
                     continue

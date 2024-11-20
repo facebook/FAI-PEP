@@ -138,7 +138,9 @@ def get_payload(req):
                 "status": (
                     "OCCUPIED"
                     if d[2] == "0"
-                    else "AVAILABLE" if d[2] == "1" else "OFFLINE"
+                    else "AVAILABLE"
+                    if d[2] == "1"
+                    else "OFFLINE"
                 ),
                 "claimer": claimer,
                 "job_queue": job_queue,

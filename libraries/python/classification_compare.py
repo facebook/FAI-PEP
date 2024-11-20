@@ -130,12 +130,9 @@ class OutputCompare:
             benchmark_data = np.reshape(
                 benchmark_data, (dims_list[idx], dims_list[idx + 1])
             )
-        assert len(benchmark_data) == len(
-            golden_data
-        ), "Benchmark data has {} entries, ".format(
-            len(benchmark_data)
-        ) + "but golden data has {} entries".format(
-            len(golden_data)
+        assert len(benchmark_data) == len(golden_data), (
+            "Benchmark data has {} entries, ".format(len(benchmark_data))
+            + "but golden data has {} entries".format(len(golden_data))
         )
 
         def sort_key(elem):

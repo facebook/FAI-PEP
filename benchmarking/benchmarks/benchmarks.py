@@ -30,7 +30,6 @@ COPY_THRESHOLD = 6442450944  # 6 GB
 
 class BenchmarkCollector:
     def __init__(self, framework, model_cache, **kwargs):
-
         self.args = kwargs.get("args", None)
         if not os.path.isdir(model_cache):
             os.makedirs(model_cache)
@@ -104,7 +103,6 @@ class BenchmarkCollector:
     # Update all files in the benchmark to absolute path
     # download the files if needed
     def _updateFiles(self, one_benchmark, filename, user_identifier):
-
         model = one_benchmark["model"]
         model_dir = os.path.join(self.model_cache, model["format"], model["name"])
         if not os.path.isdir(model_dir):

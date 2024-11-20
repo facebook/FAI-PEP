@@ -53,9 +53,7 @@ class BenchmarkDriverTest(unittest.TestCase):
             "harness.parseKnown", return_value=(argparse.Namespace(), [])
         ), patch("harness.getArgs", return_value=self.args), patch(
             "harness.BenchmarkCollector.collectBenchmarks", return_value=[]
-        ), patch(
-            "harness.getPlatforms", return_value=[]
-        ):
+        ), patch("harness.getPlatforms", return_value=[]):
             app = BenchmarkDriver()
             app.run()
             status = app.status

@@ -53,7 +53,6 @@ class RunBench:
     def run(self):
         raw_args = self._getRawArgs()
         if "--remote" in raw_args or "--lab" in raw_args:
-
             # server address must start with http
             assert "--server_addr" in raw_args
             idx = raw_args.index("--server_addr")
