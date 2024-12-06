@@ -42,11 +42,7 @@ class JsonConverter(DataConverterBase):
                 else:
                     result = json.loads(match[0])
                     if (
-                        (
-                            "type" in result
-                            and result["type"] == "NET"
-                            and "value" in result
-                        )
+                        ("type" in result and "value" in result)
                         or ("NET" in result)
                         or ("custom_output" in result)
                     ):  # for backward compatibility
@@ -70,8 +66,14 @@ class JsonConverter(DataConverterBase):
                 table_name = d["table_name"] if "table_name" in d else "Custom Output"
                 details["custom_output"][table_name].append(d["custom_output"])
 
-            elif "type" in d and "metric" in d and "unit" in d:
+            if (
+                "type" in d
+                and "metric" in d
+                and "unit" in d
+                and "custom_output" not in d
+            ):
                 # new format
+                getLogger().info("New format")
                 key = d["type"] + " " + d["metric"]
                 if "info_string" in d:
                     if "info_string" in details[key]:
