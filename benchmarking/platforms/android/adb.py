@@ -28,7 +28,7 @@ class ADB(PlatformUtilBase):
         adb = self._addADB()
         return super(ADB, self).run(adb, *args, **kwargs)
 
-    def push(self, src, tgt, chmod="+755"):
+    def push(self, src, tgt, chmod="755"):
         # Always remove the old file before pushing the new file
         self.deleteFile(tgt)
         res = self.run("push", src, tgt)
