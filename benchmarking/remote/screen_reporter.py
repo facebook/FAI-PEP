@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 import os
@@ -135,7 +134,7 @@ class ScreenReporter:
                             net_delay = data["NET latency"]["summary"]["mean"]
                         else:
                             raise AssertionError("Net latency is not specified")
-                        print("ID:{}\tNET latency: {}".format(identifier, net_delay))
+                        print(f"ID:{identifier}\tNET latency: {net_delay}")
                     elif metric == "generic":
                         if isinstance(data, dict):
                             if "meta" in data:

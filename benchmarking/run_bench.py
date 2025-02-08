@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import argparse
 import copy
@@ -110,7 +109,7 @@ class RunBench:
 
         config_file = os.path.join(self.root_dir, "config.txt")
         if os.path.isfile(config_file):
-            with open(config_file, "r") as f:
+            with open(config_file) as f:
                 load_args = json.load(f)
                 args.update(load_args)
 
@@ -176,7 +175,7 @@ class RunBench:
 
     def _inputOneArg(self, text, key, args):
         arg = args[key] if key in args else None
-        v = six.moves.input(text + " [" + str(arg) + "]: ")
+        v = input(text + " [" + str(arg) + "]: ")
         if v == "":
             v = arg
         if v is not None:
@@ -203,7 +202,7 @@ class RunBench:
             for config in tiered_configs:
                 config_file = os.path.join(self.root_dir, config)
                 if os.path.isfile(config_file):
-                    with open(config_file, "r") as f:
+                    with open(config_file) as f:
                         args.update(json.load(f))
         for v in new_args:
             if v in args:
@@ -233,7 +232,7 @@ class RunBench:
                 benchmark_file = adhoc_path
             else:
                 getLogger().error(
-                    "Could not find specified adhoc config: {}".format(configName)
+                    f"Could not find specified adhoc config: {configName}"
                 )
         if not benchmark_file:
             return
@@ -242,7 +241,7 @@ class RunBench:
         if not os.path.isfile(benchmark_file):
             return
         benchmark = {}
-        with open(benchmark_file, "r") as f:
+        with open(benchmark_file) as f:
             benchmark = json.load(f)
         defaults = {}
         if "default_args" in benchmark:

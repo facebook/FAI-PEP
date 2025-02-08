@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
 import re
@@ -21,7 +20,7 @@ from six import string_types
 
 class TFLiteFramework(FrameworkBase):
     def __init__(self, tempdir, args):
-        super(TFLiteFramework, self).__init__(args)
+        super().__init__(args)
         self.tempdir = os.path.join(tempdir, self.getName())
         os.makedirs(self.tempdir, 0o777)
 
@@ -29,9 +28,7 @@ class TFLiteFramework(FrameworkBase):
         return "tflite"
 
     def runBenchmark(self, info, benchmark, platform):
-        output, output_files = super(TFLiteFramework, self).runBenchmark(
-            info, benchmark, platform
-        )
+        output, output_files = super().runBenchmark(info, benchmark, platform)
         return output, output_files
 
     def verifyBenchmarkFile(self, benchmark, filename, is_post):
@@ -62,7 +59,7 @@ class TFLiteFramework(FrameworkBase):
         preprocess_files=None,
         main_command=False,
     ):
-        cmds = super(TFLiteFramework, self).composeRunCommand(
+        cmds = super().composeRunCommand(
             commands,
             platform,
             programs,
@@ -89,8 +86,8 @@ class TFLiteFramework(FrameworkBase):
             "--graph={}".format(model_files["graph"]),
             "--warmup_runs={}".format(test["warmup"]),
             "--num_runs={}".format(test["iter"]),
-            "--input_layer={}".format(input),
-            "--input_layer_shape={}".format(input_shape),
+            f"--input_layer={input}",
+            f"--input_layer_shape={input_shape}",
         ]
 
         cmd = [str(s) for s in cmd]
@@ -109,7 +106,7 @@ class TFLiteFramework(FrameworkBase):
             return False
         results = {}
         rows = output
-        if isinstance(output, string_types):
+        if isinstance(output, str):
             rows = output.split("\n")
         # only collect one data point for statistics
         # the actual run data should override the warmup data
@@ -141,7 +138,7 @@ class TFLiteFramework(FrameworkBase):
             else:
                 pattern = re.compile(r"^count=(\d+) curr=(\d+)")
                 match = pattern.match(data)
-                assert match, "No data is collected for {}".format(data)
+                assert match, f"No data is collected for {data}"
 
                 r = {
                     "count": int(match.group(1)),

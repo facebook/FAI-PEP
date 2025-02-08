@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 import os
@@ -29,7 +28,7 @@ class IOSPlatform(PlatformBase):
     def __init__(
         self, tempdir, platform_util, args, platform_meta, usb_controller=None
     ):
-        super(IOSPlatform, self).__init__(
+        super().__init__(
             tempdir,
             args.ios_dir,
             platform_util,
@@ -52,12 +51,12 @@ class IOSPlatform(PlatformBase):
 
     def getKind(self):
         if self.platform_model and self.platform_os_version:
-            return "{}-{}".format(self.platform_model, self.platform_os_version)
+            return f"{self.platform_model}-{self.platform_os_version}"
         return self.platform
 
     def getOS(self):
         if self.platform_os_version:
-            return "iOS {}".format(self.platform_os_version)
+            return f"iOS {self.platform_os_version}"
         return "iOS"
 
     def preprocess(self, *args, **kwargs):
@@ -192,7 +191,7 @@ class IOSPlatform(PlatformBase):
         # the command may fail, but the err_output is what we need
         log_screen = self.util.run(run_cmd, **platform_args)
         if os.path.isfile(logfile):
-            with open(logfile, "r") as f:
+            with open(logfile) as f:
                 getLogger().info(f.read())
 
         if self.use_xcrun:
@@ -210,7 +209,7 @@ class IOSPlatform(PlatformBase):
             self.util.pull("/tmp/BENCH_LOG", logfile)
 
             if os.path.isfile(logfile):
-                logfile_reader = open(logfile, "r")
+                logfile_reader = open(logfile)
                 logfile_contents = logfile_reader.read()
                 getLogger().info("\n\t[ ======= Benchmark Logs ======= ]")
                 getLogger().info(logfile_contents)

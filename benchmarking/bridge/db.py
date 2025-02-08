@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 
@@ -175,7 +174,7 @@ class DBDriver:
                 )
             )
             for key in result_json:
-                getLogger().error("{}: {}".format(key, result_json[key]))
+                getLogger().error(f"{key}: {result_json[key]}")
             return {
                 "status": "fail",
                 "values": [],
@@ -200,7 +199,7 @@ class DBDriver:
                 )
             )
             for key in result_json:
-                getLogger().error("{}: {}".format(key, result_json[key]))
+                getLogger().error(f"{key}: {result_json[key]}")
             return {
                 "status": "fail",
                 "values": [],

@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
 import select
@@ -37,7 +36,7 @@ def processRun(*args, **kwargs):
         setRunStatus(0, overwrite=True, key=kwargs["process_key"] + "_retry")
         sleep = kwargs.get("retry_sleep")
         if sleep:
-            getLogger().info("Sleeping for {}".format(sleep))
+            getLogger().info(f"Sleeping for {sleep}")
             time.sleep(sleep)
         processRunRetryKwargs = kwargs
         processRunRetryKwargs["process_key"] = kwargs["process_key"] + "_retry"
@@ -100,12 +99,12 @@ def _processRun(*args, **kwargs):
         return processWait((ps, t), **kwargs)
     except subprocess.CalledProcessError as e:
         err_output = e.output.decode("utf-8", errors="replace")
-        getLogger().error("Command failed: {}".format(err_output))
+        getLogger().error(f"Command failed: {err_output}")
     except Exception:
         getLogger().error(
             "Unknown exception {}: {}".format(sys.exc_info()[0], " ".join(*args))
         )
-        err_output = "{}".format(sys.exc_info()[0])
+        err_output = f"{sys.exc_info()[0]}"
     return [], err_output
 
 
@@ -150,7 +149,7 @@ def processWait(processAndTimeout, **kwargs):
         if log_output or (status != 0 and not ignore_status):
             if status != 0 and not ignore_status:
                 if not silent:
-                    getLogger().info("Process exited with status: {}".format(status))
+                    getLogger().info(f"Process exited with status: {status}")
                 setRunStatus(1, key=process_key)
             if "filter" in kwargs:
                 output = _filterOutput(output, kwargs["filter"])
@@ -168,10 +167,10 @@ def processWait(processAndTimeout, **kwargs):
             return [], "\n".join(output)
     except subprocess.CalledProcessError as e:
         err_output = e.output.decode("utf-8", errors="replace")
-        getLogger().error("Command failed: {}".format(err_output))
+        getLogger().error(f"Command failed: {err_output}")
     except Exception:
-        err_output = "{}".format(sys.exc_info()[0])
-        getLogger().error("Unknown exception {}".format(sys.exc_info()[0]))
+        err_output = f"{sys.exc_info()[0]}"
+        getLogger().error(f"Unknown exception {sys.exc_info()[0]}")
     return [], err_output
 
 
@@ -253,6 +252,6 @@ def _kill(p, cmd, processKey):
         os.killpg(p.pid, signal.SIGKILL)
     except OSError:
         pass  # ignore
-    getLogger().error("Process timed out: {}".format(cmd))
+    getLogger().error(f"Process timed out: {cmd}")
     setRunStatus(1, key=processKey)
     setRunTimeout()

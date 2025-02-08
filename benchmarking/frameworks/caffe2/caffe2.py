@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import copy
 import os
@@ -25,7 +24,7 @@ class Caffe2Framework(FrameworkBase):
     NET = "NET"
 
     def __init__(self, tempdir, args):
-        super(Caffe2Framework, self).__init__(args)
+        super().__init__(args)
         self.tempdir = os.path.join(tempdir, self.getName())
         os.makedirs(self.tempdir, 0o777)
         # cannot have any variable pass among methods
@@ -34,9 +33,7 @@ class Caffe2Framework(FrameworkBase):
         return "caffe2"
 
     def runBenchmark(self, info, benchmark, platform):
-        output, output_files = super(Caffe2Framework, self).runBenchmark(
-            info, benchmark, platform
-        )
+        output, output_files = super().runBenchmark(info, benchmark, platform)
         return output, output_files
 
     def verifyBenchmarkFile(self, benchmark, filename, is_post):
@@ -56,19 +53,16 @@ class Caffe2Framework(FrameworkBase):
             for f in model["files"]:
                 field = model["files"][f]
                 assert "filename" in field, (
-                    "Filename is missing in file"
-                    + " {} of benchmark {}".format(f, filename)
+                    "Filename is missing in file" + f" {f} of benchmark {filename}"
                 )
                 assert "location" in field, (
-                    "Location is missing in file"
-                    + " {} of benchmark {}".format(f, filename)
+                    "Location is missing in file" + f" {f} of benchmark {filename}"
                 )
                 if "md5" not in field:
                     assert not field["location"].startswith("//") or field[
                         "location"
                     ].startswith("//fbpkg"), (
-                        "MD5 is missing in file"
-                        + " {} of benchmark {}".format(f, filename)
+                        "MD5 is missing in file" + f" {f} of benchmark {filename}"
                     )
 
         # tests is mandatory
@@ -88,7 +82,7 @@ class Caffe2Framework(FrameworkBase):
 
         for test in tests:
             assert "metric" in test, (
-                "Metric field is missing in " + "benchmark {}".format(filename)
+                "Metric field is missing in " + f"benchmark {filename}"
             )
 
             # no check is needed if the metric is generic
@@ -102,14 +96,14 @@ class Caffe2Framework(FrameworkBase):
                 test["warmup"] = -1
 
             assert "identifier" in test, (
-                "Identifier field is missing in " + "benchmark {}".format(filename)
+                "Identifier field is missing in " + f"benchmark {filename}"
             )
 
             if "commands" in test or "command" in test or "arguments" in test:
                 continue
             # for backward compatibility purpose
             assert "inputs" in test, (
-                "Inputs field is missing in " + "benchmark {}".format(filename)
+                "Inputs field is missing in " + f"benchmark {filename}"
             )
 
             num = -1
@@ -117,15 +111,16 @@ class Caffe2Framework(FrameworkBase):
                 ip = test["inputs"][ip_name]
                 assert "shapes" in ip, (
                     "Shapes field is missing in"
-                    + " input {}".format(ip_name)
-                    + " of benchmark {}".format(filename)
+                    + f" input {ip_name}"
+                    + f" of benchmark {filename}"
                 )
-                assert "type" in ip, "Type field is missing in input {}".format(
-                    ip_name
-                ) + " of benchmark {}".format(filename)
+                assert "type" in ip, (
+                    "Type field is missing in input {}".format(ip_name)
+                    + f" of benchmark {filename}"
+                )
                 assert isinstance(ip["shapes"], list), (
                     "Shape field should be a list. However, input "
-                    + "{} of benchmark is not.".format(ip_name, filename)
+                    + f"{ip_name} of benchmark is not."
                 )
 
                 dims = -1
@@ -143,9 +138,9 @@ class Caffe2Framework(FrameworkBase):
                 else:
                     assert len(ip["shapes"]) == num, (
                         "The shapes of "
-                        + "input {} ".format(ip_name)
+                        + f"input {ip_name} "
                         + "are not of the same dimension in "
-                        + "benchmark {}".format(filename)
+                        + f"benchmark {filename}"
                     )
 
     def rewriteBenchmarkTests(self, benchmark, filename):
@@ -189,10 +184,10 @@ class Caffe2Framework(FrameworkBase):
                     new_num = len(fs)
                 else:
                     assert len(fs) == new_num, (
-                        "The number of specified {} files ".format(ftype)
-                        + "in blob {} do not ".format(name)
+                        f"The number of specified {ftype} files "
+                        + f"in blob {name} do not "
                         + "match in all input blobs in benchmark "
-                        + "{}.".format(source)
+                        + f"{source}."
                     )
             else:
                 new_num = 1
@@ -213,7 +208,7 @@ class Caffe2Framework(FrameworkBase):
         preprocess_files=None,
         main_command=False,
     ):
-        cmds = super(Caffe2Framework, self).composeRunCommand(
+        cmds = super().composeRunCommand(
             commands,
             platform,
             programs,
@@ -270,7 +265,7 @@ class Caffe2Framework(FrameworkBase):
         if shared_libs:
             cmd = [
                 "export",
-                "LD_LIBRARY_PATH=$\{LD_LIBRARY_PATH\}:"
+                r"LD_LIBRARY_PATH=$\{LD_LIBRARY_PATH\}:"
                 + os.path.dirname(shared_libs[0]),
                 "&&",
             ] + cmd

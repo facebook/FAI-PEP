@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import argparse
 import copy
@@ -302,12 +301,12 @@ class BenchmarkDriver:
         tempdir = tempfile.mkdtemp(
             prefix="_".join(["aibench", str(self.args.user_identifier), ""])
         )
-        getLogger().info("Temp directory: {}".format(tempdir))
+        getLogger().info(f"Temp directory: {tempdir}")
         info = self._getInfo()
         frameworks = getFrameworks()
         assert (
             self.args.framework in frameworks
-        ), "Framework {} is not supported".format(self.args.framework)
+        ), f"Framework {self.args.framework} is not supported"
         framework = frameworks[self.args.framework](tempdir, self.args)
         bcollector = BenchmarkCollector(
             framework, self.args.model_cache, args=self.args
@@ -342,7 +341,7 @@ class BenchmarkDriver:
             status_str = "harness error"
         else:
             status_str = "user and harness error"
-        getLogger().info(" ======= {} =======".format(status_str))
+        getLogger().info(f" ======= {status_str} =======")
         if getRunKilled():
             return RUN_KILLED
         if getRunTimeout():
@@ -360,7 +359,7 @@ class BenchmarkDriver:
 
         # for backward compatible purpose
         if self.args.backend:
-            info["meta"]["command_args"] += " --backend {}".format(self.args.backend)
+            info["meta"]["command_args"] += f" --backend {self.args.backend}"
         if self.args.wipe_cache:
             info["meta"]["command_args"] += " --wipe_cache {}".format(
                 self.args.wipe_cache

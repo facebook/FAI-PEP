@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 import os
@@ -38,7 +37,7 @@ def checkRegressions(info, platform, framework, benchmark, reporters, meta, outd
         from driver.benchmark_driver import runOneBenchmark
 
         getLogger().info(
-            "Regression detected on {}, ".format(platform.getMangledName())
+            f"Regression detected on {platform.getMangledName()}, "
             + "verifying: {}".format(",".join(regressions))
         )
         for i in infos:
@@ -68,12 +67,11 @@ def checkRegressions(info, platform, framework, benchmark, reporters, meta, outd
             getLogger().info("Regressed types: {}".format(",".join(verify_regressions)))
         getLogger().info(
             "Regression verifying completed for "
-            + "{} on {}".format(platform.getMangledName(), commit)
+            + f"{platform.getMangledName()} on {commit}"
         )
     else:
         getLogger().info(
-            "No Regression found for "
-            + "{} on {}".format(platform.getMangledName(), commit)
+            "No Regression found for " + f"{platform.getMangledName()} on {commit}"
         )
 
 
@@ -176,14 +174,14 @@ def _collectBenchmarkRunData(runs):
         latest_file = latest_run + filename
         if not os.path.isfile(latest_file):
             continue
-        with open(latest_file, "r") as f:
+        with open(latest_file) as f:
             content = json.load(f)
             d = [content]
             for run in runs:
                 compare_file = run + filename
                 if not os.path.isfile(compare_file):
                     continue
-                with open(compare_file, "r") as cf:
+                with open(compare_file) as cf:
                     content = json.load(cf)
                     d.append(content)
             data[filename] = d

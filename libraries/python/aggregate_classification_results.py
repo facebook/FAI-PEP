@@ -11,7 +11,6 @@
 # This script aggregates test results from multiple runs and form
 # the final result
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import argparse
 import json
@@ -56,9 +55,9 @@ class AggregateOutputs:
     def _getOneOutput(self, index):
         filename = self._composeFilename(index)
         if not os.path.isfile(filename):
-            print("File {} does not exist".format(filename))
+            print(f"File {filename} does not exist")
             return None
-        with open(filename, "r") as f:
+        with open(filename) as f:
             content = json.load(f)
         return content
 

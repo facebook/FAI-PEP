@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import abc
 import ast
@@ -516,9 +515,7 @@ class FrameworkBase:
             # is a file field
             if files and fields[-1] in files:
                 return getString(files[fields[-1]])
-        assert isinstance(entry, string_types), (
-            "Output {}".format(entry) + " is not string type"
-        )
+        assert isinstance(entry, str), f"Output {entry}" + " is not string type"
         return getString(entry)
 
     @abc.abstractmethod
@@ -695,7 +692,7 @@ class FrameworkBase:
                 with open(file, "rb") as f:
                     content = f.read()
             else:
-                with open(file, "r") as f:
+                with open(file) as f:
                     content = f.read()
             convert = converter_class()
             results, _ = convert.collect(content, args)

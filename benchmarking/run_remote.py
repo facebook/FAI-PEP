@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import argparse
 import glob
@@ -303,7 +302,7 @@ class BuildProgram(threading.Thread):
             for fn in allfiles:
                 with LOCK:
                     filename, _ = self.file_handler.uploadFile(fn, None, None, False)
-                getLogger().info("program: {}".format(filename))
+                getLogger().info(f"program: {filename}")
                 self.filenames[os.path.basename(fn)] = filename
             # main program needs to be in
             self.filenames["program"] = self.filenames[os.path.basename(program)]
@@ -555,7 +554,7 @@ class RunRemote:
         # upload test file
         assert (
             "tests" in one_benchmark
-        ), "tests field is missing in benchmark {}".format(filename)
+        ), f"tests field is missing in benchmark {filename}"
         tests = one_benchmark["tests"]
         for test in tests:
             if "input_files" in test:
@@ -649,7 +648,7 @@ class RunRemote:
             "--commit_hash",
             commit_hash,
         ]
-        getLogger().info("Downloading {}".format(location))
+        getLogger().info(f"Downloading {location}")
         subprocess.check_output(cmd)
         os.remove(query_exe)
         return tgt_file
@@ -673,7 +672,7 @@ class RunRemote:
         rows.sort()
         if flag:
             table = tabulate(rows, headers=headers, tablefmt="orgtbl")
-            print("\n{}\n".format(table))
+            print(f"\n{table}\n")
         return rows
 
     def _checkDevices(self, specified_devices, hashes=None):
@@ -788,7 +787,7 @@ class RunRemote:
         # If the provided user identifier is a file path
         # read list of user identifiers from the file
         if os.path.isfile(user_identifier):
-            with open(user_identifier, "r") as f:
+            with open(user_identifier) as f:
                 user_identifiers = f.readlines()
                 user_identifiers = [
                     user_identifier.strip() for user_identifier in user_identifiers
@@ -835,8 +834,8 @@ class RunRemote:
                     # check values again
                     if "values" not in vv or len(vv["values"]) == 0:
                         continue
-                    assert vv["type"], "type is missing in {}".format(kk)
-                    assert vv["metric"], "metric is missing in {}".format(kk)
+                    assert vv["type"], f"type is missing in {kk}"
+                    assert vv["metric"], f"metric is missing in {kk}"
                     if vv["metric"] == "flops":
                         continue
                     unit = vv["unit"] if "unit" in vv else "null"
@@ -861,9 +860,9 @@ class RunRemote:
             item["mobilelab_result"] = mobilelab_result
 
     def _mobilelabAddField(self, output, identifier, type, metric, values, unit):
-        key = "{}__{}__{}".format(identifier, type, metric)
+        key = f"{identifier}__{type}__{metric}"
         key = re.sub(r"\W+", "_", key)
-        assert key not in output, "duplicate key {}".format(key)
+        assert key not in output, f"duplicate key {key}"
         output[key] = {
             "values": values,
             "metric": metric,
@@ -879,7 +878,7 @@ class RunRemote:
                 args.benchmark_file = adhoc_file
             else:
                 getLogger().error(
-                    "Could not find specified adhoc config: {}".format(args.adhoc)
+                    f"Could not find specified adhoc config: {args.adhoc}"
                 )
 
 

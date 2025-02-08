@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 
@@ -23,7 +22,7 @@ class RemoteReporter(ReporterBase):
     def __init__(self, remote_reporter, remote_access_token):
         self.remote_reporter = remote_reporter
         self.remote_access_token = remote_access_token
-        super(RemoteReporter, self).__init__()
+        super().__init__()
 
     def report(self, content):
         if not self.remote_reporter:
@@ -118,7 +117,7 @@ class RemoteReporter(ReporterBase):
                 meta.pop(key, None)
                 summary[key] = value
             except Exception:
-                getLogger().warning("{} cannot be converted into int".format(meta[key]))
+                getLogger().warning(f"{meta[key]} cannot be converted into int")
                 pass
 
     def _updateSummaryData(self, data, summary, prefix):

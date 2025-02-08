@@ -12,7 +12,6 @@
 # for image classification tasks, if the golden is 1, expecting the benchmark
 # is the closest to that.
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import argparse
 import json
@@ -46,7 +45,7 @@ class OutputCompare:
         self.args = parser.parse_args()
         assert os.path.isfile(
             self.args.benchmark_output
-        ), "Benchmark output file {} doesn't exist".format(self.args.benchmark_output)
+        ), f"Benchmark output file {self.args.benchmark_output} doesn't exist"
         assert os.path.isfile(self.args.labels), "Labels file {} doesn't exist".format(
             self.args.labels
         )
@@ -54,7 +53,7 @@ class OutputCompare:
     def getData(self, filename):
         num_entries = 0
         content_list = []
-        with open(filename, "r") as f:
+        with open(filename) as f:
             line = f.readline()
             dim_str = line
             while line != "":
@@ -96,17 +95,17 @@ class OutputCompare:
         return entry
 
     def writeResult(self, results):
-        top = "top{}".format(str(self.args.top))
+        top = f"top{str(self.args.top)}"
         values = [item["predict"] for item in results]
         num_corrects = sum(values)
         percent = num_corrects * 100.0 / len(values)
         output = {}
         res = self.writeOneResult(
-            values, num_corrects, "number_of_{}_corrects".format(top), "number"
+            values, num_corrects, f"number_of_{top}_corrects", "number"
         )
         output[res["type"] + "_" + res["metric"]] = res
         res = self.writeOneResult(
-            values, percent, "percent_of_{}_corrects".format(top), "percent"
+            values, percent, f"percent_of_{top}_corrects", "percent"
         )
         output[res["type"] + "_" + res["metric"]] = res
         if self.args.result_file:
@@ -116,7 +115,7 @@ class OutputCompare:
 
     def compare(self):
         benchmark_data, dims_list = self.getData(self.args.benchmark_output)
-        with open(self.args.labels, "r") as f:
+        with open(self.args.labels) as f:
             content = f.read()
             golden_lines = [
                 item.strip().split(",") for item in content.strip().split("\n")
@@ -131,8 +130,8 @@ class OutputCompare:
                 benchmark_data, (dims_list[idx], dims_list[idx + 1])
             )
         assert len(benchmark_data) == len(golden_data), (
-            "Benchmark data has {} entries, ".format(len(benchmark_data))
-            + "but golden data has {} entries".format(len(golden_data))
+            f"Benchmark data has {len(benchmark_data)} entries, "
+            + f"but golden data has {len(golden_data)} entries"
         )
 
         def sort_key(elem):

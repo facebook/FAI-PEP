@@ -1,12 +1,11 @@
 # pyre-unsafe
-from typing import Tuple
 
 import numpy as np
 
 from utils.custom_logger import getLogger
 
 
-def get_benchmark_start_end(data, window_size) -> Tuple[int, int]:
+def get_benchmark_start_end(data, window_size) -> tuple[int, int]:
     """
     This convolves the power data with a window of size 10 seconds
     with first half filled with -1 and second half with 1.

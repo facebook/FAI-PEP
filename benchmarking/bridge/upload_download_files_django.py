@@ -1,5 +1,4 @@
 # pyre-unsafe
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
 
@@ -14,14 +13,14 @@ from utils.utilities import requestsJson
 
 class UploadDownloadFilesDjango(UploadDownloadFilesBase):
     def __init__(self, args):
-        super(UploadDownloadFilesDjango, self).__init__(args)
+        super().__init__(args)
         self.server_addr = self.args.server_addr
 
     def upload(self, **kwargs):
         path = kwargs["file"]
         if self.server_addr:
             storage_addr = self.server_addr + "/upload/"
-            getLogger().info("Uploading {} to {}".format(path, storage_addr))
+            getLogger().info(f"Uploading {path} to {storage_addr}")
             filename = os.path.basename(path)
 
             with open(path, "rb") as f:
@@ -32,7 +31,7 @@ class UploadDownloadFilesDjango(UploadDownloadFilesBase):
         url = ""
         if result_json["status"] == "success":
             url = os.path.join(self.server_addr, result_json["path"])
-        getLogger().info("File has been uploaded to {}".format(url))
+        getLogger().info(f"File has been uploaded to {url}")
         return url
 
     def download(self, **kwargs):

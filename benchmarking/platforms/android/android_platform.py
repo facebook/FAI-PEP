@@ -39,7 +39,7 @@ from utils.utilities import (
 
 class AndroidPlatform(PlatformBase):
     def __init__(self, tempdir, adb, args, usb_controller=None):
-        super(AndroidPlatform, self).__init__(
+        super().__init__(
             tempdir,
             args.android_dir,
             adb,
@@ -62,7 +62,7 @@ class AndroidPlatform(PlatformBase):
                 self.platform_model + "-" + self.rel_version + "-" + self.build_version
             )
         self.platform_abi = adb.getprop("ro.product.cpu.abi")
-        self.os_version = "{}-{}".format(self.rel_version, self.build_version)
+        self.os_version = f"{self.rel_version}-{self.build_version}"
         self.type = "android"
         self.setPlatform(self.platform)
         self.device_label = self.getMangledName()
@@ -104,7 +104,7 @@ class AndroidPlatform(PlatformBase):
         return self.platform
 
     def getOS(self):
-        return "Android {} sdk {}".format(self.rel_version, self.build_version)
+        return f"Android {self.rel_version} sdk {self.build_version}"
 
     def _setLogCatSize(self):
         repeat = True
@@ -121,9 +121,9 @@ class AndroidPlatform(PlatformBase):
                 size = int(size / 2)
 
     def fileExistsOnPlatform(self, files):
-        if isinstance(files, string_types):
+        if isinstance(files, str):
             exists = self.util.shell(
-                "test -e {} && echo True || echo False".format(files).split(" ")
+                f"test -e {files} && echo True || echo False".split(" ")
             )
             if "True" not in exists:
                 return False
@@ -157,7 +157,7 @@ class AndroidPlatform(PlatformBase):
         if not self.app:
             if "intent.txt" in programs:
                 # temporary to rename the program with adb suffix
-                with open(programs["intent.txt"], "r") as f:
+                with open(programs["intent.txt"]) as f:
                     self.app = json.load(f)
             else:
                 return
@@ -380,7 +380,7 @@ class AndroidPlatform(PlatformBase):
             return log_screen + log_logcat, meta
 
     def collectMetaData(self, info):
-        meta = super(AndroidPlatform, self).collectMetaData(info)
+        meta = super().collectMetaData(info)
         meta["platform_hash"] = self.platform_hash
         return meta
 

@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 import re
@@ -29,7 +28,7 @@ class IOSDriver(DriverBase):
         self.args = args
         self.devices = self.getDevices()
         if devices:
-            if isinstance(devices, string_types):
+            if isinstance(devices, str):
                 devices = [devices]
             self.devices = {d: self.devices[d] for d in self.devices if d in devices}
         self.type = "ios"

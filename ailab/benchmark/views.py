@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import json
 
 from django.http import HttpResponse, JsonResponse
@@ -162,8 +159,8 @@ def visualize(request):
             index = i + 1
             vals = [getattr(o, column) for o in qs]
 
-            chartdata["name{}".format(index)] = column
-            chartdata["y{}".format(index)] = vals
+            chartdata[f"name{index}"] = column
+            chartdata[f"y{index}"] = vals
 
         # Chart info for NVD3
         charttype = "lineChart"

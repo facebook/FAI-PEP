@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime
 import os
@@ -39,7 +38,7 @@ class HostPlatform(PlatformBase):
             platform_name = platform.platform() + "-" + self._getProcessorName()
         self.tempdir = os.path.join(tempdir, platform_hash)
         hdb = HDB(platform_hash, tempdir)
-        super(HostPlatform, self).__init__(
+        super().__init__(
             self.tempdir,
             self.tempdir,
             hdb,
@@ -56,7 +55,7 @@ class HostPlatform(PlatformBase):
         self.type = "host"
 
     def getOS(self):
-        return "{} {}".format(os.uname().sysname, os.uname().release)
+        return f"{os.uname().sysname} {os.uname().release}"
 
     def runBenchmark(self, cmd, *args, **kwargs):
         if not isinstance(cmd, list):

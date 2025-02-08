@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import gc
 import hashlib
@@ -71,7 +70,7 @@ class DownloadBenchmarks:
 
         assert (
             "tests" in one_benchmark
-        ), "tests field is missing in benchmark {}".format(filename)
+        ), f"tests field is missing in benchmark {filename}"
         tests = one_benchmark["tests"]
         for test in tests:
             if "input_files" in test:
@@ -110,7 +109,7 @@ class DownloadBenchmarks:
             path = self.root_model_dir + location[1:]
         if os.path.isfile(path):
             if md5:
-                getLogger().info("Calculate md5 of {}".format(path))
+                getLogger().info(f"Calculate md5 of {path}")
                 file_hash = None
                 with open(path, "rb") as f:
                     file_hash = hashlib.md5()
@@ -121,7 +120,7 @@ class DownloadBenchmarks:
                 gc.collect()
                 if md5 == new_md5:
                     getLogger().info(
-                        "File {}".format(os.path.basename(path))
+                        f"File {os.path.basename(path)}"
                         + " is cached, skip downloading"
                     )
                     return path

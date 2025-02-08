@@ -110,8 +110,7 @@ class BenchmarkDriverUnitTest(unittest.TestCase):
         with self.assertLogs(level="ERROR") as log:
             self.assertRaises(AssertionError, bd._getStatistics, self.array1, stats)
             self.assertIn(
-                self.log_prefix
-                + "Unsupported custom statistic '{}' ignored.".format(stats[0]),
+                self.log_prefix + f"Unsupported custom statistic '{stats[0]}' ignored.",
                 log.output,
             )
 
@@ -120,8 +119,7 @@ class BenchmarkDriverUnitTest(unittest.TestCase):
         with self.assertLogs(level="ERROR") as log:
             self.assertRaises(AssertionError, bd._getStatistics, self.array1, stats)
             self.assertIn(
-                self.log_prefix
-                + "Unsupported custom statistic '{}' ignored.".format(stats[0]),
+                self.log_prefix + f"Unsupported custom statistic '{stats[0]}' ignored.",
                 log.output,
             )
 

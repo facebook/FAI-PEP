@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 
@@ -28,11 +27,11 @@ def emitMetric(identifier="PyTorchObserver", **kwargs):
     # fields in value format
     if "value" in kwargs:
         data["value"] = kwargs["value"]
-        return "{} {}".format(identifier, json.dumps(data))
+        return f"{identifier} {json.dumps(data)}"
     # fields in info format
     if "info_string" in kwargs:
         data["info_string"] = kwargs["info_string"]
-        return "{} {}".format(identifier, json.dumps(data))
+        return f"{identifier} {json.dumps(data)}"
     # fields in summary format
     # summary is a list of [p0, p10, p50, p90, p100, mean, stdev, MAD]
     if "num_runs" in kwargs and "summary" in kwargs and len(kwargs["summary"]) == 8:
@@ -50,6 +49,6 @@ def emitMetric(identifier="PyTorchObserver", **kwargs):
         data["summary"] = {}
         for key, idx in summaryMapping.items():
             data["summary"][key] = kwargs["summary"][idx]
-        return "{} {}".format(identifier, json.dumps(data))
+        return f"{identifier} {json.dumps(data)}"
     # invalid set of fields was passed in
     return ""

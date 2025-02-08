@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
 
@@ -21,7 +20,7 @@ class GenericFramework(FrameworkBase):
     IDENTIFIER = "PyTorchObserver "
 
     def __init__(self, tempdir, args):
-        super(GenericFramework, self).__init__(args)
+        super().__init__(args)
         self.tempdir = os.path.join(tempdir, self.getName())
         os.makedirs(self.tempdir, 0o777)
 

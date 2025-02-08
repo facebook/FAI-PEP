@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import argparse
 import datetime
@@ -139,7 +138,7 @@ parser.add_argument(
 
 def stopRun(status_file):
     if status_file and os.path.isfile(status_file):
-        with open(status_file, "r") as file:
+        with open(status_file) as file:
             content = file.read().strip()
             if content == "0":
                 return True
@@ -181,8 +180,7 @@ class ExecutablesBuilder(threading.Thread):
 
     def _saveOneCommitExecutable(self, platform):
         getLogger().info(
-            "Building executable on {} ".format(platform)
-            + "@ {}".format(self.current_commit_hash)
+            f"Building executable on {platform} " + f"@ {self.current_commit_hash}"
         )
         same_host = self.args.same_host
         if same_host:
@@ -276,7 +274,7 @@ class ExecutablesBuilder(threading.Thread):
 
     def _getSavedCommit(self):
         if self.args.commit_file and os.path.isfile(self.args.commit_file):
-            with open(self.args.commit_file, "r") as file:
+            with open(self.args.commit_file) as file:
                 commit_hash = file.read().strip()
                 # verify that the commit exists
                 return self.repo.getCommitHash(commit_hash)

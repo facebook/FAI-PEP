@@ -18,7 +18,6 @@ import time
 from enum import Enum
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import List
 
 from bridge.file_storage.download_files.file_downloader import FileDownloader
 from profilers.perfetto.perfetto_config import PerfettoConfig
@@ -81,7 +80,7 @@ class Perfetto(ProfilerBase):
     def __init__(
         self,
         platform,
-        cmd: List[str],
+        cmd: list[str],
         *,
         model_name="benchmark",
         types=None,
@@ -156,7 +155,7 @@ class Perfetto(ProfilerBase):
         self.battery_disconnected_path = "/sys/class/power_supply/battery/input_suspend"
         self.battery_state: BatteryState = BatteryState.connected
 
-        super(Perfetto, self).__init__(None)
+        super().__init__(None)
 
     def _init_sideloaded_binary(self):
         """
@@ -567,7 +566,7 @@ class Perfetto(ProfilerBase):
         # TODO: implement
 
 
-def _getAppPath(args: List[str], default: str) -> str:
+def _getAppPath(args: list[str], default: str) -> str:
     """App path will be the first non env-setting string."""
     # TODO: externalize this method so it can be used elsewhere
     app_path = default

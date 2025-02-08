@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
 import shlex
@@ -21,7 +20,7 @@ from utils.custom_logger import getLogger
 
 class xcrun(IDB):
     def __init__(self, device=None, tempdir=None):
-        super(xcrun, self).__init__(device, tempdir)
+        super().__init__(device, tempdir)
         self.bundle_id = None
         if self.tempdir is not None:
             self.cached_tree = os.path.join(self.tempdir, "tree")
@@ -43,7 +42,7 @@ class xcrun(IDB):
     def push(self, src, tgt):
         # only push files, not directories, as apps are directories
         if os.path.isdir(src):
-            getLogger().info("Skip pushing directory {}".format(src))
+            getLogger().info(f"Skip pushing directory {src}")
             return
         cmd = [
             "copy",

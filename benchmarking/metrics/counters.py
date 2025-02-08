@@ -10,8 +10,6 @@
 
 counter_handles = {}
 
-from typing import Dict, List
-
 
 class Counter:
     def __init__(self, context: str = "default"):
@@ -20,7 +18,7 @@ class Counter:
             raise RuntimeError(f"No configuration found for {context}")
         self.counter = self.counter_handles[context]()
 
-    def update_counters(self, data: List[Dict]):
+    def update_counters(self, data: list[dict]):
         return self.counter.update_counters(data)
 
     def get_counter(self):

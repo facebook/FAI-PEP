@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 import os
@@ -88,7 +87,7 @@ class OculusFramework(FrameworkBase):
         json_file = platform.moveFilesFromPlatform(
             os.path.join(platform.getOutputDir(), "report.json"), self.tempdir
         )
-        with open(json_file, "r") as f:
+        with open(json_file) as f:
             json_content = json.load(f)
 
         result = {}
@@ -98,7 +97,7 @@ class OculusFramework(FrameworkBase):
                 value = one_entry["value"]
                 unit = one_entry["unit"]
                 metric = one_entry["metric"]
-                map_key = "{}_{}".format(type, metric)
+                map_key = f"{type}_{metric}"
                 if map_key in result:
                     entry = result[map_key]
                     if entry["unit"] is not None and entry["unit"] != unit:
@@ -135,10 +134,10 @@ class OculusFramework(FrameworkBase):
         )
         assert (
             "name" in benchmark["model"]
-        ), "field name must exist in model in benchmark {}".format(filename)
+        ), f"field name must exist in model in benchmark {filename}"
         assert (
             "format" in benchmark["model"]
-        ), "field format must exist in model in benchmark {}".format(filename)
+        ), f"field format must exist in model in benchmark {filename}"
         assert "tests" in benchmark, "Tests field is missing in benchmark {}".format(
             filename
         )
@@ -146,10 +145,10 @@ class OculusFramework(FrameworkBase):
         for test in benchmark["tests"]:
             assert (
                 "input_files" in test
-            ), "inputs must exist in test in benchmark {}".format(filename)
+            ), f"inputs must exist in test in benchmark {filename}"
             assert (
                 "output_files" in test
-            ), "outputs must exist in test in benchmark {}".format(filename)
+            ), f"outputs must exist in test in benchmark {filename}"
             assert "metric" in test, "metric must exist in test in benchmark {}".format(
                 filename
             )

@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import abc
 import json
@@ -41,15 +40,15 @@ class PlatformBase:
         self.tgt_dir = tgt_dir
         self.hash_platform_mapping = None
         self.device_name_mapping = None
-        if isinstance(hash_platform_mapping, string_types):
+        if isinstance(hash_platform_mapping, str):
             # if the user provides filename, we will load it.
             try:
                 with open(hash_platform_mapping) as f:
                     self.hash_platform_mapping = json.load(f)
             except OSError as e:
-                getLogger().info("OSError: {}".format(e))
+                getLogger().info(f"OSError: {e}")
             except ValueError as e:
-                getLogger().info("Invalid json: {}".format(e))
+                getLogger().info(f"Invalid json: {e}")
         else:
             # otherwise read from internal
             try:
@@ -61,15 +60,15 @@ class PlatformBase:
             except Exception:
                 pass
 
-        if isinstance(device_name_mapping, string_types):
+        if isinstance(device_name_mapping, str):
             # if the user provides filename, we will load it.
             try:
                 with open(device_name_mapping) as f:
                     self.device_name_mapping = json.load(f)
             except OSError as e:
-                getLogger().info("OSError: {}".format(e))
+                getLogger().info(f"OSError: {e}")
             except ValueError as e:
-                getLogger().info("Invalid json: {}".format(e))
+                getLogger().info(f"Invalid json: {e}")
         else:
             # otherwise read from internal
             try:
@@ -117,7 +116,7 @@ class PlatformBase:
     def getMangledName(self):
         name = self.platform
         if self.platform_hash:
-            name = name + " ({})".format(self.platform_hash)
+            name = name + f" ({self.platform_hash})"
         return name
 
     def rebootDevice(self):
@@ -137,7 +136,7 @@ class PlatformBase:
 
     def copyFilesToPlatform(self, files, target_dir=None, copy_files=True):
         target_dir = self.tgt_dir if target_dir is None else target_dir
-        if isinstance(files, string_types):
+        if isinstance(files, str):
             target_file = os.path.join(target_dir, os.path.basename(files))
             if copy_files:
                 self.util.push(files, target_file)
@@ -158,7 +157,7 @@ class PlatformBase:
 
     def moveFilesFromPlatform(self, files, target_dir=None, delete=True):
         assert target_dir is not None, "Target directory must be specified."
-        if isinstance(files, string_types):
+        if isinstance(files, str):
             basename = os.path.basename(files)
             target_file = os.path.join(target_dir, basename)
             self.util.pull(files, target_file)
@@ -183,7 +182,7 @@ class PlatformBase:
         return None
 
     def delFilesFromPlatform(self, files):
-        if isinstance(files, string_types):
+        if isinstance(files, str):
             self.util.deleteFile(files)
         elif isinstance(files, list):
             for f in files:

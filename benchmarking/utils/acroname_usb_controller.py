@@ -40,9 +40,7 @@ class AcronameUSBController(USBControllerBase):
     def connect(self, device_hash):
         listing = self.device_map.get(device_hash)
         if listing is None:
-            getLogger().error(
-                "Could not find hub serial for device {}".format(device_hash)
-            )
+            getLogger().error(f"Could not find hub serial for device {device_hash}")
             return []
         self.active[device_hash] = True
         return self._cli_toggle_port(
@@ -52,9 +50,7 @@ class AcronameUSBController(USBControllerBase):
     def disconnect(self, device_hash):
         listing = self.device_map.get(device_hash)
         if listing is None:
-            getLogger().error(
-                "Could not find hub serial for device {}".format(device_hash)
-            )
+            getLogger().error(f"Could not find hub serial for device {device_hash}")
             return []
 
         self.active[device_hash] = False
@@ -149,10 +145,10 @@ class AcronameUSBController(USBControllerBase):
                 }
                 self.active[device_hash] = True
 
-        getLogger().info("Hub Mapping {}".format(self.device_map))
+        getLogger().info(f"Hub Mapping {self.device_map}")
 
     def _load_device_map(self, device_map_filepath):
-        with open(device_map_filepath, "r") as f:
+        with open(device_map_filepath) as f:
             self.device_map = json.load(f)
 
     """

@@ -10,9 +10,8 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
-from typing import Any, Dict
+from typing import Any
 
 from platforms.android.adb import ADB
 from platforms.ios.idb import IDB
@@ -20,8 +19,8 @@ from platforms.ios.idb import IDB
 from utils.custom_logger import getLogger
 
 
-def getBatteryState(device, platform: str, android_dir: str) -> Dict[str, Any]:
-    state: Dict[str, Any] = {
+def getBatteryState(device, platform: str, android_dir: str) -> dict[str, Any]:
+    state: dict[str, Any] = {
         "supported": False,
         "disconnected": None,
         "status": None,

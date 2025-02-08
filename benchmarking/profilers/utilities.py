@@ -11,7 +11,7 @@
 ##############################################################################
 
 import os
-from typing import Dict, Mapping, Optional
+from collections.abc import Mapping
 from uuid import uuid4
 
 from bridge.file_storage.upload_files.file_uploader import FileUploader
@@ -19,10 +19,10 @@ from utils.custom_logger import getLogger
 
 
 def generate_perf_filename(
-    model_name: Optional[str] = "benchmark", hash: Optional[str] = None
+    model_name: str | None = "benchmark", hash: str | None = None
 ) -> str:
     """Given the provided model name and optional hash, generate a unique base filename."""
-    unique_name: Optional[str] = os.getenv("JOB_IDENTIFIER", None)
+    unique_name: str | None = os.getenv("JOB_IDENTIFIER", None)
     if unique_name is None:
         unique_name = f"{uuid4()}"
     elif hash is None:
@@ -32,7 +32,7 @@ def generate_perf_filename(
     return f"{model_name}_perf_{unique_name}"
 
 
-def upload_output_files(files: Mapping[str, str]) -> Dict:
+def upload_output_files(files: Mapping[str, str]) -> dict:
     """
     Upload to aibench profiling reports.
     Accepts dict of key -> local file path, uploads using file basename

@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 
@@ -26,7 +25,7 @@ class AndroidDriver(DriverBase):
     def __init__(self, args, devices=None):
         self.args = args
         if devices:
-            if isinstance(devices, string_types):
+            if isinstance(devices, str):
                 devices = [devices]
         self.devices = devices
         self.type = "android"

@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
 import shutil
@@ -23,10 +22,10 @@ COPY_THRESHOLD = 6442450944  # 6 GB
 
 class HDB(PlatformUtilBase):
     def __init__(self, device=None, tempdir=None):
-        super(HDB, self).__init__(device, tempdir)
+        super().__init__(device, tempdir)
 
     def push(self, src, tgt):
-        getLogger().info("push {} to {}".format(src, tgt))
+        getLogger().info(f"push {src} to {tgt}")
         if src != tgt:
             if os.path.isdir(src):
                 if os.path.exists(tgt):
@@ -38,19 +37,17 @@ class HDB(PlatformUtilBase):
                     os.chmod(tgt, 0o777)
                 else:
                     if not os.path.isfile(tgt):
-                        getLogger().info(
-                            "Create symlink between {} and {}".format(src, tgt)
-                        )
+                        getLogger().info(f"Create symlink between {src} and {tgt}")
                         os.symlink(src, tgt)
 
     def pull(self, src, tgt):
-        getLogger().info("pull {} to {}".format(src, tgt))
+        getLogger().info(f"pull {src} to {tgt}")
         if src != tgt:
             shutil.copyfile(src, tgt)
             os.chmod(tgt, 0o777)
 
     def deleteFile(self, file, *args, **kwargs):
-        getLogger().info("delete {}".format(file))
+        getLogger().info(f"delete {file}")
         if os.path.isdir(file):
             shutil.rmtree(file)
         else:

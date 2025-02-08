@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import abc
 
@@ -38,7 +37,7 @@ class DataConverterBase:
     def _prepareData(self, data):
         if data is None:
             return []
-        if isinstance(data, string_types):
+        if isinstance(data, str):
             rows = data.split("\n")
         else:
             assert isinstance(data, list), "Input format must be string or list"

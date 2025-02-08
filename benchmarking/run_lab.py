@@ -11,8 +11,6 @@
 ##############################################################################
 
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import argparse
 import gc
 import json
@@ -246,7 +244,7 @@ def stopRun(args):
         getLogger().info("Finished draining. Exiting...")
         return True
     if args.status_file and os.path.isfile(args.status_file):
-        with open(args.status_file, "r") as file:
+        with open(args.status_file) as file:
             content = file.read().strip()
             if content == "0":
                 return True
@@ -583,7 +581,7 @@ class runAsync:
                     f"The output file {f} doesn't exist for benchmark."
                 )
                 continue
-            with open(f, "r") as file:
+            with open(f) as file:
                 content = json.load(file)
                 # special case for power metrics
                 if "power_data" in content:
@@ -809,7 +807,7 @@ class RunLab:
 
         content = job.get("benchmarks", {}).get("benchmark", {}).get("content", {})
         if isinstance(content, str) and os.path.isfile(content):
-            with open(content, "r") as content_file:
+            with open(content) as content_file:
                 content = json.load(content_file)
         job_cooldown = content.get("model", {}).get("cooldown", None)
         self._coolDown(

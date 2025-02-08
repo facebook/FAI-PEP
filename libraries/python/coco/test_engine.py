@@ -8,7 +8,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import argparse
 import logging
@@ -113,7 +112,7 @@ class TestEngine:
             filename = os.path.join(
                 self.args.input_dir, self.args.result_prefix + "_" + str(i) + ".pkl"
             )
-            with open(filename, "r") as f:
+            with open(filename) as f:
                 results = pickle.load(f)
             for ret in results:
                 self.extendResultsWithClasses(

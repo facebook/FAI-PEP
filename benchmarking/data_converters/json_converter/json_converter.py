@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import collections
 import json
@@ -23,7 +22,7 @@ from utils.custom_logger import getLogger
 
 class JsonConverter(DataConverterBase):
     def __init__(self):
-        super(JsonConverter, self).__init__()
+        super().__init__()
 
     @staticmethod
     def getName():
@@ -50,7 +49,7 @@ class JsonConverter(DataConverterBase):
                     results.append(result)
             except Exception as e:
                 # bypass one line
-                getLogger().info("Skip one row %s \n Exception: %s" % (row, str(e)))
+                getLogger().info("Skip one row {} \n Exception: {}".format(row, str(e)))
                 pass
         if len(valid_run_idxs) > 0:
             # strip data not yet in a valid range
@@ -84,10 +83,10 @@ class JsonConverter(DataConverterBase):
                                 "info_string values " "for {} ".format(key)
                                 + "do not match.\n"
                                 + "Current info_string: "
-                                + "{}\n ".format(old_string)
+                                + f"{old_string}\n "
                                 + "does not match new "
                                 + "info_string: "
-                                + "{}".format(new_string)
+                                + f"{new_string}"
                             )
                     else:
                         details[key]["info_string"] = d["info_string"]
@@ -116,7 +115,7 @@ class JsonConverter(DataConverterBase):
                                 assert (
                                     details[key]["info_string"] == vv["info_string"]
                                 ), (
-                                    "info_string values for {} ".format(key)
+                                    f"info_string values for {key} "
                                     + "do not match.\n"
                                     + "Current info_string:\n{}\n ".format(
                                         details[key]["info_string"]
@@ -137,9 +136,7 @@ class JsonConverter(DataConverterBase):
 
     def _updateOneEntry(self, detail, d, k):
         if k in detail:
-            assert (
-                detail[k] == d[k]
-            ), "Field {} does not match in different entries".format(k)
+            assert detail[k] == d[k], f"Field {k} does not match in different entries"
         else:
             detail[k] = d[k]
 

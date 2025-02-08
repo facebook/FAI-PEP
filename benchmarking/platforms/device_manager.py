@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import asyncio
 import datetime
@@ -240,7 +239,7 @@ class DeviceManager:
                         self.online_devices.append(d)
                     if d["hash"] in self.device_dc_count:
                         self.device_dc_count.pop(d["hash"])
-                    getLogger().info("New device added: {}".format(d))
+                    getLogger().info(f"New device added: {d}")
             await self._initCounters(devices=new_devices)
 
     async def _updateHeartbeats(self):
@@ -439,7 +438,7 @@ class CoolDownDevice(Thread):
             raw_args.extend(["--android_dir", self.args.android_dir])
             self.device["rebooting"] = True
             if reboot_device(raw_args=raw_args):
-                getLogger().info("Device {} was rebooted.".format(self.device))
+                getLogger().info(f"Device {self.device} was rebooted.")
                 self.device["reboot_time"] = datetime.datetime.now()
             else:
                 self.device.pop("rebooting")

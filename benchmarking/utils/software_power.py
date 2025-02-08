@@ -1,5 +1,4 @@
 # pyre-unsafe
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import time
 
@@ -16,14 +15,14 @@ class PowerUtil:
         self.data.append(self.platform.currentPower())
         self.platform.usb_controller.disconnect(self.platform.platform_hash)
 
-        getLogger().info("Sleeping for {}".format(self.duration))
+        getLogger().info(f"Sleeping for {self.duration}")
         time.sleep(self.duration)
 
         self.platform.usb_controller.connect(self.platform.platform_hash)
         time.sleep(2)  # device needs a second to connect
         self.data.append(self.platform.currentPower())
 
-        getLogger().info("Done collecting {}".format(self.data))
+        getLogger().info(f"Done collecting {self.data}")
         result = {}
         result["software_power"] = _composeStructuredData(
             self.data,

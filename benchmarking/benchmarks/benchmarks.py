@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import copy
 import gc
@@ -37,8 +36,8 @@ class BenchmarkCollector:
         self.framework = framework
 
     def collectBenchmarks(self, info, source, user_identifier):
-        assert os.path.isfile(source), "Source {} is not a file".format(source)
-        with open(source, "r") as f:
+        assert os.path.isfile(source), f"Source {source} is not a file"
+        with open(source) as f:
             content = json.load(f)
 
         meta = content["meta"] if "meta" in content else {}
@@ -67,8 +66,8 @@ class BenchmarkCollector:
         self.framework.verifyBenchmarkFile(benchmark, filename, is_post)
 
     def _collectOneBenchmark(self, source, meta, benchmarks, info, user_identifier):
-        assert os.path.isfile(source), "Benchmark {} does not exist".format(source)
-        with open(source, "r") as b:
+        assert os.path.isfile(source), f"Benchmark {source} does not exist"
+        with open(source) as b:
             one_benchmark = json.load(b)
 
         string_map = json.loads(self.args.string_map) if self.args.string_map else {}
@@ -222,12 +221,10 @@ class BenchmarkCollector:
     def _calculateMD5(self, model_name: str, old_md5: str, filename: str) -> str:
         if os.stat(filename).st_size >= COPY_THRESHOLD or os.path.islink(model_name):
             if not os.path.isfile(model_name):
-                getLogger().info(
-                    "Create symlink between {} and {}".format(filename, model_name)
-                )
+                getLogger().info(f"Create symlink between {filename} and {model_name}")
                 os.symlink(filename, model_name)
             return old_md5
-        getLogger().info("Calculate md5 of {}".format(model_name))
+        getLogger().info(f"Calculate md5 of {model_name}")
         if os.path.isdir(model_name):
             return self._calcalateDirMD5(model_name)
         elif os.path.isfile(model_name):
@@ -243,7 +240,7 @@ class BenchmarkCollector:
         location = field["location"]
         if location[0:4] == "http":
             abs_name = destination_name
-            getLogger().info("Downloading {}".format(location))
+            getLogger().info(f"Downloading {location}")
             r = requests.get(location)
             if r.status_code == 200:
                 with open(destination_name, "wb") as f:
@@ -274,7 +271,7 @@ class BenchmarkCollector:
         md5 = self._calculateMD5(destination_name, field["md5"], abs_name)
         if md5 != field["md5"]:
             getLogger().info(
-                "Source file {} is changed, ".format(location)
+                f"Source file {location} is changed, "
                 + " updating MD5. "
                 + "Please commit the updated json file."
             )

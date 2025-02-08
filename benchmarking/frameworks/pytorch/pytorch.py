@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 from frameworks.caffe2.caffe2 import Caffe2Framework
 from utils.custom_logger import getLogger

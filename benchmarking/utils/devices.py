@@ -1,5 +1,4 @@
 # pyre-unsafe
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 devices = {
     "ONEPLUS-A3000-8.0.0-26": {

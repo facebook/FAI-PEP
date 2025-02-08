@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 import os
@@ -23,7 +22,7 @@ from six import string_types
 
 class GlowFramework(FrameworkBase):
     def __init__(self, tempdir, args):
-        super(GlowFramework, self).__init__(args)
+        super().__init__(args)
         self.tempdir = os.path.join(tempdir, self.getName())
         os.makedirs(self.tempdir, 0o777)
 
@@ -31,9 +30,7 @@ class GlowFramework(FrameworkBase):
         return "glow"
 
     def runBenchmark(self, info, benchmark, platform):
-        output, output_files = super(GlowFramework, self).runBenchmark(
-            info, benchmark, platform
-        )
+        output, output_files = super().runBenchmark(info, benchmark, platform)
         return output, output_files
 
     def composeRunCommand(
@@ -50,7 +47,7 @@ class GlowFramework(FrameworkBase):
         preprocess_files=None,
         main_command=False,
     ):
-        cmds = super(GlowFramework, self).composeRunCommand(
+        cmds = super().composeRunCommand(
             commands,
             platform,
             programs,
@@ -81,7 +78,7 @@ class GlowFramework(FrameworkBase):
         if output is None:
             return False
         rows = output
-        if isinstance(output, string_types):
+        if isinstance(output, str):
             rows = output.split("\n")
         i = 0
         while i < len(rows):
@@ -136,7 +133,7 @@ class GlowFramework(FrameworkBase):
         if output is None:
             return False
         rows = output
-        if isinstance(output, string_types):
+        if isinstance(output, str):
             rows = output.split("\n")
         i = 0
         while i < len(rows):
@@ -229,7 +226,7 @@ class GlowFramework(FrameworkBase):
         if output is None:
             return False
         rows = output
-        if isinstance(output, string_types):
+        if isinstance(output, str):
             rows = output.split("\n")
         i = 0
         while i < len(rows):
@@ -262,7 +259,7 @@ class GlowFramework(FrameworkBase):
         if output is None:
             return False
         rows = output
-        if isinstance(output, string_types):
+        if isinstance(output, str):
             rows = output.split("\n")
         i = 0
         while i < len(rows):
@@ -273,26 +270,26 @@ class GlowFramework(FrameworkBase):
 
                     runtimeRecord = {
                         "type": "NET",
-                        "metric": "{}:runtime".format(benchName),
+                        "metric": f"{benchName}:runtime",
                         "unit": "second",
                         "values": [],
                     }
                     throughputRecord = {
                         "type": "SECONDARY",
-                        "metric": "{}:throughput".format(benchName),
+                        "metric": f"{benchName}:throughput",
                         "unit": "Gb/second",
                         "values": [],
                     }
 
                     self._addOrAppendResult(
                         results,
-                        "NET {}:runtime".format(benchName),
+                        f"NET {benchName}:runtime",
                         float(fields[fieldMap[benchName][0]]),
                         runtimeRecord,
                     )
                     self._addOrAppendResult(
                         results,
-                        "SECONDARY {}:throughput".format(benchName),
+                        f"SECONDARY {benchName}:throughput",
                         float(fields[fieldMap[benchName][1]]),
                         throughputRecord,
                     )
@@ -307,7 +304,7 @@ class GlowFramework(FrameworkBase):
         if output is None:
             return False
         rows = output
-        if isinstance(output, string_types):
+        if isinstance(output, str):
             rows = output.split("\n")
         i = 0
         while i < len(rows):
@@ -336,7 +333,7 @@ class GlowFramework(FrameworkBase):
         traceFile = os.path.join(platform.getOutputDir(), "trace")
         if not os.path.exists(traceFile):
             return
-        with open(traceFile, "r") as fp:
+        with open(traceFile) as fp:
             line = fp.readline()
             while line:
                 try:

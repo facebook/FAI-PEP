@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 from benchmark.models import BenchmarkInfo, Device
 from django.utils import timezone
 
@@ -27,7 +25,7 @@ def get_payload(req):
 
     ids = []
     if ids_str is None and (action == "run" or action == "release"):
-        raise AssertionError("ids must be specified for {}".format(action))
+        raise AssertionError(f"ids must be specified for {action}")
     elif ids_str is not None:
         ids = ids_str.split(",")
 
@@ -165,4 +163,4 @@ def get_payload(req):
         return {"status": "success"}
 
     else:
-        raise AssertionError("action {} not recognized".format(action))
+        raise AssertionError(f"action {action} not recognized")

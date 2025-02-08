@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 from regression_detectors.regression_detector_base import RegressionDetectorBase
 from utils.custom_logger import getLogger
@@ -18,7 +17,7 @@ from utils.custom_logger import getLogger
 
 class DelayRegressionDetector(RegressionDetectorBase):
     def __init__(self):
-        super(DelayRegressionDetector, self).__init__()
+        super().__init__()
 
     def isRegressed(self, filename, latest_data, compare_data, control_in_compare):
         # The algorithm to check whether there is a regression

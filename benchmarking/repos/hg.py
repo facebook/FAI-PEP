@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 from utils.subprocess_with_logger import processRun
 
@@ -19,7 +18,7 @@ from .repo_base import RepoBase
 
 class HGRepo(RepoBase):
     def __init__(self, dir):
-        super(HGRepo, self).__init__(dir)
+        super().__init__(dir)
 
     def _run(self, cmd, *args):
         hg = ["hg"]

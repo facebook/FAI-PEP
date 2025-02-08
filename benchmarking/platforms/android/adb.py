@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
 import re
@@ -22,11 +21,11 @@ from utils.custom_logger import getLogger
 
 class ADB(PlatformUtilBase):
     def __init__(self, device=None, tempdir=None):
-        super(ADB, self).__init__(device, tempdir)
+        super().__init__(device, tempdir)
 
     def run(self, *args, **kwargs):
         adb = self._addADB()
-        return super(ADB, self).run(adb, *args, **kwargs)
+        return super().run(adb, *args, **kwargs)
 
     def push(self, src, tgt, chmod="755"):
         # Always remove the old file before pushing the new file
@@ -194,7 +193,7 @@ class ADB(PlatformUtilBase):
                     freq_target = target[cpu]
                 else:
                     freq_target = "mid"
-            elif isinstance(target, string_types):
+            elif isinstance(target, str):
                 freq_target = target
             else:
                 raise AssertionError("Unsupported frequency target")
@@ -210,7 +209,7 @@ class ADB(PlatformUtilBase):
         directory = os.path.join(*["/sys/devices/system/cpu/", cpu, "/"])
 
         scaling_governor = directory + "cpufreq/scaling_governor"
-        self.su_shell(['"echo userspace > {}"'.format(scaling_governor)])
+        self.su_shell([f'"echo userspace > {scaling_governor}"'])
         set_scaling_governor = self.su_shell(["cat", scaling_governor]).strip()
         assert set_scaling_governor == "userspace", getLogger().fatal(
             "Cannot set scaling governor to userspace"
@@ -230,15 +229,15 @@ class ADB(PlatformUtilBase):
             assert re.match(r"^\d+$", freq_target), "Frequency target is not integer"
             freq = freq_target
         minfreq = directory + "cpufreq/scaling_min_freq"
-        self.su_shell(['"echo {} > {}"'.format(freq, minfreq)])
+        self.su_shell([f'"echo {freq} > {minfreq}"'])
         maxfreq = directory + "cpufreq/scaling_max_freq"
-        self.su_shell(['"echo {} > {}"'.format(freq, maxfreq)])
+        self.su_shell([f'"echo {freq} > {maxfreq}"'])
         curr_speed = directory + "cpufreq/scaling_cur_freq"
         set_freq = self.su_shell(["cat", curr_speed]).strip()
         assert set_freq == freq, "Unable to set frequency {} for {}".format(
             freq_target, cpu
         )
-        getLogger().info("On {}, set {} frequency to {}".format(self.device, cpu, freq))
+        getLogger().info(f"On {self.device}, set {cpu} frequency to {freq}")
 
     def _getCPUs(self):
         dirs = self.su_shell(["ls", "/sys/devices/system/cpu/"])

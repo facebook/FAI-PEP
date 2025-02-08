@@ -10,14 +10,13 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 from reporters.reporter_base import ReporterBase
 
 
 class SimpleScreenReporter(ReporterBase):
     def __init__(self):
-        super(SimpleScreenReporter, self).__init__()
+        super().__init__()
 
     def report(self, content):
         print(content["data"])

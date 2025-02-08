@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 import os
@@ -40,9 +39,7 @@ def collectPowerData(
         device_hash=hash, monsoon_map=monsoon_map, Monsoon=Mon
     )
     if serialno is not None:
-        getLogger().info(
-            "Collecting current from monsoon {} for {}".format(str(serialno), hash)
-        )
+        getLogger().info(f"Collecting current from monsoon {str(serialno)} for {hash}")
     # wait till all actions are performed
     sleep(1)
     Mon.setup_usb(serialno)
@@ -149,7 +146,7 @@ def _extract_samples(samples, has_usb):
         mode="w", delete=False, prefix="power_data_", suffix=".csv"
     ) as f:
         filename = f.name
-        getLogger().info("Writing power data to file: {}".format(f.name))
+        getLogger().info(f"Writing power data to file: {f.name}")
         f.write("time, current, voltage, usb_current, usb_voltage, total_power\n")
         for i in range(len(power_data["time"])):
             f.write(

@@ -10,7 +10,6 @@
 
 # This is the script to generate the im_info blob used in MaskRCNN2Go model
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import argparse
 import json
@@ -67,7 +66,7 @@ class ImInfo:
         self.args = args
 
     def run(self):
-        with open(self.args.dataset_file, "r") as f:
+        with open(self.args.dataset_file) as f:
             imgs = [json.loads(s) for s in f.readlines()]
         batch_size = self.args.batch_size if self.args.batch_size > 0 else len(imgs)
 
@@ -100,11 +99,11 @@ class ImInfo:
             im_infos.append(one_batch_info)
 
         with open(self.args.output_file, "w") as f:
-            f.write("{}, {}\n".format(num_batches * batch_size, 3))
+            f.write(f"{num_batches * batch_size}, {3}\n")
             for batch in im_infos:
                 for im_info in batch:
                     s = ", ".join([str(s) for s in im_info])
-                    f.write("{}\n".format(s))
+                    f.write(f"{s}\n")
 
     def getScale(self, height, width):
         min_size = self.args.min_size

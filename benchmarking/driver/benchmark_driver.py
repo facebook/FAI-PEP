@@ -10,14 +10,12 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import copy
 import gc
 import os
 import sys
 import time
-from typing import Optional
 
 from utils.custom_logger import getLogger
 from utils.utilities import deepMerge, getCommand, getRunStatus, setRunStatus
@@ -126,10 +124,10 @@ def _logNoData(benchmark, info, name):
     if "commit" in info["treatment"]:
         commit_hash = info["treatment"]["commit"]
     getLogger().info(
-        "No data collected for {}".format(model_name)
-        + "on {}. ".format(name)
+        f"No data collected for {model_name}"
+        + f"on {name}. "
         + "The run may be failed for "
-        + "{}".format(commit_hash)
+        + f"{commit_hash}"
     )
 
 
@@ -198,9 +196,9 @@ def _mergeDelayData(treatment_data, control_data, bname):
                 getLogger().warning(
                     "Treatment value is used, and the control value is lost. "
                     + "The field info_string in control "
-                    + "({})".format(control_string)
+                    + f"({control_string})"
                     + "is different from the info_string in treatment "
-                    + "({})".format(treatment_string)
+                    + f"({treatment_string})"
                 )
 
         if "values" in control_value:
@@ -225,7 +223,7 @@ def _to_float(token: str):
         return None
 
 
-def _percentileArgVal(token) -> Optional[float]:
+def _percentileArgVal(token) -> float | None:
     if len(token) < 2 or token[0] != "p":
         return None
 
@@ -267,7 +265,7 @@ def _mergeDelayMeta(treatment_meta, control_meta, bname):
                 f"Value {k} existed in treatment but not control for benchmark {bname}."
             )
             continue
-        meta["control_{}".format(k)] = control_meta[k]
+        meta[f"control_{k}"] = control_meta[k]
     return meta
 
 
@@ -277,7 +275,7 @@ def _processErrorData(treatment_files, golden_files, stats=None):
     data = {}
     for output in treatment_outputs:
         treatment_values = treatment_outputs[output]
-        assert output in golden_outputs, "Output {} is missing in golden".format(output)
+        assert output in golden_outputs, f"Output {output} is missing in golden"
         golden_values = golden_outputs[output]
         diff_values = list(
             map(lambda pair: pair[0] - pair[1], zip(treatment_values, golden_values))
@@ -299,8 +297,8 @@ def _collectErrorData(output_files):
     data = {}
     for output in output_files:
         filename = output_files[output]
-        assert os.path.isfile(filename), "File {} doesn't exist".format(filename)
-        with open(filename, "r") as f:
+        assert os.path.isfile(filename), f"File {filename} doesn't exist"
+        with open(filename) as f:
             content = f.read().splitlines()
             data[output] = [float(x.strip()) for x in content]
     return data

@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import argparse
 import json
@@ -30,7 +29,7 @@ from harness import BenchmarkDriver
 class BenchmarkDriverTest(unittest.TestCase):
     def setUp(self):
         info_path = os.path.join(BENCHMARK_DIR, "test/test_config/info.json")
-        info = json.load(open(info_path, "r"))
+        info = json.load(open(info_path))
         self.info = str(info).replace("'", '"')
         self.args = argparse.Namespace(
             benchmark_file=os.path.join(

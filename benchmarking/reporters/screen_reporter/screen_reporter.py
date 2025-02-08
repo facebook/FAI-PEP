@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import copy
 import datetime
@@ -21,7 +20,7 @@ from utils.custom_logger import getLogger
 
 class ScreenReporter(ReporterBase):
     def __init__(self):
-        super(ScreenReporter, self).__init__()
+        super().__init__()
 
     def report(self, content):
         data = copy.deepcopy(content[self.DATA])
@@ -44,7 +43,7 @@ class ScreenReporter(ReporterBase):
         if "platform_hash" in meta:
             print("PLATFORM: {}\tHASH: {}".format(platform_name, meta["platform_hash"]))
         else:
-            print("PLATFORM: {}".format(platform_name))
+            print(f"PLATFORM: {platform_name}")
         print(
             "FRAMEWORK: {}\tCOMMIT: {}\tTIME: {}".format(
                 framework_name,

@@ -8,7 +8,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import argparse
 import copy
@@ -169,11 +168,11 @@ def genOneModelMeta(args, model_name, model):
         s = json.dumps(meta, indent=2, sort_keys=True)
         with open(filename, "w") as f:
             f.write(s)
-        logger.info("Writing {}".format(filename))
+        logger.info(f"Writing {filename}")
 
 
 def downloadFile(location, target):
-    logger.info("Downloading {}".format(location))
+    logger.info(f"Downloading {location}")
     r = requests.get(location)
     if r.status_code == 200:
         target_dir = os.path.dirname(target)
@@ -187,7 +186,7 @@ def downloadFile(location, target):
         fn = os.path.splitext(target)
         new_target = fn[0] + "_" + md5 + fn[1]
         shutil.move(target, new_target)
-        logger.info("Write file {}".format(new_target))
+        logger.info(f"Write file {new_target}")
         return md5
     return None
 
@@ -199,6 +198,6 @@ if __name__ == "__main__":
             m = models[args.model]
             genOneModelMeta(args, args.model, m)
         else:
-            logger.error("Model {} is not specified".format(args.model))
+            logger.error(f"Model {args.model} is not specified")
     else:
         genModelMetas(args)

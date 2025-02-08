@@ -15,8 +15,6 @@
 
 """Functions for evaluating results computed for a json dataset."""
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import json
 import logging
 import os
@@ -37,7 +35,7 @@ def evaluateMasks(
         output_dir, "segmentations_" + json_dataset.name + "_results"
     )
     if use_salt:
-        res_file += "_{}".format(str(uuid.uuid4()))
+        res_file += f"_{str(uuid.uuid4())}"
     res_file += ".json"
     _writeCocoSegmsResultsFile(json_dataset, all_boxes, all_segms, res_file)
     # Only do evaluation on non-test sets (annotations are undisclosed on test)
@@ -73,19 +71,16 @@ def _writeCocoSegmsResultsFile(json_dataset, all_boxes, all_segms, res_file):
                 json_dataset, all_boxes[cls_ind], all_segms[cls_ind], cat_id
             )
         )
-    logger.info(
-        "Writing segmentation results json to: {}".format(os.path.abspath(res_file))
-    )
+    logger.info(f"Writing segmentation results json to: {os.path.abspath(res_file)}")
     with open(res_file, "w") as fid:
         # "counts" is an array encoded by mask_util as a byte-stream. Python3's
         # json writer which /always produces strings/ cannot serialize a bytestream
         # unless you decode it. Thankfully, utf-8 works out (which is also what
         # the pycocotools/_mask.pyx does.
-        if six.PY3:
-            for r in results:
-                rle = r["segmentation"]
-                if "counts" in rle:
-                    rle["counts"] = rle["counts"].decode("utf8")
+        for r in results:
+            rle = r["segmentation"]
+            if "counts" in rle:
+                rle["counts"] = rle["counts"].decode("utf8")
 
         json.dump(results, fid)
 
@@ -136,7 +131,7 @@ def _doSegmentationEval(json_dataset, res_file, output_dir):
 def evaluateBoxes(json_dataset, all_boxes, output_dir, use_salt=True, cleanup=False):
     res_file = os.path.join(output_dir, "bbox_" + json_dataset.name + "_results")
     if use_salt:
-        res_file += "_{}".format(str(uuid.uuid4()))
+        res_file += f"_{str(uuid.uuid4())}"
     res_file += ".json"
     _writeCocoBboxResultsFile(json_dataset, all_boxes, res_file)
     # Only do evaluation on non-test sets (annotations are undisclosed on test)
@@ -170,7 +165,7 @@ def _writeCocoBboxResultsFile(json_dataset, all_boxes, res_file):
         results.extend(
             _cocoBboxEesultsOneCategory(json_dataset, all_boxes[cls_ind], cat_id)
         )
-    logger.info("Writing bbox results json to: {}".format(os.path.abspath(res_file)))
+    logger.info(f"Writing bbox results json to: {os.path.abspath(res_file)}")
     with open(res_file, "w") as fid:
         json.dump(results, fid)
 
@@ -257,7 +252,7 @@ def _logDetectionEvalMetrics(json_dataset, coco_eval):
             IoU_lo_thresh, IoU_hi_thresh
         )
     )
-    logger.info("{:.1f}".format(100 * ap_default))
+    logger.info(f"{100 * ap_default:.1f}")
     for cls_ind, cls in enumerate(json_dataset.classes):
         if cls == "__background__":
             continue
@@ -266,6 +261,6 @@ def _logDetectionEvalMetrics(json_dataset, coco_eval):
             ind_lo : (ind_hi + 1), :, cls_ind - 1, 0, 2
         ]
         ap = np.mean(precision[precision > -1])
-        logger.info("{:.1f}".format(100 * ap))
+        logger.info(f"{100 * ap:.1f}")
     logger.info("~~~~ Summary metrics ~~~~")
     coco_eval.summarize()

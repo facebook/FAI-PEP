@@ -3,7 +3,7 @@
 
 # pyre-unsafe
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class PerfettoConfig:
@@ -21,10 +21,10 @@ class PerfettoConfig:
 
     def __init__(
         self,
-        types: List[str],
-        options: Dict[str, Any],
+        types: list[str],
+        options: dict[str, Any],
         *,
-        app_name: Optional[str] = "program",
+        app_name: str | None = "program",
     ):
         self.types = types
         self.options = options

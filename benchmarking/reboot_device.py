@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import argparse
 
@@ -42,7 +41,7 @@ def reboot(**kwargs):
     elif platform.startswith("android"):
         util = ADB(device, args.android_dir)
     else:
-        raise AssertionError("Platform {} not recognized".format(platform))
+        raise AssertionError(f"Platform {platform} not recognized")
     success = util.reboot()
     return success
 

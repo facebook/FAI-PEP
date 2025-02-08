@@ -1,5 +1,4 @@
 # pyre-unsafe
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
 
@@ -13,14 +12,14 @@ from utils.custom_logger import getLogger
 
 class DjangoFileDownloader(FileDownloaderBase):
     def __init__(self, **kwargs):
-        super(DjangoFileDownloader, self).__init__()
+        super().__init__()
         self.root_model_dir = kwargs["args"].root_model_dir
 
     def download_file(self, location, path):
         # Assume the file is the same
         if os.path.exists(location):
             return
-        getLogger().info("Downloading from {} to {}".format(location, path))
+        getLogger().info(f"Downloading from {location} to {path}")
         basedir = os.path.dirname(path)
         if not os.path.exists(basedir):
             os.makedirs(basedir)

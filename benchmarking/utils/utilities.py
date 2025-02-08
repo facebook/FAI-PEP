@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import ast
 import copy
@@ -88,7 +87,7 @@ def check_is_json(json_str):
 
 def getBenchmarks(json_input, framework=None):
     if os.path.isfile(json_input):
-        with open(json_input, "r") as f:
+        with open(json_input) as f:
             content = json.load(f)
     elif check_is_json(json_input):
         content = json.loads(json_input)
@@ -103,7 +102,7 @@ def getBenchmarks(json_input, framework=None):
             assert os.path.isfile(filename), "Benchmark {} doesn't exist".format(
                 filename
             )
-            with open(filename, "r") as f:
+            with open(filename) as f:
                 cnt = json.load(f)
                 if framework and "model" in cnt and "framework" not in cnt["model"]:
                     # do not override the framework specified in the json
@@ -181,7 +180,7 @@ def deepReplace(root, pattern, replacement):
         for name in root:
             m = root[name]
             root[name] = deepReplace(m, pattern, replacement)
-    elif isinstance(root, string_types):
+    elif isinstance(root, str):
         return root.replace(pattern, replacement)
     return root
 
@@ -234,7 +233,7 @@ def requestsData(url, **kwargs):
                 result = session.post(url, **kwargs)
             if result.status_code != 200:
                 getLogger().error(
-                    "Post request failed, receiving code {}".format(result.status_code)
+                    f"Post request failed, receiving code {result.status_code}"
                 )
             else:
                 if delay > 0:
@@ -252,13 +251,13 @@ def requestsData(url, **kwargs):
             break
         delay = delay + 1 if delay <= 5 else delay
         sleep_time = 1 << delay
-        getLogger().info("wait {} seconds. Retrying...".format(sleep_time))
+        getLogger().info(f"wait {sleep_time} seconds. Retrying...")
         sleep(sleep_time)
         total_delay += sleep_time
         if timeout > 0 and total_delay > timeout:
             break
     getLogger().error(
-        "Failed to post to {}, retrying after {} seconds...".format(url, total_delay)
+        f"Failed to post to {url}, retrying after {total_delay} seconds..."
     )
     return result
 
@@ -292,13 +291,13 @@ async def asyncRequestsData(loop, url, **kwargs):
             break
         delay = delay + 1 if delay <= 5 else delay
         sleep_time = 1 << delay
-        getLogger().info("wait {} seconds. Retrying...".format(sleep_time))
+        getLogger().info(f"wait {sleep_time} seconds. Retrying...")
         sleep(sleep_time)
         total_delay += sleep_time
         if timeout > 0 and total_delay > timeout:
             break
     getLogger().error(
-        "Failed to post to {}, retrying after {} seconds...".format(url, total_delay)
+        f"Failed to post to {url}, retrying after {total_delay} seconds..."
     )
     return result
 
@@ -310,9 +309,9 @@ def requestsJson(url, **kwargs):
             result_json = result.json()
             return result_json
     except ValueError as e:
-        getLogger().error("Cannot decode json {}".format(e.output))
+        getLogger().error(f"Cannot decode json {e.output}")
 
-    getLogger().error("Failed to retrieve json from {}".format(url))
+    getLogger().error(f"Failed to retrieve json from {url}")
     return {}
 
 
@@ -324,9 +323,9 @@ async def asyncRequestsJson(loop, url, **kwargs):
                 result_json = await result.text()
                 return json.loads(result_json)
     except ValueError as e:
-        getLogger().error("Cannot decode json {}".format(e.output))
+        getLogger().error(f"Cannot decode json {e.output}")
 
-    getLogger().error("Failed to retrieve json from {}".format(url))
+    getLogger().error(f"Failed to retrieve json from {url}")
     return {}
 
 
@@ -335,7 +334,7 @@ def parse_kwarg(kwarg_str):
     try:
         value = ast.literal_eval("'" + value + "'")
     except ValueError:
-        getLogger().error("Failed to parse kwarg str: {}".format(kwarg_str))
+        getLogger().error(f"Failed to parse kwarg str: {kwarg_str}")
     return key, value
 
 
@@ -423,7 +422,7 @@ def getMeta(args, platform):
             args.frameworks_dir, args.framework, platform, "meta.json"
         )
     if os.path.isfile(meta_file):
-        with open(meta_file, "r") as f:
+        with open(meta_file) as f:
             meta = json.load(f)
     return meta
 
@@ -474,4 +473,4 @@ def zip_files(input, output: str):
                         arcfpath = os.path.join(arcdir, f)
                         zf.write(fpath, arcfpath)
             else:
-                raise IOError(f"Could not zip files. {path} is not a valid path.")
+                raise OSError(f"Could not zip files. {path} is not a valid path.")

@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 import os
@@ -25,7 +24,7 @@ from utils.utilities import getFilename
 class SimpleLocalReporter(ReporterBase):
     def __init__(self, simple_local_reporter):
         self.simple_local_reporter = simple_local_reporter
-        super(SimpleLocalReporter, self).__init__()
+        super().__init__()
 
     def report(self, content):
         data = content[self.DATA]
@@ -50,4 +49,4 @@ class SimpleLocalReporter(ReporterBase):
         pname = meta[self.PLATFORM]
         if "platform_hash" in meta:
             pname = pname + " ({})".format(meta["platform_hash"])
-        getLogger().info("Writing file for {}: {}".format(pname, dirname))
+        getLogger().info(f"Writing file for {pname}: {dirname}")

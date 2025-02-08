@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
 import shutil
@@ -22,7 +21,7 @@ from utils.custom_logger import getLogger
 
 class IDB(PlatformUtilBase):
     def __init__(self, device=None, tempdir=None):
-        super(IDB, self).__init__(device, tempdir)
+        super().__init__(device, tempdir)
         self.bundle_id = None
         if self.tempdir is not None:
             self.cached_tree = os.path.join(self.tempdir, "tree")
@@ -38,12 +37,12 @@ class IDB(PlatformUtilBase):
             idb.extend(["--id", self.device])
         if self.bundle_id:
             idb.extend(["--bundle_id", self.bundle_id])
-        return super(IDB, self).run(idb, *args, **kwargs)
+        return super().run(idb, *args, **kwargs)
 
     def push(self, src, tgt):
         # only push files, not directories, as apps are directories
         if os.path.isdir(src):
-            getLogger().info("Skip pushing directory {}".format(src))
+            getLogger().info(f"Skip pushing directory {src}")
             return
         return self.run("--upload", src, "--to", tgt)
 
@@ -66,8 +65,8 @@ class IDB(PlatformUtilBase):
     def reboot(self):
         # use idevicediagnostics to reboot device if exists
         try:
-            super(IDB, self).run("idevicepair", "-u", self.device, "pair")
-            super(IDB, self).run("idevicediagnostics", "-u", self.device, "restart")
+            super().run("idevicepair", "-u", self.device, "pair")
+            super().run("idevicediagnostics", "-u", self.device, "restart")
             return True
         except Exception:
             getLogger().critical(
@@ -88,7 +87,7 @@ class IDB(PlatformUtilBase):
             response = self.run("--get_battery_level")
             level = int(response[-1].lstrip("BatteryCurrentCapacity:"))
 
-            getLogger().info("Result {}".format(level))
+            getLogger().info(f"Result {level}")
             return level
         except Exception:
             getLogger().critical(

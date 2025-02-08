@@ -1,5 +1,4 @@
 # pyre-unsafe
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import remote.django_url_printer
 from remote.url_printer_base import getResultURLHandles

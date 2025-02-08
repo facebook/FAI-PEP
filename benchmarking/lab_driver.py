@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import argparse
 import json
@@ -193,7 +192,7 @@ class LabDriver:
         raw_args.extend(["--root_model_dir", self.args.root_model_dir])
         raw_args.extend(["--logger_level", self.args.logger_level])
         raw_args.extend(self.unknowns)
-        getLogger().info("Running {} with raw_args {}".format(app_class, raw_args))
+        getLogger().info(f"Running {app_class} with raw_args {raw_args}")
         app = app_class(raw_args=raw_args)
         res = app.run()
         if res:

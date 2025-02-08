@@ -10,7 +10,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import copy
 import json
@@ -26,7 +25,7 @@ class Devices:
             assert os.path.isfile(filename), "Device file {} does not exist".format(
                 filename
             )
-            with open(filename, "r") as f:
+            with open(filename) as f:
                 self.devices = json.load(f)
         else:
             # otherwise read from internal
@@ -60,7 +59,7 @@ class Devices:
             if "abbr" in device:
                 assert isinstance(
                     device["abbr"], list
-                ), "Abbreviations for {} needs to be a list".format(name)
+                ), f"Abbreviations for {name} needs to be a list"
                 for abbr in device["abbr"]:
                     device_abbr.append((device, abbr))
 
@@ -69,6 +68,6 @@ class Devices:
 
     def _elaborateOneDevice(self, device, abbr):
         assert abbr not in self.devices, (
-            "Abbreviation " + "{} is already specified in the device list".format(abbr)
+            "Abbreviation " + f"{abbr} is already specified in the device list"
         )
         self.devices[abbr] = device

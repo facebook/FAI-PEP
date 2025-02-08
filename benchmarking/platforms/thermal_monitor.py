@@ -11,7 +11,6 @@
 import logging
 import threading
 import time
-from typing import Dict, List
 
 import pkg_resources
 from platforms.android.adb import ADB
@@ -31,9 +30,9 @@ class ThermalException(Exception):
 class ThermalMonitor:
     def __init__(
         self,
-        log_handle: List[str],
+        log_handle: list[str],
         adb: ADB,
-        thermal_monitor_config: Dict[str, str],
+        thermal_monitor_config: dict[str, str],
         pattern: str,
         delay: float = 10.0,
         lead_in_delay: float = 15.0,

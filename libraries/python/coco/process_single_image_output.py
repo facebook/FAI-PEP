@@ -8,7 +8,6 @@
 # LICENSE file in the root directory of this source tree.
 ##############################################################################
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import argparse
 import json
@@ -54,7 +53,7 @@ class ProcessSingleImageOutput:
 
     def getData(self, filename):
         result = []
-        with open(filename, "r") as f:
+        with open(filename) as f:
             line = f.readline()
             while line != "":
                 content_list = []
@@ -111,7 +110,7 @@ class ProcessSingleImageOutput:
             boxes_exp = boxes.copy()
             boxes_exp[:, 2:4] *= scale
         else:
-            raise Exception("Unsupported box dimension: {}".format(box_dim))
+            raise Exception(f"Unsupported box dimension: {box_dim}")
 
         return boxes_exp
 
@@ -184,7 +183,7 @@ class ProcessSingleImageOutput:
 
     def process(self):
         im_infos = []
-        with open(self.args.im_info, "r") as f:
+        with open(self.args.im_info) as f:
             lines = f.readlines()
         for line in lines:
             im_info = json.loads(line)

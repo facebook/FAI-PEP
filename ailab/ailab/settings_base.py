@@ -10,8 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -30,7 +28,7 @@ except ImportError:
 
     secret_key = get_random_secret_key()
     with open(SETTINGS_DIR + os.path.sep + "secret_key.py", "w") as f:
-        f.write('SECRET_KEY = "{}"'.format(secret_key))
+        f.write(f'SECRET_KEY = "{secret_key}"')
     from .secret_key import SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
