@@ -24,17 +24,21 @@ from .utilities import getRunKilled, getRunTimeout, setRunStatus, setRunTimeout
 
 
 def processRun(*args, **kwargs):
+    getLogger().info("processRun start")
     if "process_key" not in kwargs:
         kwargs["process_key"] = ""
+
     retryCount = 3
     if "retry" in kwargs:
         retryCount = kwargs["retry"]
+
     while retryCount > 0:
         # reset run status overwritting error
         # from prior run
         # Use temporary process key for each retry to avoid overwriting global status where process_key=""
         setRunStatus(0, overwrite=True, key=kwargs["process_key"] + "_retry")
         sleep = kwargs.get("retry_sleep")
+
         if sleep:
             getLogger().info(f"Sleeping for {sleep}")
             time.sleep(sleep)
@@ -84,6 +88,7 @@ def _processRun(*args, **kwargs):
         timeout = None
         if "timeout" in kwargs:
             timeout = kwargs["timeout"]
+
         ps = _Popen(*args, **kwargs)
         t = None
         if timeout:

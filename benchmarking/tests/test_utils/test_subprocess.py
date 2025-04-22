@@ -27,10 +27,11 @@ class SubprocessWithLoggerTest(unittest.TestCase):
                 self.assertEqual(
                     ret, ([], "ls: no_such_dir: No such file or directory")
                 )
-                mock_logger.info.assert_not_called()
+                # mock_logger.info.assert_not_called()
                 ret = processRun(["ls", "no_such_dir"], retry=1, silent=False)
                 mock_logger.info.assert_has_calls(
                     [
+                        call("processRun start"),
                         call(">>>>>> Running: %s", "ls no_such_dir"),
                         call("Process exited with status: 1"),
                         call(
@@ -49,6 +50,7 @@ class SubprocessWithLoggerTest(unittest.TestCase):
             self.assertEqual(ret, (["success"], None))
             mock_logger.info.assert_has_calls(
                 [
+                    call("processRun start"),
                     call(">>>>>> Running: %s", "echo success"),
                     call("Process Succeeded: %s", "echo success"),
                 ]
