@@ -259,9 +259,9 @@ class BenchmarkCollector:
                         )
                         os.symlink(abs_name, destination_name)
             elif os.path.isdir(abs_name):
-                import distutils.dir_util
+                import shutil
 
-                distutils.dir_util.copy_tree(abs_name, destination_name)
+                shutil.copytree(abs_name, destination_name, dirs_exist_ok=True)
             else:
                 raise AssertionError(f"Path {abs_name} cannot be retrieved.")
                 return False
