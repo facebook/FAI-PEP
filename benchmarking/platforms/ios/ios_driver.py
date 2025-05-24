@@ -20,8 +20,6 @@ from platforms.ios.idb import IDB
 from platforms.ios.ios_platform import IOSPlatform
 from platforms.ios.xcrun import xcrun
 
-from six import string_types
-
 
 class IOSDriver(DriverBase):
     def __init__(self, args, devices=None):
