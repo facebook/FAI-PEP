@@ -249,6 +249,8 @@ class BenchmarkCollector:
             abs_name = self._getAbsFilename(field, source, None)
             if os.path.isfile(abs_name):
                 if os.stat(abs_name).st_size < COPY_THRESHOLD:
+                    import shutil
+
                     shutil.copyfile(abs_name, destination_name)
                 else:
                     if not os.path.isfile(destination_name):
