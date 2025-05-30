@@ -16,7 +16,6 @@ import gc
 import hashlib
 import json
 import os
-import shutil
 import tempfile
 
 import requests
