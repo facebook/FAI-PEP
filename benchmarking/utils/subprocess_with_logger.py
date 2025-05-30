@@ -24,7 +24,12 @@ from .utilities import getRunKilled, getRunTimeout, setRunStatus, setRunTimeout
 
 
 def processRun(*args, **kwargs):
-    getLogger().info("processRun start")
+    not_print_processrun = (
+        len(args) > 0 and len(args[0]) > 0 and args[0][0] == "ios-deploy"
+    )
+    if not not_print_processrun:
+        getLogger().info("processRun start")
+
     if "process_key" not in kwargs:
         kwargs["process_key"] = ""
 
