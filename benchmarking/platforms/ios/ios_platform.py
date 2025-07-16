@@ -198,9 +198,17 @@ class IOSPlatform(PlatformBase):
             # Since XCRun doesn't provide logs, we generate a file with the logs on the device (for ExecuTorch benchmark) at /tmp/BENCH_LOG. Once the benchmark completes, /tmp/BENCH_DONE will be created.
             # The xcrun command to detect fiels takes a while. 15 seconds should be enough for the commandto complete.
             timeout = kwargs.get("platform_args", {}).get("timeout", 1200)
-            while "tmp/BENCH_DONE" not in self.util.listFiles() and timeout >= 0:
-                time.sleep(15)
-                timeout -= 15
+            getLogger().info(
+                f"Benchmark timeout is {timeout} seconds. (iOS aibench cannot reliably detect benchmark completion)"
+            )
+            log_checker_wait = 15
+            time_counter = 0
+            while (
+                "tmp/BENCH_DONE" not in self.util.listFiles()
+                and time_counter <= timeout
+            ):
+                time.sleep(log_checker_wait)
+                time_counter += log_checker_wait
             if "tmp/BENCH_DONE" not in self.util.listFiles():
                 getLogger().info(
                     f"Benchmark did not complete within the timeout period ({timeout} seconds)."
