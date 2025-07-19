@@ -24,6 +24,9 @@ from utils.subprocess_with_logger import processRun
 from utils.utilities import getRunStatus, setRunStatus
 
 
+CHECK_COMPLETION_AT_BENCHMARK = True
+
+
 class IOSPlatform(PlatformBase):
     def __init__(
         self, tempdir, platform_util, args, platform_meta, usb_controller=None
@@ -198,18 +201,30 @@ class IOSPlatform(PlatformBase):
             # Since XCRun doesn't provide logs, we generate a file with the logs on the device (for ExecuTorch benchmark) at /tmp/BENCH_LOG. Once the benchmark completes, /tmp/BENCH_DONE will be created.
             # The xcrun command to detect fiels takes a while. 15 seconds should be enough for the commandto complete.
             timeout = kwargs.get("platform_args", {}).get("timeout", 1200)
+            check_completion_by_xcrun = CHECK_COMPLETION_AT_BENCHMARK
+            completion_file = "tmp/BENCH_DONE"
             getLogger().info(
-                f"Benchmark timeout is {timeout} seconds. (iOS aibench cannot reliably detect benchmark completion)"
+                f"Benchmark timeout is {timeout} seconds. (iOS aibench cannot reliably detect benchmark completion), "
+                + f"using check_completion_by_xcrun={check_completion_by_xcrun}, can be turned off at benchmarking/ios/ios_platform.py"
             )
             log_checker_wait = 15
             time_counter = 0
-            while (
-                "tmp/BENCH_DONE" not in self.util.listFiles()
-                and time_counter <= timeout
-            ):
+            while time_counter <= timeout:
                 time.sleep(log_checker_wait)
                 time_counter += log_checker_wait
-            if "tmp/BENCH_DONE" not in self.util.listFiles():
+                getLogger().info(
+                    f"Benchmark counter waiting for app run complete (heartbeat every {log_checker_wait} seconds)."
+                )
+                if (
+                    check_completion_by_xcrun
+                    and completion_file in self.util.listFiles()
+                ):
+                    break
+
+            if (
+                check_completion_by_xcrun
+                and completion_file not in self.util.listFiles()
+            ):
                 getLogger().info(
                     f"Benchmark did not complete within the timeout period ({timeout} seconds)."
                 )
