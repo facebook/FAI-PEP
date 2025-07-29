@@ -14,9 +14,12 @@
 import argparse
 import json
 import logging
+from typing import Optional
 
 from platforms.platforms import getPlatforms
 from utils.custom_logger import getLogger
+
+OVERRIDE_DEVICE_NAME: Optional[str] = None
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -76,9 +79,12 @@ class GetConnectedDevices:
         platforms = getPlatforms(self.args, tempdir="/tmp")
         devices = []
         for p in platforms:
+            kind = p.getKind()
+            if OVERRIDE_DEVICE_NAME:
+                kind = OVERRIDE_DEVICE_NAME
             devices.append(
                 {
-                    "kind": p.getKind(),
+                    "kind": kind,
                     "name": p.getName(),
                     "hash": p.platform_hash,
                     "abi": p.getABI(),
