@@ -428,10 +428,16 @@ def getMeta(args, platform):
 
 
 def getMachineId():
-    ident = socket.getfqdn()
-    if len(ident) == 0 or ident == "localhost":
-        ident = uuid.uuid1().hex
-    return ident
+    """
+    Returns a unique machine identifier with less than 30 characters.
+    Uses hostname when available, or a shortened UUID when not.
+    """
+    # Try to get hostname first
+    hostname = socket.gethostname()
+
+    if hostname and hostname != "localhost" and len(hostname) <= 29:
+        return hostname
+    return uuid.uuid4().hex[:29]
 
 
 adhoc_configs = {
