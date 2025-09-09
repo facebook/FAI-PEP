@@ -14,12 +14,11 @@
 import argparse
 import json
 import logging
-from typing import Optional
 
 from platforms.platforms import getPlatforms
 from utils.custom_logger import getLogger
 
-OVERRIDE_DEVICE_NAME: Optional[str] = None
+OVERRIDE_DEVICE_NAME: str | None = None
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
