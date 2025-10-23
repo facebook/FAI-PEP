@@ -13,7 +13,6 @@
 
 import os
 import shutil
-import sys
 
 from platforms.platform_util_base import PlatformUtilBase
 from utils.custom_logger import getLogger
