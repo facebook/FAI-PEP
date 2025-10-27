@@ -13,8 +13,6 @@
 
 import abc
 
-from six import string_types
-
 
 class DataConverterBase:
     def __init__(self):
