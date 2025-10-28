@@ -1,6 +1,6 @@
 # pyre-unsafe
 
-import download_benchmarks.django_file_downloader
+import download_benchmarks.django_file_downloader  # noqa: F401 - registers DjangoFileDownloader via side effect
 from download_benchmarks.file_downloader_base import getDownloadHandles
 
 
