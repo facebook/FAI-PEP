@@ -29,7 +29,7 @@ except ImportError:
     secret_key = get_random_secret_key()
     with open(SETTINGS_DIR + os.path.sep + "secret_key.py", "w") as f:
         f.write(f'SECRET_KEY = "{secret_key}"')
-    from .secret_key import SECRET_KEY
+    from .secret_key import SECRET_KEY  # noqa: F401
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
