@@ -17,7 +17,6 @@ import re
 from collections import defaultdict
 
 from frameworks.framework_base import FrameworkBase
-from six import string_types
 
 
 class GlowFramework(FrameworkBase):
