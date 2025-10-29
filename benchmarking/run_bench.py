@@ -16,7 +16,6 @@ import copy
 import json
 import os
 
-import six
 from lab_driver import LabDriver
 from utils.custom_logger import getLogger, setLoggerLevel
 from utils.utilities import getRunStatus, getString, setRunStatus, unpackAdhocFile

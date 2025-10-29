@@ -15,10 +15,8 @@ import argparse
 import datetime
 import json
 import os
-import sys
 import threading
 import time
-import traceback
 from collections import deque
 
 from harness import BenchmarkDriver

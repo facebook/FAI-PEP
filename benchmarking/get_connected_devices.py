@@ -13,10 +13,8 @@
 
 import argparse
 import json
-import logging
 
 from platforms.platforms import getPlatforms
-from utils.custom_logger import getLogger
 
 OVERRIDE_DEVICE_NAME: str | None = None
 
