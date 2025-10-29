@@ -15,7 +15,6 @@ import os
 import re
 
 from platforms.platform_util_base import PlatformUtilBase
-from six import string_types
 from utils.custom_logger import getLogger
 
 

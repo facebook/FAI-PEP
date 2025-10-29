@@ -18,8 +18,6 @@ from platforms.android.android_platform import AndroidPlatform
 
 from platforms.driver_base import DriverBase, registerDriver
 
-from six import string_types
-
 
 class AndroidDriver(DriverBase):
     def __init__(self, args, devices=None):

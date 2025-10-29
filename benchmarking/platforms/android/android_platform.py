@@ -27,7 +27,6 @@ from profilers.perfetto.perfetto import (
     PerfettoAllSupported,
 )
 from profilers.profilers import getProfilerByUsage
-from six import string_types
 from utils.custom_logger import getLogger
 from utils.utilities import (
     BenchmarkArgParseException,
