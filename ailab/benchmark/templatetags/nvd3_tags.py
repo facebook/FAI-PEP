@@ -3,7 +3,7 @@ import collections
 from django.conf import settings
 from django.template.defaultfilters import register
 from django.utils.safestring import mark_safe
-from nvd3 import (
+from nvd3 import (  # noqa: F401 - used dynamically via eval() in load_chart
     cumulativeLineChart,
     discreteBarChart,
     lineChart,
