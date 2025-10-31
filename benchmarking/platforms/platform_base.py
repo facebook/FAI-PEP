@@ -15,7 +15,6 @@ import abc
 import json
 import os
 
-from six import string_types
 from utils.custom_logger import getLogger
 from utils.utilities import getFilename
 
