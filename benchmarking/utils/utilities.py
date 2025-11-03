@@ -27,7 +27,6 @@ import aiohttp
 import certifi
 import pkg_resources
 import requests
-from six import string_types
 from utils.custom_logger import getLogger
 
 # Status codes for benchmark
