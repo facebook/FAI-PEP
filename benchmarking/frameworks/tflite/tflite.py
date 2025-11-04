@@ -15,7 +15,6 @@ import os
 import re
 
 from frameworks.framework_base import FrameworkBase
-from six import string_types
 
 
 class TFLiteFramework(FrameworkBase):
