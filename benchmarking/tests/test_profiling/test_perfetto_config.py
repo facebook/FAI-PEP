@@ -1,15 +1,15 @@
-# pyre-unsafe
+# pyre-strict
 import unittest
 
 from profilers.perfetto.perfetto_config import PerfettoConfig
 
 
 class PerfettoConfigTest(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.maxDiff = None
         pass
 
-    def test_generate_perfetto_config_memory(self):
+    def test_generate_perfetto_config_memory(self) -> None:
         types = ["memory"]
         options = {}
         expected = self.MEMORY_CONFIG
@@ -17,7 +17,7 @@ class PerfettoConfigTest(unittest.TestCase):
         config_str = PerfettoConfig(types, options).GeneratePerfettoConfig()
         self.assertEqual(config_str, expected)
 
-    def test_generate_perfetto_config_memory_with_log(self):
+    def test_generate_perfetto_config_memory_with_log(self) -> None:
         types = ["memory"]
         options = {"include_android_log": True}
         expected = self.MEMORY_CONFIG_WITH_LOG
@@ -25,7 +25,7 @@ class PerfettoConfigTest(unittest.TestCase):
         config_str = PerfettoConfig(types, options).GeneratePerfettoConfig()
         self.assertEqual(config_str, expected)
 
-    def test_generate_perfetto_config_battery(self):
+    def test_generate_perfetto_config_battery(self) -> None:
         types = ["battery"]
         options = {}
         expected = self.BATTERY_CONFIG
@@ -33,7 +33,7 @@ class PerfettoConfigTest(unittest.TestCase):
         config_str = PerfettoConfig(types, options).GeneratePerfettoConfig()
         self.assertEqual(config_str, expected)
 
-    def test_generate_perfetto_config_gpu(self):
+    def test_generate_perfetto_config_gpu(self) -> None:
         types = ["gpu"]
         options = {}
         expected = self.GPU_CONFIG
@@ -41,7 +41,7 @@ class PerfettoConfigTest(unittest.TestCase):
         config_str = PerfettoConfig(types, options).GeneratePerfettoConfig()
         self.assertEqual(config_str, expected)
 
-    def test_generate_perfetto_config_cpu(self):
+    def test_generate_perfetto_config_cpu(self) -> None:
         types = ["cpu"]
         options = {}
         expected = self.CPU_CONFIG
@@ -49,7 +49,7 @@ class PerfettoConfigTest(unittest.TestCase):
         config_str = PerfettoConfig(types, options).GeneratePerfettoConfig()
         self.assertEqual(config_str, expected)
 
-    def test_generate_perfetto_config_cpu_gpu_memory(self):
+    def test_generate_perfetto_config_cpu_gpu_memory(self) -> None:
         types = ["cpu", "gpu", "memory"]
         options = {}
         expected = self.CPU_GPU_MEMORY_CONFIG
