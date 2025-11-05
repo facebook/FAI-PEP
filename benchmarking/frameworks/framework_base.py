@@ -30,7 +30,6 @@ from data_converters.json_with_identifier_converter.json_with_identifier_convert
 )
 from platforms.platforms import getHostPlatform
 from profilers.perfetto.perfetto import PerfettoAnySupported
-from six import string_types
 from utils import software_power
 from utils.custom_logger import getLogger
 from utils.utilities import (
