@@ -2,7 +2,6 @@
 
 import os
 
-import requests
 from bridge.upload_download_files_base import (
     registerUploadDownloadFiles,
     UploadDownloadFilesBase,

@@ -1,6 +1,6 @@
 # pyre-unsafe
 
-import bridge.django_auth
+import bridge.django_auth  # noqa: F401 - has side effects (registers auth handler)
 from bridge.auth_base import getAuthHandles
 
 

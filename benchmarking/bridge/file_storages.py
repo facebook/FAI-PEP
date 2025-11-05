@@ -1,6 +1,6 @@
 # pyre-unsafe
 
-import bridge.upload_download_files_django
+import bridge.upload_download_files_django  # noqa: F401 - registers django file handler
 from bridge.upload_download_files_base import getFileHandles
 
 
