@@ -21,7 +21,6 @@ import os
 import uuid
 
 import numpy as np
-import six
 from pycocotools.cocoeval import COCOeval
 
 
