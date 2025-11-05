@@ -1,6 +1,6 @@
 # pyre-unsafe
 
-import remote.django_url_printer
+import remote.django_url_printer  # noqa: F401 - registers Django URL printer on import
 from remote.url_printer_base import getResultURLHandles
 
 
