@@ -215,19 +215,17 @@ class IOSPlatform(PlatformBase):
                 getLogger().info(
                     f"Benchmark counter waiting for app run complete (heartbeat every {log_checker_wait} seconds)."
                 )
-                if (
-                    check_completion_by_xcrun
-                    and completion_file in self.util.listFiles()
-                ):
-                    break
+                if check_completion_by_xcrun:
+                    files = self.util.listFiles()
+                    if any(completion_file in file_entry for file_entry in files):
+                        break
 
-            if (
-                check_completion_by_xcrun
-                and completion_file not in self.util.listFiles()
-            ):
-                getLogger().info(
-                    f"Benchmark did not complete within the timeout period ({timeout} seconds)."
-                )
+            if check_completion_by_xcrun:
+                files = self.util.listFiles()
+                if not any(completion_file in file_entry for file_entry in files):
+                    getLogger().info(
+                        f"Benchmark did not complete within the timeout period ({timeout} seconds)."
+                    )
 
             self.util.pull("/tmp/BENCH_LOG", logfile)
 
