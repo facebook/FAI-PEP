@@ -394,6 +394,21 @@ class runAsync:
                     self.job.get("user"),
                 ]
             )
+
+            # Pass use_enkaku flag from benchmark config if specified
+            benchmark_data = self.job["benchmarks"].get("benchmark", {})
+            if "use_enkaku" in benchmark_data:
+                raw_args.extend(["--use_enkaku", str(benchmark_data["use_enkaku"])])
+                getLogger().info(
+                    f"[RunLab._getRawArgs] Passing use_enkaku={benchmark_data['use_enkaku']} from benchmark config"
+                )
+
+            # Pass quota_use_case from benchmark config if specified
+            if "quota_use_case" in benchmark_data:
+                raw_args.extend(["--quota_use_case", benchmark_data["quota_use_case"]])
+                getLogger().info(
+                    f"[RunLab._getRawArgs] Passing quota_use_case={benchmark_data['quota_use_case']} from benchmark config"
+                )
             if self.job["framework"] != "generic":
                 raw_args.extend(["--remote_reporter", self.args.remote_reporter])
             if self.args.shared_libs:

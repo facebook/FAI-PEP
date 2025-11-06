@@ -224,6 +224,14 @@ parser.add_argument(
     "--user_string",
     help="Specify the user running the test (to be passed to the remote reporter).",
 )
+parser.add_argument(
+    "--use_enkaku",
+    help="Specify whether to use Enkaku leasing system instead of RIOT.",
+)
+parser.add_argument(
+    "--quota_use_case",
+    help="Specify the quota use case for device leasing.",
+)
 
 
 class BenchmarkDriver:
@@ -234,6 +242,9 @@ class BenchmarkDriver:
         self.usb_controller = kwargs.get("usb_controller")
         self.args, self.unknowns = parser.parse_known_args(raw_args)
         self._lock = threading.Lock()
+
+        # Set use_enkaku via JK check if not already provided via args
+        self._set_use_enkaku_if_needed()
 
     def runBenchmark(self, info, platform, benchmarks):
         if self.args.reboot:
@@ -368,6 +379,82 @@ class BenchmarkDriver:
             info["user"] = self.args.user_string
 
         return info
+
+    def _set_use_enkaku_if_needed(self):
+        """Set use_enkaku flag via pool-based JK check if not already provided via args.
+
+        This ensures all submission paths (API, CLI, run_lab) use pool-specific
+        use_enkaku settings based on JustKnobs configuration.
+        """
+        # If use_enkaku is already set via args (from API or run_lab), use that
+        if self.args.use_enkaku is not None:
+            getLogger().info(
+                f"[BenchmarkDriver] use_enkaku={self.args.use_enkaku} already set via args"
+            )
+            return
+
+        # For RIOT android platform, determine pool from device and check JK flag
+        if self.args.platform == "android" and self.args.device:
+            try:
+                import pyjk
+
+                # Import RIOT pool mapping to get pool from device name
+                # pyre-ignore[21]: Import path is valid at runtime
+                from aibench.specifications import riot_pool_mapping
+
+                # Extract base device name (remove hash suffix if present)
+                base_device_name = self.args.device.split("-")[0]
+
+                # Check if it's a known RIOT device
+                # pyre-ignore[16]: riot_pool_mapping is valid at runtime
+                if base_device_name in riot_pool_mapping.device_info:
+                    # pyre-ignore[16]: riot_pool_mapping is valid at runtime
+                    pool = riot_pool_mapping.device_info[base_device_name]["pool"]
+                    # Check JK flag with pool-specific switchval
+                    use_enkaku = pyjk.check(
+                        "aibench/leasing:use_enkaku", switchval=pool
+                    )
+                    # Convert boolean to string for args
+                    self.args.use_enkaku = str(use_enkaku)
+                    getLogger().info(
+                        f"[BenchmarkDriver] Set use_enkaku={use_enkaku} for device={base_device_name}, pool={pool}"
+                    )
+                else:
+                    # Device not in RIOT mapping, fall back to global JK check
+                    use_enkaku = pyjk.check("aibench/leasing:use_enkaku")
+                    self.args.use_enkaku = str(use_enkaku)
+                    getLogger().info(
+                        f"[BenchmarkDriver] Device {base_device_name} not in RIOT mapping, using global use_enkaku={use_enkaku}"
+                    )
+            except Exception as e:
+                # If anything fails, fall back to global JK check
+                getLogger().warning(
+                    f"[BenchmarkDriver] Error determining pool-based use_enkaku: {e}, falling back to global check"
+                )
+                try:
+                    import pyjk
+
+                    use_enkaku = pyjk.check("aibench/leasing:use_enkaku")
+                    self.args.use_enkaku = str(use_enkaku)
+                    getLogger().info(
+                        f"[BenchmarkDriver] Using global use_enkaku={use_enkaku}"
+                    )
+                except Exception as fallback_error:
+                    getLogger().error(
+                        f"[BenchmarkDriver] Failed to check JK flag: {fallback_error}"
+                    )
+        else:
+            # For non-RIOT platforms, use global JK check
+            try:
+                import pyjk
+
+                use_enkaku = pyjk.check("aibench/leasing:use_enkaku")
+                self.args.use_enkaku = str(use_enkaku)
+                getLogger().info(
+                    f"[BenchmarkDriver] Platform {self.args.platform}: using global use_enkaku={use_enkaku}"
+                )
+            except Exception as e:
+                getLogger().warning(f"[BenchmarkDriver] Failed to check JK flag: {e}")
 
 
 if __name__ == "__main__":
