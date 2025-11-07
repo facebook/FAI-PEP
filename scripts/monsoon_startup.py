@@ -1,4 +1,4 @@
-# pyre-unsafe
+# pyre-strict
 import argparse
 
 import Monsoon.HVPM as HVPM
@@ -6,7 +6,13 @@ import Monsoon.pmapi as pmapi
 import Monsoon.sampleEngine as sampleEngine
 
 
-def testHVPM(HVMON, serialno, Protocol, power_up_current_limit, runtime_current_limit):
+def testHVPM(
+    HVMON: HVPM.Monsoon,
+    serialno: str,
+    Protocol: pmapi.USB_protocol,
+    power_up_current_limit: float,
+    runtime_current_limit: float,
+) -> None:
     HVMON.setup_usb(serialno, Protocol)
     print("HVPM Serial Number: " + repr(HVMON.getSerialNumber()))
     HVMON.setPowerUpCurrentLimit(power_up_current_limit)
@@ -41,7 +47,7 @@ def testHVPM(HVMON, serialno, Protocol, power_up_current_limit, runtime_current_
     HVMON.closeDevice()
 
 
-def main():
+def main() -> None:
     HVMON = HVPM.Monsoon()
     available_devices = HVMON.enumerateDevices()
     parser = argparse.ArgumentParser(description="Test HVPM")
