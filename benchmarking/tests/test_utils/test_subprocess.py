@@ -1,4 +1,4 @@
-# pyre-unsafe
+# pyre-strict
 import unittest
 from unittest.mock import call, MagicMock, patch
 
@@ -7,10 +7,10 @@ from utils.subprocess_with_logger import processRun
 
 
 class SubprocessWithLoggerTest(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         pass
 
-    def test_subprocess_error_logging(self):
+    def test_subprocess_error_logging(self) -> None:
         mock_logger = MagicMock()
         mock_logger.info = MagicMock()
         with patch.object(
@@ -40,7 +40,7 @@ class SubprocessWithLoggerTest(unittest.TestCase):
                     ]
                 )
 
-    def test_subprocess_success_logging(self):
+    def test_subprocess_success_logging(self) -> None:
         mock_logger = MagicMock()
         mock_logger.info = MagicMock()
         with patch.object(
