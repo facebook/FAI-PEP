@@ -279,6 +279,12 @@ class BenchmarkDriver:
                     if "env" in test:
                         cmd_env.update(test["env"])
                     test["env"] = cmd_env
+            # Add quota_use_case from CLI args to benchmark dict if specified
+            if self.args.quota_use_case:
+                benchmark["quota_use_case"] = self.args.quota_use_case
+                getLogger().info(
+                    f"[BenchmarkDriver.runBenchmark] Adding quota_use_case={self.args.quota_use_case} to benchmark dict"
+                )
 
             b = copy.deepcopy(benchmark)
             i = copy.deepcopy(info)
