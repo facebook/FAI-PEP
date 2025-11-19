@@ -72,7 +72,11 @@ class JsonConverter(DataConverterBase):
                 and "custom_output" not in d
             ):
                 # new format
-                getLogger().info("New format")
+                getLogger().debug(
+                    "Processing new format metric: %s %s",
+                    d.get("type"),
+                    d.get("metric"),
+                )
                 key = d["type"] + " " + d["metric"]
                 if "info_string" in d:
                     if "info_string" in details[key]:
