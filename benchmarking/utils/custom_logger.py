@@ -41,7 +41,9 @@ def getLogger():
 
 
 def setLoggerLevel(level):
-    if level == "info":
+    if level == "debug":
+        logger.setLevel(logging.DEBUG)
+    elif level == "info":
         logger.setLevel(logging.INFO)
     elif level == "warning":
         logger.setLevel(logging.WARNING)

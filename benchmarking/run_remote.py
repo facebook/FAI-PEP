@@ -156,7 +156,7 @@ parser.add_argument(
 parser.add_argument(
     "--logger_level",
     default="info",
-    choices=["info", "warning", "error"],
+    choices=["debug", "info", "warning", "error"],
     help="Specify the logger level",
 )
 parser.add_argument(
