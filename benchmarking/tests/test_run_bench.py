@@ -17,7 +17,6 @@ import os
 import shutil
 import sys
 import unittest
-
 from unittest.mock import patch
 
 BENCHMARK_DIR = os.path.abspath(
@@ -113,15 +112,18 @@ class RunBenchTest(unittest.TestCase):
 
     def test_existing_config(self):
         config_path = os.path.join(BENCHMARK_DIR, "test/test_config")
-        with patch(
-            "os.system", side_effect=self._check_repo_driver_call_params
-        ) as repo_driver, patch(
-            "utils.arg_parse.parseKnown",
-            return_value=(
-                argparse.Namespace(
-                    config_dir=config_path, logger_level="warn", reset_options=None
+        with (
+            patch(
+                "os.system", side_effect=self._check_repo_driver_call_params
+            ) as repo_driver,
+            patch(
+                "utils.arg_parse.parseKnown",
+                return_value=(
+                    argparse.Namespace(
+                        config_dir=config_path, logger_level="warn", reset_options=None
+                    ),
+                    [],
                 ),
-                [],
             ),
         ):
             self.app.root_dir = config_path
@@ -131,15 +133,18 @@ class RunBenchTest(unittest.TestCase):
 
     def test_existing_config_unknows(self):
         config_path = os.path.join(BENCHMARK_DIR, "test/test_config")
-        with patch(
-            "os.system", side_effect=self._check_repo_driver_call_params
-        ) as repo_driver, patch(
-            "argparse.ArgumentParser.parse_known_args",
-            return_value=(
-                argparse.Namespace(
-                    config_dir=config_path, logger_level="warn", reset_options=None
+        with (
+            patch(
+                "os.system", side_effect=self._check_repo_driver_call_params
+            ) as repo_driver,
+            patch(
+                "argparse.ArgumentParser.parse_known_args",
+                return_value=(
+                    argparse.Namespace(
+                        config_dir=config_path, logger_level="warn", reset_options=None
+                    ),
+                    ["--unknown1", "UNKNOWN1", "--unknown2", "UNKNOWN2"],
                 ),
-                ["--unknown1", "UNKNOWN1", "--unknown2", "UNKNOWN2"],
             ),
         ):
             self.app.root_dir = config_path
@@ -149,15 +154,17 @@ class RunBenchTest(unittest.TestCase):
 
     def test_new_config(self):
         test_home = os.path.join(BENCHMARK_DIR, "test/test_home/.aibench/git")
-        with patch("os.system", return_value=0) as repo_driver, patch(
-            "run_bench.RunBench._inputOneArg", side_effect=self._mock_input_arg
-        ), patch(
-            "argparse.ArgumentParser.parse_known_args",
-            return_value=(
-                argparse.Namespace(
-                    config_dir=None, logger_level="warn", reset_options=True
+        with (
+            patch("os.system", return_value=0) as repo_driver,
+            patch("run_bench.RunBench._inputOneArg", side_effect=self._mock_input_arg),
+            patch(
+                "argparse.ArgumentParser.parse_known_args",
+                return_value=(
+                    argparse.Namespace(
+                        config_dir=None, logger_level="warn", reset_options=True
+                    ),
+                    ["--unknown1", "UNKNOWN1", "--unknown2", "UNKNOWN2"],
                 ),
-                ["--unknown1", "UNKNOWN1", "--unknown2", "UNKNOWN2"],
             ),
         ):
             self.app.root_dir = test_home

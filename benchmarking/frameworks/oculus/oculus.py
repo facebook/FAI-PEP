@@ -132,23 +132,23 @@ class OculusFramework(FrameworkBase):
         assert "model" in benchmark, "Model must exist in the benchmark {}".format(
             filename
         )
-        assert (
-            "name" in benchmark["model"]
-        ), f"field name must exist in model in benchmark {filename}"
-        assert (
-            "format" in benchmark["model"]
-        ), f"field format must exist in model in benchmark {filename}"
+        assert "name" in benchmark["model"], (
+            f"field name must exist in model in benchmark {filename}"
+        )
+        assert "format" in benchmark["model"], (
+            f"field format must exist in model in benchmark {filename}"
+        )
         assert "tests" in benchmark, "Tests field is missing in benchmark {}".format(
             filename
         )
 
         for test in benchmark["tests"]:
-            assert (
-                "input_files" in test
-            ), f"inputs must exist in test in benchmark {filename}"
-            assert (
-                "output_files" in test
-            ), f"outputs must exist in test in benchmark {filename}"
+            assert "input_files" in test, (
+                f"inputs must exist in test in benchmark {filename}"
+            )
+            assert "output_files" in test, (
+                f"outputs must exist in test in benchmark {filename}"
+            )
             assert "metric" in test, "metric must exist in test in benchmark {}".format(
                 filename
             )

@@ -277,7 +277,7 @@ async def asyncRequestsData(loop, url, **kwargs):
                     if result.status != 200:
                         text = json.loads(text)
                         getLogger().error(
-                            f"Async post request returned status code {result.status}. Reason: {result.reason} Message: {text.get('error',{})}"
+                            f"Async post request returned status code {result.status}. Reason: {result.reason} Message: {text.get('error', {})}"
                         )
                     else:
                         # getLogger().info(result.status)

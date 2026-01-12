@@ -134,7 +134,7 @@ parser.add_argument("--program", help="The program to run on the platform.")
 parser.add_argument(
     "--reboot",
     action="store_true",
-    help="Tries to reboot the devices before launching benchmarks for one " "commit.",
+    help="Tries to reboot the devices before launching benchmarks for one commit.",
 )
 parser.add_argument(
     "--regressed_types",
@@ -263,10 +263,10 @@ class BenchmarkDriver:
             # check the framework matches
             if "model" in benchmark and "framework" in benchmark["model"]:
                 assert benchmark["model"]["framework"] == self.args.framework, (
-                    "Framework specified in the json file " "{} ".format(
+                    "Framework specified in the json file {} ".format(
                         benchmark["model"]["framework"]
                     )
-                    + "does not match the command line argument " "{}".format(
+                    + "does not match the command line argument {}".format(
                         self.args.framework
                     )
                 )
@@ -321,9 +321,9 @@ class BenchmarkDriver:
         getLogger().info(f"Temp directory: {tempdir}")
         info = self._getInfo()
         frameworks = getFrameworks()
-        assert (
-            self.args.framework in frameworks
-        ), f"Framework {self.args.framework} is not supported"
+        assert self.args.framework in frameworks, (
+            f"Framework {self.args.framework} is not supported"
+        )
         framework = frameworks[self.args.framework](tempdir, self.args)
         bcollector = BenchmarkCollector(
             framework, self.args.model_cache, args=self.args

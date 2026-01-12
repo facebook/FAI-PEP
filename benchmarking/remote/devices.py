@@ -57,9 +57,9 @@ class Devices:
                 + " do not match"
             )
             if "abbr" in device:
-                assert isinstance(
-                    device["abbr"], list
-                ), f"Abbreviations for {name} needs to be a list"
+                assert isinstance(device["abbr"], list), (
+                    f"Abbreviations for {name} needs to be a list"
+                )
                 for abbr in device["abbr"]:
                     device_abbr.append((device, abbr))
 

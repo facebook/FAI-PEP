@@ -16,12 +16,15 @@ class SubprocessWithLoggerTest(unittest.TestCase):
         with patch.object(
             subprocess_with_logger, "getLogger", return_value=mock_logger
         ):
-            with patch.object(
-                subprocess_with_logger,
-                "_getOutput",
-                return_value=(["ls: no_such_dir: No such file or directory"], None),
-            ), patch.object(
-                subprocess_with_logger.subprocess.Popen, "wait", return_value=1
+            with (
+                patch.object(
+                    subprocess_with_logger,
+                    "_getOutput",
+                    return_value=(["ls: no_such_dir: No such file or directory"], None),
+                ),
+                patch.object(
+                    subprocess_with_logger.subprocess.Popen, "wait", return_value=1
+                ),
             ):
                 ret = processRun(["ls", "no_such_dir"], retry=1, silent=True)
                 self.assertEqual(

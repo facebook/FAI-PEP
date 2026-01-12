@@ -301,15 +301,15 @@ class BenchmarkCollector:
 
     def _rewriteTestFields(self, test):
         if "arguments" in test:
-            assert (
-                "commands" not in test
-            ), "Commands and arguments cannot co-exist in test"
+            assert "commands" not in test, (
+                "Commands and arguments cannot co-exist in test"
+            )
             test["commands"] = ["{program} " + test["arguments"]]
             del test["arguments"]
         if "command" in test:
-            assert (
-                "commands" not in test
-            ), "Commands and command cannot co-exist in test"
+            assert "commands" not in test, (
+                "Commands and command cannot co-exist in test"
+            )
             test["commands"] = [test["command"]]
             # do not delete for now
             # del test["command"]

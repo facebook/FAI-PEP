@@ -15,7 +15,6 @@ import argparse
 import os
 import sys
 import unittest
-
 from unittest.mock import patch
 
 BENCHMARK_DIR = os.path.abspath(
@@ -34,7 +33,7 @@ class IOSDriverTest(unittest.TestCase):
 
     def _idb_run_for_get_device(self, *args):
         return [
-            "[....] Waiting up to 5 seconds for iOS device to be " "connected",
+            "[....] Waiting up to 5 seconds for iOS device to be connected",
             "[....] Found 12345678-9012345678AB901C (A012BC, A012BC, "
             "uknownos, unkarch) a.k.a. 'Developer iPhone' connected "
             "through USB.",
@@ -50,17 +49,20 @@ class IOSDriverTest(unittest.TestCase):
 
     def test_get_ios_platforms(self):
         driver = IOSDriver()
-        with patch(
-            "platforms.ios.ios_driver.IOSDriver.getDevices",
-            return_value={"12345678-9012345678AB901C": "A012BC"},
-        ), patch(
-            "platforms.ios.ios_platform.IOSPlatform.__init__", return_value=None
-        ), patch(
-            "platforms.ios.ios_platform.IOSPlatform.setPlatform", return_value=None
-        ), patch(
-            "platforms.ios.ios_driver.getArgs",
-            return_value=argparse.Namespace(
-                device=None, devices=None, excluded_devices=None
+        with (
+            patch(
+                "platforms.ios.ios_driver.IOSDriver.getDevices",
+                return_value={"12345678-9012345678AB901C": "A012BC"},
+            ),
+            patch("platforms.ios.ios_platform.IOSPlatform.__init__", return_value=None),
+            patch(
+                "platforms.ios.ios_platform.IOSPlatform.setPlatform", return_value=None
+            ),
+            patch(
+                "platforms.ios.ios_driver.getArgs",
+                return_value=argparse.Namespace(
+                    device=None, devices=None, excluded_devices=None
+                ),
             ),
         ):
             platforms = driver.getIOSPlatforms("/tmp")

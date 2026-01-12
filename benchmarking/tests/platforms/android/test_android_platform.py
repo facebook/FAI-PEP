@@ -16,7 +16,6 @@ import os
 import sys
 import tempfile
 import unittest
-
 from unittest.mock import Mock, patch
 
 BENCHMARK_DIR = os.path.abspath(
@@ -66,10 +65,13 @@ class AndroidPlatformTest(unittest.TestCase):
             }
         }
         mock_json_loads_thermal_monitor = Mock(return_value=mock_thermal_monitor_config)
-        with patch(
-            "platforms.android.android_platform.json.loads",
-            side_effect=mock_json_loads_thermal_monitor,
-        ), patch("platforms.android.android_platform.pkg_resources.resource_string"):
+        with (
+            patch(
+                "platforms.android.android_platform.json.loads",
+                side_effect=mock_json_loads_thermal_monitor,
+            ),
+            patch("platforms.android.android_platform.pkg_resources.resource_string"),
+        ):
             self.platform = AndroidPlatform(self.tempdir, self.adb, self.args)
             self.assertEqual(
                 self.platform.thermal_monitor_config,

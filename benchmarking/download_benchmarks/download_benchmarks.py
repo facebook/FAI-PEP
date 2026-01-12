@@ -52,7 +52,7 @@ class DownloadBenchmarks:
                 for field in one_benchmark["model"]["files"]:
                     value = one_benchmark["model"]["files"][field]
                     assert "location" in value, (
-                        "location field is missing in benchmark " "{}".format(filename)
+                        "location field is missing in benchmark {}".format(filename)
                     )
                     location = value["location"]
                     md5 = value.get("md5")
@@ -61,16 +61,16 @@ class DownloadBenchmarks:
             if "libraries" in one_benchmark["model"]:
                 for value in one_benchmark["model"]["libraries"]:
                     assert "location" in value, (
-                        "location field is missing in benchmark " "{}".format(filename)
+                        "location field is missing in benchmark {}".format(filename)
                     )
                     location = value["location"]
                     md5 = value.get("md5")
                     path = self.downloadFile(location, md5)
                     locations.append(path)
 
-        assert (
-            "tests" in one_benchmark
-        ), f"tests field is missing in benchmark {filename}"
+        assert "tests" in one_benchmark, (
+            f"tests field is missing in benchmark {filename}"
+        )
         tests = one_benchmark["tests"]
         for test in tests:
             if "input_files" in test:

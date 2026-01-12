@@ -125,7 +125,7 @@ parser.add_argument("--platform_sig", help="Specify the platform signature")
 parser.add_argument(
     "--reboot",
     action="store_true",
-    help="Tries to reboot the devices before launching benchmarks for one " "commit.",
+    help="Tries to reboot the devices before launching benchmarks for one commit.",
 )
 parser.add_argument(
     "--remote_reporter",
@@ -509,9 +509,7 @@ class runAsync:
                     f"Downloading programs for benchmark {self.job['identifier']} id {self.job['id']}"
                 )
                 if "treatment" not in self.job["benchmarks"]["info"]:
-                    getLogger().error(
-                        "Field treatment " 'must exist in job["benchmarks"]'
-                    )
+                    getLogger().error('Field treatment must exist in job["benchmarks"]')
                 elif "programs" not in self.job["benchmarks"]["info"]["treatment"]:
                     getLogger().error(
                         'Field "program" must exist in '
@@ -636,9 +634,9 @@ class RunLab:
         self.adb = ADB(None, self.args.android_dir)
         setLoggerLevel(self.args.logger_level)
         if not self.args.benchmark_db_entry:
-            assert (
-                self.args.server_addr is not None
-            ), "Either server_addr or benchmark_db_entry must be specified"
+            assert self.args.server_addr is not None, (
+                "Either server_addr or benchmark_db_entry must be specified"
+            )
             while self.args.server_addr[-1] == "/":
                 self.args.server_addr = self.args.server_addr[:-1]
             self.args.benchmark_db_entry = self.args.server_addr + "/benchmark/"

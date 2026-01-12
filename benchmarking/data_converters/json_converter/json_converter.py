@@ -84,7 +84,7 @@ class JsonConverter(DataConverterBase):
                         new_string = d["info_string"]
                         if old_string != new_string:
                             getLogger().warning(
-                                "info_string values " "for {} ".format(key)
+                                "info_string values for {} ".format(key)
                                 + "do not match.\n"
                                 + "Current info_string: "
                                 + f"{old_string}\n "

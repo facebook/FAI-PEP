@@ -1,7 +1,6 @@
 # pyre-unsafe
 
 import numpy as np
-
 from utils.custom_logger import getLogger
 
 

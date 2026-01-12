@@ -43,9 +43,9 @@ parser.add_argument("--name", required=True, help="Specify the type of the metri
 class OutputCompare:
     def __init__(self):
         self.args = parser.parse_args()
-        assert os.path.isfile(
-            self.args.benchmark_output
-        ), f"Benchmark output file {self.args.benchmark_output} doesn't exist"
+        assert os.path.isfile(self.args.benchmark_output), (
+            f"Benchmark output file {self.args.benchmark_output} doesn't exist"
+        )
         assert os.path.isfile(self.args.labels), "Labels file {} doesn't exist".format(
             self.args.labels
         )

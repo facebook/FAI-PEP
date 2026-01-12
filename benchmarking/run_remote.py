@@ -115,7 +115,7 @@ parser.add_argument(
 parser.add_argument(
     "--kill",
     action="store_true",
-    help="Kill submitted jobs, use together with " "--user_identifier",
+    help="Kill submitted jobs, use together with --user_identifier",
 )
 parser.add_argument(
     "--file_storage", help="The storage engine for uploading and downloading files"
@@ -316,9 +316,9 @@ class RunRemote:
         self._updateArgs(self.args)
         setLoggerLevel(self.args.logger_level)
         if not self.args.benchmark_db_entry:
-            assert (
-                self.args.server_addr is not None
-            ), "Either server_addr or benchmark_db_entry must be specified"
+            assert self.args.server_addr is not None, (
+                "Either server_addr or benchmark_db_entry must be specified"
+            )
             while self.args.server_addr[-1] == "/":
                 self.args.server_addr = self.args.server_addr[:-1]
             self.args.benchmark_db_entry = self.args.server_addr + "/benchmark/"
@@ -365,9 +365,9 @@ class RunRemote:
             (self.args.info is not None)
             and (self.args.custom_binary is None)
             and (self.args.pre_built_binary is None)
-        ) or (
-            self.args.info is None
-        ), "--info cannot co-exist with --custom_binary and --pre_built_binary"
+        ) or (self.args.info is None), (
+            "--info cannot co-exist with --custom_binary and --pre_built_binary"
+        )
 
         list_job_queues = self._listJobQueues()
         if not self.args.force_submit:
@@ -430,9 +430,9 @@ class RunRemote:
                     test["env"] = cmd_env
         t.join()
 
-        assert (
-            "program" in program_filenames
-        ), "program does not exist. Build may be failed."
+        assert "program" in program_filenames, (
+            "program does not exist. Build may be failed."
+        )
 
         for fn in program_filenames:
             self.info["treatment"]["programs"][fn] = {"location": program_filenames[fn]}
@@ -536,7 +536,7 @@ class RunRemote:
                 for field in one_benchmark["model"]["files"]:
                     value = one_benchmark["model"]["files"][field]
                     assert "location" in value, (
-                        "location field is missing in benchmark " "{}".format(filename)
+                        "location field is missing in benchmark {}".format(filename)
                     )
                     ref_path = ["files", field]
                     if self._uploadFile(value, filename, benchmark, ref_path):
@@ -544,7 +544,7 @@ class RunRemote:
             if "libraries" in one_benchmark["model"]:
                 for value in one_benchmark["model"]["libraries"]:
                     assert "location" in value, (
-                        "location field is missing in benchmark " "{}".format(filename)
+                        "location field is missing in benchmark {}".format(filename)
                     )
                     self._uploadFile(value, filename, benchmark)
 
@@ -552,9 +552,9 @@ class RunRemote:
             self._del_from_benchmark(benchmark["content"]["model"], del_path)
 
         # upload test file
-        assert (
-            "tests" in one_benchmark
-        ), f"tests field is missing in benchmark {filename}"
+        assert "tests" in one_benchmark, (
+            f"tests field is missing in benchmark {filename}"
+        )
         tests = one_benchmark["tests"]
         for test in tests:
             if "input_files" in test:
@@ -594,8 +594,10 @@ class RunRemote:
         Note: Support the file in model first
         """
         if location.startswith("//repo"):
-            assert ref_path is not None, "repo is not yet \
+            assert ref_path is not None, (
+                "repo is not yet \
                 supported for {}".format(location)
+            )
             for side in self.info:
                 if side == "extra":
                     continue
@@ -612,9 +614,9 @@ class RunRemote:
                 assert len(ref_path), "ref_path must be a path to target file"
                 value["programs"][".".join(ref_path)] = {"location": f["location"]}
                 # remove from benchmark
-                assert (
-                    benchmark is not None
-                ), "benchmark must be passed into _uploadFile"
+                assert benchmark is not None, (
+                    "benchmark must be passed into _uploadFile"
+                )
             return True
         else:
             with LOCK:
@@ -781,9 +783,9 @@ class RunRemote:
 
     def _killJob(self):
         user_identifier = self.args.user_identifier
-        assert (
-            user_identifier
-        ), "User identifier must be specified for killing submitted jobs."
+        assert user_identifier, (
+            "User identifier must be specified for killing submitted jobs."
+        )
         # If the provided user identifier is a file path
         # read list of user identifiers from the file
         if os.path.isfile(user_identifier):

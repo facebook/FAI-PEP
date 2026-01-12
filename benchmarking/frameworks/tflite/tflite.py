@@ -32,12 +32,12 @@ class TFLiteFramework(FrameworkBase):
 
     def verifyBenchmarkFile(self, benchmark, filename, is_post):
         assert "model" in benchmark, "Field model is missing in benchmark"
-        assert (
-            "files" in benchmark["model"]
-        ), "Field files is missing in benchmark[model]"
-        assert (
-            "graph" in benchmark["model"]["files"]
-        ), "Field graph is missing in benchmark[model][files]"
+        assert "files" in benchmark["model"], (
+            "Field files is missing in benchmark[model]"
+        )
+        assert "graph" in benchmark["model"]["files"], (
+            "Field graph is missing in benchmark[model][files]"
+        )
 
         assert "tests" in benchmark, "Field tests is missing in benchmark"
         for test in benchmark["tests"]:

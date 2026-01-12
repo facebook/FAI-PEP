@@ -16,7 +16,6 @@ import datetime
 import json
 import os
 import time
-
 from argparse import Namespace
 from collections import defaultdict
 from threading import Thread
@@ -262,7 +261,7 @@ class DeviceManager:
                     if devices is None or hash in devices:
                         data.append(
                             {
-                                "key": f"aibench_devices.{os.environ.get('CLAIMER','')}.{k}.{hash}.connected",
+                                "key": f"aibench_devices.{os.environ.get('CLAIMER', '')}.{k}.{hash}.connected",
                                 "value": 0.0,
                             }
                         )
@@ -277,7 +276,7 @@ class DeviceManager:
                 for hash in self.lab_devices[k]:
                     data.append(
                         {
-                            "key": f"aibench_devices.{os.environ.get('CLAIMER','')}.{k}.{hash}.connected",
+                            "key": f"aibench_devices.{os.environ.get('CLAIMER', '')}.{k}.{hash}.connected",
                             "value": 1.0 if self.lab_devices[k][hash]["live"] else 0.0,
                         }
                     )

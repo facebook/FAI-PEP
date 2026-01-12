@@ -85,7 +85,7 @@ class TestEngine:
         for j, classid in enumerate(classids):
             classid = int(classid)
             assert classid <= len(all_boxes), (
-                "{} classid out of range!" "class id: {}, boxes: {}".format(
+                "{} classid out of range!class id: {}, boxes: {}".format(
                     j, classid, boxes
                 )
             )
@@ -101,7 +101,7 @@ class TestEngine:
         for j, classid in enumerate(classids):
             classid = int(classid)
             assert classid <= len(all_segms), (
-                "{} classid out of range!" "class id: {}, segms: {}".format(
+                "{} classid out of range!class id: {}, segms: {}".format(
                     j, classid, im_masks_rle
                 )
             )

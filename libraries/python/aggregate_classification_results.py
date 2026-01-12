@@ -36,8 +36,7 @@ parser.add_argument(
 parser.add_argument(
     "--prefix",
     required=True,
-    help="The prefix of the json data. The files are suffixed with a number "
-    "and .txt",
+    help="The prefix of the json data. The files are suffixed with a number and .txt",
 )
 parser.add_argument("--result-file", help="Write the prediction result to a file.")
 

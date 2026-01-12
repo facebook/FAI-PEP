@@ -16,7 +16,6 @@ import json
 import os
 import sys
 import unittest
-
 from unittest.mock import patch
 
 BENCHMARK_DIR = os.path.abspath(
@@ -48,11 +47,12 @@ class BenchmarkDriverTest(unittest.TestCase):
         )
 
     def test_run(self):
-        with patch(
-            "harness.parseKnown", return_value=(argparse.Namespace(), [])
-        ), patch("harness.getArgs", return_value=self.args), patch(
-            "harness.BenchmarkCollector.collectBenchmarks", return_value=[]
-        ), patch("harness.getPlatforms", return_value=[]):
+        with (
+            patch("harness.parseKnown", return_value=(argparse.Namespace(), [])),
+            patch("harness.getArgs", return_value=self.args),
+            patch("harness.BenchmarkCollector.collectBenchmarks", return_value=[]),
+            patch("harness.getPlatforms", return_value=[]),
+        ):
             app = BenchmarkDriver()
             app.run()
             status = app.status

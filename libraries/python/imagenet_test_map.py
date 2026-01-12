@@ -54,12 +54,12 @@ parser.add_argument(
 class ImageLableMap:
     def __init__(self):
         self.args = parser.parse_args()
-        assert os.path.isfile(
-            self.args.label_file
-        ), f"Label file {self.args.label_file} doesn't exist"
-        assert os.path.isdir(
-            self.args.image_dir
-        ), f"Image directory {self.args.image_dir} doesn't exist"
+        assert os.path.isfile(self.args.label_file), (
+            f"Label file {self.args.label_file} doesn't exist"
+        )
+        assert os.path.isdir(self.args.image_dir), (
+            f"Image directory {self.args.image_dir} doesn't exist"
+        )
         if self.args.output_image_file:
             output_image_dir = os.path.dirname(
                 os.path.abspath(self.args.output_image_file)

@@ -14,7 +14,6 @@ import time
 
 import pkg_resources
 from platforms.android.adb import ADB
-
 from utils.custom_logger import getLogger
 from utils.utilities import setRunKilled
 

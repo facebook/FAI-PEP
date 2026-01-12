@@ -17,7 +17,6 @@ import sys
 import threading
 import unittest
 from collections import deque
-
 from unittest.mock import patch
 
 BENCHMARK_DIR = os.path.abspath(
@@ -56,26 +55,32 @@ class RepoDriverTest(unittest.TestCase):
             def is_alive(self):
                 return False
 
-        with patch(
-            "repo_driver.parseKnown", return_value=(argparse.Namespace(), [])
-        ), patch("repo_driver.getArgs", return_value=self.args), patch(
-            "repo_driver.getRepo", return_value=GitRepo("/test/pytorch")
-        ), patch(
-            "repo_driver.ExecutablesBuilder._setupRepoStep",
-            return_value={"commit": "123"},
-        ), patch("os.system", return_value=1):
+        with (
+            patch("repo_driver.parseKnown", return_value=(argparse.Namespace(), [])),
+            patch("repo_driver.getArgs", return_value=self.args),
+            patch("repo_driver.getRepo", return_value=GitRepo("/test/pytorch")),
+            patch(
+                "repo_driver.ExecutablesBuilder._setupRepoStep",
+                return_value={"commit": "123"},
+            ),
+            patch("os.system", return_value=1),
+        ):
             app = RepoDriver()
             app.run()
 
     def test_buildProgram(self):
-        with patch(
-            "repo_driver.parseKnown", return_value=(argparse.Namespace(), [])
-        ), patch("repo_driver.getArgs", return_value=self.args), patch(
-            "repo_driver.getRepo", return_value=GitRepo("/test/pytorch")
-        ), patch(
-            "repo_driver.ExecutablesBuilder._buildProgramPlatform", return_value=None
-        ), patch(
-            "os.listdir", return_value=os.path.join(BENCHMARK_DIR, "test/test_config")
+        with (
+            patch("repo_driver.parseKnown", return_value=(argparse.Namespace(), [])),
+            patch("repo_driver.getArgs", return_value=self.args),
+            patch("repo_driver.getRepo", return_value=GitRepo("/test/pytorch")),
+            patch(
+                "repo_driver.ExecutablesBuilder._buildProgramPlatform",
+                return_value=None,
+            ),
+            patch(
+                "os.listdir",
+                return_value=os.path.join(BENCHMARK_DIR, "test/test_config"),
+            ),
         ):
             app = ExecutablesBuilder(
                 GitRepo("/test/pytorch"), threading.Lock(), deque()
@@ -83,10 +88,10 @@ class RepoDriverTest(unittest.TestCase):
             app._buildProgram("host", {"commit": "123", "commit_time": 123})
 
     def test_getControlCommit(self):
-        with patch(
-            "repo_driver.parseKnown", return_value=(argparse.Namespace(), [])
-        ), patch("repo_driver.getArgs", return_value=self.args), patch(
-            "repos.git.GitRepo.getCommitsInRange", return_value="1:2\n3:4"
+        with (
+            patch("repo_driver.parseKnown", return_value=(argparse.Namespace(), [])),
+            patch("repo_driver.getArgs", return_value=self.args),
+            patch("repos.git.GitRepo.getCommitsInRange", return_value="1:2\n3:4"),
         ):
             app = ExecutablesBuilder(
                 GitRepo("/test/pytorch"), threading.Lock(), deque()

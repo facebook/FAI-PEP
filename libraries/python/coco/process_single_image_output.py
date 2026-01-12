@@ -82,9 +82,9 @@ class ProcessSingleImageOutput:
         for i in range(num):
             one_entry = {}
             for name in blob_names:
-                assert (
-                    len(blobs[name]) == num
-                ), "Different entries have different numbers"
+                assert len(blobs[name]) == num, (
+                    "Different entries have different numbers"
+                )
                 one_entry[name] = blobs[name][i]
             blob_array.append(one_entry)
         return blob_array
@@ -190,9 +190,9 @@ class ProcessSingleImageOutput:
             im_infos.append(im_info)
 
         blobs = self.getBlobs()
-        assert len(im_infos) == len(
-            blobs
-        ), "The number for im_infos and blobs do not match"
+        assert len(im_infos) == len(blobs), (
+            "The number for im_infos and blobs do not match"
+        )
         results = []
         for i in range(len(blobs)):
             one_blob = blobs[i]

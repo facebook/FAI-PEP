@@ -15,7 +15,6 @@ import json
 
 from platforms.android.adb import ADB
 from platforms.android.android_platform import AndroidPlatform
-
 from platforms.driver_base import DriverBase, registerDriver
 
 

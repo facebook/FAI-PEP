@@ -27,7 +27,7 @@ parser.add_argument(
     "-p",
     "--platform",
     required=True,
-    help="Specify the platform to benchmark on. " "Must starts with ios or android",
+    help="Specify the platform to benchmark on. Must starts with ios or android",
 )
 
 

@@ -17,7 +17,6 @@ import os
 import sys
 import tempfile
 import unittest
-
 from unittest.mock import patch
 
 BENCHMARK_DIR = os.path.abspath(
@@ -36,12 +35,16 @@ class IOSPlatformTest(unittest.TestCase):
         self.tempdir = tempfile.mkdtemp(prefix="aibench")
         device = {"12345678-9012345678AB901C": "A012BC"}
         idb = IDB(device, self.tempdir)
-        with patch("platforms.ios.ios_platform.IOSPlatform.setPlatformHash"), patch(
-            "platforms.ios.ios_platform.getArgs",
-            return_value=argparse.Namespace(ios_dir=self.tempdir),
-        ), patch(
-            "platforms.platform_base.getArgs",
-            return_value=argparse.Namespace(hash_platform_mapping=None),
+        with (
+            patch("platforms.ios.ios_platform.IOSPlatform.setPlatformHash"),
+            patch(
+                "platforms.ios.ios_platform.getArgs",
+                return_value=argparse.Namespace(ios_dir=self.tempdir),
+            ),
+            patch(
+                "platforms.platform_base.getArgs",
+                return_value=argparse.Namespace(hash_platform_mapping=None),
+            ),
         ):
             self.platform = IOSPlatform(self.tempdir, idb)
 
@@ -66,16 +69,20 @@ class IOSPlatformTest(unittest.TestCase):
 
     def test_preprocess(self):
         programs = {"program": "test_program.ipa"}
-        with patch(
-            "platforms.ios.ios_platform.processRun",
-            side_effect=self._process_run_for_preprocess,
-        ), patch("os.listdir", side_effect=self._list_dir_for_preprocess), patch(
-            "os.path.isdir", return_value=True
-        ), patch(
-            "platforms.ios.idb.IDB.run", side_effect=self._idb_run_for_preprocess
-        ), patch(
-            "platforms.ios.idb.IDB.setBundleId",
-            side_effect=self._set_bundle_id_for_preprocess,
+        with (
+            patch(
+                "platforms.ios.ios_platform.processRun",
+                side_effect=self._process_run_for_preprocess,
+            ),
+            patch("os.listdir", side_effect=self._list_dir_for_preprocess),
+            patch("os.path.isdir", return_value=True),
+            patch(
+                "platforms.ios.idb.IDB.run", side_effect=self._idb_run_for_preprocess
+            ),
+            patch(
+                "platforms.ios.idb.IDB.setBundleId",
+                side_effect=self._set_bundle_id_for_preprocess,
+            ),
         ):
             self.platform.preprocess(programs=programs)
 
@@ -115,10 +122,13 @@ class IOSPlatformTest(unittest.TestCase):
             "--input_type float --run_individual true"
         )
 
-        with patch(
-            "platforms.ios.idb.IDB.push", side_effect=self._push_for_run_benchmark
-        ), patch(
-            "platforms.ios.idb.IDB.run", side_effect=self._idb_run_for_run_benchmark
+        with (
+            patch(
+                "platforms.ios.idb.IDB.push", side_effect=self._push_for_run_benchmark
+            ),
+            patch(
+                "platforms.ios.idb.IDB.run", side_effect=self._idb_run_for_run_benchmark
+            ),
         ):
             res = self.platform.runBenchmark(cmd, platfor_args={"timeout": 300.0})
             self.assertTrue(res)

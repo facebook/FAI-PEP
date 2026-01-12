@@ -15,7 +15,6 @@ import argparse
 import os
 import sys
 import unittest
-
 from unittest.mock import patch
 
 BENCHMARK_DIR = os.path.abspath(
@@ -31,15 +30,18 @@ class GetConnectedDevicesTest(unittest.TestCase):
 
     def test_run(self):
         config_path = os.path.join(BENCHMARK_DIR, "test/test_config")
-        with patch(
-            "get_connected_devices.getPlatforms", return_value=[]
-        ) as getPlatforms, patch(
-            "argparse.ArgumentParser.parse_known_args",
-            return_value=(
-                argparse.Namespace(
-                    config_dir=config_path, logger_level="warn", reset_options=None
+        with (
+            patch(
+                "get_connected_devices.getPlatforms", return_value=[]
+            ) as getPlatforms,
+            patch(
+                "argparse.ArgumentParser.parse_known_args",
+                return_value=(
+                    argparse.Namespace(
+                        config_dir=config_path, logger_level="warn", reset_options=None
+                    ),
+                    [],
                 ),
-                [],
             ),
         ):
             app = GetConnectedDevices()

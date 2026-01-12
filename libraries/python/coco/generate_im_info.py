@@ -80,15 +80,15 @@ class ImInfo:
                 im_scale = self.getScale(img["height"], img["width"])
                 height = int(np.round(img["height"] * im_scale))
                 width = int(np.round(img["width"] * im_scale))
-                assert (
-                    height <= self.args.max_size
-                ), "height {} is more than the max_size {}".format(
-                    height, self.args.max_size
+                assert height <= self.args.max_size, (
+                    "height {} is more than the max_size {}".format(
+                        height, self.args.max_size
+                    )
                 )
-                assert (
-                    width <= self.args.max_size
-                ), "width {} is more than the max_size {}".format(
-                    width, self.args.max_size
+                assert width <= self.args.max_size, (
+                    "width {} is more than the max_size {}".format(
+                        width, self.args.max_size
+                    )
                 )
                 if height < self.args.min_size or width < self.args.min_size:
                     assert height == self.args.max_size or width == self.args.max_size

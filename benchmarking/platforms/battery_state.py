@@ -15,7 +15,6 @@ from typing import Any
 
 from platforms.android.adb import ADB
 from platforms.ios.idb import IDB
-
 from utils.custom_logger import getLogger
 
 

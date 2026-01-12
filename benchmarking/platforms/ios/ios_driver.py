@@ -15,7 +15,6 @@ import json
 import re
 
 from platforms.driver_base import DriverBase, registerDriver
-
 from platforms.ios.idb import IDB
 from platforms.ios.ios_platform import IOSPlatform
 from platforms.ios.xcrun import xcrun

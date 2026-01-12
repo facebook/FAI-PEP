@@ -132,9 +132,9 @@ def _logNoData(benchmark, info, name):
 
 
 def _runOnePass(info, benchmark, framework, platform):
-    assert (
-        len(benchmark["tests"]) == 1
-    ), "At this moment, only one test exists in the benchmark"
+    assert len(benchmark["tests"]) == 1, (
+        "At this moment, only one test exists in the benchmark"
+    )
     to = benchmark["model"]["repeat"] if "repeat" in benchmark["model"] else 1
     output = None
     for idx in range(to):
@@ -185,9 +185,9 @@ def _mergeDelayData(treatment_data, control_data, bname):
         control_value = control_data[k]
         treatment_value = treatment_data[k]
         if "info_string" in treatment_value:
-            assert (
-                "info_string" in control_value
-            ), "Control value missing info_string field"
+            assert "info_string" in control_value, (
+                "Control value missing info_string field"
+            )
             # If the treatment and control are not the same,
             # treatment value is used, the control value is lost.
             treatment_string = treatment_value["info_string"]
@@ -350,9 +350,9 @@ def _getStatistics(array, stats=_default_statistics):
             percentile_arg_value = _percentileArgVal(stat)  # parses p0-p100
             if percentile_arg_value is None:
                 getLogger().error(f"Unsupported custom statistic '{stat}' ignored.")
-                assert (
-                    percentile_arg_value is not None
-                ), f"Unsupported custom statistic '{stat}'."
+                assert percentile_arg_value is not None, (
+                    f"Unsupported custom statistic '{stat}'."
+                )
             else:
                 results[stat] = _getPercentile(sorted_array, percentile_arg_value)
 
@@ -361,9 +361,9 @@ def _getStatistics(array, stats=_default_statistics):
 
 def _getPercentile(sorted_array, percentile: float):
     length = len(sorted_array)
-    assert (
-        length > 0 and percentile >= 0 and percentile <= 100
-    ), f"invalid percentile value '{percentile}'."
+    assert length > 0 and percentile >= 0 and percentile <= 100, (
+        f"invalid percentile value '{percentile}'."
+    )
 
     if percentile == 100:
         return sorted_array[-1]
@@ -407,9 +407,9 @@ def _getMedian(values):
 def _adjustData(info, data):
     if "regressed_types" not in info:
         return data
-    assert (
-        "run_type" in info and info["run_type"] == "regress"
-    ), "Regressed types only show up in regress run type"
+    assert "run_type" in info and info["run_type"] == "regress", (
+        "Regressed types only show up in regress run type"
+    )
     for v in data:
         if v in info["regressed_types"]:
             data[v]["regressed"] = 1

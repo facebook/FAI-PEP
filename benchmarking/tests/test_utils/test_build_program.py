@@ -14,7 +14,6 @@ import os
 import sys
 import unittest
 from tempfile import gettempdir
-
 from unittest.mock import patch
 
 BENCHMARK_DIR = os.path.abspath(
@@ -39,10 +38,13 @@ class BuildProgramTest(unittest.TestCase):
             return_value=("Build was unsuccessful", [Exception()]),
         ):
             self.assertFalse(buildUsingBuck(self.fake_file, "android", "buck"))
-        with patch(
-            "utils.subprocess_with_logger.processRun",
-            return_value=("Build was successful", []),
-        ), patch("utils.build_program._setUpTempDirectory"):
+        with (
+            patch(
+                "utils.subprocess_with_logger.processRun",
+                return_value=("Build was successful", []),
+            ),
+            patch("utils.build_program._setUpTempDirectory"),
+        ):
             self.assertTrue(buildUsingBuck(self.actual_file, "ios", "buck"))
 
     def testisBuildSuccessful(self):
