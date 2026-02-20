@@ -285,7 +285,7 @@ async def asyncRequestsData(loop, url, **kwargs):
                             getLogger().info("Async post request successful")
                         return result
         except Exception:
-            getLogger().exception("Exception occured during async request!")
+            getLogger().exception("Exception occurred during async request!")
         if not retry:
             break
         delay = delay + 1 if delay <= 5 else delay
