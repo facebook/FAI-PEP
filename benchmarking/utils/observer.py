@@ -15,7 +15,7 @@ import json
 
 
 # converts the passed in fields into one of the formats expected by the data converter
-# and prepends the identifer to the json string
+# and prepends the identifier to the json string
 def emitMetric(identifier="PyTorchObserver", **kwargs):
     data = {}
     # check basic fields in all formats are present
