@@ -118,9 +118,9 @@ class HostPlatform(PlatformBase):
         #     self._sleepHost(from_time)
         if profiler_trace:
             traceryLink = profiler_trace.getLink()
-            filePathes = profiler_trace.getFilePathes()
+            filePaths = profiler_trace.getFilePaths()
             meta["tracery_link"] = traceryLink
-            meta["file_pathes"] = filePathes
+            meta["file_pathes"] = filePaths
 
         return output, meta
 
