@@ -38,7 +38,7 @@ def processRun(*args, **kwargs):
         retryCount = kwargs["retry"]
 
     while retryCount > 0:
-        # reset run status overwritting error
+        # reset run status overwriting error
         # from prior run
         # Use temporary process key for each retry to avoid overwriting global status where process_key=""
         setRunStatus(0, overwrite=True, key=kwargs["process_key"] + "_retry")
@@ -100,7 +100,7 @@ def _processRun(*args, **kwargs):
             t = Timer(timeout, _kill, [ps, " ".join(*args), kwargs["process_key"]])
             t.start()
         if run_async:
-            # when running the process asyncronously we return the
+            # when running the process asynchronously we return the
             # popen object and timer for the timeout as a tuple
             # it is the responsibility of the caller to pass this
             # tuple into processWait in order to gather the output
@@ -137,7 +137,7 @@ def processWait(processAndTimeout, **kwargs):
         output, match = _getOutput(ps, patterns, process_key=process_key)
         ps.stdout.close()
         if match:
-            # if the process is terminated by mathing output,
+            # if the process is terminated by matching output,
             # assume the process is executed successfully
             ps.terminate()
             status = 0
@@ -149,7 +149,7 @@ def processWait(processAndTimeout, **kwargs):
                     break
                 except subprocess.TimeoutExpired:
                     pass
-            # check if we exitted loop due to a timeout request
+            # check if we exited loop due to a timeout request
             if getRunKilled():
                 getLogger().info("Process was killed at user request")
                 ps.terminate()
@@ -233,7 +233,7 @@ def _getOutput(ps, patterns, process_key=""):
     while not getRunKilled(process_key):
         # Try to get output from binary if possible
         # If not possible then loop
-        # and recheck run killed contidion
+        # and recheck run killed condition
         if poller.poll(15.0):
             line = ps.stdout.readline()
         else:
