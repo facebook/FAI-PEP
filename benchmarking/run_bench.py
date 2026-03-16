@@ -221,7 +221,7 @@ class RunBench:
             benchmark_file = unknowns["--benchmark_file"]
         if not benchmark_file and "-b" in unknowns:
             benchmark_file = unknowns["-b"]
-        # Remove later when adhoc is moved to seperated infrastructure
+        # Remove later when adhoc is moved to separated infrastructure
         if "--adhoc" in unknowns:
             configName = unknowns["--adhoc"]
             if configName is None:

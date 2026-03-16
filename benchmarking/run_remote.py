@@ -873,7 +873,7 @@ class RunRemote:
         }
 
     def _updateArgs(self, args):
-        # Remove later when adhoc is moved to seperated infrastructure
+        # Remove later when adhoc is moved to separated infrastructure
         if args.adhoc is not None:
             adhoc_file, success = unpackAdhocFile(args.adhoc)
             if success:
