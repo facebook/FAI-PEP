@@ -43,7 +43,7 @@ def getBatteryState(device, platform: str, android_dir: str) -> dict[str, Any]:
                 state["charge_level"] = int(util.getBatteryProp("capacity"))
                 state["temperature"] = int(util.getBatteryProp("temp"))
     except Exception:
-        # If error occured, change supported state to false to allow
+        # If error occurred, change supported state to false to allow
         # downstream logic not to examine individual fields.
         state["supported"] = False
         getLogger().exception("Failed to get battery state")
