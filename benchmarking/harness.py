@@ -398,8 +398,8 @@ class BenchmarkDriver:
             )
             return
 
-        # Default to False if not explicitly provided
-        use_enkaku = False
+        # Default to True since RIOT is deprecated (March 16, 2026)
+        use_enkaku = True
         self.args.use_enkaku = str(use_enkaku)
         getLogger().info(
             f"[BenchmarkDriver] use_enkaku not provided, using default use_enkaku={use_enkaku}"

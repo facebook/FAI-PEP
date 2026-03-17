@@ -86,7 +86,7 @@ class FrameworkBase:
         # this way, in ios, the platform may not be copied to the target.
 
         # Extract use_enkaku flag from benchmark if present
-        use_enkaku = benchmark.get("use_enkaku", False)
+        use_enkaku = benchmark.get("use_enkaku", True)
         platform.preprocess(
             use_enkaku=use_enkaku, programs=program_files, benchmark=benchmark
         )
