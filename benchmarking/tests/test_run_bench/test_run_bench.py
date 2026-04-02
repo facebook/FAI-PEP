@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# pyre-unsafe
+# pyre-strict
 
 ##############################################################################
 # Copyright 2017-present, Facebook, Inc.
@@ -14,7 +14,7 @@ import os
 import sys
 import unittest
 
-BENCHMARK_DIR = os.path.abspath(
+BENCHMARK_DIR: str = os.path.abspath(
     os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
 )
 sys.path.append(BENCHMARK_DIR)
@@ -23,10 +23,10 @@ from run_bench import RunBench
 
 
 class RunBenchUnitTest(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.app = RunBench()
 
-    def test_getUnknownArgs(self):
+    def test_getUnknownArgs(self) -> None:
         self.app.unknowns = "--remote -b /home/mobilenet_v3.json\
                              --platform android --framework pytorch\
                              --devices SM-G981U1-11-30 --buck_target".split()
