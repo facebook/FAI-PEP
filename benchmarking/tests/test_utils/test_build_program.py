@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# pyre-unsafe
+# pyre-strict
 
 ##############################################################################
 # Copyright 2017-present, Facebook, Inc.
@@ -16,7 +16,7 @@ import unittest
 from tempfile import gettempdir
 from unittest.mock import patch
 
-BENCHMARK_DIR = os.path.abspath(
+BENCHMARK_DIR: str = os.path.abspath(
     os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
 )
 sys.path.append(BENCHMARK_DIR)
@@ -25,14 +25,14 @@ from utils.build_program import _isBuildSuccessful, _setUpTempDirectory, buildUs
 
 
 class BuildProgramTest(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.fake_file = os.path.join(gettempdir(), "aibenchtest1", "test")
         self.actual_file = os.path.join(gettempdir(), "aibenchtest2", "program")
         _setUpTempDirectory(self.actual_file)
         with open(self.actual_file, "a"):
             os.utime(self.actual_file, None)
 
-    def testBuckBuild(self):
+    def testBuckBuild(self) -> None:
         with patch(
             "utils.subprocess_with_logger.processRun",
             return_value=("Build was unsuccessful", [Exception()]),
@@ -47,7 +47,7 @@ class BuildProgramTest(unittest.TestCase):
         ):
             self.assertTrue(buildUsingBuck(self.actual_file, "ios", "buck"))
 
-    def testisBuildSuccessful(self):
+    def testisBuildSuccessful(self) -> None:
         self.assertFalse(
             _isBuildSuccessful(self.fake_file, "ios", "buck build aibench:run")
         )
