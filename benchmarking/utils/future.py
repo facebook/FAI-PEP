@@ -14,7 +14,7 @@
 import threading
 
 
-# Future provides a simple way for callers to asyncronously run a function
+# Future provides a simple way for callers to asynchronously run a function
 # and later retrieve the result. Using a normal bool to indicate if the
 # function has finished is safe due to python's GIL. We don't need any
 # special atomic operations.

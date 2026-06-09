@@ -75,7 +75,7 @@ def checkRegressions(info, platform, framework, benchmark, reporters, meta, outd
         )
 
 
-# Regress is identified if last two runs are both above threshhold.
+# Regress is identified if last two runs are both above threshold.
 def _detectOneBenchmarkRegression(data):
     regressed = []
     if "meta.txt" not in data:
@@ -150,7 +150,7 @@ def _getBenchmarkRuns(info, meta, outdir):
 
     dirs = []
     for entry in info["regression_commits"]:
-        one_dir = os.path.jon(
+        one_dir = os.path.join(
             dir_name, getDirectory(entry["commit"], entry["commit_time"])
         )
         if not os.path.isdir(one_dir):
