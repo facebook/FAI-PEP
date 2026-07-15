@@ -237,6 +237,9 @@ class BenchmarkCollector:
         if "location" not in field:
             return False
         location = field["location"]
+        dest_dir = os.path.dirname(destination_name)
+        if dest_dir:
+            os.makedirs(dest_dir, exist_ok=True)
         if location[0:4] == "http":
             abs_name = destination_name
             getLogger().info(f"Downloading {location}")
