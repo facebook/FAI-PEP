@@ -106,9 +106,14 @@ class BenchmarkCollector:
         if not os.path.isdir(model_dir):
             os.makedirs(model_dir)
         collected_files, collected_tmp_files = self._collectFiles(one_benchmark)
+        cached_files = []
         update_json = False
         for file in collected_files:
-            update_json |= self._updateOneFile(file, model_dir, filename)
+            file_updates_json, cached_filename = self._updateOneFile(
+                file, model_dir, filename
+            )
+            update_json |= file_updates_json
+            cached_files.append((file, cached_filename))
 
         if update_json:
             s = json.dumps(one_benchmark, indent=2, sort_keys=True)
@@ -119,9 +124,8 @@ class BenchmarkCollector:
                 + "Please update the meta json file."
             )
 
-        for file in collected_files:
+        for file, cached_filename in cached_files:
             if "md5" in file:
-                cached_filename = self._getDestFilename(file, model_dir)
                 file["location"] = cached_filename
             elif file.get("location", "").startswith("//fbpkg"):
                 file["location"] = self.args.root_model_dir + file["location"][1:]
@@ -192,8 +196,12 @@ class BenchmarkCollector:
                 != field["md5"]
             )
         ):
-            return self._copyFile(field, cached_filename, filename)
-        return False
+            update_json = self._copyFile(field, cached_filename, filename)
+            updated_cached_filename = self._getDestFilename(field, model_dir)
+            if updated_cached_filename != cached_filename:
+                self._copyFile(field, updated_cached_filename, filename)
+            return update_json, updated_cached_filename
+        return False, cached_filename
 
     def _calcalateFileMD5(self, model_name: str) -> str:
         with open(model_name, "rb") as f:
@@ -284,9 +292,10 @@ class BenchmarkCollector:
         return False
 
     def _getDestFilename(self, field, dir):
-        fn = os.path.splitext(field["filename"])
-        cached_name = os.path.join(dir, fn[0] + fn[1])
-        return cached_name
+        cache_dir = dir
+        if field.get("md5"):
+            cache_dir = os.path.join(cache_dir, field["md5"])
+        return os.path.join(cache_dir, field["filename"])
 
     def _updateTests(self, one_benchmark, source):
         if one_benchmark["tests"][0]["metric"] == "generic":

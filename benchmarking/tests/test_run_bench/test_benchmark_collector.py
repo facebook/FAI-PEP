@@ -18,9 +18,14 @@ class BenchmarkCollectorCopyFileTest(unittest.TestCase):
     def tearDown(self) -> None:
         shutil.rmtree(self.tmp, ignore_errors=True)
 
-    def _writeSource(self, content: bytes) -> str:
-        src = os.path.join(self.tmp, "src", "speech.tuna.mock_flat.fbpkg.lock")
-        os.makedirs(os.path.dirname(src))
+    def _writeSource(
+        self,
+        content: bytes,
+        directory: str = "src",
+        filename: str = "speech.tuna.mock_flat.fbpkg.lock",
+    ) -> str:
+        src = os.path.join(self.tmp, directory, filename)
+        os.makedirs(os.path.dirname(src), exist_ok=True)
         with open(src, "wb") as f:
             f.write(content)
         return src
@@ -51,3 +56,43 @@ class BenchmarkCollectorCopyFileTest(unittest.TestCase):
         self.assertTrue(os.path.isfile(destination))
         with open(destination, "rb") as f:
             self.assertEqual(f.read(), content)
+
+    def test_updateFiles_isolates_same_filename_by_content_hash(self) -> None:
+        benchmark_file = self._writeSource(
+            b"{}", directory="benchmark", filename="benchmark.json"
+        )
+        drama_source = self._writeSource(
+            b"drama", directory="drama", filename="tokenizer.json"
+        )
+        wordpiece_source = self._writeSource(
+            b"wordpiece", directory="wordpiece", filename="tokenizer.json"
+        )
+        drama = {
+            "location": drama_source,
+            "filename": "tokenizer.json",
+            "md5": "0" * 32,
+        }
+        wordpiece = {
+            "location": wordpiece_source,
+            "filename": "tokenizer.json",
+            "md5": self.collector._calcalateFileMD5(wordpiece_source),
+        }
+        benchmark = {
+            "model": {
+                "files": {"drama": drama, "wordpiece": wordpiece},
+                "format": "pytorch",
+                "name": "API Benchmark",
+            },
+            "tests": [],
+        }
+
+        self.collector._updateFiles(benchmark, benchmark_file, "test")
+
+        drama_path = benchmark["model"]["files"]["drama"]["location"]
+        wordpiece_path = benchmark["model"]["files"]["wordpiece"]["location"]
+        self.assertEqual(os.path.basename(os.path.dirname(drama_path)), drama["md5"])
+        self.assertNotEqual(drama_path, wordpiece_path)
+        with open(drama_path, "rb") as f:
+            self.assertEqual(f.read(), b"drama")
+        with open(wordpiece_path, "rb") as f:
+            self.assertEqual(f.read(), b"wordpiece")
