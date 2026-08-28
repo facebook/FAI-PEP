@@ -26,9 +26,6 @@ CONFIG_DIR=/tmp/config
 REPO_DIR=/tmp/tensorflow
 LOCAL_REPORTER_DIR=/tmp/reporter
 
-BAZEL_DIR=/tmp/bazel
-BAZEL=bazel-0.25.0-installer-linux-x86_64.sh
-
 BENCHMARK_FILE=${FAI_PEP_DIR}/specifications/models/tflite/mobilenet_v2/mobilenet_v2_0.35_96.json
 
 mkdir -p "$CONFIG_DIR"
@@ -59,15 +56,11 @@ echo "
 # clone/install tflite
 
 apt-get install wget pkg-config g++ zlib1g-dev python zip unzip -y
-if [ ! -z ${BAZEL_DIR} ]; then
-  mkdir -p ${BAZEL_DIR}
-fi
-if [ ! -f ${BAZEL_DIR}/${BAZEL} ]; then
-  wget -q -O ${BAZEL_DIR}/${BAZEL} https://github.com/bazelbuild/bazel/releases/download/0.25.0/${BAZEL}
-fi
-chmod +x ${BAZEL_DIR}/${BAZEL}
-${BAZEL_DIR}/${BAZEL} --user
-export PATH="$PATH:$HOME/bin"
+
+echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list
+curl https://bazel.build/bazel-release.pub.gpg | apt-key add -
+apt-get update
+apt-get install bazel-3.1.0
 
 rm -rf ${REPO_DIR}
 git clone --recursive --quiet https://github.com/tensorflow/tensorflow.git "$REPO_DIR"
