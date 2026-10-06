@@ -137,6 +137,15 @@ class BenchmarkCollector:
             tmp_file["location"] = tmp_file["location"].replace("{TEMPDIR}", tmp_dir)
 
     def _collectFiles(self, benchmark):
+        """Gather all file entries referenced by a benchmark specification.
+
+        Args:
+            benchmark: Parsed benchmark spec whose model `files`/`libraries`
+                and per-test file groups are walked.
+
+        Returns:
+            Tuple of regular file entries and `{TEMPDIR}` entries.
+        """
         files = []
         tmp_files = []
         if "model" in benchmark:
