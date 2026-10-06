@@ -35,6 +35,14 @@ class BenchmarkCollector:
         self.framework = framework
 
     def collectBenchmarks(self, info, source, user_identifier):
+        """Load benchmark specifications into a list of one-test benchmarks.
+
+        Args:
+            info: Its "meta" entry, if present, is merged into the benchmark meta.
+            source: Benchmark JSON file, or a meta file whose "benchmarks" entry
+                lists benchmark files relative to its directory.
+            user_identifier: Part of the temporary directory name for output files.
+        """
         assert os.path.isfile(source), f"Source {source} is not a file"
         with open(source) as f:
             content = json.load(f)
