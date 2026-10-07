@@ -141,15 +141,12 @@ class ADB(PlatformUtilBase):
         """
         if self.user_is_root():
             path = "/sys/class/power_supply/battery/" + property
-            # Make sure path exists before trying to get it
-            if not (
-                self.shell(["[", "-f", '"' + path + '"', "]"], retry=1, silent=silent)
-            ):
-                return self.shell(
-                    ["cat", path],
-                    retry=1,
-                    silent=silent,
-                )[0]
+            # Try to read the property from sysfs. If the path does not exist
+            # (e.g. the device has no battery), the shell command produces no
+            # output and we return an empty string instead of crashing.
+            result = self.shell(["cat", path], retry=1, silent=silent)
+            if result:
+                return result[0]
 
         return ""
 
