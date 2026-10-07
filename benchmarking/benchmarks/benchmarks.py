@@ -259,6 +259,23 @@ class BenchmarkCollector:
             )
 
     def _copyFile(self, field, destination_name, source):
+        """Copy or download a benchmark file into the model cache.
+
+        Args:
+            field: File entry with "location", "filename" and "md5" keys; the
+                "md5" value is updated in place when it is out of date.
+            destination_name: Target path in the model cache; missing parent
+                directories are created.
+            source: Base path used to resolve a relative location.
+
+        Returns:
+            True if field["md5"] was updated and the json file needs to be
+            committed, False otherwise.
+
+        Raises:
+            AssertionError: If the resolved location is neither an existing
+                file nor a directory.
+        """
         if "location" not in field:
             return False
         location = field["location"]
